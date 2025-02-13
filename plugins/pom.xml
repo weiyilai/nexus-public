@@ -68,14 +68,6 @@
         <version>3.79.0-SNAPSHOT</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-audit-plugin</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
-      </dependency>
-
       <!-- blobstore tasks -->
 
       <dependency>
@@ -84,28 +76,12 @@
         <version>3.79.0-SNAPSHOT</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-blobstore-tasks</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
-      </dependency>
-
       <!-- coreui -->
 
       <dependency>
         <groupId>org.sonatype.nexus.plugins</groupId>
         <artifactId>nexus-coreui-plugin</artifactId>
         <version>3.79.0-SNAPSHOT</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-coreui-plugin</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
       </dependency>
 
       <dependency>
@@ -123,28 +99,12 @@
         <version>3.79.0-SNAPSHOT</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-repository-httpbridge</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
-      </dependency>
-
       <!-- repository-maven -->
 
       <dependency>
         <groupId>org.sonatype.nexus.plugins</groupId>
         <artifactId>nexus-repository-maven</artifactId>
         <version>3.79.0-SNAPSHOT</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-repository-maven</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
       </dependency>
 
       <!-- repository-apt -->
@@ -155,29 +115,12 @@
         <version>3.79.0-SNAPSHOT</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-repository-apt</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
-      </dependency>
-
-
       <!-- repository-raw -->
 
       <dependency>
         <groupId>org.sonatype.nexus.plugins</groupId>
         <artifactId>nexus-repository-raw</artifactId>
         <version>3.79.0-SNAPSHOT</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-repository-raw</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
       </dependency>
 
       <!-- ssl -->
@@ -188,28 +131,12 @@
         <version>3.79.0-SNAPSHOT</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-ssl-plugin</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
-      </dependency>
-
       <!-- scripting -->
 
       <dependency>
         <groupId>org.sonatype.nexus.plugins</groupId>
         <artifactId>nexus-script-plugin</artifactId>
         <version>3.79.0-SNAPSHOT</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-script-plugin</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
       </dependency>
 
       <!-- task log cleanup -->
@@ -220,28 +147,12 @@
           <version>3.79.0-SNAPSHOT</version>
       </dependency>
 
-      <dependency>
-          <groupId>org.sonatype.nexus.plugins</groupId>
-          <artifactId>nexus-task-log-cleanup</artifactId>
-          <version>3.79.0-SNAPSHOT</version>
-          <classifier>features</classifier>
-          <type>xml</type>
-      </dependency>
-
       <!-- s3 blobstore -->
 
       <dependency>
         <groupId>org.sonatype.nexus.plugins</groupId>
         <artifactId>nexus-blobstore-s3</artifactId>
         <version>3.79.0-SNAPSHOT</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-blobstore-s3</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
       </dependency>
 
       <!-- onboarding plugin -->
@@ -252,13 +163,6 @@
         <version>3.79.0-SNAPSHOT</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-onboarding-plugin</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
-      </dependency>
 
 	  <!-- default-role plugin -->
 
@@ -268,28 +172,12 @@
         <version>3.79.0-SNAPSHOT</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-default-role-plugin</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
-      </dependency>
-
       <!-- example content plugin -->
 
       <dependency>
         <groupId>org.sonatype.nexus.plugins</groupId>
         <artifactId>nexus-example-content</artifactId>
         <version>3.79.0-SNAPSHOT</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.sonatype.nexus.plugins</groupId>
-        <artifactId>nexus-example-content</artifactId>
-        <version>3.79.0-SNAPSHOT</version>
-        <classifier>features</classifier>
-        <type>xml</type>
       </dependency>
 
     </dependencies>

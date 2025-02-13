@@ -152,49 +152,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.ops4j.pax.exam</groupId>
-        <artifactId>pax-exam</artifactId>
-        <version>${pax-exam.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.ops4j.pax.exam</groupId>
-        <artifactId>pax-exam-junit4</artifactId>
-        <version>${pax-exam.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.ops4j.pax.exam</groupId>
-        <artifactId>pax-exam-spi</artifactId>
-        <version>${pax-exam.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.ops4j.pax.exam</groupId>
-        <artifactId>pax-exam-extender-service</artifactId>
-        <version>${pax-exam.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.ops4j.pax.exam</groupId>
-        <artifactId>pax-exam-container-karaf</artifactId>
-        <version>${pax-exam.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.ops4j.pax.exam</groupId>
-        <artifactId>pax-exam-features</artifactId>
-        <version>${pax-exam.version}</version>
-        <type>xml</type>
-      </dependency>
-
-      <dependency>
-        <groupId>org.ops4j.pax.url</groupId>
-        <artifactId>pax-url-aether</artifactId>
-        <version>2.6.12</version>
-      </dependency>
-
-      <dependency>
         <groupId>org.littleshoot</groupId>
         <artifactId>littleproxy</artifactId>
         <version>1.1.2</version>
@@ -210,26 +167,6 @@
         <groupId>io.netty</groupId>
         <artifactId>netty-all</artifactId>
         <version>4.1.75.Final</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.sonatype.nexus.testsupport.iq</groupId>
-        <artifactId>iq-server-test-client-jupiter</artifactId>
-        <version>${iq.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.sonatype.nexus.testsupport.iq</groupId>
-        <artifactId>iq-server-test-client</artifactId>
-        <version>${iq.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.sonatype.nexus.testsupport.iq</groupId>
-        <artifactId>iq-server-test-client</artifactId>
-        <classifier>features</classifier>
-        <type>xml</type>
-        <version>${iq.version}</version>
       </dependency>
 
       <!--
@@ -264,32 +201,6 @@
         <artifactId>siesta-standard</artifactId>
         <version>3.1.0</version>
         <type>zip</type>
-      </dependency>
-
-      <dependency>
-        <groupId>com.spotify</groupId>
-        <artifactId>docker-client</artifactId>
-        <version>8.16.0</version>
-        <classifier>shaded</classifier>
-        <exclusions>
-          <exclusion>
-            <groupId>*</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>com.github.jnr</groupId>
-        <artifactId>jffi</artifactId>
-        <version>1.2.15</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.github.jnr</groupId>
-        <artifactId>jffi</artifactId>
-        <classifier>native</classifier>
-        <version>1.2.15</version>
       </dependency>
 
       <dependency>
@@ -332,22 +243,6 @@
         <groupId>io.gatling</groupId>
         <artifactId>gatling-http-java</artifactId>
         <version>${gatling.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.keycloak</groupId>
-        <artifactId>keycloak-admin-client</artifactId>
-        <version>18.0.2</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk15on</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
