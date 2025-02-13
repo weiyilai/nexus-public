@@ -12,17 +12,39 @@
  */
 package org.sonatype.nexus.spring.application.classpath.walker;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import javax.annotation.Nullable;
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import org.sonatype.goodies.common.ComponentSupport;
 
 @Named
 @Singleton
 public class NexusApplicationJarFilter
+    extends ComponentSupport
     implements ApplicationJarFilter
 {
   @Override
   public boolean allowed(final String path) {
-    String filename = path.substring(path.lastIndexOf("/") + 1);
+    String filename = getModuleNameFromFile(path);
     return filename.startsWith("nexus-");
+  }
+
+  @Nullable
+  private String getModuleNameFromFile(final String path) {
+    try {
+      Path fsPath = Paths.get(path);
+      String fileName = fsPath.getFileName().toString();
+      if (fileName.equals("test-classes") || fileName.equals("classes")) {
+        return fsPath.getParent().getParent().getFileName().toString();
+      }
+    }
+    catch (Exception e) {
+      log.debug("Failed to compute {}", path, e);
+    }
+    return path.substring(path.lastIndexOf("/") + 1);
   }
 }

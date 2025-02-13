@@ -12,16 +12,23 @@
  */
 package org.sonatype.nexus.spring.application.classpath.walker;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
+import java.util.stream.Stream;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -29,7 +36,6 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 @Named
@@ -55,19 +61,41 @@ public class ClasspathWalker
     LOG.debug("Building the IoC classpath index(es) from: {}", base);
     List<String> applicationJarPaths = getApplicationJarPaths(base);
 
-    for (String applicationJarPath : applicationJarPaths) {
-      LOG.debug("Walking classpath of: {} from base {}", applicationJarPath, base);
-      if (base.isFile()) {
-        try (JarFile baseJar = new JarFile(base)) {
-          visitJarEntries(applicationJarPath, baseJar);
+    if (!applicationJarPaths.isEmpty()) {
+      for (String applicationJarPath : applicationJarPaths) {
+        LOG.debug("Walking classpath of: {} from base {}", applicationJarPath, base);
+        if (base.isFile()) {
+          try (JarFile baseJar = new JarFile(base)) {
+            visitJarEntries(applicationJarPath, baseJar);
+          }
+        }
+      }
+    }
+    else {
+      List<Path> paths = getApplicationClasspath().stream().map(Paths::get).toList();
+      for (Path cpEntry : paths) {
+        LOG.debug("Walking classpath entry: {}", cpEntry);
+        if (Files.isDirectory(cpEntry)) {
+          visitDirectory(cpEntry);
+        }
+        else {
+          try (InputStream in = new BufferedInputStream(Files.newInputStream(cpEntry))) {
+            visitJarEntries(in, cpEntry.toString());
+          }
         }
       }
     }
   }
 
-  private void visitJarEntries(String applicationJarPath, JarFile baseJar) throws IOException {
+  private void visitJarEntries(final String applicationJarPath, final JarFile baseJar) throws IOException {
     JarEntry nestedJar = baseJar.getJarEntry(applicationJarPath);
-    try (JarInputStream applicationJarInputStream = new JarInputStream(baseJar.getInputStream(nestedJar))) {
+    try (InputStream in = baseJar.getInputStream(nestedJar)) {
+      visitJarEntries(in, applicationJarPath);
+    }
+  }
+
+  private void visitJarEntries(final InputStream in, final String applicationJarPath) throws IOException {
+    try (JarInputStream applicationJarInputStream = new JarInputStream(in)) {
       JarEntry nestedJarEntry = applicationJarInputStream.getNextJarEntry();
       while (nestedJarEntry != null) {
         LOG.debug("Visiting entry: {} in {}", nestedJarEntry.getName(), applicationJarPath);
@@ -79,6 +107,26 @@ public class ClasspathWalker
         }
         nestedJarEntry = applicationJarInputStream.getNextJarEntry();
       }
+    }
+  }
+
+  private void visitDirectory(final Path directory) throws IOException {
+    try (Stream<Path> files = Files.walk(directory)) {
+      files.filter(Files::isRegularFile).forEach(file -> {
+        String path = directory.relativize(file).toString().replace('\\', '/');
+        LOG.debug("Visiting entry: {} in {}", path, directory);
+        try (InputStream in = new BufferedInputStream(Files.newInputStream(file))) {
+          for (ClasspathVisitor classpathVisitor : classpathVisitors) {
+            // with single inputstream only one visitor can successfully visit
+            if (classpathVisitor.visit(path, directory.toString(), in)) {
+              break;
+            }
+          }
+        }
+        catch (IOException e) {
+          throw new UncheckedIOException(e);
+        }
+      });
     }
   }
 
@@ -98,7 +146,12 @@ public class ClasspathWalker
         return filterForSupportedApplications(fileToStringList(Files.newInputStream(indexFile.toPath())));
       }
     }
-    return emptyList();
+    return List.of();
+  }
+
+  private List<String> getApplicationClasspath() {
+    return filterForSupportedApplications(
+        Arrays.asList(System.getProperty("java.class.path").split(File.pathSeparator)));
   }
 
   private List<String> filterForSupportedApplications(final List<String> applicationJarPaths) {
