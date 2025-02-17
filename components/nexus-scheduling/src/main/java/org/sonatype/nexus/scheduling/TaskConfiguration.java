@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-
 import javax.annotation.Nullable;
 
 import org.sonatype.nexus.logging.task.TaskLogInfo;
@@ -101,6 +100,8 @@ public class TaskConfiguration
 
   static final String LOG_STATE_KEY = ".logState";
 
+  static final String RUN_PREVIOUS_PLAN = ".runPreviousPlan";
+
   /**
    * Set a task config key to this value to indicate that the config key should be removed from the task config upon
    * task completion.
@@ -144,6 +145,7 @@ public class TaskConfiguration
     return ImmutableMap.copyOf(configuration);
   }
 
+  @Override
   public String toString() {
     return configuration.toString();
   }
@@ -152,6 +154,7 @@ public class TaskConfiguration
   // Core properties
   //
 
+  @Override
   public String getId() {
     return getString(ID_KEY);
   }
@@ -161,6 +164,7 @@ public class TaskConfiguration
     setString(ID_KEY, id);
   }
 
+  @Override
   public String getName() {
     return getString(NAME_KEY);
   }
@@ -170,6 +174,7 @@ public class TaskConfiguration
     setString(NAME_KEY, name);
   }
 
+  @Override
   public String getTypeId() {
     return getString(TYPE_ID_KEY);
   }
@@ -212,6 +217,14 @@ public class TaskConfiguration
     setBoolean(EXPOSED_KEY, exposed);
   }
 
+  public void setRunPreviousPlan(final boolean runPreviousPlan) {
+    setBoolean(RUN_PREVIOUS_PLAN, runPreviousPlan);
+  }
+
+  public boolean isRunPreviousPlan() {
+    return getBoolean(RUN_PREVIOUS_PLAN, false);
+  }
+
   @Nullable
   public String getAlertEmail() {
     return getString(ALERT_EMAIL_KEY);
@@ -222,7 +235,8 @@ public class TaskConfiguration
   }
 
   public TaskNotificationCondition getNotificationCondition() {
-    return TaskNotificationCondition.valueOf(getString(NOTIFICATION_CONDITION_KEY, TaskNotificationCondition.DEFAULT.name()));
+    return TaskNotificationCondition
+        .valueOf(getString(NOTIFICATION_CONDITION_KEY, TaskNotificationCondition.DEFAULT.name()));
   }
 
   public void setNotificationCondition(final TaskNotificationCondition condition) {
@@ -249,6 +263,7 @@ public class TaskConfiguration
     setDate(UPDATED_KEY, date);
   }
 
+  @Override
   @Nullable
   public String getMessage() {
     return getString(MESSAGE_KEY);

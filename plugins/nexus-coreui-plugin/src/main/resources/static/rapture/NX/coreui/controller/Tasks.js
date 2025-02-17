@@ -39,7 +39,8 @@ Ext.define('NX.coreui.controller.Tasks', {
     'Task',
     'TaskType',
     'Repository',
-    'Blobstore'
+    'Blobstore',
+    'ReconcilePlans'
   ],
   models: [
     'Task'
@@ -65,6 +66,7 @@ Ext.define('NX.coreui.controller.Tasks', {
     'task.TaskSummary',
     'task.TaskSettings',
     'task.TaskSettingsForm',
+    'task.TaskReconcilePlan',
     'formfield.SettingsFieldSet'
   ],
   refs: [
@@ -162,6 +164,27 @@ Ext.define('NX.coreui.controller.Tasks', {
   },
 
   /**
+   * Get the reconcile plans for the given model.
+   * @param model
+   * @returns {*}
+   */
+  getReconcilePlans: function(model) {
+    const deferred = Ext.create('Ext.Deferred');
+    if ("blobstore.planReconciliation" === model.get('typeId')) {
+      var store = Ext.create('NX.coreui.store.ReconcilePlans');
+      store.on('load', function(store, records) {
+        model.set('reconcilePlans', records[0]);
+        deferred.resolve();
+      });
+      store.load();
+    }
+    else {
+      deferred.resolve();
+    }
+    return deferred.promise;
+  },
+
+  /**
    * @override
    * Load task model into detail tabs.
    * @param {NX.coreui.view.task.TaskList} list task grid
@@ -186,7 +209,7 @@ Ext.define('NX.coreui.controller.Tasks', {
         if (!settings) {
           me.addTab({ xtype: 'nx-coreui-task-settings', title: NX.I18n.get('Tasks_Settings_Title'), weight: 20 });
         }
-        me.showSettings(model);
+        this.showSettings(model);
       }
       else {
         if (settings) {
@@ -219,11 +242,14 @@ Ext.define('NX.coreui.controller.Tasks', {
 
   /**
    * @private
-   * Displays task settings.
+   * Displays task settings, it waits until reconcile plans are fully loaded.
    * @param {NX.coreui.model.Task} model task model
    */
   showSettings: function(model) {
-    this.getSettings().loadRecord(model);
+    var me = this;
+    Ext.Promise.all([this.getReconcilePlans(model)]).then(function() {
+      me.getSettings().loadRecord(model);
+    });
   },
 
   /**
@@ -410,13 +436,15 @@ Ext.define('NX.coreui.controller.Tasks', {
   },
 
   /**
+   * Observables, used to read data from database.
    * @private
    */
   getObservables: function () {
     var me = this;
     return [
-      { observable: me.getStore('Task'), events: ['load']},
-      { observable: Ext.History, events: ['change']}
+      {observable: me.getStore('Task'), events: ['load']},
+      {observable: Ext.History, events: ['change']},
+      {observable: me.getStore('ReconcilePlans'), events: ['load']}
     ];
   },
 
@@ -487,6 +515,7 @@ Ext.define('NX.coreui.controller.Tasks', {
                 me.getContent().getEl().unmask();
                 if (Ext.isObject(response) && response.success) {
                   me.getStore('Task').load();
+                  me.getReconcilePlans(model);
                   NX.Messages.success(NX.I18n.format('Tasks_Run_Success', description));
                 }
               });
