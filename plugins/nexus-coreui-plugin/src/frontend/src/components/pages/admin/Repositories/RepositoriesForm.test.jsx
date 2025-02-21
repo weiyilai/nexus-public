@@ -991,7 +991,7 @@ describe('RepositoriesForm', () => {
         cleanup: null,
         proxy: {
           remoteUrl: 'https://foo.bar',
-          contentMaxAge: 1440,
+          contentMaxAge: -1,
           metadataMaxAge: 1440
         },
         negativeCache: {
@@ -1092,7 +1092,7 @@ describe('RepositoriesForm', () => {
         cleanup: null,
         proxy: {
           remoteUrl: 'https://foo.bar',
-          contentMaxAge: 1440,
+          contentMaxAge: -1,
           metadataMaxAge: 1440
         },
         negativeCache: {

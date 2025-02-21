@@ -27,7 +27,7 @@ export const genericDefaultValues = {
     cleanup: null,
     proxy: {
       remoteUrl: '',
-      contentMaxAge: 1440,
+      contentMaxAge: -1,
       metadataMaxAge: 1440
     },
     negativeCache: {
