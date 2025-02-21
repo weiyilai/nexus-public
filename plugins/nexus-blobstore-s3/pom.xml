@@ -146,27 +146,4 @@
 
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.sonatype.nexus.buildsupport</groupId>
-        <artifactId>extjs-maven-plugin</artifactId>
-        <configuration>
-          <namespace>NX.s3blobstore</namespace>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.sonatype.plugins</groupId>
-        <artifactId>yuicompressor-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>plugin-css</id>
-            <phase>none</phase> <!-- no css -->
-          </execution>
-        </executions>
-      </plugin>
-
-    </plugins>
-  </build>
-
 </project>
