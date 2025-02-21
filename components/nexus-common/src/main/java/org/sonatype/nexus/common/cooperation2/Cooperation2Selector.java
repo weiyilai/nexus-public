@@ -10,29 +10,12 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.upgrade.datastore.internal.steps;
+package org.sonatype.nexus.common.cooperation2;
 
-import java.sql.Connection;
-import java.util.Optional;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
-import org.sonatype.goodies.common.ComponentSupport;
-import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
-
-@Named
-@Singleton
-public class RemoveDistributedCooperationMigrationStep_2_14
-    extends ComponentSupport
-    implements DatabaseMigrationStep
+/**
+ * Selects the proper cooperation2 implementation to use based on the current environment.
+ */
+public interface Cooperation2Selector
 {
-  @Override
-  public Optional<String> version() {
-    return Optional.of("2.14");
-  }
-
-  @Override
-  public void migrate(final Connection connection) throws Exception {
-    // with the decision to NOT completely remove distributed cooperation, we no longer need to do anything here
-  }
+  Cooperation2Factory select();
 }
