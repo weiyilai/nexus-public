@@ -368,7 +368,6 @@ if "%KARAF_PROFILER%" == "" goto :RUN
         --add-exports=java.base/sun.security.rsa=ALL-UNNAMED ^
         --add-exports=java.base/sun.security.pkcs=ALL-UNNAMED ^
         -classpath "%CLASSPATH%" ^
-        -Dkaraf.instances="%KARAF_HOME%\instances" ^
         -Dkaraf.home="%KARAF_HOME%" ^
         -Dkaraf.base="%KARAF_BASE%" ^
         -Dkaraf.etc="%KARAF_ETC%" ^
