@@ -15,6 +15,7 @@ package org.sonatype.nexus.repository.proxy;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -38,12 +39,15 @@ import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.Request;
 import org.sonatype.nexus.transaction.RetryDeniedException;
 
+import com.google.common.net.HttpHeaders;
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.HttpClientUtils;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpResponse;
 import org.junit.Before;
 import org.junit.Test;
@@ -481,5 +485,105 @@ public class ProxyFacetSupportTest
     verify(eventManager).post(any(ProxyRequestEvent.class));
     verify(eventManager).post(captor.capture());
     assertThat(captor.getValue().isBlocked(), is(false));
+  }
+
+  @Test
+  public void extractUrls_singleLinkHeader() {
+    HttpResponse response = mock(HttpResponse.class);
+    Header header = new BasicHeader(HttpHeaders.LINK, "<http://example.com>");
+    when(response.getHeaders(HttpHeaders.LINK)).thenReturn(new Header[]{header});
+
+    List<String> urls = underTest.extractUrls(response);
+
+    assertThat(urls.size(), is(1));
+    assertThat(urls.get(0), is("http://example.com"));
+  }
+
+  @Test
+  public void extractUrls_multipleLinkHeaders() {
+    HttpResponse response = mock(HttpResponse.class);
+    Header header1 = new BasicHeader(HttpHeaders.LINK, "<http://example.com>");
+    Header header2 = new BasicHeader(HttpHeaders.LINK, "<http://example.org>");
+    when(response.getHeaders(HttpHeaders.LINK)).thenReturn(new Header[]{header1, header2});
+
+    List<String> urls = underTest.extractUrls(response);
+
+    assertThat(urls.size(), is(2));
+    assertThat(urls.get(0), is("http://example.com"));
+    assertThat(urls.get(1), is("http://example.org"));
+  }
+
+  @Test
+  public void extractUrls_noLinkHeaders() {
+    HttpResponse response = mock(HttpResponse.class);
+    when(response.getHeaders(HttpHeaders.LINK)).thenReturn(new Header[]{});
+
+    List<String> urls = underTest.extractUrls(response);
+
+    assertThat(urls.size(), is(0));
+  }
+
+  @Test
+  public void extractUrls_malformedLinkHeader() {
+    HttpResponse response = mock(HttpResponse.class);
+    Header header = new BasicHeader(HttpHeaders.LINK, "malformed");
+    when(response.getHeaders(HttpHeaders.LINK)).thenReturn(new Header[]{header});
+
+    List<String> urls = underTest.extractUrls(response);
+
+    assertThat(urls.size(), is(0));
+  }
+
+  @Test
+  public void handle300MultipleChoicesError_returnsAlternativeContentWhenFound() throws IOException {
+    URI uri = URI.create("http://example.com");
+    HttpResponse response = mock(HttpResponse.class);
+    when(response.getHeaders(HttpHeaders.LINK)).thenReturn(new Header[]{
+        new BasicHeader(HttpHeaders.LINK, "<http://alternative.com>")
+    });
+    Content alternativeContent = mock(Content.class);
+    doReturn(alternativeContent).when(underTest).fetch("http://alternative.com", cachedContext, content);
+
+    Content result = underTest.handle300MultipleChoicesError(cachedContext, content, uri, response);
+
+    assertThat(result, is(alternativeContent));
+  }
+
+  @Test
+  public void handle300MultipleChoicesError_returnsNullWhenNoAlternativeContentFound() throws IOException {
+    URI uri = URI.create("http://example.com");
+    HttpResponse response = mock(HttpResponse.class);
+    when(response.getHeaders(HttpHeaders.LINK)).thenReturn(new Header[]{
+        new BasicHeader(HttpHeaders.LINK, "<http://alternative.com>")
+    });
+    doReturn(null).when(underTest).fetch("http://alternative.com", cachedContext, content);
+
+    Content result = underTest.handle300MultipleChoicesError(cachedContext, content, uri, response);
+
+    assertNull(result);
+  }
+
+  @Test
+  public void handle300MultipleChoicesError_returnsNullWhenNoLinksInResponse() throws IOException {
+    URI uri = URI.create("http://example.com");
+    HttpResponse response = mock(HttpResponse.class);
+    when(response.getHeaders(HttpHeaders.LINK)).thenReturn(new Header[]{});
+
+    Content result = underTest.handle300MultipleChoicesError(cachedContext, content, uri, response);
+
+    assertNull(result);
+  }
+
+  @Test
+  public void handle300MultipleChoicesError_returnsNullWhenMalformedLinkHeader() throws IOException {
+    URI uri = URI.create("http://example.com");
+    HttpResponse response = mock(HttpResponse.class);
+    when(response.getHeaders(HttpHeaders.LINK)).thenReturn(new Header[]{
+        new BasicHeader(HttpHeaders.LINK, "malformed")
+    });
+
+    Content result = underTest.handle300MultipleChoicesError(cachedContext, content, uri, response);
+
+    assertNull(result);
   }
 }

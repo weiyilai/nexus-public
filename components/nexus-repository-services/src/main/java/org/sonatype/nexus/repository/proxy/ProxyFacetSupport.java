@@ -17,9 +17,13 @@ import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -87,6 +91,8 @@ public abstract class ProxyFacetSupport
 
   public static final String PROXY_REMOTE_FETCH_SKIP_MARKER =
       "proxy.remote-fetch.skip";
+
+  public static final String ALTERNATIVE_URLS_PATTERN = "<(.*?)>";
 
   @VisibleForTesting
   static final String CONFIG_KEY = "proxy";
@@ -553,6 +559,9 @@ public abstract class ProxyFacetSupport
     }
 
     try {
+      if (status.getStatusCode() == HttpStatus.SC_MULTIPLE_CHOICES) {
+        return handle300MultipleChoicesError(context, stale, uri, response);
+      }
       if (status.getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
         checkState(stale != null, "Received 304 without conditional GET (bad server?) from %s", uri);
         indicateVerified(context, stale, cacheInfo);
@@ -564,6 +573,40 @@ public abstract class ProxyFacetSupport
     }
 
     return null;
+  }
+
+  protected Content handle300MultipleChoicesError(
+      final Context context,
+      final Content stale,
+      final URI uri,
+      final HttpResponse response) throws IOException
+  {
+    log.debug("Received 300 (multiple locations) from {}", uri);
+    List<String> alternativeUris = extractUrls(response);
+    for (String alternativeUri : alternativeUris) {
+      log.debug("Processing alternative link: {}", alternativeUri);
+      Content alternativeContent = fetch(alternativeUri, context, stale);
+      if (alternativeContent != null) {
+        return alternativeContent;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Gets URLs from header to handle 300 (multiple locations) responses.
+   */
+  protected List<String> extractUrls(HttpResponse response) {
+    Header[] locationHeaders = response.getHeaders(HttpHeaders.LINK);
+    List<String> urls = new ArrayList<>();
+    Pattern pattern = Pattern.compile(ALTERNATIVE_URLS_PATTERN);
+    for (Header locationHeader : locationHeaders) {
+      Matcher matcher = pattern.matcher(locationHeader.getValue());
+      while (matcher.find()) {
+        urls.add(matcher.group(1));
+      }
+    }
+    return urls;
   }
 
   protected String encodeUrl(final String url) throws UnsupportedEncodingException { // NOSONAR
