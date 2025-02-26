@@ -27,6 +27,8 @@ import {URLs} from './BlobStoresHelper';
 import '../../../../index';
 
 import UIStrings from '../../../../constants/UIStrings'
+import {ExtJS} from '@sonatype/nexus-ui-plugin';
+
 const S3_STRINGS = UIStrings.S3_BLOBSTORE_CONFIGURATION;
 
 const {
@@ -53,7 +55,8 @@ jest.mock('@sonatype/nexus-ui-plugin', () => ({
     showErrorMessage: jest.fn(),
     state: jest.fn().mockReturnValue({
       getValue: jest.fn().mockReturnValue(true)
-    })
+    }),
+    isProEdition: jest.fn()
   }
 }));
 
@@ -165,6 +168,7 @@ const selectors = {
   maxReplicationBucketsWarning: () => screen.getByText(S3_STRINGS.S3BlobStore_ReplicationBucketsSettings_MaxFailoverBucketsWarning),
   configureReplicationBucketsInfo: () => screen.getAllByText(S3_STRINGS.S3BlobStore_ReplicationBucketsSettings_ConfigureBucketReplicationMessage),
   cancelButton: () => screen.getByText('Cancel'),
+  getPresigned: () => screen.queryByLabelText(S3_STRINGS.S3BlobStore_Presigned_HelpText),
   getSoftQuota: () => within(screen.getByRole('group', {name: 'Soft Quota'})).getByLabelText('Enabled'),
   getUsePathStyle: () => within(screen.getByRole('group', {name: 'Use path-style access'})).getByLabelText(
       'Setting this flag will result in path-style access being used for all requests'),
@@ -200,6 +204,7 @@ describe('BlobStoresForm', function() {
           kmsEncryption: () => getByLabelText('Enable KMS managed encryption'),
           kmsKeyResourceName: () => getByLabelText('KMS Key ID'),
           prefix: () => getByLabelText('Prefix'),
+          presigned: () => queryByLabelText(S3_STRINGS.S3BlobStore_Presigned_HelpText),
           expiration: () => getByLabelText('Expiration Days'),
           accessKeyId: () => getByLabelText('Access Key ID'),
           secretAccessKey: () => getByLabelText('Secret Access Key'),
@@ -484,7 +489,8 @@ describe('BlobStoresForm', function() {
     );
   });
 
-  it('creates a new S3 blob store', async function() {
+  const testCreateS3 = async function(postRenderFn, submissionMutator = _ => {}) {
+    const rendered = render();
     const {
       name,
       loadingMask,
@@ -498,7 +504,7 @@ describe('BlobStoresForm', function() {
       softQuotaType,
       softQuotaLimit,
       spaceUsedQuotaLabel
-    } = render();
+    } = rendered;
 
     await waitForElementToBeRemoved(loadingMask);
 
@@ -508,6 +514,8 @@ describe('BlobStoresForm', function() {
     userEvent.click(selectors.querySubmitButton());
 
     expect(selectors.queryFormError(TestUtils.NO_CHANGES_MESSAGE)).toBeInTheDocument();
+
+    postRenderFn(rendered);
 
     userEvent.type(name(), 'test');
     expect(name()).toHaveValue('test');
@@ -565,36 +573,50 @@ describe('BlobStoresForm', function() {
     userEvent.click(selectors.querySubmitButton());
     await waitForElementToBeRemoved(selectors.querySavingMask());
 
-    expect(axios.post).toHaveBeenCalledWith(
-        'service/rest/v1/blobstores/s3',
-        {
-          name: 'test',
-          bucketConfiguration: {
-            bucket: { region: 'DEFAULT', name: 'bucket', prefix: '', expiration: '3' },
-            bucketSecurity: {
-              accessKeyId: 'someAccessKey',
-              secretAccessKey: 'SomeSecretAccessKey'
-            },
-            encryption: null,
-            advancedBucketConnection: {
-              endpoint: 'http://www.fakeurl.com',
-              maxConnectionPoolSize: '1',
-              forcePathStyle: false
-            },
-            failoverBuckets: [{region: 'us-west-2', bucketName: 'test-replication-bucket'}],
-            activeRegion: null
-          },
-          softQuota: {
-            enabled: true,
-            limit: 1048576,
-            type: 'spaceUsedQuota'
-          }
-        }
-    );
+    const request = {
+      name: 'test',
+      bucketConfiguration: {
+        bucket: { region: 'DEFAULT', name: 'bucket', prefix: '', expiration: '3' },
+        bucketSecurity: {
+          accessKeyId: 'someAccessKey',
+          secretAccessKey: 'SomeSecretAccessKey'
+        },
+        encryption: null,
+        advancedBucketConnection: {
+          endpoint: 'http://www.fakeurl.com',
+          maxConnectionPoolSize: '1',
+          forcePathStyle: false
+        },
+        failoverBuckets: [{region: 'us-west-2', bucketName: 'test-replication-bucket'}],
+        activeRegion: null
+      },
+      softQuota: {
+        enabled: true,
+        limit: 1048576,
+        type: 'spaceUsedQuota'
+      }
+    };
+
+    submissionMutator(request);
+
+    expect(axios.post).toHaveBeenCalledWith('service/rest/v1/blobstores/s3', request);
+  };
+
+  it('creates a new S3 blob store', async function() {
+    await testCreateS3(rendered => expect(rendered.presigned()).not.toBeInTheDocument());
+  });
+
+  it('PRO - creates a new S3 blob store', async function() {
+    ExtJS.isProEdition.mockReturnValue(true);
+
+    await testCreateS3(rendered => {
+        expect(rendered.presigned()).not.toBeChecked();
+        userEvent.click(selectors.getPresigned());
+      },
+      request => request.bucketConfiguration.preSignedUrlEnabled = true);
   });
 
   it('creates a new S3 blob store failover buckets not visible', async function() {
-    const { ExtJS } = require('@sonatype/nexus-ui-plugin');
     ExtJS.state().getValue.mockReturnValueOnce(false);
 
     const {
@@ -916,7 +938,7 @@ describe('BlobStoresForm', function() {
     expect(convertToGroup()).toBeInTheDocument();
   });
 
-  it('edits an s3 blob store', async function() {
+  const testEditS3 = async function() {
     when(axios.get).calledWith('service/rest/v1/blobstores/s3/test').mockResolvedValue({
       data: {
         name: 'test',
@@ -955,11 +977,13 @@ describe('BlobStoresForm', function() {
               region: "eu-west-1",
               bucketName: "replication-bucket-5"
             }
-          ]
+          ],
+          preSignedUrlEnabled: true
         }
       }
     });
 
+    const rendered = render('s3/test');
     const {
       loadingMask,
       convertToGroup,
@@ -971,8 +995,9 @@ describe('BlobStoresForm', function() {
       endpointURL,
       replicationBuckets,
       name,
+      presigned,
       title
-    } = render('s3/test');
+    } = rendered;
 
     await waitForElementToBeRemoved(loadingMask);
 
@@ -1002,6 +1027,23 @@ describe('BlobStoresForm', function() {
     expect(selectors.removeReplicationBucketButtons()).toHaveLength(4);
 
     expect(convertToGroup()).toBeInTheDocument();
+
+    return rendered;
+  };
+
+  it('edits an s3 blob store', async function() {
+    ExtJS.isProEdition.mockReturnValue(false);
+
+    const {presigned} = await testEditS3();
+    // PRO only feature should not be present
+    expect(presigned()).not.toBeInTheDocument();
+  });
+
+  it('PRO - edits an s3 blob store', async function() {
+    ExtJS.isProEdition.mockReturnValue(true);
+    const {presigned} = await testEditS3();
+    // PRO only feature should be present
+    expect(presigned()).toBeChecked();
   });
 
   it('edits S3 blob store failover buckets not visible', async function() {
@@ -1035,7 +1077,6 @@ describe('BlobStoresForm', function() {
         }
       }
     });
-    const { ExtJS } = require('@sonatype/nexus-ui-plugin');
     ExtJS.state().getValue.mockReturnValueOnce(false);
 
     const {

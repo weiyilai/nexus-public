@@ -197,6 +197,8 @@ export default {
     S3BlobStore_Region_FailoverRegionActiveText: 'The region for this AWS S3 replication bucket is currently in use.',
     S3BlobStore_Bucket_FieldLabel: 'Bucket',
     S3BlobStore_Bucket_HelpText: 'S3 Bucket Name (must be between 3 and 63 characters long containing only lower-case characters, numbers, periods, and dashes)',
+    S3BlobStore_Presigned_FieldLabel: 'Pre-Signed URL',
+    S3BlobStore_Presigned_HelpText: 'Allow Nexus Repository to redirect users to download binaries from S3',
     S3BlobStore_Prefix_FieldLabel: 'Prefix',
     S3BlobStore_Prefix_HelpText: 'S3 Path prefix',
     S3BlobStore_Expiration_FieldLabel: 'Expiration Days',

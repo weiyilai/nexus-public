@@ -58,6 +58,11 @@ export default function S3BlobStoreSettings({service}) {
   const isPrimaryRegionActive = activeRegion === pristineBucketConfig.bucket?.region;
   const isFailoverAvailable = ExtJS.state().getValue('S3FailoverEnabled', false);
   const showPrimaryRegionInactiveMessage = hasActiveRegion && isFailoverAvailable && !isPrimaryRegionActive;
+  const isProEdition = ExtJS.isProEdition();
+
+  function bucketConfigurationField(field) {
+    return `bucketConfiguration.${field}`;
+  }
 
   function bucketField(field) {
     return `bucketConfiguration.bucket.${field}`;
@@ -159,6 +164,17 @@ export default function S3BlobStoreSettings({service}) {
                  onChange={FormUtils.handleUpdate(bucketField('expiration'), send)}/>
       <span className='nxrm-s3-blobstore-prefix-text'>{FIELDS.S3BlobStore_Expiration_DaysText}</span>
     </div>
+    {isProEdition &&
+        <div className="nxrm-s3-presigned">
+          <NxFieldset label={FIELDS.S3BlobStore_Presigned_FieldLabel}>
+            <NxCheckbox {...FormUtils.checkboxProps(bucketConfigurationField('preSignedUrlEnabled'), current)}
+                        onChange={FormUtils.handleUpdate(bucketConfigurationField('preSignedUrlEnabled'), send)}
+                        className="nx-text-input--long">
+              {FIELDS.S3BlobStore_Presigned_HelpText}
+            </NxCheckbox>
+          </NxFieldset>
+        </div>
+    }
 
     <NxStatefulAccordion defaultOpen={hasAuthenticationSettings}>
       <NxAccordion.Header>
