@@ -35,12 +35,14 @@ import org.sonatype.nexus.repository.view.Status;
  *
  * @since 3.0
  */
-@Named
+@Named(DefaultHttpResponseSender.NEXUS_HTTP_RESPONSE_SENDER)
 @Singleton
 public class DefaultHttpResponseSender
     extends ComponentSupport
     implements HttpResponseSender
 {
+  public static final String NEXUS_HTTP_RESPONSE_SENDER = "NexusHttpResponseSender";
+
   @Override
   public void send(
       @Nullable final Request request,

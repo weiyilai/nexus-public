@@ -15,7 +15,8 @@ package org.sonatype.nexus.repository.view;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
+import java.net.URL;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -53,6 +54,8 @@ public class Content
   private final Payload payload;
 
   private final AttributesMap attributes;
+
+  private boolean disableRedirect = false;
 
   public Content(final Payload payload) {
     this.payload = checkNotNull(payload);
@@ -116,5 +119,17 @@ public class Content
         "payload=" + payload +
         ", attributes='" + attributes + '\'' +
         '}';
+  }
+
+  /**
+   * disables redirect handling for this content.
+   */
+  public void setDisableRedirect() {
+    disableRedirect = true;
+  }
+
+  @Override
+  public Optional<URL> getRedirectUrl(final String name) {
+    return disableRedirect ? Optional.empty() : payload.getRedirectUrl(name);
   }
 }

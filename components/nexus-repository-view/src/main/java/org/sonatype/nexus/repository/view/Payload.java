@@ -16,7 +16,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
+import java.net.URL;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 import com.google.common.io.ByteStreams;
@@ -54,10 +55,17 @@ public interface Payload
    * Callers are required to handle the flushing and closing of the streams. By default we
    * do a {@link ByteStreams#copy(InputStream, OutputStream)}.
    *
-   * @param input  {@link InputStream}
+   * @param input {@link InputStream}
    * @param output {@link OutputStream}
    */
   default void copy(final InputStream input, final OutputStream output) throws IOException {
     ByteStreams.copy(input, output);
+  }
+
+  /**
+   * Provides a URL for direct access (i.e. not through Nexus Repository) to the Payload's content.
+   */
+  default Optional<URL> getRedirectUrl(final String name) {
+    return Optional.empty();
   }
 }

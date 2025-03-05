@@ -40,8 +40,9 @@ class HttpResponseSenderSelector
   private final DefaultHttpResponseSender defaultHttpResponseSender;
 
   @Inject
-  public HttpResponseSenderSelector(final Map<String, HttpResponseSender> responseSenders,
-                                    final DefaultHttpResponseSender defaultHttpResponseSender)
+  public HttpResponseSenderSelector(
+      final Map<String, HttpResponseSender> responseSenders,
+      @Named(DefaultHttpResponseSender.NEXUS_HTTP_RESPONSE_SENDER) final DefaultHttpResponseSender defaultHttpResponseSender)
   {
     this.responseSenders = checkNotNull(responseSenders);
     this.defaultHttpResponseSender = checkNotNull(defaultHttpResponseSender);
