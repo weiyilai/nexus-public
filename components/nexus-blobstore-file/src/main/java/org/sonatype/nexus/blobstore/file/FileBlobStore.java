@@ -31,6 +31,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -1168,7 +1169,7 @@ public class FileBlobStore
     }
     else {
       // date-based walk files
-      DateBasedWalkFile dateBasedWalkFile = new DateBasedWalkFile(contentDir.toString(), duration);
+      DateBasedWalkFile dateBasedWalkFile = new DateBasedWalkFile(contentDir, duration);
       Map<String, OffsetDateTime> dateBasedBlobIds = dateBasedWalkFile.getBlobIdToDateRef();
 
       LocalDateTime sinceDate = now().minusSeconds(duration.getSeconds());
@@ -1184,9 +1185,10 @@ public class FileBlobStore
       @Nullable final String continuationToken,
       final int pageSize)
   {
-    DateBasedWalkFile dateBasedWalkFile = new DateBasedWalkFile(contentDir.toString(), fromDateTime);
-    Map<String, OffsetDateTime> dateBasedBlobIds =
-        dateBasedWalkFile.getBlobIdToDateRef(contentDir.resolve(prefix).toString());
+    Map<String, OffsetDateTime> dateBasedBlobIds = prefix.equals(VOLUME_PREFIX)
+        ? Collections.emptyMap()
+        : new DateBasedWalkFile(contentDir, fromDateTime).getBlobIdToDateRef(Path.of(prefix));
+
     List<BlobId> blobIds =
         reconciliationLogger.getBlobsCreatedSince(reconciliationLogDir,
             fromDateTime.atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime(),

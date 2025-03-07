@@ -17,8 +17,12 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Helper class to build date-based prefix based on the given date range. For more details, see
@@ -26,6 +30,11 @@ import java.util.List;
  */
 public class DateBasedHelper
 {
+  private static final Map<ChronoUnit, DateTimeFormatter> prefixFormatsByUnit = Map.of(
+      ChronoUnit.DAYS, DateTimeFormatter.ofPattern("yyyy/MM/dd"),
+      ChronoUnit.HOURS, DateTimeFormatter.ofPattern("yyyy/MM/dd/HH"),
+      ChronoUnit.MINUTES, DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm"));
+
   /**
    * Returns the date path prefix based on the given date range.
    *
@@ -35,6 +44,7 @@ public class DateBasedHelper
    */
   public static String getDatePathPrefix(final OffsetDateTime fromDateTime, final OffsetDateTime toDateTime) {
     StringBuilder datePathPrefix = new StringBuilder();
+
     if (fromDateTime.getYear() == toDateTime.getYear()) {
       datePathPrefix.append("yyyy").append("/");
       if (fromDateTime.getMonth().getValue() == toDateTime.getMonth().getValue()) {
@@ -55,52 +65,93 @@ public class DateBasedHelper
     return toDateTime.format(dateTimeFormatter);
   }
 
-  public static List<String> generatePrefixes(final OffsetDateTime from, final OffsetDateTime to) {
-    List<String> prefixes = new ArrayList<>();
+  public static Map<String, DateInterval> generatePrefixes(
+      final OffsetDateTime from,
+      final OffsetDateTime to,
+      String... additionalPrefixes)
+  {
+    Map<String, DateInterval> prefixes = new HashMap<>();
     OffsetDateTime startTime = from.truncatedTo(ChronoUnit.MINUTES).withOffsetSameInstant(ZoneOffset.UTC);
     OffsetDateTime endTime = to.truncatedTo(ChronoUnit.MINUTES).withOffsetSameInstant(ZoneOffset.UTC);
 
     Duration duration = Duration.between(startTime, endTime);
-    if (duration.toDays() > 0) {
-      while (isApplicable(startTime, endTime, ChronoUnit.DAYS)) {
-        prefixes.add(startTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))); // Only days
-        startTime = startTime.plusDays(1);
-      }
-    }
-    else if (duration.toHours() > 0) {
-      while (isApplicable(startTime, endTime, ChronoUnit.HOURS)) {
-        prefixes.add(startTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH")));
-        startTime = startTime.plusHours(1);
-      }
-    }
-    else {
-      while (isApplicable(startTime, endTime, ChronoUnit.MINUTES)) {
-        // Check if we need to round up minutes to the next hour
-        if (duration.toMinutes() > 30) {
-          // Add the remaining minutes as an hour if > 30 minutes
-          startTime = startTime.plusHours(1);
-          prefixes.add(startTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH")));
-          break;
-        }
-        else {
-          prefixes.add(startTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm")));
-          startTime = startTime.plusMinutes(1);
-        }
-      }
-    }
+    ChronoUnit unit = (duration.toDays() > 0)
+        ? ChronoUnit.DAYS
+        : (duration.toHours() > 0 || duration.toMinutes() > 30)
+            ? ChronoUnit.HOURS
+            : ChronoUnit.MINUTES;
+    DateTimeFormatter dateTimeFormatter = prefixFormatsByUnit.get(unit);
 
+    new DateIntervalIterator(startTime, endTime, unit)
+        .forEachRemaining(interval -> prefixes.put(dateTimeFormatter.format(interval.getStart()), interval));
+
+    prefixes.putAll(Stream.of(additionalPrefixes)
+        .collect(Collectors.toMap(UnaryOperator.identity(), unused -> new DateInterval(startTime, endTime))));
     return prefixes;
   }
 
-  private static boolean isApplicable(
-      final OffsetDateTime startTime,
-      final OffsetDateTime endTime,
-      final ChronoUnit granularity)
+  public static Map<String, DateInterval> generateSingletonPrefix(
+      final OffsetDateTime from,
+      final OffsetDateTime to,
+      String prefix)
   {
+    return Map.of(prefix, new DateInterval(from, to));
+  }
 
-    if (startTime.truncatedTo(granularity).equals(endTime.truncatedTo(granularity))) {
-      return true;
+  public static class DateInterval
+  {
+    private final OffsetDateTime start;
+
+    private final OffsetDateTime end;
+
+    public DateInterval(final OffsetDateTime start, final OffsetDateTime end) {
+      this.start = start;
+      this.end = end;
     }
-    return startTime.isBefore(endTime) || startTime.equals(endTime);
+
+    public OffsetDateTime getStart() {
+      return start;
+    }
+
+    public OffsetDateTime getEnd() {
+      return end;
+    }
+  }
+
+  private static class DateIntervalIterator
+      implements Iterator<DateInterval>
+  {
+    private final OffsetDateTime end;
+
+    private final ChronoUnit unit;
+
+    private OffsetDateTime currentStart;
+
+    private OffsetDateTime currentEnd;
+
+    private DateIntervalIterator(
+        final OffsetDateTime start,
+        final OffsetDateTime end,
+        final ChronoUnit unit)
+    {
+      this.currentStart = null;
+      this.currentEnd = start;
+      this.end = end;
+      this.unit = unit;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return !currentEnd.isAfter(end);
+    }
+
+    @Override
+    public DateInterval next() {
+      currentStart = currentEnd;
+      currentEnd = currentStart
+          .truncatedTo(unit)
+          .plus(unit.getDuration());
+      return new DateInterval(currentStart, currentEnd);
+    }
   }
 }
