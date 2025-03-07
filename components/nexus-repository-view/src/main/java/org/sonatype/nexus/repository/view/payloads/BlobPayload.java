@@ -58,8 +58,8 @@ public class BlobPayload
   }
 
   @Override
-  public Optional<URL> getRedirectUrl(final String name) {
-    return blob.getRedirectUrl(name, contentType);
+  public Optional<URL> getRedirectUrl(final String action, final String name) {
+    return blob.getRedirectUrl(action, name, contentType);
   }
 
   @Override

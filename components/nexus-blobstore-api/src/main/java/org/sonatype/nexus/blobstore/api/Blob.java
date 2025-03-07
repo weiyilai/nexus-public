@@ -57,7 +57,7 @@ public interface Blob
   /**
    * Provides a URL for direct access (i.e. not through Nexus Repository) to the blob's content.
    */
-  default Optional<URL> getRedirectUrl(final String name, @Nullable final String contentType) {
+  default Optional<URL> getRedirectUrl(final String action, final String name, @Nullable final String contentType) {
     return Optional.empty();
   }
 }

@@ -129,7 +129,7 @@ public class Content
   }
 
   @Override
-  public Optional<URL> getRedirectUrl(final String name) {
-    return disableRedirect ? Optional.empty() : payload.getRedirectUrl(name);
+  public Optional<URL> getRedirectUrl(final String action, final String name) {
+    return disableRedirect ? Optional.empty() : payload.getRedirectUrl(action, name);
   }
 }

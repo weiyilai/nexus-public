@@ -65,7 +65,7 @@ public interface Payload
   /**
    * Provides a URL for direct access (i.e. not through Nexus Repository) to the Payload's content.
    */
-  default Optional<URL> getRedirectUrl(final String name) {
+  default Optional<URL> getRedirectUrl(final String action, final String name) {
     return Optional.empty();
   }
 }
