@@ -64,8 +64,9 @@ public class S3BlobStoreApiBucketConfiguration
       accessMode = AccessMode.READ_ONLY)
   private final String activeRegion;
 
-  @ApiModelProperty(value = "Whether pre assigned URL is enabled or not.", example = "true")
-  private Boolean preSignedUrlEnabled;
+  @ApiModelProperty(value = "Whether pre assigned URL is enabled or not.", example = "true",
+      accessMode = AccessMode.READ_WRITE)
+  private final Boolean preSignedUrlEnabled;
 
   public S3BlobStoreApiBucketConfiguration(
       @JsonProperty("bucket") final S3BlobStoreApiBucket bucket,
