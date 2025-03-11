@@ -114,7 +114,7 @@ public class BlobStoreManagerImpl
 
   private final ReplicationBlobStoreStatusManager replicationBlobStoreStatusManager;
 
-  private final DefaultBlobStoreProvider defaultBlobstoreProvider;
+  private final DefaultBlobStoreProvider blobstoreProvider;
 
   private final SecretsService secretService;
 
@@ -128,7 +128,7 @@ public class BlobStoreManagerImpl
       final Provider<RepositoryManager> repositoryManagerProvider,
       final NodeAccess nodeAccess,
       @Nullable @Named("${nexus.blobstore.provisionDefaults}") final Boolean provisionDefaults,
-      final DefaultBlobStoreProvider defaultBlobstoreProvider,
+      @Nullable final DefaultBlobStoreProvider blobstoreProvider,
       final BlobStoreTaskService blobStoreTaskService,
       final Provider<BlobStoreOverride> blobStoreOverrideProvider,
       final ReplicationBlobStoreStatusManager replicationBlobStoreStatusManager,
@@ -143,7 +143,7 @@ public class BlobStoreManagerImpl
     this.blobStoreTaskService = checkNotNull(blobStoreTaskService);
     this.blobStoreOverrideProvider = blobStoreOverrideProvider;
     this.replicationBlobStoreStatusManager = checkNotNull(replicationBlobStoreStatusManager);
-    this.defaultBlobstoreProvider = checkNotNull(defaultBlobstoreProvider);
+    this.blobstoreProvider = blobstoreProvider;
     this.secretService = checkNotNull(secretService);
 
     if (provisionDefaults != null) {
@@ -161,9 +161,9 @@ public class BlobStoreManagerImpl
     Optional.ofNullable(blobStoreOverrideProvider.get()).ifPresent(BlobStoreOverride::apply);
     List<BlobStoreConfiguration> configurations = store.list();
 
-    if (configurations.isEmpty() && provisionDefaults.getAsBoolean()) {
+    if (blobstoreProvider != null && configurations.isEmpty() && provisionDefaults.getAsBoolean()) {
       log.debug("No BlobStores configured; provisioning default BlobStore");
-      BlobStoreConfiguration defaultBlobStoreConfiguration = defaultBlobstoreProvider.get(this::newConfiguration);
+      BlobStoreConfiguration defaultBlobStoreConfiguration = blobstoreProvider.get(this::newConfiguration);
       encryptSensitiveAttributes(newConfiguration(), defaultBlobStoreConfiguration);
       store.create(defaultBlobStoreConfiguration);
       configurations = store.list();

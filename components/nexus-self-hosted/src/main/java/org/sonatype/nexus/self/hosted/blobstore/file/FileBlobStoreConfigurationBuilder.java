@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.blobstore.file;
+package org.sonatype.nexus.self.hosted.blobstore.file;
 
 import java.util.function.Supplier;
 
@@ -27,6 +27,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FileBlobStoreConfigurationBuilder
     extends BlobStoreConfigurationBuilder
 {
+  private static final String CONFIG_KEY = "file";
+
+  private static final String PATH_KEY = "path";
+
+  private static final String TYPE = "File";
+
   private String path;
 
   /**
@@ -38,7 +44,7 @@ public class FileBlobStoreConfigurationBuilder
       final Supplier<BlobStoreConfiguration> configurationSupplier)
   {
     super(name, configurationSupplier);
-    type(FileBlobStore.TYPE);
+    type(TYPE);
     this.path = name;
   }
 
@@ -56,7 +62,7 @@ public class FileBlobStoreConfigurationBuilder
   @Override
   public BlobStoreConfiguration build() {
     final BlobStoreConfiguration configuration = super.build();
-    configuration.attributes(FileBlobStore.CONFIG_KEY).set(FileBlobStore.PATH_KEY, path);
+    configuration.attributes(CONFIG_KEY).set(PATH_KEY, path);
     return configuration;
   }
 }

@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.repository.internal.blobstore;
+package org.sonatype.nexus.self.hosted.blobstore.file;
 
 import java.util.function.Supplier;
 
@@ -19,8 +19,6 @@ import javax.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.DefaultBlobStoreProvider;
-import org.sonatype.nexus.blobstore.file.FileBlobStoreConfigurationBuilder;
-import org.sonatype.nexus.common.app.FeatureFlag;
 
 import static org.sonatype.nexus.blobstore.api.BlobStoreManager.DEFAULT_BLOBSTORE_NAME;
 
@@ -29,10 +27,9 @@ import static org.sonatype.nexus.blobstore.api.BlobStoreManager.DEFAULT_BLOBSTOR
  *
  * @since 3.37
  */
-@FeatureFlag(name = "nexus.default.file.blobstore", enabledByDefault = true)
 @Named("default")
 @Singleton
-public class DefaultFileBlobStoreProvider
+public class DefaultFileDefaultBlobStoreProvider
     implements DefaultBlobStoreProvider
 {
   @Override

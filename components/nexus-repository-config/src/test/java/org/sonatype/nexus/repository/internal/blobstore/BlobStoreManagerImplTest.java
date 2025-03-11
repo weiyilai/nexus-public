@@ -12,16 +12,18 @@
  */
 package org.sonatype.nexus.repository.internal.blobstore;
 
-import javax.inject.Provider;
+import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
+import javax.inject.Provider;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.BlobStoreDescriptor;
@@ -30,7 +32,9 @@ import org.sonatype.nexus.blobstore.api.BlobId;
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
+import org.sonatype.nexus.blobstore.api.DefaultBlobStoreProvider;
 import org.sonatype.nexus.blobstore.api.tasks.BlobStoreTaskService;
+import org.sonatype.nexus.blobstore.file.FileBlobStore;
 import org.sonatype.nexus.common.app.FreezeService;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.node.NodeAccess;
@@ -42,15 +46,14 @@ import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.replication.ReplicationBlobStoreStatusManager;
 import org.sonatype.nexus.security.UserIdHelper;
 
-import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -116,7 +119,7 @@ public class BlobStoreManagerImplTest
     userIdHelperMockedStatic = mockStatic(UserIdHelper.class);
     userIdHelperMockedStatic.when(UserIdHelper::get).thenReturn(TEST_USER);
     when(store.newConfiguration()).thenReturn(new MockBlobStoreConfiguration());
-    underTest = newBlobStoreManager(false);
+    underTest = newBlobStoreManager(false, this::getBlobStoreConfig);
   }
 
   @After
@@ -124,7 +127,10 @@ public class BlobStoreManagerImplTest
     userIdHelperMockedStatic.close();
   }
 
-  private BlobStoreManagerImpl newBlobStoreManager(Boolean provisionDefaults) {
+  private BlobStoreManagerImpl newBlobStoreManager(
+      final Boolean provisionDefaults,
+      final DefaultBlobStoreProvider blobStoreConfigProvider)
+  {
     Map<String, BlobStoreDescriptor> descriptors = new HashMap<>();
     descriptors.put("test", descriptor);
     descriptors.put("File", descriptor);
@@ -136,7 +142,7 @@ public class BlobStoreManagerImplTest
         providers,
         freezeService, () -> repositoryManager,
         nodeAccess, provisionDefaults,
-        new DefaultFileBlobStoreProvider(),
+        blobStoreConfigProvider,
         blobStoreTaskService,
         blobStoreOverrideProvider,
         replicationBlobStoreStatusManager,
@@ -144,8 +150,17 @@ public class BlobStoreManagerImplTest
   }
 
   @Test
+  public void shouldNotCreateDefaultBlobStoreWhenProviderIsNull() throws Exception {
+    underTest = newBlobStoreManager(false, null);
+
+    underTest.doStart();
+
+    verify(store, never()).create(any(BlobStoreConfiguration.class));
+  }
+
+  @Test
   public void canStartWithNothingConfigured() throws Exception {
-    underTest = newBlobStoreManager(true);
+    underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
 
     ArgumentCaptor<BlobStoreConfiguration> configurationArgumentCaptor = forClass(BlobStoreConfiguration.class);
     when(store.list()).thenReturn(Collections.emptyList());
@@ -166,10 +181,8 @@ public class BlobStoreManagerImplTest
   }
 
   @Test
-  public void canStartWithNothingConfiguredAndDoesCreateDefaultWhenClusteredIfProvisionDefaultsIsTrue()
-      throws Exception
-  {
-    underTest = newBlobStoreManager(true);
+  public void canStartWithNothingConfiguredAndDoesCreateDefaultWhenClusteredIfProvisionDefaultsIsTrue() throws Exception {
+    underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
 
     ArgumentCaptor<BlobStoreConfiguration> configurationArgumentCaptor = forClass(BlobStoreConfiguration.class);
     when(nodeAccess.isClustered()).thenReturn(true);
@@ -183,7 +196,7 @@ public class BlobStoreManagerImplTest
 
   @Test
   public void canSkipCreatingDefaultBlobstoreWhenNonClusteredIfProvisionDefaultsIsFalse() throws Exception {
-    underTest = newBlobStoreManager(false);
+    underTest = newBlobStoreManager(false, this::getBlobStoreConfig);
 
     when(nodeAccess.isClustered()).thenReturn(false);
     when(store.list()).thenReturn(Collections.emptyList());
@@ -200,7 +213,7 @@ public class BlobStoreManagerImplTest
 
     underTest.doStart();
 
-    //assert underTest.browse().toList().equals(List.of(blobStore));
+    // assert underTest.browse().toList().equals(List.of(blobStore));
 
     assert StreamSupport.stream(underTest.browse().spliterator(), false)
         .collect(Collectors.toList())
@@ -245,7 +258,8 @@ public class BlobStoreManagerImplTest
     when(provider.get()).thenReturn(blobStore);
     Secret secret = mock(Secret.class);
     when(secret.getId()).thenReturn(SECRET_ID);
-    when(secretsService.encryptMaven(BlobStoreManagerImpl.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(), TEST_USER))
+    when(
+        secretsService.encryptMaven(BlobStoreManagerImpl.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(), TEST_USER))
         .thenReturn(secret);
     Map<String, Map<String, Object>> blobStoreAttributes = new HashMap<>();
     Map<String, Object> blobConfigMap = new HashMap<>();
@@ -378,7 +392,7 @@ public class BlobStoreManagerImplTest
         providers,
         freezeService, () -> repositoryManager,
         nodeAccess, true,
-        new DefaultFileBlobStoreProvider(),
+        this::getBlobStoreConfig,
         blobStoreTaskService,
         blobStoreOverrideProvider,
         replicationBlobStoreStatusManager,
@@ -484,7 +498,7 @@ public class BlobStoreManagerImplTest
     when(provider.get()).thenReturn(blobStore);
     when(store.list()).thenReturn(Collections.singletonList(createConfig("test")));
     underTest.doStart();
-    //assert underTest.browse().toList().equals(List.of(blobStore));
+    // assert underTest.browse().toList().equals(List.of(blobStore));
     assert StreamSupport.stream(underTest.browse().spliterator(), false)
         .collect(Collectors.toList())
         .equals(Collections.singletonList(blobStore));
@@ -580,5 +594,12 @@ public class BlobStoreManagerImplTest
     config.setType("test");
     config.setAttributes(fileAttributes);
     return config;
+  }
+
+  public BlobStoreConfiguration getBlobStoreConfig(final Supplier<BlobStoreConfiguration> configurationSupplier) {
+    final BlobStoreConfiguration configuration = configurationSupplier.get();
+    configuration.setName(DEFAULT_BLOBSTORE_NAME);
+    configuration.setType(FileBlobStore.TYPE);
+    return configuration;
   }
 }
