@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -544,7 +545,9 @@ public abstract class ProxyFacetSupport
       throw e;
     }
 
-    if (status.getStatusCode() == HttpStatus.SC_OK) {
+    boolean isUnmodified = isNotModified(response, stale);
+
+    if (status.getStatusCode() == HttpStatus.SC_OK && !isUnmodified) {
       HttpEntity entity = response.getEntity();
       log.debug("Entity: {}", entity);
 
@@ -562,7 +565,7 @@ public abstract class ProxyFacetSupport
       if (status.getStatusCode() == HttpStatus.SC_MULTIPLE_CHOICES) {
         return handle300MultipleChoicesError(context, stale, uri, response);
       }
-      if (status.getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
+      if (isUnmodified) {
         checkState(stale != null, "Received 304 without conditional GET (bad server?) from %s", uri);
         indicateVerified(context, stale, cacheInfo);
       }
@@ -573,6 +576,10 @@ public abstract class ProxyFacetSupport
     }
 
     return null;
+  }
+
+  protected boolean isNotModified(final HttpResponse response, final Content stale) {
+    return response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_MODIFIED;
   }
 
   protected Content handle300MultipleChoicesError(
