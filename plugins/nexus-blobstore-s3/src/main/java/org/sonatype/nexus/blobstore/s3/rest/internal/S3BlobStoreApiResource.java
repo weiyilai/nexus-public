@@ -13,7 +13,6 @@
 package org.sonatype.nexus.blobstore.s3.rest.internal;
 
 import java.util.Optional;
-
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -31,6 +30,8 @@ import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.blobstore.rest.BlobStoreResourceUtil;
 import org.sonatype.nexus.blobstore.s3.internal.S3BlobStore;
+import org.sonatype.nexus.blobstore.s3.rest.internal.model.S3BlobStoreApiBucketConfiguration;
+import org.sonatype.nexus.blobstore.s3.rest.internal.model.S3BlobStoreApiBucketSecurity;
 import org.sonatype.nexus.blobstore.s3.rest.internal.model.S3BlobStoreApiModel;
 import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.crypto.secrets.SecretsFactory;
@@ -53,6 +54,7 @@ import static javax.ws.rs.core.Response.status;
 import static org.apache.commons.lang.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.SECRET_ACCESS_KEY_KEY;
+import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.SESSION_TOKEN_KEY;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.TYPE;
 import static org.sonatype.nexus.blobstore.s3.rest.internal.S3BlobStoreApiConstants.NOT_AN_S3_BLOB_STORE_MSG_FORMAT;
 import static org.sonatype.nexus.blobstore.s3.rest.internal.S3BlobStoreApiModelMapper.map;
@@ -121,22 +123,7 @@ public class S3BlobStoreApiResource
       @PathParam("name") final String blobStoreName) throws Exception
   {
     s3BlobStoreApiUpdateValidation.validateUpdateRequest(request, blobStoreName);
-
-    if (isPasswordUntouched(request)) {
-      // Did not update the password, just use the password we already have
-      BlobStore currentS3Blobstore = blobStoreManager.get(blobStoreName);
-      String secretId = currentS3Blobstore.getBlobStoreConfiguration()
-          .getAttributes()
-          .get(TYPE.toLowerCase())
-          .get(SECRET_ACCESS_KEY_KEY)
-          .toString();
-
-      String decryptedSecretKey = new String(secretsFactory.from(secretId).decrypt());
-
-      request.getBucketConfiguration()
-          .getBucketSecurity()
-          .setSecretAccessKey(decryptedSecretKey);
-    }
+    maybeFetchSecrets(request, blobStoreName);
 
     try {
       final BlobStoreConfiguration blobStoreConfiguration =
@@ -151,9 +138,45 @@ public class S3BlobStoreApiResource
     }
   }
 
-  private boolean isPasswordUntouched(final S3BlobStoreApiModel request) {
-    return request.getBucketConfiguration() != null && request.getBucketConfiguration().getBucketSecurity() != null &&
-        PasswordPlaceholder.is(request.getBucketConfiguration().getBucketSecurity().getSecretAccessKey());
+  private void maybeFetchSecrets(final S3BlobStoreApiModel request, final String blobStoreName) {
+    BlobStore blobStore = blobStoreManager.get(blobStoreName);
+    if (hasSecretAccessKeyPasswordPlaceholder(request)) {
+      request.getBucketConfiguration()
+          .getBucketSecurity()
+          .setSecretAccessKey(decryptSecret(blobStore, SECRET_ACCESS_KEY_KEY));
+    }
+
+    if (hasSessionTokenPasswordPlaceholder(request)) {
+      request.getBucketConfiguration()
+          .getBucketSecurity()
+          .setSessionToken(decryptSecret(blobStore, SESSION_TOKEN_KEY));
+    }
+  }
+
+  private String decryptSecret(final BlobStore blobStore, final String secretKey) {
+    String secretId = blobStore.getBlobStoreConfiguration()
+        .getAttributes()
+        .get(TYPE.toLowerCase())
+        .get(secretKey)
+        .toString();
+
+    return new String(secretsFactory.from(secretId).decrypt());
+  }
+
+  private static boolean hasSecretAccessKeyPasswordPlaceholder(final S3BlobStoreApiModel request) {
+    return Optional.ofNullable(request.getBucketConfiguration())
+        .map(S3BlobStoreApiBucketConfiguration::getBucketSecurity)
+        .map(S3BlobStoreApiBucketSecurity::getSecretAccessKey)
+        .map(PasswordPlaceholder::is)
+        .orElse(false);
+  }
+
+  private static boolean hasSessionTokenPasswordPlaceholder(final S3BlobStoreApiModel request) {
+    return Optional.ofNullable(request.getBucketConfiguration())
+        .map(S3BlobStoreApiBucketConfiguration::getBucketSecurity)
+        .map(S3BlobStoreApiBucketSecurity::getSessionToken)
+        .map(PasswordPlaceholder::is)
+        .orElse(false);
   }
 
   @GET
