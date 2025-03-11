@@ -12,8 +12,6 @@
  */
 package org.sonatype.nexus.logging.task;
 
-import java.io.File;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 import ch.qos.logback.classic.LoggerContext;
@@ -22,6 +20,8 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
+import java.io.File;
+import java.util.Optional;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

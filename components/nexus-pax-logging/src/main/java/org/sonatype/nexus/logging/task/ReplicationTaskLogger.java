@@ -13,7 +13,6 @@
 package org.sonatype.nexus.logging.task;
 
 import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 

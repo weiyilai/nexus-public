@@ -77,7 +77,6 @@
     <module>nexus-ssl</module>
     <module>nexus-supportzip-api</module>
     <module>nexus-swagger</module>
-    <module>nexus-task-logging</module>
     <module>nexus-test-common</module>
     <module>nexus-test-db</module>
     <module>nexus-testsupport</module>

@@ -12,12 +12,11 @@
  */
 package org.sonatype.nexus.logging.task;
 
-import java.time.Duration;
-
 import org.sonatype.nexus.test.util.Whitebox;
 
-import junitparams.JUnitParamsRunner;
 import com.google.common.base.Stopwatch;
+import java.time.Duration;
+import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Test;
 import org.junit.runner.RunWith;

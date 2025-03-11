@@ -204,7 +204,7 @@
 
     <dependency>
       <groupId>org.sonatype.nexus</groupId>
-      <artifactId>nexus-task-logging</artifactId>
+      <artifactId>nexus-pax-logging</artifactId>
     </dependency>
   </dependencies>
 

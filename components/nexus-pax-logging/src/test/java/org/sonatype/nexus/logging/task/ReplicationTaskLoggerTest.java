@@ -12,9 +12,9 @@
  */
 package org.sonatype.nexus.logging.task;
 
-import java.util.Optional;
 import javax.annotation.Nullable;
 
+import java.util.Optional;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

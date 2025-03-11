@@ -12,15 +12,15 @@
  */
 package org.sonatype.nexus.logging.task;
 
+import javax.annotation.Nullable;
+
+import org.sonatype.goodies.testsupport.TestSupport;
+
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import javax.annotation.Nullable;
-
-import org.sonatype.goodies.testsupport.TestSupport;
-
 import org.hamcrest.core.StringContains;
 import org.junit.Test;
 import org.slf4j.Logger;
