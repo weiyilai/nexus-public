@@ -570,7 +570,7 @@ public class FileBlobStore
         return false;
       }
 
-      if (isDateBasedLayoutEnabled()) {
+      if (isReconcilePlanEnabled()) {
         BlobId propRef = new BlobId(blobId.asUniqueString(), UTC.now());
         String softDeletedPrefixLocation = getLocationPrefix(propRef);
         Path path = attributePath(propRef);

@@ -25,7 +25,7 @@ import static java.util.UUID.randomUUID;
 import static org.sonatype.nexus.blobstore.api.BlobStore.BLOB_NAME_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.DIRECT_PATH_BLOB_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.TEMPORARY_BLOB_HEADER;
-import static org.sonatype.nexus.common.app.FeatureFlags.DATE_BASED_BLOBSTORE_LAYOUT_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.RECONCILE_PLAN_ENABLED_NAMED;
 
 /**
  * Default {@link BlobIdLocationResolver}.
@@ -56,13 +56,13 @@ public class DefaultBlobIdLocationResolver
 
   protected final LocationStrategy dateBasedLocationStrategy;
 
-  private final boolean dateBasedLayoutEnabled;
+  private final boolean isReconcilePlanEnabled;
 
   @Inject
   public DefaultBlobIdLocationResolver(
-      @Named(DATE_BASED_BLOBSTORE_LAYOUT_ENABLED_NAMED) final boolean dateBasedLayoutEnabled)
+      @Named(RECONCILE_PLAN_ENABLED_NAMED) final boolean isReconcilePlanEnabled)
   {
-    this.dateBasedLayoutEnabled = dateBasedLayoutEnabled;
+    this.isReconcilePlanEnabled = isReconcilePlanEnabled;
     this.volumeChapterLocationStrategy = new VolumeChapterLocationStrategy();
     this.temporaryLocationStrategy = new TemporaryLocationStrategy();
     this.directLocationStrategy = new DirectPathLocationStrategy();
@@ -96,7 +96,7 @@ public class DefaultBlobIdLocationResolver
 
   @Override
   public BlobId fromHeaders(final Map<String, String> headers) {
-    OffsetDateTime blobCreatedRef = dateBasedLayoutEnabled ? UTC.now() : null;
+    OffsetDateTime blobCreatedRef = isReconcilePlanEnabled ? UTC.now() : null;
     if (headers.containsKey(TEMPORARY_BLOB_HEADER)) {
       return new BlobId(TEMPORARY_BLOB_ID_PREFIX + randomUUID(), blobCreatedRef);
     }

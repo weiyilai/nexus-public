@@ -50,7 +50,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.sonatype.nexus.blobstore.api.BlobAttributesConstants.HEADER_PREFIX;
 import static org.sonatype.nexus.blobstore.api.BlobRef.DATE_TIME_FORMATTER;
 import static org.sonatype.nexus.blobstore.api.BlobRef.DATE_TIME_PATH_FORMATTER;
-import static org.sonatype.nexus.common.app.FeatureFlags.DATE_BASED_BLOBSTORE_LAYOUT_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.RECONCILE_PLAN_ENABLED_NAMED;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.SHUTDOWN;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
 
@@ -94,7 +94,7 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
 
   public static final int MIN_NAME_LENGTH = 1;
 
-  private boolean dateBasedLayoutEnabled;
+  private boolean isReconcilePlanEnabled;
 
   public BlobStoreSupport(
       final BlobIdLocationResolver blobIdLocationResolver,
@@ -110,10 +110,10 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
   }
 
   @Inject
-  public void setDateBasedLayoutEnabled(
-      @Named(DATE_BASED_BLOBSTORE_LAYOUT_ENABLED_NAMED) final boolean dateBasedLayoutEnabled)
+  public void setisReconcilePlanEnabled(
+      @Named(RECONCILE_PLAN_ENABLED_NAMED) final boolean isReconcilePlanEnabled)
   {
-    this.dateBasedLayoutEnabled = dateBasedLayoutEnabled;
+    this.isReconcilePlanEnabled = isReconcilePlanEnabled;
   }
 
   protected BlobId getBlobId(final Map<String, String> headers, @Nullable final BlobId blobId) {
@@ -356,8 +356,8 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
     return !getBlobIdStream().findAny().isPresent();
   }
 
-  public boolean isDateBasedLayoutEnabled() {
-    return dateBasedLayoutEnabled;
+  public boolean isReconcilePlanEnabled() {
+    return isReconcilePlanEnabled;
   }
 
   /**

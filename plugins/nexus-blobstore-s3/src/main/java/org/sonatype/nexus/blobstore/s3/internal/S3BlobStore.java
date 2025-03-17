@@ -545,7 +545,7 @@ public class S3BlobStore
       blobAttributes.setDeletedReason(reason);
       blobAttributes.setDeletedDateTime(deletedDateTime);
 
-      if (isDateBasedLayoutEnabled()) {
+      if (isReconcilePlanEnabled()) {
         String softDeletedPrefixLocation = getLocationPrefix(propRef);
         blobAttributes.setSoftDeletedLocation(softDeletedPrefixLocation);
 
@@ -812,7 +812,7 @@ public class S3BlobStore
       OffsetDateTime fromDateTime = now.minusSeconds(duration.getSeconds());
 
       Stream<BlobId> blobIdStreams;
-      if (isDateBasedLayoutEnabled()) {
+      if (isReconcilePlanEnabled()) {
         // get Blob Ids from date-based location only
         String prefix = getContentPrefix() + DateBasedHelper.getDatePathPrefix(fromDateTime, now);
         blobIdStreams = getBlobIdStream(prefix, fromDateTime);

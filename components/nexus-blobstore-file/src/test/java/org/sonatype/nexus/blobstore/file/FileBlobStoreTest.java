@@ -40,7 +40,6 @@ import org.sonatype.nexus.blobstore.api.BlobMetrics;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 import org.sonatype.nexus.blobstore.api.BlobStoreUsageChecker;
-import org.sonatype.nexus.blobstore.file.FileBlobStore.FileBlob;
 import org.sonatype.nexus.blobstore.file.internal.FileOperations;
 import org.sonatype.nexus.blobstore.file.internal.datastore.metrics.DatastoreFileBlobStoreMetricsService;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaUsageChecker;
@@ -607,7 +606,7 @@ public class FileBlobStoreTest
 
     BlobId blobId = new BlobId("test-blob-id");
     Path path = underTest.attributePath(new BlobId(blobId.asUniqueString(), UTC.now()));
-    when(underTest.isDateBasedLayoutEnabled()).thenReturn(true);
+    when(underTest.isReconcilePlanEnabled()).thenReturn(true);
     when(attributes.isDeleted()).thenReturn(false);
     when(underTest.getFileBlobAttributes(blobId)).thenReturn(attributes);
     when(underTest.getFileBlobAttributes(path)).thenReturn(newBlobAttributes);
@@ -630,7 +629,7 @@ public class FileBlobStoreTest
     TestFileBlobStore underTest = createFixture();
 
     BlobId blobId = new BlobId("test-blob-id");
-    when(underTest.isDateBasedLayoutEnabled()).thenReturn(false);
+    when(underTest.isReconcilePlanEnabled()).thenReturn(false);
     when(attributes.isDeleted()).thenReturn(false);
     when(underTest.getFileBlobAttributes(blobId)).thenReturn(attributes);
 
@@ -668,7 +667,7 @@ public class FileBlobStoreTest
     verify(fileBlobDeletionIndex).createRecord(blobId);
   }
 
-  // test class to provide isDateBasedLayoutEnabled() method
+  // test class to provide isReconcilePlanEnabled() method
   private class TestFileBlobStore
       extends FileBlobStore
   {
@@ -691,7 +690,7 @@ public class FileBlobStoreTest
     }
 
     @Override
-    public boolean isDateBasedLayoutEnabled() {
+    public boolean isReconcilePlanEnabled() {
       return false;
     }
   }

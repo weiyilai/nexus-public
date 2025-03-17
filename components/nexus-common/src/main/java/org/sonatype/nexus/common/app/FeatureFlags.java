@@ -215,10 +215,6 @@ public interface FeatureFlags
 
   String SECRETS_FILE_ENV = "NEXUS_SECRETS_KEY_FILE";
 
-  String DATE_BASED_BLOBSTORE_LAYOUT_ENABLED = "nexus.blobstore.datebased.layout.enabled";
-
-  String DATE_BASED_BLOBSTORE_LAYOUT_ENABLED_NAMED = "${nexus.blobstore.datebased.layout.enabled:-false}";
-
   String RECONCILE_CLEANUP_DAYS_AGO = "${nexus.reconcile.cleanup.daysAgo:-7}";
 
   String RECONCILE_EXECUTE_CREATED_HOURS_AGO = "${nexus.reconcile.execute.plans.created:-2h}";
