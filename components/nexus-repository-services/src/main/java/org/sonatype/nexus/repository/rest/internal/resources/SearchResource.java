@@ -137,7 +137,8 @@ public class SearchResource
   {
     SearchResponse response = doSearch(continuationToken, sort, direction, seconds, uriInfo);
 
-    List<ComponentXO> componentXOs = response.getSearchResults().stream()
+    List<ComponentXO> componentXOs = response.getSearchResults()
+        .stream()
         .map(this::toComponent)
         .collect(toList());
 
@@ -166,10 +167,11 @@ public class SearchResource
   @GET
   @Path(SEARCH_AND_DOWNLOAD_URI)
   @Override
-  public Response searchAndDownloadAssets(@QueryParam(SORT_FIELD) final String sort,
-                                          @QueryParam(SORT_DIRECTION) final String direction,
-                                          @QueryParam("timeout") final Integer seconds,
-                                          @Context final UriInfo uriInfo)
+  public Response searchAndDownloadAssets(
+      @QueryParam(SORT_FIELD) final String sort,
+      @QueryParam(SORT_DIRECTION) final String direction,
+      @QueryParam("timeout") final Integer seconds,
+      @Context final UriInfo uriInfo)
   {
     Page<AssetXO> assets = assetSearch(null, sort, direction, seconds, uriInfo);
 
@@ -192,7 +194,8 @@ public class SearchResource
     MultivaluedMap<String, String> assetParams = getAssetParams(uriInfo);
 
     // Filter Assets by the criteria
-    List<AssetXO> assets = response.getSearchResults().stream()
+    List<AssetXO> assets = response.getSearchResults()
+        .stream()
         .flatMap(component -> searchResultFilterUtils.filterComponentAssets(component, assetParams))
         .map(asset -> AssetXO.from(asset, searchUtils.getRepository(asset.getRepository()), assetDescriptors))
         .collect(toList());
@@ -200,7 +203,8 @@ public class SearchResource
     return new Page<>(assets, response.getContinuationToken());
   }
 
-  private SearchResponse doSearch(
+  @VisibleForTesting
+  SearchResponse doSearch(
       final String continuationToken,
       final String sort,
       final String direction,
@@ -216,6 +220,7 @@ public class SearchResource
         .limit(getPageSize())
         .sortField(sort)
         .sortDirection(Optional.ofNullable(direction)
+            .filter(dir -> !dir.isBlank())
             .map(String::toUpperCase)
             .map(SortDirection::valueOf)
             .orElse(null))
@@ -236,9 +241,10 @@ public class SearchResource
     componentXO.setRepository(componentHit.getRepositoryName());
     componentXO.setFormat(componentHit.getFormat());
 
-    List<AssetXO> assets = componentHit.getAssets().stream()
-       .map(asset -> AssetXO.from(asset, repository, assetDescriptors))
-       .collect(toList());
+    List<AssetXO> assets = componentHit.getAssets()
+        .stream()
+        .map(asset -> AssetXO.from(asset, repository, assetDescriptors))
+        .collect(toList());
     componentXO.setAssets(assets);
     for (SearchResourceExtension searchResourceExtension : searchResourceExtensions) {
       componentXO = searchResourceExtension.updateComponentXO(componentXO, componentHit);
@@ -250,7 +256,8 @@ public class SearchResource
   @VisibleForTesting
   MultivaluedMap<String, String> getAssetParams(final UriInfo uriInfo) {
     return uriInfo.getQueryParameters()
-        .entrySet().stream()
+        .entrySet()
+        .stream()
         .filter(t -> searchUtils.isAssetSearchParam(t.getKey()))
         .collect(toMap(Entry::getKey, Entry::getValue, (u, v) -> {
           throw new IllegalStateException(format("Duplicate key %s", u));
