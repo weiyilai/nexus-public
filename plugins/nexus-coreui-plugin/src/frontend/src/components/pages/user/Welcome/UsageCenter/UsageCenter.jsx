@@ -23,7 +23,7 @@ import {
   NxPositiveStatusIndicator,
   NxTile} from '@sonatype/react-shared-components';
 import {faExclamationCircle, faExclamationTriangle, faInfoCircle} from '@fortawesome/free-solid-svg-icons';
-import {indexBy, pathOr, prop, replace} from 'ramda';
+import {replace} from 'ramda';
 import classNames from 'classnames';
 
 import UIStrings from '../../../../../constants/UIStrings';
@@ -47,9 +47,8 @@ const {
 
 const {
   TOTAL_COMPONENTS,
-  UNIQUE_LOGINS,
-  REQUESTS_PER_MINUTE,
   REQUESTS_PER_DAY,
+  MONTHLY_REQUESTS,
   PERCENTAGE,
   COMMUNITY,
   CARD_PRO_LABELS: {
@@ -59,13 +58,12 @@ const {
     USAGE_LIMIT
   },
   CARD_SHARED_LABELS: {
-    PERIOD,
-    VALUE,
     LAST_EXCEEDED_DATE_LABEL}} = CARDS;
 
 function Card({card, usage}) {
-  const {METRIC_NAME_PRO_POSTGRESQL, SUB_TITLE_PRO_POSTGRESQL, TITLE, TITLE_PRO_POSTGRESQL} = card;
-  const {metricValue} = getMetricData(usage, METRIC_NAME_PRO_POSTGRESQL);
+  const isPostgres = ExtJS.state().getValue('datastore.isPostgresql');
+  const {METRIC_NAME, METRIC_NAME_PRO_POSTGRESQL, SUB_TITLE_PRO_POSTGRESQL, TITLE, TITLE_PRO_POSTGRESQL} = card;
+  const {metricValue} = getMetricData(usage, isPostgres ? METRIC_NAME_PRO_POSTGRESQL : METRIC_NAME);
 
   return (
     <NxCard aria-label={TITLE_PRO_POSTGRESQL ?? TITLE}>
@@ -153,34 +151,35 @@ function CardWithThreshold({card, usage, tooltip, edition, date}) {
   );
 }
 
-function CardWithoutThreshold({card, usage, tooltip}) {
-  const {AGGREGATE_PERIOD_24_H, AGGREGATE_PERIOD_30_D, HIGHEST_RECORDED_COUNT, METRIC_NAME, SUB_TITLE, TITLE} = card;
-  const {metricValue, aggregates} = getMetricData(usage, METRIC_NAME);
-  const peakRequestsLast24H = pathOr(0, [AGGREGATE_PERIOD_24_H, VALUE], indexBy(prop(PERIOD), aggregates));
-  const highestRecordedCount = pathOr(0, [AGGREGATE_PERIOD_30_D, VALUE], indexBy(prop(PERIOD), aggregates));
+function MonthlyMetricsCard({usage}) {
+  const {metricValue: totalMetricValue} = getMetricData(usage, MONTHLY_REQUESTS.TOTAL.METRIC_NAME);
+  const {metricValue: averageMetricValue} = getMetricData(usage, MONTHLY_REQUESTS.AVERAGE.METRIC_NAME);
+  const {metricValue: highestMetricValue} = getMetricData(usage, MONTHLY_REQUESTS.HIGHEST.METRIC_NAME);
+
+  const currentMonth = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date());
 
   return (
-    <NxCard aria-label={TITLE}>
+    <NxCard aria-label={MONTHLY_REQUESTS.TITLE}>
       <NxCard.Header>
         <NxH3>
-          {TITLE}
-          <NxTooltip title={tooltip}>
+          {MONTHLY_REQUESTS.TITLE}
+          <NxTooltip title={MONTHLY_REQUESTS.TOOLTIP}>
             <NxFontAwesomeIcon icon={faInfoCircle}/>
           </NxTooltip>
         </NxH3>
       </NxCard.Header>
       <NxCard.Content>
-        <NxCard.Text>
-          <div className="nxrm-label-container no-meter">
-            <div className="nxrm-label start">
-              <span>{TITLE === UNIQUE_LOGINS.TITLE ? metricValue.toLocaleString() : peakRequestsLast24H.toLocaleString()}</span>
-              <span>{SUB_TITLE}</span>
-            </div>
-          </div>
+        <NxCard.Text className="nxrm-highest-records">
+          <span>{totalMetricValue.toLocaleString()}</span>
+          <span>{MONTHLY_REQUESTS.TOTAL.SUB_TITLE(currentMonth)}</span>
         </NxCard.Text>
         <NxCard.Text className="nxrm-highest-records">
-          <span>{highestRecordedCount.toLocaleString()}</span>
-          <span>{HIGHEST_RECORDED_COUNT}</span>
+          <span>{averageMetricValue.toLocaleString()}</span>
+          <span>{MONTHLY_REQUESTS.AVERAGE.SUB_TITLE}</span>
+        </NxCard.Text>
+        <NxCard.Text className="nxrm-highest-records">
+          <span>{highestMetricValue.toLocaleString()}</span>
+          <span>{MONTHLY_REQUESTS.HIGHEST.SUB_TITLE}</span>
         </NxCard.Text>
       </NxCard.Content>
     </NxCard>
@@ -240,7 +239,6 @@ function UsageCenterHeader() {
   </>);
 }
 
-
 export default function UsageCenter() {
   const isProEdition = ExtJS.isProEdition();
   const isCommunityEdition = ExtJS.state().getEdition() === COMMUNITY;
@@ -272,7 +270,7 @@ export default function UsageCenter() {
   const requestFormattedDate = requestPer24HoursLimitDateLastExceeded
     ? formatDate(requestPer24HoursLimitDateLastExceeded)
     : '';
-  
+
   return !isHa && (
     <div className="nxrm-usage-center" id="nxrm-usage-center">
       <NxTile>
@@ -280,8 +278,9 @@ export default function UsageCenter() {
         {isProEdition &&
           <NxCard.Container>
             <Card key={TOTAL_COMPONENTS.TITLE} card={TOTAL_COMPONENTS} usage={usage}/>
-            <Card key={REQUESTS_PER_MINUTE.TITLE} card={REQUESTS_PER_MINUTE} usage={usage}/>
             <Card key={REQUESTS_PER_DAY.TITLE} card={REQUESTS_PER_DAY} usage={usage}/>
+            <Card key={MONTHLY_REQUESTS.TITLE} card={MONTHLY_REQUESTS} usage={usage}/>
+
           </NxCard.Container> 
         }
         {isCommunityEdition &&
@@ -302,11 +301,8 @@ export default function UsageCenter() {
               edition={COMMUNITY} 
               date={requestFormattedDate}
             />
-            <CardWithoutThreshold 
-              key={UNIQUE_LOGINS.TITLE} 
-              card={UNIQUE_LOGINS} 
+            <MonthlyMetricsCard 
               usage={usage} 
-              tooltip={UNIQUE_LOGINS.TOOLTIP_CE}
             />
           </NxCard.Container>
         }
