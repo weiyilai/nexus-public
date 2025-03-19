@@ -73,15 +73,15 @@ export const USAGE_CENTER_CONTENT_CE = [
 
 export const USAGE_CENTER_CONTENT_PRO = [
   {
-    "metricName": "peak_requests_per_day_30d",
+    "metricName": "peak_requests_per_day",
     "metricValue": 145302,
     "thresholds": [],
     "utilization": "FULL",
     "aggregates": []
   },
   {
-    "metricName": "requests_per_minute",
-    "metricValue": 1236,
+    "metricName": "highestMonthlyRequestMetrics",
+    "metricValue": 26256,
     "aggregates": []
   },
   {
