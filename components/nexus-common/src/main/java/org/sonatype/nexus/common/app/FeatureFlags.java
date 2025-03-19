@@ -220,4 +220,6 @@ public interface FeatureFlags
   String RECONCILE_EXECUTE_CREATED_HOURS_AGO = "${nexus.reconcile.execute.plans.created:-2h}";
 
   String SECRETS_API_ENABLED = "nexus.secrets.api.enabled";
+
+  String NEXUS_SECURITY_OAUTH2_ENABLED = "nexus.security.oauth2.enabled";
 }
