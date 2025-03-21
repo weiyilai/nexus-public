@@ -71,7 +71,7 @@ export default {
       TITLE_SINGULAR: 'Malware Component Found',
       DESCRIPTION: {
         TITLE: <><strong>Open source malware is cached in the proxy repositories of this instance of Nexus Repository Manager</strong></>,
-        CONTENT: 'Open source malware is cached in the proxy repositories on your Nexus Repository, review the components flagged by Sonatype as containing malware and remove them.',
+        CONTENT: 'Open source malware is cached in the proxy repositories on your Nexus Repository. Review the components flagged by Sonatype as containing malware and remove them.',
         ADDITIONAL_NON_ADMIN_CONTENT: <><strong>Contact your instance administrator to resolve.</strong></>
       },
       CONTACT_SONATYPE: {
