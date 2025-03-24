@@ -63,41 +63,42 @@ public class ScriptTaskDescriptor
 
   private static final Messages messages = I18N.create(Messages.class);
 
-  // TODO: validate language is registered?  Maybe use combo to only allow selection of valid languages?
+  // TODO: validate language is registered? Maybe use combo to only allow selection of valid languages?
 
-  // TODO: validate source is valid?  This may not be easy to do or reliable w/o actually executing?
+  // TODO: validate source is valid? This may not be easy to do or reliable w/o actually executing?
 
   // TODO: this task may expose a lot of potential for misuse, and may need to be optional enabled by system property
 
   @Inject
-  public ScriptTaskDescriptor(final NodeAccess nodeAccess, @Named("${nexus.scripts.allowCreation:-false}") boolean allowCreation) {
+  public ScriptTaskDescriptor(
+      final NodeAccess nodeAccess,
+      @Named("${nexus.scripts.allowCreation:-false}") boolean allowCreation)
+  {
     super(TYPE_ID,
         ScriptTask.class,
         messages.name(),
-        VISIBLE,
+        TaskDescriptorSupport.VISIBLE,
         isExposed(allowCreation),
         new StringTextFormField(
             LANGUAGE,
             messages.languageLabel(),
             messages.languageHelpText(),
-            FormField.MANDATORY
-        ).withInitialValue(ScriptEngineManagerProvider.DEFAULT_LANGUAGE),
+            FormField.MANDATORY).withInitialValue(ScriptEngineManagerProvider.DEFAULT_LANGUAGE),
         new TextAreaFormField(
             SOURCE,
             messages.sourceLabel(),
             messages.sourceHelpText(),
             FormField.MANDATORY,
             null,
-            !allowCreation
-        ),
-        nodeAccess.isClustered() ? newMultinodeFormField() : null);
+            !allowCreation),
+        nodeAccess.isClustered() ? TaskDescriptorSupport.newMultinodeFormField() : null);
   }
 
   /**
    * If the allowCreation flag is false we don't want this task exposed to user, but still want
    * existing scripts runnable
    */
-  private static boolean isExposed(boolean allowCreation){
+  private static boolean isExposed(boolean allowCreation) {
     return allowCreation;
   }
 }

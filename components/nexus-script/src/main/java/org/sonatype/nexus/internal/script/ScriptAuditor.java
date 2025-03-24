@@ -43,9 +43,9 @@ public class ScriptAuditor
   public static final String DOMAIN = "script";
 
   public ScriptAuditor() {
-    registerType(ScriptCreatedEvent.class, CREATED_TYPE);
-    registerType(ScriptDeletedEvent.class, DELETED_TYPE);
-    registerType(ScriptUpdatedEvent.class, UPDATED_TYPE);
+    registerType(ScriptCreatedEvent.class, AuditorSupport.CREATED_TYPE);
+    registerType(ScriptDeletedEvent.class, AuditorSupport.DELETED_TYPE);
+    registerType(ScriptUpdatedEvent.class, AuditorSupport.UPDATED_TYPE);
   }
 
   @Subscribe

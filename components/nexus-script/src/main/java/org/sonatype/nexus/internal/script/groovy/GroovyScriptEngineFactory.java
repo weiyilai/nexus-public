@@ -48,7 +48,7 @@ import static org.sonatype.nexus.internal.script.ScriptServiceImpl.SCRIPT_CLEANU
  */
 @Named("groovy")
 @Singleton
-public class GroovyScriptEngineFactory
+public class GroovyScriptEngineFactory // NOSONAR
     extends org.codehaus.groovy.jsr223.GroovyScriptEngineFactory
 {
   private static final Logger log = LoggerFactory.getLogger(GroovyScriptEngineFactory.class);

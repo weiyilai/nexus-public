@@ -86,8 +86,7 @@ public class ScriptEngineManagerProvider
           factory.getLanguageVersion(),
           factory.getNames(),
           factory.getMimeTypes(),
-          factory.getExtensions()
-      );
+          factory.getExtensions());
     }
 
     log.info("Default language: {}", DEFAULT_LANGUAGE);

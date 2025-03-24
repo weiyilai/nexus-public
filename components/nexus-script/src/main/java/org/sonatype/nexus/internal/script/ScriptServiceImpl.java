@@ -139,8 +139,10 @@ public class ScriptServiceImpl
   }
 
   @Override
-  public Object eval(final String language, final String script, final Map<String, Object> customBindings)
-      throws ScriptException
+  public Object eval(
+      final String language,
+      final String script,
+      final Map<String, Object> customBindings) throws ScriptException
   {
     ScriptContext context = createContext(language);
     customizeBindings(context, customBindings);

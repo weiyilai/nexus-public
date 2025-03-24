@@ -72,7 +72,7 @@ public class ScriptTask
         .put("log", LoggerFactory.getLogger(ScriptTask.class))
         .put("task", this)
         .build();
-    
+
     // execution script
     log.debug("Evaluating source: {}", source);
     Object result = scripts.eval(getConfiguration().getString(ScriptTaskDescriptor.LANGUAGE), source, customBindings);
