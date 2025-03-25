@@ -22,11 +22,11 @@ import {
 } from '@sonatype/nexus-ui-plugin';
 
 import UIStrings from '../../../../constants/UIStrings';
+import { scrollToUsageCenter } from '../../../../interfaces/LocationUtils';
 
 const {LICENSING: {DETAILS: LABELS}, LICENSING} = UIStrings;
 
 export default function LicensedUsage({maxRepoRequests, maxRepoComponents}) {
-
   return (
       <NxTile>
         <NxTile.Content>
@@ -41,7 +41,7 @@ export default function LicensedUsage({maxRepoRequests, maxRepoComponents}) {
               <NxGrid.Column>
                 <NxReadOnly>
                   <NxReadOnly.Item>
-                    <ReadOnlyField value={LABELS.USAGE_DESCRIPTION.LABEL}/>
+                    <ReadOnlyField value={LABELS.USAGE_DESCRIPTION.LABEL(scrollToUsageCenter)}/>
                   </NxReadOnly.Item>
                 </NxReadOnly>
               </NxGrid.Column>
