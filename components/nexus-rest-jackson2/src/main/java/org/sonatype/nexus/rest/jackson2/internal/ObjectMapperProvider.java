@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /**
  * Jackson {@link ObjectMapper} provider for use with Siesta.
@@ -46,6 +47,7 @@ public class ObjectMapperProvider
 
   @Override
   public ObjectMapper get() {
+    mapper.registerModule(new JavaTimeModule());
     return mapper;
   }
 }
