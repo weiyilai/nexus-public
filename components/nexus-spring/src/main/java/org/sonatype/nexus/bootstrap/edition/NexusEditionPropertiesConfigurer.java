@@ -150,6 +150,10 @@ public class NexusEditionPropertiesConfigurer
     if (parseBoolean(properties.get(JWT_ENABLED, FALSE))) {
       properties.put(SESSION_ENABLED, FALSE);
     }
+    else {
+      // If JWT is not enabled, then disable OAuth2 as well
+      properties.put(NEXUS_SECURITY_OAUTH2_ENABLED, FALSE);
+    }
   }
 
   private void requireProperty(final PropertyMap properties, final String name) {
