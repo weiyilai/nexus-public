@@ -28,7 +28,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,7 +42,6 @@ import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.blobstore.api.BlobAttributes;
 import org.sonatype.nexus.blobstore.api.BlobId;
 import org.sonatype.nexus.blobstore.api.BlobMetrics;
-import org.sonatype.nexus.blobstore.api.BlobRef;
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
@@ -1070,16 +1068,15 @@ public class S3BlobStore
   }
 
   @Override
-  public Optional<ExternalMetadata> getExternalMetadata(final BlobRef blobRef) {
-    String path = contentPath(blobRef.getBlobId());
-
+  public Optional<ExternalMetadata> getExternalMetadata(final BlobId blobId) {
+    String path = contentPath(blobId);
     try {
       ObjectMetadata object = s3.getObjectMetadata(getConfiguredBucket(), path);
 
       return Optional.of(new ExternalMetadata(object.getETag(), DateHelper.toOffsetDateTime(object.getLastModified())));
     }
     catch (Exception e) {
-      log.warn("Unable to retrieve remote metadata for blobref {} cause {}", blobRef, e.getMessage(),
+      log.warn("Unable to retrieve remote metadata for path {} cause {}", path, e.getMessage(),
           log.isDebugEnabled() ? e : null);
     }
     return Optional.empty();

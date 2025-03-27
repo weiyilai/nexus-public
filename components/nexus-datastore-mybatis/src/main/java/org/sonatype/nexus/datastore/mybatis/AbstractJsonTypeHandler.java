@@ -54,7 +54,7 @@ public abstract class AbstractJsonTypeHandler<T>
   private final JavaType jsonType;
 
   protected AbstractJsonTypeHandler() {
-    this.objectMapper = buildObjectMapper(() -> new ObjectMapper());
+    this.objectMapper = buildObjectMapper(ObjectMapper::new);
     this.jsonType = objectMapper.constructType(getJsonType()); // NOSONAR
   }
 
@@ -64,7 +64,8 @@ public abstract class AbstractJsonTypeHandler<T>
    * @param mapperFactory Factory that supplies prototype mappers for further customization
    */
   protected ObjectMapper buildObjectMapper(final Supplier<ObjectMapper> mapperFactory) {
-    return mapperFactory.get().registerModule(new JavaTimeModule());
+    return mapperFactory.get()
+        .registerModule(new JavaTimeModule());
   }
 
   /**

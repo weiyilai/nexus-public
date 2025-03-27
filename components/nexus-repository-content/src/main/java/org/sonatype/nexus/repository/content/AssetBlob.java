@@ -74,6 +74,9 @@ public interface AssetBlob
    */
   Optional<String> createdByIp();
 
+  /**
+   * External metadata associated with the blob, or {@code null} if none.
+   */
   @Nullable
   ExternalMetadata externalMetadata();
 }

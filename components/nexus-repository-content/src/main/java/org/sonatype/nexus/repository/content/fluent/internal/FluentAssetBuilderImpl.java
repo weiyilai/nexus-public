@@ -13,6 +13,7 @@
 package org.sonatype.nexus.repository.content.fluent.internal;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +23,7 @@ import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.blobstore.api.BlobId;
 import org.sonatype.nexus.blobstore.api.BlobMetrics;
 import org.sonatype.nexus.blobstore.api.BlobRef;
+import org.sonatype.nexus.blobstore.api.ExternalMetadata;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.hash.HashAlgorithm;
 import org.sonatype.nexus.common.time.UTC;
@@ -41,7 +43,6 @@ import org.sonatype.nexus.repository.proxy.ProxyFacetSupport;
 import org.sonatype.nexus.repository.view.payloads.AttachableBlob;
 import org.sonatype.nexus.repository.view.payloads.TempBlob;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -51,6 +52,8 @@ import static org.sonatype.nexus.blobstore.api.BlobStore.BLOB_NAME_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.CONTENT_TYPE_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.CREATED_BY_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.CREATED_BY_IP_HEADER;
+import static org.sonatype.nexus.blobstore.api.BlobStore.EXTERNAL_ETAG_HEADER;
+import static org.sonatype.nexus.blobstore.api.BlobStore.EXTERNAL_LAST_MODIFIED_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.REPO_NAME_HEADER;
 import static org.sonatype.nexus.common.time.DateHelper.toOffsetDateTime;
 
@@ -185,8 +188,7 @@ public class FluentAssetBuilderImpl
     if (attributes != null && !attributes.isEmpty()) {
       AttributeChangeSet changeSet = new AttributeChangeSet();
       attributes.forEach((key, value) -> changeSet.attributes(AttributeOperation.OVERLAY, key, value));
-      facet.stores()
-          .assetStore
+      facet.stores().assetStore
           .updateAssetAttributes(asset, changeSet);
     }
     return asset;
@@ -197,8 +199,8 @@ public class FluentAssetBuilderImpl
       asset.blob()
           .ifPresent(blob -> facet
               .blobMetadataStorage()
-              .attach(facet.stores().blobStoreProvider.get(), blob.blobRef().getBlobId(), null, asset.attributes(), blob.checksums())
-          );
+              .attach(facet.stores().blobStoreProvider.get(), blob.blobRef().getBlobId(), null, asset.attributes(),
+                  blob.checksums()));
     }
   }
 
@@ -209,20 +211,22 @@ public class FluentAssetBuilderImpl
     }
 
     Blob blob = tempBlob.getBlob();
-    ImmutableMap.Builder<String, String> headerBuilder = ImmutableMap.builder();
+    Map<String, String> headers = new HashMap<>();
 
     Map<String, String> tempHeaders = blob.getHeaders();
-    headerBuilder.put(REPO_NAME_HEADER, tempHeaders.get(REPO_NAME_HEADER));
-    headerBuilder.put(BLOB_NAME_HEADER, assetData.path());
-    headerBuilder.put(CREATED_BY_HEADER, tempHeaders.get(CREATED_BY_HEADER));
-    headerBuilder.put(CREATED_BY_IP_HEADER, tempHeaders.get(CREATED_BY_IP_HEADER));
-    headerBuilder.put(CONTENT_TYPE_HEADER, facet.checkContentType(assetData, blob));
+    headers.put(REPO_NAME_HEADER, tempHeaders.get(REPO_NAME_HEADER));
+    headers.put(BLOB_NAME_HEADER, assetData.path());
+    headers.put(CREATED_BY_HEADER, tempHeaders.get(CREATED_BY_HEADER));
+    headers.put(CREATED_BY_IP_HEADER, tempHeaders.get(CREATED_BY_IP_HEADER));
+    headers.put(CONTENT_TYPE_HEADER, facet.checkContentType(assetData, blob));
 
-    Blob permanentBlob = facet.stores().blobStoreProvider.get().makeBlobPermanent(blob.getId(), headerBuilder.build());
+    Blob permanentBlob = facet.stores().blobStoreProvider.get().makeBlobPermanent(blob.getId(), headers);
     NestedAttributesMap componentAttributes = assetData.component().map(Component::attributes).orElse(null);
     Map<String, String> checksums = assetData.blob().map(AssetBlob::checksums).orElse(null);
-    facet.blobMetadataStorage().attach(facet.stores().blobStoreProvider.get(), permanentBlob.getId(), componentAttributes, assetData.attributes(),
-        checksums);
+    facet.blobMetadataStorage()
+        .attach(facet.stores().blobStoreProvider.get(), permanentBlob.getId(), componentAttributes,
+            assetData.attributes(),
+            checksums);
     return permanentBlob;
   }
 
@@ -233,9 +237,10 @@ public class FluentAssetBuilderImpl
         .orElseGet(() -> createAssetBlob(blobRef, blob, checksums));
   }
 
-  private AssetBlobData createAssetBlob(final BlobRef blobRef,
-                                        final Blob blob,
-                                        final Map<HashAlgorithm, HashCode> checksums)
+  private AssetBlobData createAssetBlob(
+      final BlobRef blobRef,
+      final Blob blob,
+      final Map<HashAlgorithm, HashCode> checksums)
   {
     BlobMetrics metrics = blob.getMetrics();
     Map<String, String> headers = blob.getHeaders();
@@ -245,14 +250,23 @@ public class FluentAssetBuilderImpl
     assetBlob.setBlobSize(metrics.getContentSize());
     assetBlob.setContentType(headers.get(CONTENT_TYPE_HEADER));
 
-    assetBlob.setChecksums(checksums.entrySet().stream().collect(
-        toImmutableMap(
-            e -> e.getKey().name(),
-            e -> e.getValue().toString())));
+    assetBlob.setChecksums(checksums.entrySet()
+        .stream()
+        .collect(
+            toImmutableMap(
+                e -> e.getKey().name(),
+                e -> e.getValue().toString())));
 
     assetBlob.setBlobCreated(toOffsetDateTime(metrics.getCreationTime()));
     assetBlob.setCreatedBy(headers.get(CREATED_BY_HEADER));
     assetBlob.setCreatedByIp(headers.get(CREATED_BY_IP_HEADER));
+
+    if (headers.containsKey(EXTERNAL_ETAG_HEADER) || headers.containsKey(EXTERNAL_LAST_MODIFIED_HEADER)) {
+      String lastModified = headers.get(EXTERNAL_LAST_MODIFIED_HEADER);
+
+      assetBlob.setExternalMetadata(new ExternalMetadata(headers.get(EXTERNAL_ETAG_HEADER),
+          lastModified != null ? OffsetDateTime.parse(lastModified, DateTimeFormatter.ISO_OFFSET_DATE_TIME) : null));
+    }
 
     facet.stores().assetBlobStore.createAssetBlob(assetBlob);
 

@@ -114,6 +114,16 @@ public interface BlobStore
   String REPO_NAME_HEADER = "Bucket.repo-name";
 
   /**
+   * An associated etag to the stored object
+   */
+  String EXTERNAL_ETAG_HEADER = "External.etag";
+
+  /**
+   * An associated last modified date to the stored object
+   */
+  String EXTERNAL_LAST_MODIFIED_HEADER = "External.last-modified";
+
+  /**
    * Prefix for the old layout (volume/chapter) in folder structures.
    * Used as a filter in certain blob store implementations.
    *
@@ -446,6 +456,13 @@ public interface BlobStore
    * @return an Optional containing the external metadata if supported, empty otherwise
    */
   default Optional<ExternalMetadata> getExternalMetadata(final BlobRef blobRef) {
+    return getExternalMetadata(blobRef.getBlobId());
+  }
+
+  /**
+   * @return an Optional containing the external metadata if supported, empty otherwise
+   */
+  default Optional<ExternalMetadata> getExternalMetadata(final BlobId blobId) {
     return Optional.empty();
   }
 }

@@ -36,6 +36,7 @@ import org.sonatype.nexus.blobstore.api.BlobStoreUsageChecker;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaUsageChecker;
 import org.sonatype.nexus.blobstore.s3.internal.datastore.DatastoreS3BlobStoreMetricsService;
 import org.sonatype.nexus.common.log.DryRunPrefix;
+import org.sonatype.nexus.common.time.DateHelper;
 
 import com.amazonaws.SdkClientException;
 import com.amazonaws.regions.Region;
@@ -52,6 +53,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.SetObjectTaggingRequest;
+import org.hamcrest.core.Is;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,10 +77,12 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.endsWith;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -88,6 +92,8 @@ import static org.sonatype.nexus.blobstore.api.BlobStore.BLOB_NAME_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.CONTENT_TYPE_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.CREATED_BY_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.CREATED_BY_IP_HEADER;
+import static org.sonatype.nexus.blobstore.api.BlobStore.EXTERNAL_ETAG_HEADER;
+import static org.sonatype.nexus.blobstore.api.BlobStore.EXTERNAL_LAST_MODIFIED_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.REPO_NAME_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.TEMPORARY_BLOB_HEADER;
 
@@ -606,6 +612,75 @@ public class S3BlobStoreTest
     Blob blob = blobStore.create(new ByteArrayInputStream("hello world".getBytes()), headers);
 
     assertThrows(IllegalArgumentException.class, () -> blobStore.makeBlobPermanent(blob.getId(), headers)); // NOSONAR
+  }
+
+  @Test
+  public void makeBlobPermanentAttachExternalHeadersIfPresent() throws Exception {
+    BlobId blobId = mock(BlobId.class);
+    when(blobId.asUniqueString()).thenReturn("test");
+
+    blobStore.init(config);
+    blobStore.doStart();
+
+    S3BlobStore spy = spy(blobStore);
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(CONTENT_TYPE_HEADER, "application/json");
+    headers.put(BLOB_NAME_HEADER, "foo.json");
+    headers.put(REPO_NAME_HEADER, "test-repo");
+
+    ObjectMetadata metadata = mock(ObjectMetadata.class);
+    Blob blob = mock(Blob.class);
+    Date lastModified = new Date();
+
+    doReturn(blob).when(spy).get(blobId);
+    doReturn(blob).when(spy).get(blobId, false);
+    doReturn(blob).when(spy).writeBlobProperties(blobId, headers);
+    when(blob.getHeaders()).thenReturn(Map.of(TEMPORARY_BLOB_HEADER, "true"));
+    when(s3.getObjectMetadata(any(), any())).thenReturn(metadata);
+    when(metadata.getETag()).thenReturn("test-etag");
+    when(metadata.getLastModified()).thenReturn(lastModified);
+
+    Blob result = spy.makeBlobPermanent(blobId, headers);
+
+    verify(spy).getExternalMetadata(blobId);
+    assertThat(result, Is.is(blob));
+    assertThat(headers.size(), Is.is(5));
+    assertThat(headers, hasKey(EXTERNAL_ETAG_HEADER));
+    assertThat(headers, hasKey(EXTERNAL_LAST_MODIFIED_HEADER));
+    assertThat(headers.get(EXTERNAL_ETAG_HEADER), Is.is("test-etag"));
+    assertThat(headers.get(EXTERNAL_LAST_MODIFIED_HEADER), Is.is(DateHelper.toOffsetDateTime(lastModified).toString()));
+  }
+
+  @Test
+  public void makeBlobPermanentDoesNotFailIfNoMetadataAvailable() throws Exception {
+    BlobId blobId = mock(BlobId.class);
+    when(blobId.asUniqueString()).thenReturn("test");
+
+    blobStore.init(config);
+    blobStore.doStart();
+
+    S3BlobStore spy = spy(blobStore);
+    Map<String, String> headers = new HashMap<>();
+    headers.put(CONTENT_TYPE_HEADER, "application/parquet");
+    headers.put(BLOB_NAME_HEADER, "test.parquet");
+    headers.put(REPO_NAME_HEADER, "huggingface");
+
+    Blob blob = mock(Blob.class);
+
+    doReturn(blob).when(spy).get(blobId);
+    doReturn(blob).when(spy).get(blobId, false);
+    doReturn(blob).when(spy).writeBlobProperties(blobId, headers);
+    when(blob.getHeaders()).thenReturn(Map.of(TEMPORARY_BLOB_HEADER, "true"));
+    when(s3.getObjectMetadata(any(), any())).thenThrow(new SdkClientException("unable to get metadata"));
+
+    Blob result = spy.makeBlobPermanent(blobId, headers);
+
+    verify(spy).getExternalMetadata(blobId);
+    assertThat(result, Is.is(blob));
+    assertThat(headers.size(), Is.is(3));
+    assertThat(headers, not(hasKey(EXTERNAL_ETAG_HEADER)));
+    assertThat(headers, not(hasKey(EXTERNAL_LAST_MODIFIED_HEADER)));
   }
 
   @Test

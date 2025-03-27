@@ -53,9 +53,25 @@ public abstract class CloudBlobStoreSupport<T extends AttributesLocation>
     return Optional.ofNullable(get(blobId))
         .map(Blob::getHeaders)
         .filter(blobHeaders -> blobHeaders.containsKey(TEMPORARY_BLOB_HEADER))
-        .map(__ -> writeBlobProperties(blobId, headers))
+        .map(__ -> {
+          attachExternalMetadata(blobId, headers);
+          return writeBlobProperties(blobId, headers);
+        })
         // We were given a blob that was already made permanent, so we need to copy it instead.
         .orElseGet(() -> super.makeBlobPermanent(blobId, headers));
+  }
+
+  /**
+   * Attaches external metadata from the cloud blobstore and attach it to the blob headers.
+   *
+   * @param blobId the existing blob id
+   * @param headers the existing blob headers
+   */
+  protected void attachExternalMetadata(final BlobId blobId, final Map<String, String> headers) {
+    getExternalMetadata(blobId).ifPresent(externalMetadata -> {
+      headers.put(EXTERNAL_ETAG_HEADER, externalMetadata.etag());
+      headers.put(EXTERNAL_LAST_MODIFIED_HEADER, externalMetadata.lastModified().toString());
+    });
   }
 
   @Override

@@ -19,6 +19,7 @@ import java.util.Optional;
 import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.blobstore.api.BlobMetrics;
 import org.sonatype.nexus.blobstore.api.BlobRef;
+import org.sonatype.nexus.blobstore.api.ExternalMetadata;
 import org.sonatype.nexus.common.collect.AttributesMap;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.hash.HashAlgorithm;
@@ -219,6 +220,7 @@ public class FluentAssetImpl
       contentAttributes.set(CONTENT_ETAG, metrics.getSha1Hash());
     }
 
+    attachExternalMetadata(assetBlob, contentAttributes);
     return content;
   }
 
@@ -279,6 +281,28 @@ public class FluentAssetImpl
   @Override
   public Asset unwrap() {
     return asset;
+  }
+
+  /**
+   * attaches external metadata if stored in the asset_blob attributes
+   *
+   * @param assetBlob the {@link AssetBlob} that carries the external metadata
+   * @param contentAttributes the {@link Content} attributes to be updated
+   */
+  private static void attachExternalMetadata(final AssetBlob assetBlob, final AttributesMap contentAttributes) {
+    ExternalMetadata externalMetadata = assetBlob.externalMetadata();
+
+    if (externalMetadata == null) {
+      return;
+    }
+
+    if (externalMetadata.lastModified() != null) {
+      contentAttributes.set(Content.EXTERNAL_LAST_MODIFIED, externalMetadata.lastModified());
+    }
+
+    if (externalMetadata.etag() != null) {
+      contentAttributes.set(Content.EXTERNAL_ETAG, externalMetadata.etag());
+    }
   }
 
   /**

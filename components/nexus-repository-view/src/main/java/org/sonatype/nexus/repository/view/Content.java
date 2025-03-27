@@ -51,6 +51,15 @@ public class Content
    */
   public static final String CONTENT_ETAG = "etag";
 
+  /**
+   * Common prefix for external metadata attributes to be stored in {@link Content#attributes}
+   */
+  private static final String EXTERNAL_ATTRIBUTE = "external.%s";
+
+  public static final String EXTERNAL_LAST_MODIFIED = EXTERNAL_ATTRIBUTE.formatted(CONTENT_LAST_MODIFIED);
+
+  public static final String EXTERNAL_ETAG = EXTERNAL_ATTRIBUTE.formatted(CONTENT_ETAG);
+
   private final Payload payload;
 
   private final AttributesMap attributes;

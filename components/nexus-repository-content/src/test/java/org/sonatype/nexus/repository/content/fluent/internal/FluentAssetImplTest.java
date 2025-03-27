@@ -14,15 +14,18 @@
 package org.sonatype.nexus.repository.content.fluent.internal;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.blobstore.api.BlobMetrics;
 import org.sonatype.nexus.blobstore.api.BlobRef;
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
+import org.sonatype.nexus.blobstore.api.ExternalMetadata;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
+import org.sonatype.nexus.common.time.DateHelper;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.Asset;
 import org.sonatype.nexus.repository.content.AssetBlob;
@@ -36,13 +39,13 @@ import org.sonatype.nexus.repository.types.ProxyType;
 import org.sonatype.nexus.repository.view.Content;
 
 import org.joda.time.DateTime;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -51,14 +54,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.repository.view.Content.CONTENT_LAST_MODIFIED;
 
-public class FluentAssetImplTest
-    extends TestSupport
+class FluentAssetImplTest
+    extends Test5Support
 {
   @Mock
   private ContentFacetSupport contentFacet;
 
   @Mock
   private ContentFacetStores contentFacetStores;
+
+  @Mock
+  private BlobStoreManager blobStoreManager;
 
   @Mock
   private BlobStore blobStore;
@@ -77,20 +83,17 @@ public class FluentAssetImplTest
 
   private FluentAssetImpl underTest;
 
-  @Before
-  public void setUp() {
-    BlobStoreManager mockBlobstoreManager = mock(BlobStoreManager.class);
+  @BeforeEach
+  void setUp() {
     FormatStoreManager mockFormatStoreManager = mock(FormatStoreManager.class);
     Repository mockRepository = mock(Repository.class);
 
-    when(mockBlobstoreManager.get(anyString())).thenReturn(blobStore);
+    when(blobStoreManager.get(anyString())).thenReturn(blobStore);
 
-    contentFacetStores = new ContentFacetStores(mockBlobstoreManager, "test", mockFormatStoreManager, "test");
+    contentFacetStores = new ContentFacetStores(blobStoreManager, "test", mockFormatStoreManager, "test");
 
     when(contentFacet.stores()).thenReturn(contentFacetStores);
-    when(contentFacet.dependencies()).thenReturn(dependencies);
     when(contentFacet.repository()).thenReturn(mockRepository);
-    when(dependencies.getMoveService()).thenReturn(Optional.of(moveService));
     when(asset.blob()).thenReturn(Optional.of(assetBlob));
     when(assetBlob.blobRef()).thenReturn(new BlobRef("default", "test"));
     when(assetBlob.contentType()).thenReturn("text");
@@ -99,7 +102,7 @@ public class FluentAssetImplTest
   }
 
   @Test
-  public void testDownloadWorksAsExpected() {
+  void testDownloadWorksAsExpected() {
     Blob mockBlob = mock(Blob.class);
     BlobMetrics mockMetrics = mock(BlobMetrics.class);
 
@@ -126,7 +129,7 @@ public class FluentAssetImplTest
   }
 
   @Test
-  public void testDownloadWorksIfMoveInProgress(){
+  void testDownloadWorksIfMoveInProgress() {
     Blob mockBlob = mock(Blob.class);
     BlobMetrics mockMetrics = mock(BlobMetrics.class);
     Repository mockRepository = mock(Repository.class);
@@ -134,7 +137,9 @@ public class FluentAssetImplTest
     when(asset.attributes()).thenReturn(new NestedAttributesMap());
     when(blobStore.get(any())).thenReturn(null);
     when(contentFacet.repository()).thenReturn(mockRepository);
-    when(moveService.getIfBeingMoved(any(BlobRef.class) , anyString())).thenReturn(mockBlob);
+    when(contentFacet.dependencies()).thenReturn(dependencies);
+    when(dependencies.getMoveService()).thenReturn(Optional.of(moveService));
+    when(moveService.getIfBeingMoved(any(BlobRef.class), anyString())).thenReturn(mockBlob);
     when(mockRepository.getName()).thenReturn("test");
     when(mockBlob.getMetrics()).thenReturn(mockMetrics);
 
@@ -150,7 +155,7 @@ public class FluentAssetImplTest
       assertEquals(creationDate, result.getAttributes().get(CONTENT_LAST_MODIFIED));
 
       verify(blobStore, times(1)).get(any());
-      verify(moveService , times(1)).getIfBeingMoved(any(BlobRef.class) , anyString());
+      verify(moveService, times(1)).getIfBeingMoved(any(BlobRef.class), anyString());
     }
     catch (IOException ex) {
       fail();
@@ -158,7 +163,7 @@ public class FluentAssetImplTest
   }
 
   @Test
-  public void testDownloadSetCorrectAttributesForProxyRepository() {
+  void testDownloadSetCorrectAttributesForProxyRepository() {
     Blob mockBlob = mock(Blob.class);
     BlobMetrics mockMetrics = mock(BlobMetrics.class);
     Repository mockRepository = mock(Repository.class);
@@ -174,8 +179,6 @@ public class FluentAssetImplTest
     when(mockBlob.getMetrics()).thenReturn(mockMetrics);
 
     when(mockRepository.getType()).thenReturn(new ProxyType());
-    when(mockMetrics.getCreationTime()).thenReturn(creationDate);
-    when(mockMetrics.getSha1Hash()).thenReturn(etag);
 
     try (Content result = underTest.download()) {
 
@@ -190,7 +193,7 @@ public class FluentAssetImplTest
   }
 
   @Test
-  public void testDownloadSetCorrectAttributesForHostedRepository() {
+  void testDownloadSetCorrectAttributesForHostedRepository() {
     Blob mockBlob = mock(Blob.class);
     BlobMetrics mockMetrics = mock(BlobMetrics.class);
     Repository mockRepository = mock(Repository.class);
@@ -216,6 +219,42 @@ public class FluentAssetImplTest
       assertEquals("text", result.getContentType());
       assertEquals(creationDate, result.getAttributes().get(CONTENT_LAST_MODIFIED));
       assertEquals(expectedETag, result.getAttributes().get(Content.CONTENT_ETAG));
+    }
+    catch (IOException ex) {
+      fail();
+    }
+  }
+
+  @Test
+  void testDownloadSetCorrectExternalAttributesIfPresent() {
+    ExternalMetadata externalAttrs = new ExternalMetadata("etag", DateHelper.toOffsetDateTime(new Date()));
+
+    Blob mockBlob = mock(Blob.class);
+    BlobMetrics mockMetrics = mock(BlobMetrics.class);
+    Repository mockRepository = mock(Repository.class);
+    DateTime creationDate = DateTime.now();
+
+    NestedAttributesMap attributes = new NestedAttributesMap();
+    attributes.child(Content.CONTENT).set(Content.CONTENT_LAST_MODIFIED, creationDate);
+    String etag = "sha1-test";
+    attributes.child(Content.CONTENT).set(Content.CONTENT_ETAG, etag);
+
+    when(asset.attributes()).thenReturn(attributes);
+    when(assetBlob.externalMetadata()).thenReturn(externalAttrs);
+    when(blobStore.get(any())).thenReturn(mockBlob);
+    when(contentFacet.repository()).thenReturn(mockRepository);
+    when(mockBlob.getMetrics()).thenReturn(mockMetrics);
+    when(mockRepository.getType()).thenReturn(new ProxyType());
+
+    try (Content result = underTest.download()) {
+      assertNotNull(result);
+      assertEquals("text", result.getContentType());
+      assertEquals(creationDate, result.getAttributes().get(Content.CONTENT_LAST_MODIFIED));
+      assertEquals(etag, result.getAttributes().get(Content.CONTENT_ETAG));
+      assertEquals(externalAttrs.etag(),
+          result.getAttributes().get(Content.EXTERNAL_ETAG));
+      assertEquals(externalAttrs.lastModified(),
+          result.getAttributes().get(Content.EXTERNAL_LAST_MODIFIED));
     }
     catch (IOException ex) {
       fail();
