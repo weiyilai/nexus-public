@@ -31,6 +31,8 @@
     <bouncycastle.version>1.78.1</bouncycastle.version>
     <apache-shiro.version>1.13.0</apache-shiro.version>
     <java-jwt.version>3.16.0</java-jwt.version>
+    <nimbusds.jwt.version>10.0.2</nimbusds.jwt.version>
+    <nimbusds.oauth2.version>11.23.1</nimbusds.oauth2.version>
   </properties>
 
   <dependencyManagement>
@@ -42,6 +44,18 @@
         <groupId>com.auth0</groupId>
         <artifactId>java-jwt</artifactId>
         <version>${java-jwt.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.nimbusds</groupId>
+        <artifactId>oauth2-oidc-sdk</artifactId>
+        <version>${nimbusds.oauth2.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.nimbusds</groupId>
+        <artifactId>nimbus-jose-jwt</artifactId>
+        <version>${nimbusds.jwt.version}</version>
       </dependency>
 
       <!-- bouncycastle -->
