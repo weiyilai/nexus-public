@@ -1407,6 +1407,35 @@
       </build>
     </profile>
     <profile>
+      <id>githook-checks-windows</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.rudikershaw.gitbuildhook</groupId>
+            <artifactId>git-build-hook-maven-plugin</artifactId>
+            <version>3.5.0</version>
+            <configuration>
+              <gitConfig>
+                <core.hooksPath>private/githooks/windows/</core.hooksPath>
+              </gitConfig>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>configure</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>sonatype</id>
       <activation>
         <property>
