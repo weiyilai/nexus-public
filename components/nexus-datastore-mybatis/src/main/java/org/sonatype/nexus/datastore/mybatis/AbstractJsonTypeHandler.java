@@ -49,6 +49,8 @@ public abstract class AbstractJsonTypeHandler<T>
 {
   private static final Base64Variant BASE_64 = Base64Variants.getDefaultVariant();
 
+  private static final Class<?> H2_JDBC_PREPARED_STATEMENT = getH2JdbcPreparedStatement();
+
   private final ObjectMapper objectMapper;
 
   private final JavaType jsonType;
@@ -143,7 +145,7 @@ public abstract class AbstractJsonTypeHandler<T>
       final JdbcType jdbcType) throws SQLException
   {
     byte[] json = writeToJson(parameter);
-    if (ps.isWrapperFor(org.h2.jdbc.JdbcPreparedStatement.class)) {
+    if (H2_JDBC_PREPARED_STATEMENT != null && ps.isWrapperFor(H2_JDBC_PREPARED_STATEMENT)) {
       // H2 only accepts JSON passed as UTF8 byte array
       ps.setBytes(parameterIndex, json);
     }
@@ -166,5 +168,14 @@ public abstract class AbstractJsonTypeHandler<T>
   @Override
   public final T getNullableResult(final CallableStatement cs, final int columnIndex) throws SQLException {
     return (T) readFromJson(cs.getBytes(columnIndex)); // works for both byte[] and UTF8 strings
+  }
+
+  private static Class<?> getH2JdbcPreparedStatement() {
+    try {
+      return Class.forName("org.h2.jdbc.JdbcPreparedStatement");
+    }
+    catch (ClassNotFoundException e) {
+      return null;
+    }
   }
 }

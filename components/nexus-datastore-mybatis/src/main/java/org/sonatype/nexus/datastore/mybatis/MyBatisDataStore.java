@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -78,6 +79,7 @@ import org.sonatype.nexus.security.PasswordHelper;
 import org.sonatype.nexus.transaction.TransactionIsolation;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Splitter.MapSplitter;
 import com.google.common.collect.ImmutableList;
@@ -106,7 +108,6 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.eclipse.sisu.BeanEntry;
 import org.eclipse.sisu.Mediator;
 import org.eclipse.sisu.inject.BeanLocator;
-import org.h2.jdbc.JdbcSQLNonTransientConnectionException;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -160,6 +161,9 @@ public class MyBatisDataStore
   private static final Pattern MAPPER_BODY = compile(".*<mapper[^>]*>(.*)</mapper>", DOTALL);
 
   private static final int DEFAULT_CONTENT_STORE_MAX_POOL_SIZE = 100;
+
+  private final Predicate<Throwable> isH2JdbcSQLNonTransientConnectionException =
+      isH2JdbcSQLNonTransientConnectionException();
 
   private final Iterable<? extends BeanEntry<Named, Class<DataAccess>>> declaredAccessTypes;
 
@@ -769,10 +773,13 @@ public class MyBatisDataStore
     }
   }
 
-  private boolean isH2UnsupportedDatabaseVersion(Exception exception) {
+  private boolean isH2UnsupportedDatabaseVersion(final Exception exception) {
     int unsupportedDatabaseErrorCode = 90048;
-    return exception.getCause() instanceof JdbcSQLNonTransientConnectionException &&
-        ((JdbcSQLNonTransientConnectionException) exception.getCause()).getErrorCode() == unsupportedDatabaseErrorCode;
+
+    if (isH2JdbcSQLNonTransientConnectionException.test(exception.getCause())) {
+      return ((SQLException) exception.getCause()).getErrorCode() == unsupportedDatabaseErrorCode;
+    }
+    return false;
   }
 
   /**
@@ -952,6 +959,19 @@ public class MyBatisDataStore
     }
     catch (Exception | LinkageError e) {
       log.warn("Problem applying MyBatis proxy workaround", e);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Predicate<Throwable> isH2JdbcSQLNonTransientConnectionException() {
+    try {
+      Class<? extends SQLException> clazz = (Class<? extends SQLException>) Class
+          .forName("org.h2.jdbc.JdbcSQLNonTransientConnectionException");
+
+      return clazz::isInstance;
+    }
+    catch (ClassNotFoundException e) {
+      return Predicates.alwaysFalse();
     }
   }
 }
