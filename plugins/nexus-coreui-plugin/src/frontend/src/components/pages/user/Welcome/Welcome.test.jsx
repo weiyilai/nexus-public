@@ -62,7 +62,7 @@ describe('Welcome', function() {
 
   beforeEach(function() {
     user = null;
-    status = {edition: 'OSS'};
+    status = {edition: 'COMMUNITY'};
 
     jest.spyOn(axios, 'post').mockResolvedValue(testData.simpleSuccessResponse);
     jest.spyOn(axios, 'get').mockReturnValue(jest.fn());
@@ -190,7 +190,7 @@ describe('Welcome', function() {
     });
 
     it('sets the iframe URL with the appropriate query parameters based on the status and license', async function() {
-      jest.spyOn(ExtJS, 'useStatus').mockReturnValue({ version: '1.2.3-foo', edition: 'OSS' });
+      jest.spyOn(ExtJS, 'useStatus').mockReturnValue({ version: '1.2.3-foo', edition: 'COMMUNITY' });
       jest.spyOn(ExtJS, 'useLicense').mockReturnValue({ daysToExpiry: 42 });
 
       render(<Welcome />);
@@ -198,7 +198,7 @@ describe('Welcome', function() {
       const frame = await selectors.outreachFrame('find');
       expect(frame).toHaveAttribute('src', expect.stringMatching(/\?(.+&)?version=1\.2\.3-foo/));
       expect(frame).toHaveAttribute('src', expect.stringMatching(/\?(.+&)?versionMm=1\.2/));
-      expect(frame).toHaveAttribute('src', expect.stringMatching(/\?(.+&)?edition=OSS/));
+      expect(frame).toHaveAttribute('src', expect.stringMatching(/\?(.+&)?edition=COMMUNITY/));
       expect(frame).toHaveAttribute('src', expect.stringMatching(/\?(.+&)?daysToExpiry=42/));
     });
 

@@ -65,35 +65,50 @@ const welcomeMachine = createMachine({
   },
   services: {
     fetch: async () => {
-      const user = ExtJS.state().getUser(),
-          edition = ExtJS.state().getValue('status')?.edition,
-          isAdmin = user?.administrator,
-          requiresOutreach = edition === 'OSS' || !!user,
-          outreachStatusRequest = { action, method: outreachStatusMethod },
-          proxyDownloadNumbersRequest = { action, method: proxyDownloadNumbersMethod },
-          requests = [outreachStatusRequest, proxyDownloadNumbersRequest],
+      const CORE_EDITION = 'CORE',
+          COMMUNITY_EDITION = 'COMMUNITY',
+          user = ExtJS.state().getUser(),
+          edition = ExtJS.state().getValue('status')?.edition;
 
-          bulkResponse = await ExtAPIUtils.extAPIBulkRequest(requests),
-          outreachStatusResponse = bulkResponse.data.find(({ method }) => method === outreachStatusRequest.method),
-          proxyDownloadNumbersResponse = bulkResponse.data
-              .find(({ method }) => method === proxyDownloadNumbersRequest.method),
+      const getOutreachData = async () => {
 
-          // The ExtAPIUtils expect this extra layer of object
-          wrappedOutreachStatusResponse = { data: outreachStatusResponse },
-          wrappedProxyDownloadNumbersResponse = { data: proxyDownloadNumbersResponse };
+        if (edition === CORE_EDITION) {
+          return {
+            proxyDownloadNumberParams: {}
+          };
+        }
 
-      ExtAPIUtils.checkForError(wrappedOutreachStatusResponse);
+        const isAdmin = user?.administrator,
+            requiresOutreach = edition === COMMUNITY_EDITION || !!user,
+            outreachStatusRequest = { action, method: outreachStatusMethod },
+            proxyDownloadNumbersRequest = { action, method: proxyDownloadNumbersMethod },
+            requests = [outreachStatusRequest, proxyDownloadNumbersRequest],
 
-      // the outreach response includes a `data` property that is a long hexadecimal string (when the iframe should
-      // be enabled) or null when the iframe should be disabled
-      const showOutreachIframe = requiresOutreach &&
-              Boolean(outreachStatusResponse?.result?.success) && outreachStatusResponse?.result?.data !== null,
-          proxyDownloadNumberParams = ExtAPIUtils.extractResult(wrappedProxyDownloadNumbersResponse);
+            bulkResponse = await ExtAPIUtils.extAPIBulkRequest(requests),
+            outreachStatusResponse = bulkResponse.data.find(({ method }) => method === outreachStatusRequest.method),
+            proxyDownloadNumbersResponse = bulkResponse.data
+                .find(({ method }) => method === proxyDownloadNumbersRequest.method),
 
-      return {
-        showOutreachIframe,
-        proxyDownloadNumberParams,
-      };
+            // The ExtAPIUtils expect this extra layer of object
+            wrappedOutreachStatusResponse = { data: outreachStatusResponse },
+            wrappedProxyDownloadNumbersResponse = { data: proxyDownloadNumbersResponse };
+
+        ExtAPIUtils.checkForError(wrappedOutreachStatusResponse);
+
+        // the outreach response includes a `data` property that is a long hexadecimal string (when the iframe should
+        // be enabled) or null when the iframe should be disabled
+        const showOutreachIframe = requiresOutreach &&
+                Boolean(outreachStatusResponse?.result?.success) && outreachStatusResponse?.result?.data !== null,
+            proxyDownloadNumberParams = ExtAPIUtils.extractResult(wrappedProxyDownloadNumbersResponse);
+
+        return {
+          showOutreachIframe,
+          proxyDownloadNumberParams,
+        };
+      }
+
+      return await getOutreachData();
+
     }
   }
 });
