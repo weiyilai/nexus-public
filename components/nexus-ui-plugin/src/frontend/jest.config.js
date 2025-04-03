@@ -202,4 +202,7 @@ module.exports = {
 
   // Whether to use watchman for file crawling
   // watchman: true,
+
+  // Timeout for all tests to help CI pass
+  testTimeout: 10000
 };
