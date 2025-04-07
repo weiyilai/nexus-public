@@ -66,6 +66,13 @@ $card-width: 1016px;
 
     // Note: Firefox and Chrome pseudo-elements must be in separate declarations, as the browser invalidates the
     // entire thing if it doesn't recognize one pseudo-element
+
+    // Styles `.nx-meter` and `::-webkit-meter-bar` for consistent background and height across browsers.
+    &::-webkit-meter-bar {
+      background: var(--nx-color-progress-background);
+      height: 16px;
+    }
+
     &::-webkit-meter-optimum-value {
       background: #2AB472;
     }
