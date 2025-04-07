@@ -212,6 +212,9 @@ public class FeatureFlags
   public static final String MALWARE_REMEDIATOR_TASK_CHECK_REPOSITORY_IN_KNOWN_REGISTRIES_NAMED =
       "${nexus.malware.remediator.task.check.repository.in.known.registries:-true}";
 
+  public static final String MALWARE_REMEDIATOR_TASK_IGNORE_QUARANTINE_STATE_NAMED =
+      "${nexus.malware.remediator.task.ignore.quarantine.state:-true}";
+
   public static final String RECONCILE_PLAN_ENABLED = "nexus.reconcile.plan.enabled";
 
   public static final String RECONCILE_PLAN_ENABLED_NAMED = "${nexus.reconcile.plan.enabled:-false}";
