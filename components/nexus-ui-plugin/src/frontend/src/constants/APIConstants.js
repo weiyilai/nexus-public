@@ -301,9 +301,6 @@ export default {
       get NODE_ID() {
         return `${this.BASE_URL}system/node`;
       },
-      get MALICIOUS_RISK_SUMMARY() {
-        return `${this.BASE_URL}malicious-risk/summary`;
-      },
       get MALICIOUS_RISK_ON_DISK() {
         return `${this.BASE_URL}malicious-risk/risk-on-disk`;
       },
