@@ -49,7 +49,7 @@ import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirecto
 @ConditionalOnProperty(value = "nexus.spring.only", havingValue = "true")
 public class NexusProperties
 {
-  private static final String INTERNAL_DEFAULT_PATH = "default.properties";
+  private static final String INTERNAL_DEFAULT_PATH = "/org/sonatype/nexus/bootstrap/application/default.properties";
 
   private static final File EXTERNAL_DEFAULT_NEXUS_PROPERTIES_FILEPATH =
       getBasePath("etc", "nexus-default.properties").toFile();

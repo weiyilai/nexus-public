@@ -62,7 +62,7 @@ import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirecto
 @Singleton
 public class NexusProperties
 {
-  private static final String INTERNAL_DEFAULT_PATH = "default.properties";
+  private static final String INTERNAL_DEFAULT_PATH = "/org/sonatype/nexus/bootstrap/application/default.properties";
 
   private static final File EXTERNAL_DEFAULT_NEXUS_PROPERTIES_FILEPATH =
       getBasePath("etc", "nexus-default.properties").toFile();
@@ -94,11 +94,15 @@ public class NexusProperties
 
       resolveAnyImplicitDefaults(nexusProperties);
       LOG.info("nexus.properties: {}", nexusProperties);
-      new NexusEditionPropertiesConfigurer().applyPropertiesFromConfiguration(nexusProperties);
+      applyConfig(nexusProperties);
 
       nexusProperties.forEach(System::setProperty);
     }
     return nexusProperties;
+  }
+
+  protected void applyConfig(final PropertyMap nexusProperties) {
+    new NexusEditionPropertiesConfigurer().applyPropertiesFromConfiguration(nexusProperties);
   }
 
   private void applyClasspathProperties(final PropertyMap nexusProperties) throws IOException {

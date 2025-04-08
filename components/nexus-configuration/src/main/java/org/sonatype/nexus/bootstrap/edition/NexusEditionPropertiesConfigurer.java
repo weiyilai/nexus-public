@@ -53,7 +53,7 @@ public class NexusEditionPropertiesConfigurer
 
     Path workDirPath = getDataPath();
 
-    NexusEditionFactory.selectActiveEdition(nexusProperties, workDirPath);
+    selectEdition(nexusProperties, workDirPath);
 
     selectDatastoreFeature(nexusProperties);
     selectAuthenticationFeature(nexusProperties);
@@ -62,6 +62,10 @@ public class NexusEditionPropertiesConfigurer
     requireProperty(nexusProperties, NEXUS_EDITION);
     requireProperty(nexusProperties, NEXUS_DB_FEATURE);
     ensureHACIsDisabled();
+  }
+
+  protected void selectEdition(final PropertyMap nexusProperties, final Path workDirPath) {
+    NexusEditionFactory.selectActiveEdition(nexusProperties, workDirPath);
   }
 
   private void readEnvironmentVariables(final PropertyMap properties) {
