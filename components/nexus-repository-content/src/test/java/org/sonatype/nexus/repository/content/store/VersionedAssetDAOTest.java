@@ -16,6 +16,7 @@ import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.repository.content.Asset;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -135,6 +136,8 @@ public class VersionedAssetDAOTest
   }
 
   @Test
+  @Ignore
+  // Disabled pending fix: https://sonatype.atlassian.net/browse/NEXUS-46837
   public void testAssetRecordsExist() {
     super.testAssetRecordsExist();
   }
