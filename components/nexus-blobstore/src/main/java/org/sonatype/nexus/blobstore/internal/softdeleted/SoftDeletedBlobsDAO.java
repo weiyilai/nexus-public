@@ -10,25 +10,36 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.blobstore.file.store;
+package org.sonatype.nexus.blobstore.internal.softdeleted;
 
-import java.util.stream.Stream;
+import java.time.OffsetDateTime;
+
+import javax.annotation.Nullable;
 
 import org.sonatype.nexus.blobstore.api.BlobId;
+import org.sonatype.nexus.blobstore.api.softdeleted.SoftDeletedBlob;
 import org.sonatype.nexus.common.entity.Continuation;
+import org.sonatype.nexus.datastore.api.DataAccess;
+
+import org.apache.ibatis.annotations.Param;
 
 /**
- * Store for accessing the soft deleted blob ID's
+ * {@link SoftDeletedBlob} DataAccess
  */
-public interface SoftDeletedBlobsStore
+public interface SoftDeletedBlobsDAO
+    extends DataAccess
 {
   /**
    * Create new record
    *
-   * @param blobId string representation of {@link BlobId}
    * @param sourceBlobStoreName the blobstore name this record is related to
+   * @param blobId string representation of {@link BlobId}
+   * @param datePathRef the {@link OffsetDateTime} of the blob creation
    */
-  void createRecord(BlobId blobId, String sourceBlobStoreName);
+  void createRecord(
+      @Param("sourceBlobStoreName") String sourceBlobStoreName,
+      @Param("blobId") String blobId,
+      @Param("datePathRef") OffsetDateTime datePathRef);
 
   /**
    * Return all records stored in DB, the continuationToken to be used when amount more than single page (>1000 rows)
@@ -37,9 +48,10 @@ public interface SoftDeletedBlobsStore
    * @param sourceBlobStoreName the blobstore name these records are related to
    * @return all records related to provided sourceBlobStoreName
    */
-  Continuation<SoftDeletedBlobsData> readRecords(String continuationToken, int limit, String sourceBlobStoreName);
-
-  Stream<BlobId> readAllBlobIds(String sourceBlobStoreName);
+  Continuation<SoftDeletedBlob> readRecords(
+      @Nullable @Param("continuationToken") String continuationToken,
+      @Param("limit") int limit,
+      @Param("sourceBlobStoreName") String sourceBlobStoreName);
 
   /**
    * Delete single record by provided 'blobId' related to specified blobstore name
@@ -47,14 +59,20 @@ public interface SoftDeletedBlobsStore
    * @param sourceBlobStoreName the blobstore name this record is related to
    * @param blobId {@link BlobId} of record that should be deleted
    */
-  void deleteRecord(String sourceBlobStoreName, BlobId blobId);
+  void deleteRecord(
+      @Param("sourceBlobStoreName") String sourceBlobStoreName,
+      @Param("blobId") String blobId);
 
   /**
    * Delete all records related to provided blobstore name
    *
    * @param sourceBlobStoreName the blobstore name these records are related to
+   * @param limit maximum amount of rows to be deleted
+   * @return numbers of deleted rows
    */
-  void deleteAllRecords(String sourceBlobStoreName);
+  int deleteAllRecords(
+      @Param("sourceBlobStoreName") String sourceBlobStoreName,
+      @Param("limit") String limit);
 
   /**
    * Returns the amount of soft deleted blobs records related to provided blobstore
@@ -62,5 +80,5 @@ public interface SoftDeletedBlobsStore
    * @param sourceBlobStoreName the blobstore name these records are related to
    * @return amount of soft deleted blobs
    */
-  int count(String sourceBlobStoreName);
+  int count(@Param("sourceBlobStoreName") String sourceBlobStoreName);
 }

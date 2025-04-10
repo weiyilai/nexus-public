@@ -10,17 +10,17 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.blobstore.file.internal;
+package org.sonatype.nexus.blobstore.internal.softdeleted;
 
 import java.util.stream.Stream;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobId;
-import org.sonatype.nexus.blobstore.file.store.SoftDeletedBlobsData;
-import org.sonatype.nexus.blobstore.file.store.SoftDeletedBlobsStore;
-import org.sonatype.nexus.blobstore.file.store.internal.SoftDeletedBlobsDAO;
+import org.sonatype.nexus.blobstore.api.softdeleted.SoftDeletedBlob;
+import org.sonatype.nexus.blobstore.api.softdeleted.SoftDeletedBlobsStore;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.entity.Continuations;
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
@@ -49,9 +49,9 @@ public class SoftDeletedBlobsStoreImpl
 
   @Transactional
   @Override
-  public Continuation<SoftDeletedBlobsData> readRecords(
+  public Continuation<SoftDeletedBlob> readRecords(
       final String continuationToken,
-      int limit,
+      final int limit,
       final String sourceBlobStoreName)
   {
     return dao().readRecords(continuationToken, limit, sourceBlobStoreName);
@@ -73,6 +73,7 @@ public class SoftDeletedBlobsStoreImpl
   @Override
   public void deleteAllRecords(final String sourceBlobStoreName) {
     while (doDeleteAllBlobs(sourceBlobStoreName) != 0) {
+      log.trace("Deleted page for {}", sourceBlobStoreName);
     }
   }
 

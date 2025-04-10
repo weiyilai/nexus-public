@@ -10,17 +10,17 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.blobstore.file.store;
+package org.sonatype.nexus.blobstore.internal.softdeleted;
 
 import java.time.OffsetDateTime;
 
-import org.sonatype.nexus.common.entity.ContinuationAware;
+import org.sonatype.nexus.blobstore.api.softdeleted.SoftDeletedBlob;
 
 /**
  * Data object for the soft deleted blobs table.
  */
 public class SoftDeletedBlobsData
-    implements ContinuationAware
+    implements SoftDeletedBlob
 {
   Integer recordId; // NOSONAR: internal id
 
@@ -32,6 +32,7 @@ public class SoftDeletedBlobsData
 
   private OffsetDateTime datePathRef;
 
+  @Override
   public String getSourceBlobStoreName() {
     return sourceBlobStoreName;
   }
@@ -40,6 +41,7 @@ public class SoftDeletedBlobsData
     this.sourceBlobStoreName = sourceBlobStoreName;
   }
 
+  @Override
   public OffsetDateTime getDeletedDate() {
     return deletedDate;
   }
@@ -48,10 +50,12 @@ public class SoftDeletedBlobsData
     this.deletedDate = deletedDate;
   }
 
+  @Override
   public String getBlobId() {
     return blobId;
   }
 
+  @Override
   public OffsetDateTime getDatePathRef() {
     return datePathRef;
   }

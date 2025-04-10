@@ -14,10 +14,10 @@ package org.sonatype.nexus.blobstore.file;
 
 import java.time.Duration;
 
-import org.sonatype.nexus.blobstore.file.internal.SoftDeletedBlobsStoreImpl;
+import org.sonatype.nexus.blobstore.api.softdeleted.SoftDeletedBlobsStore;
 import org.sonatype.nexus.blobstore.file.internal.datastore.DatastoreFileBlobDeletionIndex;
-import org.sonatype.nexus.blobstore.file.store.SoftDeletedBlobsStore;
-import org.sonatype.nexus.blobstore.file.store.internal.SoftDeletedBlobsDAO;
+import org.sonatype.nexus.blobstore.internal.softdeleted.SoftDeletedBlobsDAO;
+import org.sonatype.nexus.blobstore.internal.softdeleted.SoftDeletedBlobsStoreImpl;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
