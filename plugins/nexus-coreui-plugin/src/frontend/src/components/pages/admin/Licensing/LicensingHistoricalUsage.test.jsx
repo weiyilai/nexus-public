@@ -37,6 +37,7 @@ describe('Licensing Historical Usage', () => {
     expect(screen.getByText("Components % Change")).toBeInTheDocument();
     expect(screen.getByText("Total Requests")).toBeInTheDocument();
     expect(screen.getByText("Requests % Change")).toBeInTheDocument();
+    expect(screen.getByText("Peak Storage")).toBeInTheDocument();
   });
 
   it('renders data rows correctly', async () => {
@@ -46,7 +47,8 @@ describe('Licensing Historical Usage', () => {
         componentCount: 1000,
         percentageChangeComponent: 10,
         requestCount: 2000,
-        percentageChangeRequest: -5
+        percentageChangeRequest: -5,
+        peakStorage: 1073741824
       }
     ];
 
@@ -59,6 +61,7 @@ describe('Licensing Historical Usage', () => {
     expect(screen.getByText("10%")).toBeInTheDocument();
     expect(screen.getByText("2,000")).toBeInTheDocument();
     expect(screen.getByText("5%")).toBeInTheDocument();
+    expect(screen.getByText("1.00 GB")).toBeInTheDocument();
   });
 
   it('renders change icons correctly', async () => {

@@ -96,6 +96,7 @@ export default {
       TOTAL_REQUESTS: 'Total Requests',
       REQUESTS_CHANGE: 'Requests % Change',
       REQUESTS_CHANGE_TOOLTIP: 'Change rate of the total monthly requests from the previous month.',
+      PEAK_STORAGE: 'Peak Storage',
     }
   }
 };

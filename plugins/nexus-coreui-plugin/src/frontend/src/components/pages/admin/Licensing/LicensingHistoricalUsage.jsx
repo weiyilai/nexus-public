@@ -10,16 +10,17 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import React, { useState } from 'react';
+import React from 'react';
 import {useMachine} from '@xstate/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretUp, faCaretDown, faMinus, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 
 import { NxH2, NxP, NxTable, NxTableHead, NxTableRow, NxTableCell, NxTableBody, NxTooltip } from '@sonatype/react-shared-components';
 
 import LicensingHistoricalUsageMachine from './LicensingHistoricalUsageMachine';
 import LicensingStrings from '../../../../constants/pages/admin/system/LicensingStrings';
 import ChangeIcon from './ChangeIcon';
+import { HumanReadableUtils } from '@sonatype/nexus-ui-plugin';
 import './Licensing.scss';
 
 export default function LicensingHistorcalUsage() {
@@ -56,6 +57,7 @@ export default function LicensingHistorcalUsage() {
                 <span><FontAwesomeIcon icon={faInfoCircle} /></span>
               </NxTooltip>
             </NxTableCell>
+            <NxTableCell>{LicensingStrings.LICENSING.HISTORICAL_USAGE.PEAK_STORAGE}</NxTableCell>
           </NxTableRow>
         </NxTableHead>
         <NxTableBody>
@@ -70,6 +72,7 @@ export default function LicensingHistorcalUsage() {
                 <NxTableCell>
                   <ChangeIcon value={item.percentageChangeRequest} /> {formatPercentage(item.percentageChangeRequest)}
                 </NxTableCell>
+                <NxTableCell>{HumanReadableUtils.bytesToString(item.peakStorage)}</NxTableCell>
               </NxTableRow>
             ))}
           </NxTableBody>
