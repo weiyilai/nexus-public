@@ -92,12 +92,18 @@ Ext.define('NX.coreui.view.formfield.factory.FormfieldItemselectFactory', {
       itemConfig.listeners = {
         afterrender: function (itemSelector) {
           const settings = itemSelector.up('nx-coreui-formfield-settingsfieldset');
-
-          itemSelector.on('change', me.selectionPlaceholderUpdater);
+          itemSelector.on('change', function() {
+            me.selectionPlaceholderUpdater(itemSelector);
+          });
           if(settings) {
-            settings.on('propertiesimported', function() { me.selectionPlaceholderUpdater(itemSelector) });
+            settings.on('propertiesimported', function() {
+              me.selectionPlaceholderUpdater(itemSelector);
+            });
           }
-          me.selectionPlaceholderUpdater(itemSelector);
+          setTimeout(function() {
+            me.selectionPlaceholderUpdater(itemSelector);
+          }, 100);
+          settings.updateLayout();
         }
       };
     }

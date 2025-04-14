@@ -26,7 +26,6 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -46,6 +45,7 @@ import org.sonatype.nexus.quartz.internal.task.QuartzTaskInfo;
 import org.sonatype.nexus.quartz.internal.task.QuartzTaskJob;
 import org.sonatype.nexus.quartz.internal.task.QuartzTaskJobListener;
 import org.sonatype.nexus.quartz.internal.task.QuartzTaskState;
+import org.sonatype.nexus.rest.ValidationErrorsException;
 import org.sonatype.nexus.scheduling.CurrentState;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskInfo;
@@ -107,6 +107,8 @@ public abstract class QuartzSchedulerSPI
     implements SchedulerSPI
 {
   public static final String MISSING_TRIGGER_RECOVERY = ".missingTriggerRecovery";
+
+  public static final String PLAN_RECONCILIATION_TASK_ID = "blobstore.planReconciliation";
 
   protected static final String GROUP_NAME = "nexus";
 
@@ -612,17 +614,28 @@ public abstract class QuartzSchedulerSPI
     try (TcclBlock tccl = TcclBlock.begin(this)) {
       // check for existing task with same id
       QuartzTaskInfo old = findTaskById(config.getId());
-
       if (old != null) {
         return updateJob(old, config, schedule);
       }
-      else {
-        return createNewJob(config, schedule);
+
+      if (PLAN_RECONCILIATION_TASK_ID.equals(config.getTypeId()) && findTaskByTypeId(config.getTypeId()).isPresent()) {
+        log.warn("Task {} already scheduled, ignoring", PLAN_RECONCILIATION_TASK_ID);
+        throw new ValidationErrorsException("Task {} already exist, ignoring", PLAN_RECONCILIATION_TASK_ID);
       }
+      return createNewJob(config, schedule);
     }
     catch (SchedulerException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private Optional<QuartzTaskInfo> findTaskByTypeId(final String typeId) throws SchedulerException {
+    Map<JobKey, QuartzTaskInfo> tasks = allTasks();
+    return tasks.entrySet()
+        .stream()
+        .filter(entry -> entry.getValue().getConfiguration().getTypeId().equals(typeId))
+        .findFirst()
+        .map(Entry::getValue);
   }
 
   protected QuartzTaskInfo createNewJob(
@@ -938,6 +951,7 @@ public abstract class QuartzSchedulerSPI
     return findAndSubmit(typeId, emptyMap());
   }
 
+  @Override
   public boolean findWaitingTask(final String typeId, final Map<String, String> config) {
     TaskInfo taskInfo = getTaskByTypeId(typeId, config);
     if (taskInfo == null) {

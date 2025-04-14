@@ -96,7 +96,6 @@ Ext.define('NX.coreui.view.task.TaskScopeDates', {
     const field = this.down('datefield[name="' + fieldName + '"]');
     if (field) {
       if (value) {
-        console.log("Set field " + fieldName + " to value = " + value);
         field.setValue(value);
       } else {
         field.setValue(new Date());

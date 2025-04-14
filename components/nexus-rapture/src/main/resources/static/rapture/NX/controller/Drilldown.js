@@ -187,11 +187,23 @@ Ext.define('NX.controller.Drilldown', {
   loadStores: function () {
     var me = this;
     if (this.getFeature()) {
-      Ext.each(this.storesForLoad, function(store){
+      Ext.each(this.storesForLoad, function(storeName) {
         //<if debug>
-        me.logDebug('Loading Drilldown store: ', store);
+        me.logDebug('Loading Drilldown store: ', storeName);
         //</if>
-        me.getStore(store).load();
+        var storeInstance = me.getStore(storeName);
+        if (storeName === 'Task') {
+          me.getStore(storeName).load().addFilter([
+            {
+              filterFn: function(record) {
+                return record.get('typeId') !== 'blobstore.executeReconciliationPlan';
+              }
+            }
+          ], false);
+        }
+        else {
+          storeInstance.load();
+        }
       });
     }
   },

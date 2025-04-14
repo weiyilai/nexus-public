@@ -128,7 +128,10 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
     if (this.isPlanReconcileTask()) {
       task.runPreviousPlan = values.runPreviousPlan ? true : false;
       task.properties.runPreviousPlan = task.runPreviousPlan;
-      task.planIds = me.down('nx-coreui-task-reconcile-plan').data.planIds.toString();
+      var data = me.down('nx-coreui-task-reconcile-plan').data;
+      if (data) {
+        task.planIds = data.planIds.toString();
+      }
       const scopeFieldsSet = me.down('nx-coreui-task-scopefieldset');
       if (scopeFieldsSet) {
         Object.assign(task.properties, scopeFieldsSet.exportProperties());
@@ -186,13 +189,7 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
         ]);
       }
 
-      if (taskTypeModel.get('id') === 'blobstore.planReconciliation') {
-        scheduleFieldSet.setHidden(true);
-        previousPlan.setVisible(true);
-      } else {
-        scheduleFieldSet.setHidden(false);
-        previousPlan.setVisible(false);
-      }
+      this.initScheduleFieldSet(taskTypeModel, scheduleFieldSet, previousPlan);
 
       Ext.each(formFields, function(field) {
         var properties = model.get('properties');
@@ -209,11 +206,28 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
       if (this.isPlanReconcileTask()) {
         const scopeFieldsSet = me.down('nx-coreui-task-scopefieldset');
         if (scopeFieldsSet) {
+          if (model.get("properties") == null) {
+            model.set("properties", {"taskScope": null})
+          }
           scopeFieldsSet.importProperties(model.get('properties'));
         }
       }
 
       this.maybeMakeReadOnly(model);
+    }
+  },
+  initScheduleFieldSet: function(taskTypeModel, scheduleFieldSet, previousPlan) {
+    if (taskTypeModel.get('id') === 'blobstore.planReconciliation') {
+      scheduleFieldSet.setHidden(true);
+      previousPlan.setVisible(true);
+      var scheduleCombo = this.down('[name="schedule"]');
+      if (scheduleCombo) {
+        scheduleCombo.setValue('manual');
+      }
+    }
+    else {
+      scheduleFieldSet.setHidden(false);
+      previousPlan.setVisible(false);
     }
   },
 

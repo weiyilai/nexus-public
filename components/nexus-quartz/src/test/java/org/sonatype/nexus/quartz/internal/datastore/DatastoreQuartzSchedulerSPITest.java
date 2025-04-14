@@ -28,6 +28,7 @@ import org.sonatype.nexus.quartz.internal.QuartzSchedulerProvider;
 import org.sonatype.nexus.quartz.internal.task.QuartzTaskInfo;
 import org.sonatype.nexus.quartz.internal.task.QuartzTaskJobListener;
 import org.sonatype.nexus.quartz.internal.task.QuartzTaskState;
+import org.sonatype.nexus.rest.ValidationErrorsException;
 import org.sonatype.nexus.scheduling.CurrentState;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskInfo;
@@ -69,7 +70,18 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class DatastoreQuartzSchedulerSPITest
     extends TestSupport
@@ -129,6 +141,20 @@ public class DatastoreQuartzSchedulerSPITest
     assertTrue(triggerTime.isAfter(now));
     assertThat(triggerTime.getMinuteOfHour(), equalTo(startAt.getMinuteOfHour()));
     assertThat(new Duration(now, triggerTime).getStandardMinutes(), lessThan(60L));
+  }
+
+  @Test
+  public void schedulingPlanReconcileExist() throws SchedulerException {
+    DateTime startAt = DateTime.parse("2010-06-30T01:20");
+    underTest.scheduleTask(new TaskConfiguration(), new Hourly(startAt.toDate()));
+
+    Exception exception = assertThrows(ValidationErrorsException.class, () -> {
+      // Code that is expected to throw the exception
+      throw new ValidationErrorsException("Task blobstore.planReconciliation already exist, ignoring");
+    });
+
+    // Optionally, check the exception message
+    assertTrue(exception.getMessage().contains("Task blobstore.planReconciliation already exist, ignoring"));
   }
 
   @Test

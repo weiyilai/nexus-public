@@ -132,6 +132,9 @@ Ext.define('NX.coreui.view.task.TaskReconcilePlan', {
    */
   setPlanInformation: function() {
     var me = this;
+    if (me.data === null || me.data.plan === null) {
+      return;
+    }
 
     var labelComponent = me.down('#labelPreviousPlanId');
     if (me.data.plan === null) {
@@ -146,8 +149,8 @@ Ext.define('NX.coreui.view.task.TaskReconcilePlan', {
         labelComponent.setText(NX.I18n.get('Task_TaskSettingsForm_PlanInformation_PlanId_Multiple'));
       }
       me.down('#labelPreviousPlanCreated').update(
-          Ext.Date.format(new Date(me.data.plan.created),
-              'Y-m-d\\TH:i:s.uP'));
+          Ext.Date.format(new Date(me.data.plan.configuration['.created']),
+              'Y/m/d H:i:s \\G\\M\\T P'));
     }
   },
 
@@ -157,6 +160,9 @@ Ext.define('NX.coreui.view.task.TaskReconcilePlan', {
    */
   populateData: function(model) {
     var timeLastPlan = 0;
+    if (model.get('reconcilePlans') === undefined) {
+      return;
+    }
     var plans = model.get('reconcilePlans').get('items');
     this.data = {
       plan: null,

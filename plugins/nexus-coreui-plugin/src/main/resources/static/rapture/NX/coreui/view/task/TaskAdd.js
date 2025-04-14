@@ -41,8 +41,8 @@ Ext.define('NX.coreui.view.task.TaskAdd', {
       editableMarker: NX.I18n.get('Task_TaskAdd_Create_Error'),
 
       buttons: [
-        { text: NX.I18n.get('Task_TaskList_New_Button'), action: 'add', formBind: true, ui: 'nx-primary' },
-        { text: NX.I18n.get('Add_Cancel_Button'), action: 'back' }
+        {text: NX.I18n.get('Task_TaskList_New_Button'), action: 'add', formBind: true, ui: 'nx-primary'},
+        {text: NX.I18n.get('Add_Cancel_Button'), action: 'back'}
       ]
     };
 

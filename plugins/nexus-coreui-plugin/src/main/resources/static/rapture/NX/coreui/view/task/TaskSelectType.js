@@ -51,9 +51,10 @@ Ext.define('NX.coreui.view.task.TaskSelectType', {
     ];
 
     me.store = Ext.create('NX.coreui.store.TaskType');
-    me.store.addFilter([
-      { property: 'exposed', value: true }
-    ], false);
+    var filters = [{property: 'exposed', value: true}];
+    me.filterTasksIfCreated(filters,
+        ['blobstore.planReconciliation', 'blobstore.executeReconciliationPlan']);
+    me.store.addFilter(filters, false);
 
     // Add a white background behind the filter, to make it look like part of the header
     me.dockedItems = [
@@ -63,6 +64,33 @@ Ext.define('NX.coreui.view.task.TaskSelectType', {
     ];
 
     me.callParent();
+  },
+  filterTasksIfCreated: function(filters, typeIds) {
+    var me = this;
+    typeIds.forEach(function(typeId) {
+      if (me.isTaskCreated(typeId)) {
+        filters.push({
+          filterFn: function(record) {
+            return record.get('id') !== typeId;
+          }
+        });
+      }
+    });
+  },
+  isTaskCreated: function(typeId) {
+    var taskListComponent = Ext.ComponentQuery.query('nx-coreui-task-list')[0];
+    if (taskListComponent) {
+      var taskStore = taskListComponent.getStore("Task");
+      if (taskStore) {
+        var tasks = taskStore.getData().items;
+        for (var i = 0; i < tasks.length; i++) {
+          if (tasks[i].data.typeId === typeId) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
 });
