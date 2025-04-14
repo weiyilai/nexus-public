@@ -32,7 +32,11 @@ export default function IqServer() {
 
   return <Page>
     <PageHeader>
-      <PageTitle icon={faShieldAlt} {...UIStrings.IQ_SERVER.MENU}/>
+      <PageTitle
+          icon={UIStrings.IQ_SERVER.MENU.icon}
+          text={UIStrings.IQ_SERVER.MENU.text}
+          description={UIStrings.IQ_SERVER.MENU.description}
+      />
     </PageHeader>
     <ContentBody className="nxrm-iq-server">
       <Section>

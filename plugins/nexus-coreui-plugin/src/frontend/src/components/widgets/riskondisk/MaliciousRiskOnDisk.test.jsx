@@ -24,14 +24,13 @@ import {maliciousRiskOnDiskResponse, maliciousRiskOnDiskResponseWithCount0} from
 import MaliciousRiskOnDisk from "./MaliciousRiskOnDisk";
 import FeatureFlags from '../../../constants/FeatureFlags';
 import MaliciousRiskStrings from "../../../constants/pages/maliciousrisk/MaliciousRiskStrings";
-import { helperFunctions } from "../CELimits/UsageHelper";
+import { helperFunctions } from "../SystemStatusAlerts/CELimits/UsageHelper";
 
 const {
   useThrottlingStatusValue,
   useGracePeriodEndsDate
 } = helperFunctions;
 
-const {MALICIOUS_RISK_ON_DISK} = APIConstants.REST.PUBLIC;
 const {
   CLM,
   MALWARE_RISK_ENABLED,
@@ -231,8 +230,7 @@ describe('MaliciousRiskOnDisk', () => {
   });
 
   async function expectAlertToRender(count, isAdmin, isProEdition, isIqServerEnabled = null, isMalwareRiskEnabled = null) {
-    expect(selectors.getHeading(count)).toBeInTheDocument();
-    expect(selectors.getHeading(RISK_ON_DISK.TITLE_PLURAL)).toBeInTheDocument();
+    expect(selectors.getHeading(count + ' ' + RISK_ON_DISK.TITLE_PLURAL)).toBeInTheDocument();
     expect(selectors.queryAlert()).toHaveTextContent(RISK_ON_DISK.DESCRIPTION.CONTENT);
 
     if (isAdmin) {

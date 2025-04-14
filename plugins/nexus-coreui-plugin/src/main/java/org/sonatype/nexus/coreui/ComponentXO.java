@@ -43,12 +43,15 @@ public class ComponentXO
   @NotBlank
   private String lastBlobUpdated;
 
+  private String groupingKey;
+
   public String getId() {
     return id;
   }
 
   public void setId(String id) {
     this.id = id;
+    setGroupingKey();
   }
 
   public String getRepositoryName() {
@@ -89,6 +92,7 @@ public class ComponentXO
 
   public void setFormat(String format) {
     this.format = format;
+    setGroupingKey();
   }
 
   public String getLastBlobUpdated() {
@@ -97,6 +101,12 @@ public class ComponentXO
 
   public void setLastBlobUpdated(String lastBlobUpdated) {
     this.lastBlobUpdated = lastBlobUpdated;
+  }
+
+  private void setGroupingKey() {
+    if (this.format != null && this.id != null) {
+      this.groupingKey = this.format + "-" + this.id;
+    }
   }
 
   @Override

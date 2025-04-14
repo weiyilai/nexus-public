@@ -49,8 +49,10 @@ export default {
       LABEL: 'Upgrade Failed.',
       TEXT: 'error occurred while trying update the nodes in your cluster.',
       TEXT_MISMATCH: 'or more node(s) in your cluster is not running the same version of Nexus Repository.',
-      CONTACT_SUPPORT: <><NxTextLink external href="https://links.sonatype.com/products/nexus/pro/support-request">
-        Contact support</NxTextLink> for assistance.</>
+      CONTACT_SUPPORT: {
+        HREF: 'https://links.sonatype.com/products/nexus/pro/support-request',
+        TEXT: 'Contact support'
+      }
     },
 
     COMPLETE: {

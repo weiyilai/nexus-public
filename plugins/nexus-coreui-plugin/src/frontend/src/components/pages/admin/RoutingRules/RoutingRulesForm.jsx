@@ -30,7 +30,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle,
   Section
@@ -42,6 +41,7 @@ import UIStrings from '../../../../constants/UIStrings';
 import {faPlus, faTrash} from '@fortawesome/free-solid-svg-icons';
 import RoutingRulesPreview from './RoutingRulesFormPreview';
 import RoutingRuleMatcherRow from './RoutingRuleMatcherRow';
+import { isEmpty } from 'ramda';
 
 const {ROUTING_RULES, SETTINGS} = UIStrings;
 
@@ -64,7 +64,7 @@ export default function RoutingRulesForm({itemId, onDone}) {
 
   const {data, path, testError, testResult} = current.context;
   const isTesting = current.matches('testing');
-  const hasData = data && data !== {};
+  const hasData = data && !isEmpty(data);
   const assignedRepositoryCount = data?.assignedRepositoryCount || 0;
   const assignedRepositoryNames = data?.assignedRepositoryNames || [];
   const isEdit = Boolean(itemId);
@@ -104,7 +104,7 @@ export default function RoutingRulesForm({itemId, onDone}) {
     send({type: 'TEST'});
   }
 
-  return <Page className="nxrm-routing-rules">
+  return <div className="nxrm-routing-rules">
     {isEdit &&
     <NxInfoAlert>
       {!hasAssignedRepositories && <span dangerouslySetInnerHTML={{__html: ROUTING_RULES.FORM.UNUSED}}/>}
@@ -184,5 +184,5 @@ export default function RoutingRulesForm({itemId, onDone}) {
         </NxLoadWrapper>
       </Section>
     </ContentBody>
-  </Page>;
+  </div>;
 }

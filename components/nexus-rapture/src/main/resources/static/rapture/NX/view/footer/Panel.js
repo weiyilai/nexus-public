@@ -47,8 +47,7 @@ Ext.define('NX.view.footer.Panel', {
           xtype: 'container',
           cls: 'copyright',
           html: NX.I18n.get('Footer_Panel_HTML')
-        },
-        { xtype: 'nx-footer-branding', hidden: true }
+        }
       ]
     });
 

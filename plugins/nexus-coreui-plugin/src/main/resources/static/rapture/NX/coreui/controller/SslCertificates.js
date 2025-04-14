@@ -76,22 +76,6 @@ Ext.define('NX.coreui.controller.SslCertificates', {
   init: function () {
     var me = this;
 
-    me.features = {
-      mode: 'admin',
-      path: '/Security/SSL Certificates',
-      view: {xtype: 'nx-coreui-sslcertificate-feature'},
-      text: NX.I18n.get('SslCertificates_Text'),
-      description: NX.I18n.get('SslCertificates_Description'),
-      iconConfig: {
-        file: 'ssl_certificates.png',
-        variants: ['x16', 'x32']
-      },
-      visible: function() {
-        return NX.Permissions.check('nexus:ssl-truststore:read') &&
-            !NX.State.getValue('nexus.react.sslCertificates', true);
-      },
-    };
-
     me.callParent();
 
     me.listen({

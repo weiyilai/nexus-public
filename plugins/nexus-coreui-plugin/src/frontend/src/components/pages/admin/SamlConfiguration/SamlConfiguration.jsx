@@ -50,7 +50,13 @@ export default function SamlConfiguration() {
   }
 
   return <Page>
-    <PageHeader><PageTitle icon={faIdCard} {...UIStrings.SAML_CONFIGURATION.MENU}/></PageHeader>
+    <PageHeader>
+      <PageTitle
+        icon={UIStrings.SAML_CONFIGURATION.MENU.icon}
+        text={UIStrings.SAML_CONFIGURATION.MENU.text}
+        description={UIStrings.SAML_CONFIGURATION.MENU.description}
+      />
+    </PageHeader>
     <ContentBody className='nxrm-saml-configuration'>
       <Section>
         <NxStatefulForm

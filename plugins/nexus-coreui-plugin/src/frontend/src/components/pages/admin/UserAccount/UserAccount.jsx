@@ -44,7 +44,13 @@ export default function UserAccount() {
 
   return (
       <Page>
-        <PageHeader><PageTitle icon={faUser} {...UIStrings.USER_ACCOUNT.MENU}/></PageHeader>
+        <PageHeader>
+          <PageTitle
+              icon={UIStrings.USER_ACCOUNT.MENU.icon}
+              text={UIStrings.USER_ACCOUNT.MENU.text}
+              description={UIStrings.USER_ACCOUNT.MENU.description}
+          />
+        </PageHeader>
         <ContentBody className="nxrm-user-account">
           <NxTile className="user-account-settings">
             <NxStatefulForm

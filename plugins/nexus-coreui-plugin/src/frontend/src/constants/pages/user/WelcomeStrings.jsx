@@ -11,11 +11,13 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import React from 'react';
+ import { faHome } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   WELCOME: {
     MENU: {
-      text: 'Welcome'
+      text: 'Dashboard',
+      icon: faHome
     },
     ACTIONS: {
       SYSTEM_HEALTH: {
@@ -59,11 +61,12 @@ export default {
     USAGE: {
       BANNERS: {
         NEAR_LIMITS: 'This instance of Nexus Repository Community Edition is trending toward its usage limit. Once limits are reached, new components cannot be added.',
-        OVER_LIMIT_IN_GRACE: (daysLeft, endDate) => <><strong>{daysLeft} Days Remaining</strong><br/>This instance of Nexus Repository Community Edition has exceeded its usage limit. Limits will be enforced starting {endDate}, when new components can no longer be added.</>,
+        OVER_LIMIT_IN_GRACE: (endDate) => `This instance of Nexus Repository Community Edition has exceeded its usage limit. Limits will be enforced starting ${endDate}, when new components can no longer be added.`,
+        OVER_LIMIT_IN_GRACE_TITLE: (daysLeft) => `${daysLeft} Days Remaining`,
         OVER_LIMIT_END_GRACE: 'This instance of Nexus Repository Community Edition has exceeded its usage limit. New components can no longer be added.',
         BELOW_LIMIT_END_GRACE: 'If this instance of Nexus Repository Community Edition exceeds usage limits, you will not be able to add new components.',
-        THROTTLING_NON_ADMIN: <>This instance of Nexus Repository Community Edition has exceeded its usage limit. New components can no longer be added. Talk to your repository administrator.</>,
-        NEARING_NON_ADMIN: <>This instance of Nexus Repository Community Edition is trending toward its usage limit.  Once limits are reached, new components cannot be added. Talk to your repository administrator.</>
+        THROTTLING_NON_ADMIN: 'This instance of Nexus Repository Community Edition has exceeded its usage limit. New components can no longer be added. Talk to your repository administrator.',
+        NEARING_NON_ADMIN: 'This instance of Nexus Repository Community Edition is trending toward its usage limit. Once limits are reached, new components cannot be added. Talk to your repository administrator.'
       },
       MENU: {
         TITLE: 'Usage Center',

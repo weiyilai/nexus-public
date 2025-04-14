@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import React, {useEffect} from 'react';
+import React, { useEffect, forwardRef, useRef } from 'react';
 import {useMachine} from "@xstate/react";
 
 import {
@@ -18,19 +18,20 @@ import {
   NxErrorAlert,
   NxFontAwesomeIcon,
   NxGrid,
-  NxH2,
   NxH3,
   useToggle
 } from "@sonatype/react-shared-components";
 import {ExtJS} from '@sonatype/nexus-ui-plugin';
-import {faExclamationCircle, faExclamationTriangle, faCaretRight} from "@fortawesome/free-solid-svg-icons";
+import {faExclamationCircle, faCaretRight} from "@fortawesome/free-solid-svg-icons";
 
 import MaliciousRiskOnDiskMachine from "./MaliciousRiskOnDiskMachine";
 import UIStrings from '../../../constants/UIStrings';
 import "./MaliciousRiskOnDisk.scss";
 import FeatureFlags from '../../../constants/FeatureFlags';
-import {helperFunctions} from '../CELimits/UsageHelper';
+import {helperFunctions} from '../SystemStatusAlerts/CELimits/UsageHelper';
 import {isPageHashIncluding} from '../../../interfaces/LocationUtils';
+import { useSize } from '../../../hooks/useSize';
+import classNames from 'classnames';
 
 const {
   CLM,
@@ -54,17 +55,33 @@ const {
 const EXTJS_EXPANDED_HEIGHT = 292;
 const EXTJS_COLLAPSED_HEIGHT = 115;
 
-function MalwareButton({isProEdition, isMalwareRiskEnabled, isIqServerEnabled}) {
-  if (isProEdition && isMalwareRiskEnabled && isIqServerEnabled) {
-    return <a className="nx-btn nx-btn--error" href="#browse/malwarerisk">{VIEW_MALWARE_RISK}</a>;
-  } else if (isProEdition) {
-    return <a className="nx-btn nx-btn--error" href={CONTACT_SONATYPE.URL.PRO} target="_blank">{CONTACT_SONATYPE.TEXT}</a>;
-  } else {
-    return <a className="nx-btn nx-btn--error" href={CONTACT_SONATYPE.URL.OSS} target="_blank">{CONTACT_SONATYPE.TEXT}</a>;
+export default function MaliciousRiskOnDisk({ toggle, onSizeChanged, className }) {
+  const isRiskOnDiskEnabled = ExtJS.state().getValue(MALWARE_RISK_ON_DISK_ENABLED);
+  const user = ExtJS.useUser();
+  const userIsLogged = user ?? false;
+  const showMaliciousRiskOnDisk = userIsLogged && isRiskOnDiskEnabled;
+
+  const isRiskOnDiskNoneAdminOverrideEnabled = ExtJS.state().getValue(MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED);
+  const isAdmin = user && user.administrator;
+  const shouldHideForNonAdmin = isRiskOnDiskNoneAdminOverrideEnabled && !isAdmin;
+
+  if (!showMaliciousRiskOnDisk || shouldHideForNonAdmin) {
+    return null;
   }
+
+  return <MaliciousRiskOnDiskContent user={user} toggle={toggle} onSizeChanged={onSizeChanged}  />;
 }
 
-function MaliciousRiskOnDiskContent({rerender, toggle}) {
+function MaliciousRiskOnDiskContent({ toggle, onSizeChanged, className }) {
+  const maliciousRiskRef = useRef(null);
+  const maliciousRiskSize = useSize(maliciousRiskRef);
+
+  useEffect(() => {
+    if (!!maliciousRiskSize && typeof onSizeChanged === 'function') {
+      onSizeChanged(maliciousRiskSize.width, maliciousRiskSize.height);
+    }
+  }, [maliciousRiskSize.width, maliciousRiskSize.height]);
+
   const [state, send] = useMachine(MaliciousRiskOnDiskMachine, {
     devTools: true
   });
@@ -76,16 +93,84 @@ function MaliciousRiskOnDiskContent({rerender, toggle}) {
   const isProEdition = ExtJS.isProEdition();
   const isIqServerEnabled = ExtJS.state().getValue(CLM)?.enabled;
   const isMalwareRiskEnabled = ExtJS.state().getValue(MALWARE_RISK_ENABLED);
-  const isMalwareRemediationPage = isPageHashIncluding(['#browse/malwarerisk']);
   const isOnBrowseOrSearch = isPageHashIncluding(['#browse/browse', '#browse/search']);
+
   const isWelcomePage = !window.location.hash || isPageHashIncluding(['#browse/welcome']);
 
   const riskOnDiskCount = maliciousRiskOnDisk?.totalCount ?? 0;
-  const showWarningAlert = riskOnDiskCount > 0 && !closeMalwareBanner && !isMalwareRemediationPage;
+  const showWarningAlert = riskOnDiskCount > 0 && !closeMalwareBanner;
   const throttlingStatus = useThrottlingStatus();
 
+  const startsExpanded = shouldStartExpanded();
+  const [isExpanded, onToggleCollapse] = useToggle(startsExpanded);
+
+  useEffect(() => {
+    if (isOnBrowseOrSearch && toggle) {
+      toggle(isExpanded ? EXTJS_EXPANDED_HEIGHT : EXTJS_COLLAPSED_HEIGHT);
+    }
+  }, [isExpanded]);
+
+  if (!showWarningAlert) {
+    return null;
+  }
+
+  return (<div className={`${classNames('risk-on-disk-container', className)}`} ref={maliciousRiskRef}>
+    <NxErrorAlert
+        aria-label="Malicious Components Found"
+        className="risk-on-disk-alert"
+        onClose={isExpanded ? dismiss : undefined}
+    >
+      <div className="risk-on-disk-content">
+        <button
+            type="button"
+            className="nx-collapsible-items__trigger"
+            onClick={onToggleCollapse || undefined}
+            aria-expanded={isExpanded}
+        >
+          <div className="risk-on-disk-toggle">
+            <NxFontAwesomeIcon icon={faCaretRight} className={isExpanded ? 'expanded' : ''}/>
+          </div>
+          <div className="risk-on-disk-alert-title">
+            <NxFontAwesomeIcon icon={faExclamationCircle}/>
+            <NxH3>
+              <span className="nxrm-malware-components-count-value">{riskOnDiskCount.toLocaleString()}</span>
+              {getTitle()}
+            </NxH3>
+          </div>
+        </button>
+        {isExpanded && (
+            <>
+              <NxGrid.Column className='risk-on-disk-alert-description'>
+                <NxGrid.ColumnSection>
+                  <NxGrid.Header>
+                    <p className='risk-on-disk-alert-description-title'>{DESCRIPTION.TITLE}</p>
+                  </NxGrid.Header>
+                  <p className='risk-on-disk-alert-description-content'>{DESCRIPTION.CONTENT}</p>
+                </NxGrid.ColumnSection>
+                {!isAdmin &&
+                    <NxGrid.ColumnSection>
+                      <p>{DESCRIPTION.ADDITIONAL_NON_ADMIN_CONTENT}</p>
+                    </NxGrid.ColumnSection>
+                }
+              </NxGrid.Column>
+              {isAdmin && <NxButtonBar>
+                <MalwareButton isProEdition={isProEdition}
+                               isMalwareRiskEnabled={isMalwareRiskEnabled}
+                               isIqServerEnabled={isIqServerEnabled}/>
+              </NxButtonBar>}
+            </>
+        )}
+      </div>
+    </NxErrorAlert>
+  </div>);
+
+  function dismiss() {
+    send({type: 'DISMISS'});
+  }
+
   function hasUsageBanner() {
-    if (throttlingStatus === 'BELOW_LIMITS_GRACE_PERIOD_ENDED' && document.cookie.includes('under_end_grace=dismissed')) {
+    if (throttlingStatus === 'BELOW_LIMITS_GRACE_PERIOD_ENDED' &&
+        document.cookie.includes('under_end_grace=dismissed')) {
       return false;
     }
     else if (throttlingStatus === 'NO_THROTTLING') {
@@ -99,111 +184,29 @@ function MaliciousRiskOnDiskContent({rerender, toggle}) {
       return true;
     }
     else if (!isAdmin) {
-      return true; 
+      return true;
     }
     else if (isWelcomePage && !hasUsageBanner()) {
-      return true; 
-    } 
+      return true;
+    }
     return false;
   }
 
-  const startsExpanded = shouldStartExpanded();
-  const [isExpanded, onToggleCollapse] = useToggle(startsExpanded);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isOnBrowseOrSearch && rerender) {
-        rerender(riskOnDiskCount, closeMalwareBanner);
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [riskOnDiskCount, closeMalwareBanner]);
-
-  useEffect(() => {
-    if (isOnBrowseOrSearch && toggle) {
-      toggle(isExpanded ? EXTJS_EXPANDED_HEIGHT : EXTJS_COLLAPSED_HEIGHT);
-    }
-  }, [isExpanded]);
-
-  function retry() {
-    send({type: 'RETRY'});
+  function getTitle() {
+    return `${riskOnDiskCount > 1 ? TITLE_PLURAL : TITLE_SINGULAR}`
   }
-
-  function dismiss() {
-    send({type: 'DISMISS'});
-  }
-
-  return (
-      <>
-        {showWarningAlert && (
-          <>
-            <div className={isOnBrowseOrSearch ? "risk-on-disk-container-browse-search" : "risk-on-disk-container"}>
-              <NxErrorAlert className="risk-on-disk-alert" onClose={isExpanded ? dismiss : undefined}>
-                <div className="risk-on-disk-content">
-                  <button 
-                    type="button"
-                    className="nx-collapsible-items__trigger"
-                    onClick={onToggleCollapse || undefined}
-                    aria-expanded={isExpanded}
-                  > 
-                    <div className="risk-on-disk-toggle">
-                      <NxFontAwesomeIcon icon={faCaretRight} className={isExpanded ? 'expanded' : ''}/>
-                    </div>
-                    <div className="risk-on-disk-alert-title">
-                      <NxFontAwesomeIcon icon={faExclamationCircle}/>
-                      <NxH3>{riskOnDiskCount.toLocaleString()}</NxH3>
-                      <NxH3>{riskOnDiskCount > 1 ? TITLE_PLURAL : TITLE_SINGULAR}</NxH3>
-                    </div>
-                  </button> 
-                  {isExpanded && (
-                    <>
-                      <NxGrid.Column className='risk-on-disk-alert-description'>
-                        <NxGrid.ColumnSection>
-                          <NxGrid.Header>
-                            <p className='risk-on-disk-alert-description-title'>{DESCRIPTION.TITLE}</p>
-                          </NxGrid.Header>
-                          <p className='risk-on-disk-alert-description-content'>{DESCRIPTION.CONTENT}</p>
-                        </NxGrid.ColumnSection>
-                        {!isAdmin && 
-                          <NxGrid.ColumnSection>
-                            <p>{DESCRIPTION.ADDITIONAL_NON_ADMIN_CONTENT}</p>
-                          </NxGrid.ColumnSection>
-                        }
-                      </NxGrid.Column>
-                      {isAdmin && <NxButtonBar>
-                        <MalwareButton isProEdition={isProEdition}
-                                       isMalwareRiskEnabled={isMalwareRiskEnabled}
-                                       isIqServerEnabled={isIqServerEnabled}/>
-                      </NxButtonBar>}
-                    </>
-                  )}
-                </div>
-              </NxErrorAlert>
-          </div>
-        </>
-      )}
-      {isMalwareRemediationPage && <div className={`malware-components-count ${riskOnDiskCount === 0 ? 'zero' : ''}`}>
-        {riskOnDiskCount > 0 && <NxFontAwesomeIcon icon={faExclamationTriangle}/>}
-        <NxH2>{riskOnDiskCount.toLocaleString()}</NxH2>
-        <NxH3>{riskOnDiskCount > 1 ? TITLE_PLURAL : TITLE_SINGULAR}</NxH3>
-      </div>}
-    </>
-  );
 }
 
-export default function MaliciousRiskOnDisk({rerender, toggle}) {
-  const isRiskOnDiskEnabled = ExtJS.state().getValue(MALWARE_RISK_ON_DISK_ENABLED);
-  const user = ExtJS.useUser();
-  const userIsLogged = user ?? false;
-  const showMaliciousRiskOnDisk = userIsLogged && isRiskOnDiskEnabled;
-
-  const isRiskOnDiskNoneAdminOverrideEnabled = ExtJS.state().getValue(MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED);
-  const isAdmin = user && user.administrator;
-  const shouldHideForNonAdmin = isRiskOnDiskNoneAdminOverrideEnabled && !isAdmin;
-
-  if (!showMaliciousRiskOnDisk || shouldHideForNonAdmin) {
-    return null;
+function MalwareButton({isProEdition, isMalwareRiskEnabled, isIqServerEnabled}) {
+  if (isProEdition && isMalwareRiskEnabled && isIqServerEnabled) {
+    return <a className="nx-btn nx-btn--error" href="#browse/malwarerisk">{VIEW_MALWARE_RISK}</a>;
   }
-  return <MaliciousRiskOnDiskContent user={user} rerender={rerender} toggle={toggle} />;
+  else if (isProEdition) {
+    return <a className="nx-btn nx-btn--error" href={CONTACT_SONATYPE.URL.PRO}
+              target="_blank">{CONTACT_SONATYPE.TEXT}</a>;
+  }
+  else {
+    return <a className="nx-btn nx-btn--error" href={CONTACT_SONATYPE.URL.OSS}
+              target="_blank">{CONTACT_SONATYPE.TEXT}</a>;
+  }
 }

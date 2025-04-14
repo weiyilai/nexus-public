@@ -27,7 +27,6 @@ import {faCopy, faUpload} from '@fortawesome/free-solid-svg-icons';
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -51,7 +50,7 @@ export default function UploadList({onEdit, copyUrl = doCopyUrl}) {
 
   const filter = (value) => send({type: 'FILTER', filter: value});
 
-  return <Page className="nxrm-upload">
+  return <div className="nxrm-upload">
     <PageHeader>
       <PageTitle icon={faUpload} {...UPLOAD.MENU}/>
     </PageHeader>
@@ -100,7 +99,7 @@ export default function UploadList({onEdit, copyUrl = doCopyUrl}) {
         </NxTile.Content>
       </NxTile>
     </ContentBody>
-  </Page>
+  </div>
 }
 
 function doCopyUrl(event, url) {

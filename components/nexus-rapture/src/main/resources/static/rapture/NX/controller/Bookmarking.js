@@ -54,7 +54,9 @@ Ext.define('NX.controller.Bookmarking', {
    * @returns {NX.Bookmark} current bookmark
    */
   getBookmark: function () {
-    return NX.Bookmarks.fromToken(Ext.History.bookmark || Ext.History.getToken());
+    // changing this to getHash rather than getToken. getToken is just a wrapper around getHash that caches the values
+    // of getHash, and it is not staying up to date with route changes driven by UI Router.
+    return NX.Bookmarks.fromToken(Ext.History.bookmark || Ext.History.getHash());
   },
 
   /**

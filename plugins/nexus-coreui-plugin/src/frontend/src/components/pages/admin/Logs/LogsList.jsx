@@ -28,7 +28,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle,
   Section,
@@ -50,9 +49,14 @@ export default function LogsList({onEdit}) {
   const sizeSortDir = ListMachineUtils.getSortDirection('size', current.context);
   const lastModifiedSortDir = ListMachineUtils.getSortDirection('lastModified', current.context);
 
-  return <Page>
+  return <div className="nxrm-logs">
     <PageHeader>
-      <PageTitle icon={faScroll} {...UIStrings.LOGS.MENU}/>
+      {/*icon does not match what's in constants faScroll vs faTerminal */}
+      <PageTitle
+          icon={faScroll}
+          text={UIStrings.LOGS.MENU.text}
+          description={UIStrings.LOGS.MENU.description}
+      />
     </PageHeader>
     <ContentBody>
       <Section className="nxrm-logs-list">
@@ -94,5 +98,5 @@ export default function LogsList({onEdit}) {
         </NxTable>
       </Section>
     </ContentBody>
-  </Page>;
+  </div>;
 }

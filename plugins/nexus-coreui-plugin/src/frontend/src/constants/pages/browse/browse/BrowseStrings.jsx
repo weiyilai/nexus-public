@@ -10,11 +10,14 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
+import { faDatabase } from '@fortawesome/free-solid-svg-icons';
+
 export default {
   BROWSE: {
     MENU: {
       text: 'Browse',
       description: 'Browse assets and components',
+      icon: faDatabase
     },
     TREE_TITLE: 'View Assets/Components for',
     TREE_EMPTY_MESSAGE: 'No component/assets found in repository',

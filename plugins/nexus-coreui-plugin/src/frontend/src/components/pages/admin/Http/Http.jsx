@@ -35,7 +35,11 @@ export default function Http() {
   return (
     <Page>
       <PageHeader>
-        <PageTitle icon={faTruck} {...UIStrings.HTTP.MENU} />
+        <PageTitle
+            icon={UIStrings.HTTP.MENU.icon}
+            text={UIStrings.HTTP.MENU.text}
+            description={UIStrings.HTTP.MENU.description}
+        />
       </PageHeader>
       <ContentBody className="nxrm-http">
         <NxTile>{canEdit ? <HttpForm /> : <HttpReadOnly />}</NxTile>

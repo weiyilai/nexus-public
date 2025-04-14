@@ -566,5 +566,12 @@ Ext.define('NX.coreui.controller.Users', {
     if (userSearchBox && !userSearchBox.hasFocus) {
       this.callParent();
     }
-  }
+  },
+
+  onNavigate: function() {
+    if (NX.Bookmarks.getBookmark().getToken().includes('security/users')) {
+      this.reselect();
+    }
+  },
+
 });

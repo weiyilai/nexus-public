@@ -27,7 +27,7 @@ import {replace} from 'ramda';
 import classNames from 'classnames';
 
 import UIStrings from '../../../../../constants/UIStrings';
-import {helperFunctions} from '../../../../widgets/CELimits/UsageHelper';
+import {helperFunctions} from '../../../../widgets/SystemStatusAlerts/CELimits/UsageHelper';
 import './UsageCenter.scss';
 
 const {

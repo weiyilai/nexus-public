@@ -26,7 +26,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageTitle,
 } from '../../../layout';
 
@@ -53,7 +52,7 @@ export default function TagsDetails({itemId}) {
     send({type: 'RETRY'});
   }
 
-  return <Page className="nxrm-tags">
+  return <div className="nxrm-tags">
     <div>
       <PageTitle icon={faTags} {...TAGS.DETAILS.HEADER}/>
       <NxBackButton href="#browse/tags" text={TAGS.DETAILS.BACK_TO_TAGS_TABLE}/>
@@ -86,5 +85,5 @@ export default function TagsDetails({itemId}) {
         </NxLoadWrapper>
       </NxTile>
     </ContentBody>
-  </Page>
+  </div>
 }

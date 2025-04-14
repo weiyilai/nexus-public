@@ -29,7 +29,6 @@ import {faCopy, faDatabase} from '@fortawesome/free-solid-svg-icons';
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle,
@@ -104,7 +103,7 @@ export default function RepositoriesList({onCreate, onEdit, copyUrl = doCopyUrl}
     });
 
   return (
-    <Page className="nxrm-repositories">
+    <div className="nxrm-repositories">
       <PageHeader>
         <PageTitle icon={faDatabase} {...REPOSITORIES.MENU} />
         <PageActions>
@@ -207,7 +206,7 @@ export default function RepositoriesList({onCreate, onEdit, copyUrl = doCopyUrl}
           name={healthCheckModalState.repoName}
         />
       )}
-    </Page>
+    </div>
   );
 }
 

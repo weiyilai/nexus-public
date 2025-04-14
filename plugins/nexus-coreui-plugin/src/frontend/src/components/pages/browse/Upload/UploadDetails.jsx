@@ -24,7 +24,6 @@ import {
   NxH1,
   NxH2,
   NxInfoAlert,
-  NxPageMain,
   NxPageTitle,
   NxStatefulForm,
   NxTextInput,
@@ -86,7 +85,7 @@ export default function UploadDetails({ itemId }) {
   }
 
   return (
-    <NxPageMain id="nxrm-upload-details">
+    <div id="nxrm-upload-details" data-testid="nxrm-upload-details">
       <NxPageTitle>
         <NxH1 id="upload-details-title">
           <NxFontAwesomeIcon icon={faUpload} />
@@ -177,6 +176,6 @@ export default function UploadDetails({ itemId }) {
           }
         </NxStatefulForm>
       </div>
-    </NxPageMain>
+    </div>
   );
 }

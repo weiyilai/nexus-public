@@ -34,9 +34,11 @@ const {
 } = UIStrings;
 
 export default function NodeList() {
-  const [state] = useMachine(NodeListMachine, {
+  const [state, sendEvent] = useMachine(NodeListMachine, {
     devTools: true
   });
+
+  const retryHandler = () => sendEvent({type: 'LOAD'});
 
   const {data, error} = state.context;
 
@@ -53,7 +55,7 @@ export default function NodeList() {
 
       <ContentBody>
         <NxH2>{MENU.text}</NxH2>
-        <NxLoadWrapper loading={isLoading} error={error} retryHandler={() => _}>
+        <NxLoadWrapper loading={isLoading} error={error} retryHandler={retryHandler}>
           <NxCard.Container>
             {data.map((node) => (
               <NxCard key={node.nodeId}>

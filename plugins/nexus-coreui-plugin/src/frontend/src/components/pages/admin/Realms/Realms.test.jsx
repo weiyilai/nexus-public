@@ -233,21 +233,24 @@ describe('Realms', () => {
       expect(item).toHaveTextContent(initialOrder[index].name);
     });
 
-    // Reorders the elements.
-    const secondElement = previousActivesRealms[1];
-    const secondElementButtons = secondElement.querySelectorAll('.nx-btn');
-    const secondElementMoveDownButton = secondElementButtons[1];
+    // === Reorders the elements ===
+    // move the second entry ('Local Authorizing Realm') in the list down 1
+    let localAuthorizingRealmDownButton = await getMoveDownButton('Local Authorizing Realm');
+    await userEvent.click(localAuthorizingRealmDownButton);
 
-    await userEvent.dblClick(secondElementMoveDownButton);
+    // move it ('Local Authorizing Realm') down once more
+    localAuthorizingRealmDownButton = await getMoveDownButton('Local Authorizing Realm');
+    await userEvent.click(localAuthorizingRealmDownButton);
 
-    const firstElement = previousActivesRealms[0];
-    const firstElementButtons = firstElement.querySelectorAll('.nx-btn');
-    const firstElementMoveDownButton = firstElementButtons[1];
+    // move first entry ('Local Authenticating Realm') in the list down 1
+    let localAuthenticatingRealmDownButton = await getMoveDownButton('Local Authenticating Realm');
+    await userEvent.click(localAuthenticatingRealmDownButton);
 
-    await userEvent.dblClick(firstElementMoveDownButton);
+    // moves it ('Local Authenticating Realm') down once more
+    localAuthenticatingRealmDownButton = await getMoveDownButton('Local Authenticating Realm');
+    await userEvent.click(localAuthenticatingRealmDownButton);
 
     const currentActivesRealms = allActiveItems();
-
     expect(currentActivesRealms).toHaveLength(4);
 
     // Checks new order which should be the same as the data object.
@@ -372,4 +375,13 @@ describe('Realms', () => {
       expect(emptyList()).toBeInTheDocument();
     });
   });
+
+  function getMoveDownButton(name) {
+    const localAuthRealm = screen.getByRole('group', { name })
+    return within(localAuthRealm).getAllByRole('button')[1]
+  }
 });
+
+async function doDelay(time) {
+  return new Promise((resolve, _) => setTimeout(resolve, time))
+}

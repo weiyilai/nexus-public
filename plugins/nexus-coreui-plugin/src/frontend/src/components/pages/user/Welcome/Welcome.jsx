@@ -14,13 +14,9 @@ import React, {useEffect, useRef, useState} from 'react';
 import {useMachine} from '@xstate/react';
 import {ExtJS, toURIParams, getVersionMajorMinor} from '@sonatype/nexus-ui-plugin';
 import {
-  NxLoadWrapper,
-  NxPageMain,
-  NxPageTitle,
-  NxH1,
+  NxLoadWrapper, NxPageMain,
 } from '@sonatype/react-shared-components';
 
-import UIStrings from '../../../../constants/UIStrings';
 import welcomeMachine from './WelcomeMachine';
 import OutreachActions from './OutreachActions';
 import UsageCenter from './UsageCenter/UsageCenter';
@@ -103,45 +99,30 @@ export default function Welcome() {
   }, []);
 
   return (
-      <NxPageMain className="nx-viewport-sized nxrm-welcome">
-        <NxPageTitle className="nxrm-welcome__page-title">
-          <NxPageTitle.Headings>
-            <NxH1>
-              {/* Empty alt per WHATWG-HTML § 4.8.4.4.4 paragraph 6
-              * https://html.spec.whatwg.org/multipage/images.html#a-short-phrase-or-label-with-an-alternative-graphical-representation:-icons,-logos
-              * NOTE: the role here should be redundant per https://www.w3.org/TR/html-aria/#el-img-empty-alt but
-              * the RTL queries don't appear to recognize that nuance
-              */}
-              <img className="nxrm-welcome__logo"
-                   alt=""
-                   role="presentation"
-                   src="./static/rapture/resources/icons/x32/sonatype.png"/>
-              <span>{UIStrings.WELCOME.MENU.text}</span>
-            </NxH1>
-            <NxPageTitle.Subtitle>{UIStrings.WELCOME.MENU.description}</NxPageTitle.Subtitle>
-          </NxPageTitle.Headings>
-        </NxPageTitle>
-        <NxLoadWrapper loading={loading} error={error} retryHandler={load}>
-          <div className="nxrm-welcome__outreach nx-viewport-sized__scrollable">
-            <CEHardLimitAlerts />
-            <MaliciousRiskOnDisk />
-            {isAdmin && <UsageCenter />}
-            <OutreachActions/>
-            {state.context.data?.showOutreachIframe &&
-                <iframe
-                    id="nxrm-welcome-outreach-frame"
-                    role="document"
-                    height={iframeHeight}
-                    ref={ref}
-                    scrolling="no"
-                    onLoad={onLoad}
-                    aria-label="Outreach Frame"
-                    src={`${iframeUrlPath}?${toURIParams(iframeProps)}${proxyDownloadNumberParams ?? ''}`}
-                    className="nxrm-welcome__outreach-frame"
-                />
-            }
-          </div>
-        </NxLoadWrapper>
+      <NxPageMain>
+        <div className="nxrm-welcome">
+          <NxLoadWrapper loading={loading} error={error} retryHandler={load}>
+            <div className="nxrm-welcome__outreach nx-viewport-sized__scrollable">
+              <CEHardLimitAlerts />
+              <MaliciousRiskOnDisk />
+              {isAdmin && <UsageCenter />}
+              <OutreachActions/>
+              {state.context.data?.showOutreachIframe &&
+                  <iframe
+                      id="nxrm-welcome-outreach-frame"
+                      role="document"
+                      height={iframeHeight}
+                      ref={ref}
+                      scrolling="no"
+                      onLoad={onLoad}
+                      aria-label="Outreach Frame"
+                      src={`${iframeUrlPath}?${toURIParams(iframeProps)}${proxyDownloadNumberParams ?? ''}`}
+                      className="nxrm-welcome__outreach-frame"
+                  />
+              }
+            </div>
+          </NxLoadWrapper>
+        </div>
       </NxPageMain>
   );
 }

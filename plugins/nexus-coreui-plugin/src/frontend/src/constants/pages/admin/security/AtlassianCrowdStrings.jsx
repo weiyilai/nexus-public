@@ -11,12 +11,14 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import React from 'react';
+import { faAtlassian } from '@fortawesome/free-brands-svg-icons';
 
 export default {
   CROWD_SETTINGS: {
     MENU: {
       text: 'Atlassian Crowd',
-      description: 'Manage Atlassian Crowd configuration'
+      description: 'Manage Atlassian Crowd configuration',
+      icon: faAtlassian
     },
     FIELDS: {
       enabledLabel: 'Enable Crowd',

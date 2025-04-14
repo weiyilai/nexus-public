@@ -27,7 +27,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle,
@@ -68,9 +67,13 @@ export default function PrivilegesList({onCreate, onEdit}) {
     }
   }
 
-  return <Page className="nxrm-privileges">
+  return <div className="nxrm-privileges">
     <PageHeader>
-      <PageTitle icon={faIdBadge} {...UIStrings.PRIVILEGES.MENU} />
+      <PageTitle
+          icon={UIStrings.PRIVILEGES.MENU.icon}
+          text={UIStrings.PRIVILEGES.MENU.text}
+          description={UIStrings.PRIVILEGES.MENU.description}
+      />
       <PageActions>
         <NxTooltip
             title={!canCreate && UIStrings.PERMISSION_ERROR}
@@ -123,5 +126,5 @@ export default function PrivilegesList({onCreate, onEdit}) {
       </Section>
       <HelpTile header={LABELS.HELP.TITLE} body={LABELS.HELP.TEXT}/>
     </ContentBody>
-  </Page>;
+  </div>;
 }

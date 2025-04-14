@@ -18,7 +18,7 @@ import {ExtJS} from '@sonatype/nexus-ui-plugin';
 import CEHardLimitAlerts from './CEHardLimitAlerts';
 import {USAGE_CENTER_CONTENT_CE} from '../UsageCenter/UsageCenter.testdata';
 
-import {helperFunctions} from '../../../../widgets/CELimits/UsageHelper';
+import {helperFunctions} from '../../../../widgets/SystemStatusAlerts/CELimits/UsageHelper';
 
 const {
   useGracePeriodEndsDate,

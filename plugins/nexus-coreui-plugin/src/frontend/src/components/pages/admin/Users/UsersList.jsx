@@ -30,7 +30,6 @@ import {faUsers} from '@fortawesome/free-solid-svg-icons';
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle,
@@ -77,9 +76,13 @@ export default function UsersList({onCreate, onEdit}) {
 
   const onClickRow = (realm, userId) => onEdit(`${encodeURIComponent(realm)}/${encodeURIComponent(userId)}`);
 
-  return <Page className="nxrm-users">
+  return <div className="nxrm-users">
     <PageHeader>
-      <PageTitle icon={faUsers} {...UIStrings.USERS.MENU} />
+      <PageTitle
+          icon={UIStrings.USERS.MENU.icon}
+          text={UIStrings.USERS.MENU.text}
+          description={UIStrings.USERS.MENU.description}
+      />
       <PageActions>
         <NxTooltip
             title={!canCreate && UIStrings.PERMISSION_ERROR}
@@ -154,5 +157,5 @@ export default function UsersList({onCreate, onEdit}) {
       </Section>
       <HelpTile header={LABELS.HELP.TITLE} body={LABELS.HELP.TEXT}/>
     </ContentBody>
-  </Page>;
+  </div>;
 }

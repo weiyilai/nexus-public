@@ -154,6 +154,12 @@ Ext.define('NX.coreui.controller.Tasks', {
     });
   },
 
+  onNavigate: function() {
+    if (NX.Bookmarks.getBookmark().getToken().includes('system/tasks')) {
+      this.reselect();
+    }
+  },
+
   /**
    * @override
    * Returns a description of task suitable to be displayed.

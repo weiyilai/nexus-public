@@ -14,12 +14,15 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
+import { faMedkit } from '@fortawesome/free-solid-svg-icons';
+
 export default {
   METRIC_HEALTH: {
     MENU: {
       text: 'Status',
       description: 'System status checks',
       detailsDescription: 'View Node specific details',
+      icon: faMedkit
     },
     NAME_HEADER: 'Name',
     MESSAGE_HEADER: 'Message',

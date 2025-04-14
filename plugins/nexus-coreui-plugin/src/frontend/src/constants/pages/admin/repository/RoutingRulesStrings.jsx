@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faMapSigns } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   ROUTING_RULES: {
     MENU: {
       text: 'Routing Rules',
-      description: 'Restrict which requests are handled by repositories'
+      description: 'Restrict which requests are handled by repositories',
+      icon: faMapSigns
     },
 
     LIST: {

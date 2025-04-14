@@ -25,7 +25,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle,
   Section
@@ -92,8 +91,14 @@ export default function LoggingConfigurationForm({itemId, onDone}) {
     send({type: 'RESET'});
   }
 
-  return <Page className="nxrm-logging-configuration">
-    <PageHeader><PageTitle icon={faScroll} {...UIStrings.LOGGING.MENU}/></PageHeader>
+  return <div className="nxrm-logging-configuration">
+    <PageHeader>
+      <PageTitle
+        icon={UIStrings.LOGGING.MENU.icon}
+        text={UIStrings.LOGGING.MENU.text}
+        description={UIStrings.LOGGING.MENU.description}
+      />
+    </PageHeader>
     <ContentBody>
       <Section className="nxrm-logging-configuration-form" onKeyPress={handleEnter}>
         <NxStatefulForm
@@ -124,5 +129,5 @@ export default function LoggingConfigurationForm({itemId, onDone}) {
         </NxStatefulForm>
       </Section>
     </ContentBody>
-  </Page>;
+  </div>;
 }

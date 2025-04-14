@@ -31,7 +31,13 @@ export default function SupportRequest() {
   }
 
   return <Page>
-    <PageHeader><PageTitle icon={faUserCircle} {...UIStrings.SUPPORT_REQUEST.MENU}/></PageHeader>
+    <PageHeader>
+      <PageTitle
+          icon={UIStrings.SUPPORT_REQUEST.MENU.icon}
+          text={UIStrings.SUPPORT_REQUEST.MENU.text}
+          description={UIStrings.SUPPORT_REQUEST.MENU.description}
+      />
+    </PageHeader>
     <ContentBody className='nxrm-support-request'>
       <Section>
         <p>{UIStrings.SUPPORT_REQUEST.DESCRIPTION}</p>

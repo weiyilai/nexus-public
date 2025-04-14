@@ -24,7 +24,6 @@ import {faDatabase, faTrash} from '@fortawesome/free-solid-svg-icons';
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle,
   Section
@@ -71,7 +70,7 @@ export default function RepositoriesForm({itemId, onDone = () => {}}) {
   const repositoryFacets = getFacets(format, type);
 
   return (
-    <Page className="nxrm-repository-editor">
+    <div className="nxrm-repository-editor">
       <PageHeader>
         <PageTitle icon={faDatabase} {...(isEdit ? EDITOR.EDIT_TITLE : EDITOR.CREATE_TITLE)} />
       </PageHeader>
@@ -108,6 +107,6 @@ export default function RepositoriesForm({itemId, onDone = () => {}}) {
           </NxStatefulForm>
         </Section>
       </ContentBody>
-    </Page>
+    </div>
   );
 }

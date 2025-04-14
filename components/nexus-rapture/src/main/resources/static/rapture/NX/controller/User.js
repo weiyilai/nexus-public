@@ -348,6 +348,7 @@ Ext.define('NX.controller.User', {
       success: function () {
         win.getEl().unmask();
         NX.State.setUser({id: values.username});
+        win.authenticatedSuccess = true
         win.close();
 
         // invoke optional success callback registered on window

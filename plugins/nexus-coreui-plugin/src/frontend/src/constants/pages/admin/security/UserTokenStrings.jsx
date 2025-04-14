@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faKey } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   USER_TOKEN_CONFIGURATION: {
     MENU: {
       text: 'User Tokens',
-      description: 'Manage user token configuration'
+      description: 'Manage user token configuration',
+      icon: faKey
     },
     CAPTION: 'Token Configuration',
     HELP_TEXT: <>

@@ -28,7 +28,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle,
@@ -60,7 +59,7 @@ export default function ContentSelectorsList({onCreate, onEdit}) {
 
   const canCreate = ExtJS.checkPermission('nexus:selectors:create');
 
-  return <Page className="nxrm-content-selectors">
+  return <div className="nxrm-content-selectors">
     <PageHeader>
       <PageTitle icon={faScroll} {...LABELS.MENU}/>
       <PageActions>
@@ -109,5 +108,5 @@ export default function ContentSelectorsList({onCreate, onEdit}) {
 
       <HelpTile header={LABELS.HELP_TITLE} body={LABELS.HELP_TEXT}/>
     </ContentBody>
-  </Page>;
+  </div>;
 }

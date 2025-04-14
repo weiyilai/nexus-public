@@ -278,7 +278,9 @@ export default class FormUtils {
         }),
 
         setIsPristine: assign({
-          isPristine: ({data, pristineData}) => whereEq(pristineData)(data)
+          isPristine: ({data, pristineData}) => {
+            return whereEq(pristineData)(data);
+          }
         }),
 
         setSavedData: assign({

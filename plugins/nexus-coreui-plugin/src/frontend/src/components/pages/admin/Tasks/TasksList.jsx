@@ -30,7 +30,6 @@ import {faClock} from '@fortawesome/free-solid-svg-icons';
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle
@@ -75,9 +74,13 @@ export default function TasksList({onCreate, onEdit}) {
     }
   }
 
-  return <Page className="nxrm-tasks">
+  return <div className="nxrm-tasks">
     <PageHeader>
-      <PageTitle icon={faClock} {...UIStrings.TASKS.MENU} />
+      <PageTitle
+          icon={UIStrings.TASKS.MENU.icon}
+          text={UIStrings.TASKS.MENU.text}
+          description={UIStrings.TASKS.MENU.description}
+      />
       <PageActions>
         <NxTooltip
             title={!canCreate && UIStrings.PERMISSION_ERROR}
@@ -139,5 +142,5 @@ export default function TasksList({onCreate, onEdit}) {
       </NxTile>
       <HelpTile header={LABELS.HELP.TITLE} body={LABELS.HELP.TEXT}/>
     </ContentBody>
-  </Page>;
+  </div>;
 }

@@ -100,21 +100,6 @@ Ext.define('NX.coreui.controller.Capabilities', {
   init: function() {
     var me = this;
 
-    me.features = {
-      mode: 'admin',
-      path: '/System/Capabilities',
-      text: NX.I18n.get('Capabilities_Text'),
-      description: NX.I18n.get('Capabilities_Description'),
-      view: {xtype: 'nx-coreui-capability-feature'},
-      iconConfig: {
-        file: 'brick.png',
-        variants: ['x16', 'x32']
-      },
-      visible: function() {
-        return NX.Permissions.check('nexus:capabilities:read');
-      }
-    };
-
     me.callParent();
 
     me.listen({
@@ -654,6 +639,12 @@ Ext.define('NX.coreui.controller.Capabilities', {
     //<if debug>
     this.logDebug('Dynamic tag columns added to grid');
     //</if>
+  },
+
+  onNavigate: function() {
+    if (NX.Bookmarks.getBookmark().getToken().includes('system/capabilities')) {
+      this.reselect();
+    }
   }
 
 });

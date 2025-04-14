@@ -40,7 +40,11 @@ export default function EmailServer() {
   return (
     <Page>
       <PageHeader>
-        <PageTitle icon={faEnvelope} {...UIStrings.EMAIL_SERVER.MENU} />
+        <PageTitle
+            icon={UIStrings.EMAIL_SERVER.MENU.icon}
+            title={UIStrings.EMAIL_SERVER.MENU.title}
+            description={UIStrings.EMAIL_SERVER.MENU.description}
+        />
       </PageHeader>
       <ContentBody className="nxrm-email-server">
         <NxTile>

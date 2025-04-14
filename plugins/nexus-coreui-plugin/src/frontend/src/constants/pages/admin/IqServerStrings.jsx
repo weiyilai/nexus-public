@@ -11,15 +11,18 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import React from 'react';
+import { faShieldAlt } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   IQ_SERVER: {
     MENU: {
       text: 'IQ Server',
-      description: 'Manage Sonatype Repository Firewall and Sonatype Lifecycle Configuration'
+      description: 'Manage Sonatype Repository Firewall and Sonatype Lifecycle Configuration',
+      icon: faShieldAlt
     },
 
     OPEN_DASHBOARD: 'Open IQ Server Dashboard',
+    OPEN_DASHBOARD_LINK: 'IQ Server Dashboard',
 
     ENABLED: {
       label: 'Enable IQ Server',

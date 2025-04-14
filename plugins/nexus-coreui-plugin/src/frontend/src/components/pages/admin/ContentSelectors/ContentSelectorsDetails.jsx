@@ -17,7 +17,6 @@ import {ExtJS} from '@sonatype/nexus-ui-plugin';
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -48,7 +47,7 @@ export default function ContentSelectorDetails({itemId, onDone}) {
 
   const canUpdate = ExtJS.checkPermission('nexus:selectors:update');
 
-  return <Page className="nxrm-content-selectors">
+  return <div className="nxrm-content-selectors">
     <PageHeader>
       <PageTitle text={Boolean(pristineData.name) ?
           UIStrings.CONTENT_SELECTORS.EDIT_TITLE(pristineData.name) :
@@ -60,5 +59,5 @@ export default function ContentSelectorDetails({itemId, onDone}) {
           : <ContentSelectorsReadOnly service={service} onDone={onDone}/>
       }
     </ContentBody>
-  </Page>;
+  </div>;
 }

@@ -14,11 +14,14 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
+import { faKey } from '@fortawesome/free-solid-svg-icons';
+
 export default {
   USER_TOKEN: {
     MENU: {
       text: 'User Token',
-      description: 'Access Sonatype Nexus Repository without the use of passwords'
+      description: 'Access Sonatype Nexus Repository without the use of passwords',
+      icon: faKey
     },
     CAPTION: 'Token Information',
     LABELS: {

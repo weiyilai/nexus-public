@@ -29,7 +29,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle,
@@ -59,7 +58,7 @@ export default function CleanupPoliciesList({onCreate, onEdit}) {
     send({type: 'FILTER', filter: value});
   }
 
-  return <Page className="nxrm-cleanup-policies">
+  return <div className="nxrm-cleanup-policies">
     <PageHeader>
       <PageTitle icon={faBroom} {...LABELS.MENU}/>
       <PageActions>
@@ -108,5 +107,5 @@ export default function CleanupPoliciesList({onCreate, onEdit}) {
 
       <HelpTile header={LABELS.HELP_TITLE} body={LABELS.HELP_TEXT}/>
     </ContentBody>
-  </Page>;
+  </div>;
 }

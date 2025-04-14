@@ -35,13 +35,6 @@ Ext.define('NX.controller.Menu', {
     'Ext.state.Manager'
   ],
 
-  views: [
-    'feature.Menu',
-    'feature.NotFound',
-    'feature.NotVisible',
-    'UnsavedChanges'
-  ],
-
   models: [
     'Feature'
   ],
@@ -132,9 +125,6 @@ Ext.define('NX.controller.Menu', {
         '#User': {
           beforesignout: me.warnBeforeSignOut,
           signout: me.onSignOut
-        },
-        '#Refresh': {
-          beforerefresh: me.warnBeforeRefresh
         }
       },
       component: {
@@ -204,13 +194,7 @@ Ext.define('NX.controller.Menu', {
    * @returns {NX.Bookmark} a bookmark for current selected feature (if any)
    */
   getBookmark: function () {
-    var me = this,
-        selection = me.getFeatureMenu().getSelectionModel().getSelection();
-
-    if (!selection.length) {
-      me.getFeatureMenu().setSelection(me.getFeatureMenu().getStore().first());
-      selection = me.getFeatureMenu().getSelectionModel().getSelection();
-    }
+    var me = this;
 
     return NX.Bookmarks.fromToken(selection.length ? selection[0].get('bookmark') : me.mode);
   },
@@ -348,37 +332,12 @@ Ext.define('NX.controller.Menu', {
         }
         //</if>
       }
-      // select the bookmarked feature in menu, if available
-      if (node) {
-        me.bookmarkingEnabled = me.navigateToFirstFeature;
 
-        me.getFeatureMenu().selectPath(node.getPath('text'), 'text', '/', function () {
-          me.bookmarkingEnabled = true;
-        });
-        me.getFeatureMenu().fireEvent('itemclick', me.getFeatureMenu(), node, false);
-      }
-      else {
         delete me.currentSelectedPath;
         // if the feature to navigate to is not available in menu check out if is hidden (probably no permissions)
         if (menuBookmark) {
           feature = me.getStore('Feature').findRecord('bookmark', menuBookmark, 0, false, false, true);
         }
-        me.getFeatureMenu().getSelectionModel().deselectAll();
-        if (feature) {
-          if (feature.get('authenticationRequired') && NX.Permissions.available()) {
-            //<if debug>
-            me.logDebug('Asking user to authenticate as feature exists but is not visible');
-            //</if>
-
-            NX.Security.askToAuthenticate();
-          }
-          me.selectFeature(me.createNotAvailableFeature(feature));
-        }
-        else {
-          // as feature does not exist at all, show teh 403 like content
-          me.selectFeature(me.createNotFoundFeature(menuBookmark));
-        }
-      }
     }
   },
 
@@ -540,12 +499,6 @@ Ext.define('NX.controller.Menu', {
     //</if>
 
     Ext.suspendLayouts();
-
-    mode = me.findModeSwitcher(me.mode);
-    if (mode && mode.title) {
-      menuTitle = mode.title;
-    }
-    me.getFeatureMenu().setTitle(menuTitle);
 
     me.getStore('FeatureMenu').getRootNode().removeAll();
 
@@ -766,9 +719,7 @@ Ext.define('NX.controller.Menu', {
 
     return me.warnBeforeNavigate(
       function () {
-        me.getFeatureMenu().getSelectionModel().select(record);
-        me.getFeatureMenu().fireEvent('itemclick', me.getFeatureMenu(), record);
-
+        // TODO: Replace this with react?
         if(featurePath === currentPath) {
           me.fireEvent('refresh');
         }

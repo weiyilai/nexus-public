@@ -28,7 +28,6 @@ import {faIdCardAlt} from '@fortawesome/free-solid-svg-icons';
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -62,7 +61,7 @@ export default function SslCertificatesAddForm({onDone}) {
   const onSubmit = () => showAddForm ? send({type: 'LOAD_DETAILS'}) : send({type: 'ADD_CERTIFICATE'});
 
   return (
-    <Page className="nxrm-ssl-certificate">
+    <div className="nxrm-ssl-certificate">
       <PageHeader>
         <PageTitle icon={faIdCardAlt} {...MENU} />
       </PageHeader>
@@ -128,6 +127,6 @@ export default function SslCertificatesAddForm({onDone}) {
       </ContentBody>
 
       {inTrustStore && <SslCertificatesAlreadyExistsModal certificateId={id} cancel={onDone} />}
-    </Page>
+    </div>
   );
 }

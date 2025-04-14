@@ -48,9 +48,11 @@ export default function DataStoreConfiguration() {
   return (
     <Page>
       <PageHeader>
+        {/*icon does not match what's in constants faServer vs faDatabase */}
         <PageTitle
           icon={faServer}
-          {...UIStrings.DATASTORE_CONFIGURATION.MENU}
+          text={UIStrings.DATASTORE_CONFIGURATION.MENU.text}
+          description={UIStrings.DATASTORE_CONFIGURATION.MENU.description}
         />
       </PageHeader>
       <ContentBody className="nxrm-datastore-configuration">

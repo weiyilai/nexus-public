@@ -14,9 +14,9 @@ import React, {useState} from 'react';
 
 import {NxButton, NxButtonBar, NxInfoAlert, useToggle, NxWarningAlert} from '@sonatype/react-shared-components';
 import {ExtJS} from '@sonatype/nexus-ui-plugin';
-import {UpgradeAlertFunctions} from '../../../UpgradeAlert/UpgradeAlertHelper';
+import {UpgradeAlertFunctions} from '../../../widgets/SystemStatusAlerts/UpgradeAlert/UpgradeAlertHelper';
 import UIStrings from '../../../../constants/UIStrings';
-import UpgradeTriggerModal from '../../../UpgradeAlert/UpgradeTriggerModal';
+import UpgradeTriggerModal from '../../../widgets/SystemStatusAlerts/UpgradeAlert/UpgradeTriggerModal';
 const {UPGRADE_ALERT: {PENDING, WARN}} = UIStrings;
 
 export default function UpgradeAlert() {

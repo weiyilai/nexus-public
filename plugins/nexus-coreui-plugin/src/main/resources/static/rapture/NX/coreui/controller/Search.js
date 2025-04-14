@@ -836,6 +836,14 @@ Ext.define('NX.coreui.controller.Search', {
       searchFeature.down('#criteria component[criteriaId=keyword]').setValue(searchValue);
       searchFeature.down('#criteria component[criteriaId=keyword]').search(searchValue);
     }
+  },
+
+  onNavigate: function() {
+    if (NX.Bookmarks.getBookmark().getToken().includes('browse/search')) {
+      setTimeout(function(){
+        this.reselect()
+      }.bind(this), 100);
+    }
   }
 
 });

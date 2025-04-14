@@ -330,7 +330,9 @@ Ext.define('NX.controller.Drilldown', {
    * @protected
    */
   onNavigate: function () {
-    this.reselect();
+    if (this.features && window.location.hash.includes('#' + this.features.path)) {
+      this.reselect();
+    }
   },
 
   /**

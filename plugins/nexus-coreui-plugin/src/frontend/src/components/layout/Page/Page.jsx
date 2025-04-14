@@ -13,11 +13,11 @@
 
 import React from 'react';
 
-import classNames from 'classnames';
+import { NxPageMain } from '@sonatype/react-shared-components';
 
 /**
  * @since 3.26
  */
-export default function Page({className, ...attrs}) {
-  return <main className={classNames("nx-page-main", className)} {...attrs}/>;
+export default function Page(attrs) {
+  return <NxPageMain {...attrs} />;
 }

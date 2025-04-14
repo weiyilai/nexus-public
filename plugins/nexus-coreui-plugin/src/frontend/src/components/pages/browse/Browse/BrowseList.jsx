@@ -24,7 +24,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -77,7 +76,7 @@ export default function BrowseList({onEdit, copyUrl = doCopyUrl}) {
   const showHealthCheckColumn = canUpdateHealthCheck();
   const showIqPolicyViolationsColumn = isIqServerEnabled() && canReadFirewallStatus();
 
-  return <Page className="nxrm-browse">
+  return <div className="nxrm-browse">
     <PageHeader>
       <PageTitle icon={faDatabase} {...BROWSE.MENU}/>
     </PageHeader>
@@ -153,7 +152,7 @@ export default function BrowseList({onEdit, copyUrl = doCopyUrl}) {
         </NxTile.Content>
       </NxTile>
     </ContentBody>
-  </Page>
+  </div>
 }
 
 function doCopyUrl(event, url) {

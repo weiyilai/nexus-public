@@ -11,12 +11,14 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import React from 'react';
+import { faFileArchive } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   SUPPORT_ZIP: {
     MENU: {
       text: 'Support ZIP',
-      description: 'Creates a ZIP file containing useful support information about your server'
+      description: 'Creates a ZIP file containing useful support information about your server',
+      icon: faFileArchive
     },
 
     DESCRIPTION: '<p>No information will be sent to Sonatype when creating the support ZIP file.</p>' +

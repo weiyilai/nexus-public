@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faIdCardAlt } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   SSL_CERTIFICATES: {
     MENU: {
       text: 'SSL Certificates',
-      description: 'Manage Trusted SSL Certificates for use with the Nexus truststore'
+      description: 'Manage Trusted SSL Certificates for use with the Nexus truststore',
+      icon: faIdCardAlt
     },
     LIST: {
       CREATE_BUTTON: 'Add Certificate',

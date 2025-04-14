@@ -22,7 +22,7 @@ import {
   NxTextLink
 } from '@sonatype/react-shared-components';
 
-import {helperFunctions} from '../../../../widgets/CELimits/UsageHelper';
+import {helperFunctions} from '../../../../widgets/SystemStatusAlerts/CELimits/UsageHelper';
 import UIStrings from '../../../../../constants/UIStrings';
 import CEHardLimitAlertsMachine from './CEHardLimitAlertsMachine';
 import './CEHardLimitAlerts.scss';

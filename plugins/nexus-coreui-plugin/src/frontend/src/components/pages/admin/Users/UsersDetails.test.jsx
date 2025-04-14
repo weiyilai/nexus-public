@@ -190,7 +190,11 @@ describe('UsersDetails', function() {
     await waitForElementToBeRemoved(selectors.queryLoadingMask());
   }
 
-  const clickOnRoles = roles => roles.forEach(it => userEvent.click(screen.getByText(ROLES[it].name)));
+  const clickOnRoles = roles => {
+    roles.forEach(it => {
+      userEvent.click(screen.getByText(ROLES[it].name))
+    });
+  }
 
   beforeEach(() => {
     when(Axios.get).calledWith(defaultRolesUrl).mockResolvedValue({data: Object.values(ROLES)});

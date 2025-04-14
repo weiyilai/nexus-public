@@ -14,11 +14,14 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
+import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
+
 export default {
   SUPPORT_REQUEST: {
     MENU: {
       text: 'Support Request',
-      description: 'Submit a support request to Sonatype'
+      description: 'Submit a support request to Sonatype',
+      icon: faUserCircle
     },
     ACTIONS: {
       submitRequest: 'Submit Request'

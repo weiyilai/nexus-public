@@ -33,7 +33,11 @@ export default function ProprietaryRepositories() {
 
   return <Page>
     <PageHeader>
-      <PageTitle icon={faDoorClosed} {...UIStrings.PROPRIETARY_REPOSITORIES.MENU}/>
+      <PageTitle
+          icon={UIStrings.PROPRIETARY_REPOSITORIES.MENU.icon}
+          text={UIStrings.PROPRIETARY_REPOSITORIES.MENU.text}
+          description={UIStrings.PROPRIETARY_REPOSITORIES.MENU.description}
+      />
     </PageHeader>
     <ContentBody className="nxrm-proprietary_repositories">
       <Section>

@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faLayerGroup } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   CONTENT_SELECTORS: {
     MENU: {
       text: 'Content Selectors',
-      description: 'Define the content that users can access using Content Selector Expression Language (CSEL)'
+      description: 'Define the content that users can access using Content Selector Expression Language (CSEL)',
+      icon: faLayerGroup
     },
 
     EDIT_TITLE: (name) => `Edit ${name}`,

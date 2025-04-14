@@ -12,9 +12,8 @@
  */
 $card-width: 1016px;
 
-.risk-on-disk-container, .risk-on-disk-container-browse-search {
+.risk-on-disk-container {
   padding: var(--nx-spacing-6x);
-  background: #f4f5f9;
 }
 
 .risk-on-disk-alert {
@@ -90,34 +89,8 @@ $card-width: 1016px;
   .risk-on-disk-toggle .fa-caret-right.expanded {
     transform: rotate(90deg);
   }
-}
 
-.malware-components-count {
-  display: flex;
-  align-items: center;
-  width: fit-content;
-  height: 40px;
-  background: var(--nx-swatch-white);
-  border-style: solid;
-  border-color: var(--nx-swatch-red-40);
-  border-radius: 6px;
-  border-width: 1px;
-  padding: 0 var(--nx-spacing-2x);
-  margin-bottom: var(--nx-spacing-2x);
-
-  &.zero {
-    border-color: var(--nx-swatch-grey-60);
-  }
-
-  .nx-icon {
-    margin-left: 0;
-    color: var(--nx-color-alert-error-icon);
-    vertical-align: middle;
-  }
-
-  h2, h3 {
-    display: inline-block;
-    margin: 0 var(--nx-spacing-2x) 0 0;
-    vertical-align: middle;
+  .nxrm-malware-components-count-value {
+    margin-right: var(--nx-spacing-2x)
   }
 }

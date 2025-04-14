@@ -33,7 +33,8 @@ const selectorQuery = (...queryParams) => (queryType, container) => {
 }
 
 const selectors = {
-  main: () => screen.getByRole('main'),
+  // it used to be a main tag but the main tag was removed from the component and now it is a div
+  main: () => screen.getByTestId('nxrm-upload-details'),
   h1: selectorQuery('heading', { level: 1 }),
   loadingStatus: () => screen.getByRole('status'),
   errorAlert: selectorQuery('alert'),

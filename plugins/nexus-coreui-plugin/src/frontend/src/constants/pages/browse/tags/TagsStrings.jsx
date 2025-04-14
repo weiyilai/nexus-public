@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faTags } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   TAGS: {
     MENU: {
       text: 'Tags',
       description: 'View created tags',
+      icon: faTags
     },
     EMPTY_MESSAGE: 'No tags found.',
     HELP_MESSAGE: {

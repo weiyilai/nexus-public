@@ -35,7 +35,11 @@ export default function AnonymousSettings() {
 
   return <Page>
     <PageHeader>
-      <PageTitle icon={faUser} {...UIStrings.ANONYMOUS_SETTINGS.MENU}/>
+      <PageTitle
+          icon={UIStrings.ANONYMOUS_SETTINGS.MENU.icon}
+          text={UIStrings.ANONYMOUS_SETTINGS.MENU.text}
+          description={UIStrings.ANONYMOUS_SETTINGS.description }
+      />
     </PageHeader>
     <ContentBody className='nxrm-anonymous-settings'>
       <Section>

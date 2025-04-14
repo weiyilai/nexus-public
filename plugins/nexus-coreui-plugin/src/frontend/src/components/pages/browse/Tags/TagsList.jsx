@@ -28,7 +28,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -55,7 +54,7 @@ export default function TagsList({onEdit}) {
 
   const filter = (value) => send({type: 'FILTER', filter: value});
 
-  return <Page className="nxrm-tags">
+  return <div className="nxrm-tags">
     <PageHeader>
       <PageTitle icon={faTags} {...TAGS.MENU}/>
     </PageHeader>
@@ -99,5 +98,5 @@ export default function TagsList({onEdit}) {
       </NxTile>
       <HelpTile header={TAGS.HELP_MESSAGE.TITLE} body={TAGS.HELP_MESSAGE.TEXT}/>
     </ContentBody>
-  </Page>
+  </div>
 }

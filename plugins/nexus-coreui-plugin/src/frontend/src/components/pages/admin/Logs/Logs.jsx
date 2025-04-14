@@ -20,7 +20,7 @@ import LogViewer from './LogViewer';
 import './Logs.scss';
 
 export default function Logs() {
-  return <MasterDetail className="nxrm-logs" path="admin/support/logs">
+  return <MasterDetail path="admin/support/logs">
     <Master>
       <LogsList/>
     </Master>

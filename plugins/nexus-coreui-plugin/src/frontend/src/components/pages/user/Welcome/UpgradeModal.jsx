@@ -32,7 +32,7 @@ export default function UpgradeModal() {
   const showModalFlag = ExtJS.state().getValue('zero.downtime.marketing.modal');
   const isZDU = ExtJS.state().getValue('nexus.zero.downtime.enabled');
   const hasUser = ExtJS.useUser() ?? false;
-  const hasPermissions = ExtJS.usePermission(() => ExtJS.checkPermission('nexus:*'), [hasUser])
+  const hasPermissions = ExtJS.usePermission(() => ExtJS.checkPermission('nexus:*'), [hasUser]);
   const modalCloseHandler = () => send({ type: 'CLOSE_AND_SAVE' });
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function UpgradeModal() {
     } else {
       send({ type: 'CLOSE_MODAL' });
     }
-  }, [zeroDowntimeMarketingModalClosed, hasPermissions, onboarding]);
+  }, [zeroDowntimeMarketingModalClosed, hasPermissions, onboarding, hasUser]);
 
   return <>
     {state.matches('open') && <NxModal onCancel={modalCloseHandler} aria-labelledby="zero-downtime-upgrade-modal">

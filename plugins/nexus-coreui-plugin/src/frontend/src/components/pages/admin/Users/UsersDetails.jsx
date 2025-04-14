@@ -20,7 +20,6 @@ import {ExtJS, ValidationUtils} from '@sonatype/nexus-ui-plugin';
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -62,7 +61,7 @@ export default function UsersDetails({itemId, onDone}) {
   const showReadOnly = isEdit && !canEdit;
   const isPro = ExtJS.isProEdition();
 
-  return <Page className="nxrm-user">
+  return <div className="nxrm-user">
     <PageHeader>
       <PageTitle
           text={isEdit ? LABELS.EDIT_TILE(fullName({firstName, lastName})) : LABELS.CREATE_TITLE}
@@ -82,5 +81,5 @@ export default function UsersDetails({itemId, onDone}) {
         </NxTile>
       }
     </ContentBody>
-  </Page>;
+  </div>;
 }

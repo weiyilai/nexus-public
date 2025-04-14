@@ -60,7 +60,11 @@ export function CrowdSettingsForm({service}) {
   }
 
   return <Page>
-    <PageHeader><PageTitle icon={faAtlassian} {...UIStrings.CROWD_SETTINGS.MENU}/></PageHeader>
+    <PageHeader><PageTitle
+        icon={UIStrings.CROWD_SETTINGS.MENU.icon}
+        text={UIStrings.CROWD_SETTINGS.MENU.text}
+        description={UIStrings.CROWD_SETTINGS.MENU.description}
+    /></PageHeader>
     <ContentBody className='nxrm-crowd-settings'>
       <Section>
         <NxStatefulForm

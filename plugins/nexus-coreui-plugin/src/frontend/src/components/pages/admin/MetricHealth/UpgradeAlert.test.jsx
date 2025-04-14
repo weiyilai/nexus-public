@@ -17,7 +17,7 @@ import {ExtJS} from '@sonatype/nexus-ui-plugin';
 
 import UIStrings from '../../../../constants/UIStrings';
 import UpgradeAlert from './UpgradeAlert';
-import {UpgradeAlertFunctions} from '../../../UpgradeAlert/UpgradeAlertHelper';
+import {UpgradeAlertFunctions} from '../../../widgets/SystemStatusAlerts/UpgradeAlert/UpgradeAlertHelper';
 const {UPGRADE_ALERT: {PENDING, WARN}} = UIStrings;
 
 jest.mock('axios', () => ({

@@ -27,7 +27,6 @@ import {faIdCardAlt} from '@fortawesome/free-solid-svg-icons';
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -71,7 +70,7 @@ export default function SslCertificatesDetailsForm({itemId, onDone}) {
   };
 
   return (
-    <Page className="nxrm-ssl-certificate">
+    <div className="nxrm-ssl-certificate">
       <PageHeader>
         <PageTitle
           icon={faIdCardAlt}
@@ -110,6 +109,6 @@ export default function SslCertificatesDetailsForm({itemId, onDone}) {
           </NxTile.Content>
         </NxTile>
       </ContentBody>
-    </Page>
+    </div>
   );
 }

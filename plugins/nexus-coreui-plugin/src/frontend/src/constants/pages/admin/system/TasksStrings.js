@@ -16,12 +16,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faClock } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   TASKS: {
     MENU: {
       text: 'Tasks',
       description: 'Manage scheduled tasks',
+      icon: faClock
     },
     LIST: {
       CREATE_BUTTON: 'Create task',

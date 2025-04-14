@@ -30,7 +30,6 @@ import {faUserTag} from '@fortawesome/free-solid-svg-icons';
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle,
@@ -67,9 +66,13 @@ export default function RolesList({onCreate, onEdit}) {
     }
   }
 
-  return <Page className="nxrm-roles">
+  return <div className="nxrm-roles">
     <PageHeader>
-      <PageTitle icon={faUserTag} {...UIStrings.ROLES.MENU} />
+      <PageTitle
+          icon={UIStrings.ROLES.MENU.icon}
+          text={UIStrings.ROLES.MENU.text}
+          description={UIStrings.ROLES.MENU.description}
+      />
       <PageActions>
         <NxTooltip
             title={!canCreate && UIStrings.PERMISSION_ERROR}
@@ -126,5 +129,5 @@ export default function RolesList({onCreate, onEdit}) {
       </Section>
       <HelpTile header={LABELS.HELP.TITLE} body={LABELS.HELP.TEXT}/>
     </ContentBody>
-  </Page>;
+  </div>;
 }

@@ -1,0 +1,185 @@
+/*
+ * Sonatype Nexus (TM) Open Source Version
+ * Copyright (c) 2008-present Sonatype, Inc.
+ * All rights reserved. Includes the third-party code listed at http://links.sonatype.com/products/nexus/oss/attributions.
+ *
+ * This program and the accompanying materials are made available under the terms of the Eclipse Public License Version 1.0,
+ * which accompanies this distribution and is available at http://www.eclipse.org/legal/epl-v10.html.
+ *
+ * Sonatype Nexus (TM) Open Source Version is distributed with Sencha Ext JS pursuant to a FLOSS Exception agreed upon
+ * between Sonatype, Inc. and Sencha Inc. Sencha Ext JS is licensed under GPL v3 and cannot be redistributed as part of a
+ * closed source work.
+ *
+ * Sonatype Nexus (TM) Professional Version is available from Sonatype, Inc. "Sonatype" and "Sonatype Nexus" are trademarks
+ * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
+ * Eclipse Foundation. All other trademarks are the property of their respective owners.
+ */
+
+/**
+ * This is used to check the visibility of route defined with UIRouter. It expects a visibilityRequirements block
+ *
+ * visibilityRequirements may have any of the following:
+ *
+ *   bundleActive: string
+ *   licenseValid: { key: string, defaultValue: boolean } []
+ *   statesEnabled: { key: string, defaultValue: boolean } []
+ *   permissions : string []
+ *   editions: string []
+ *   requiresUser: boolean
+ *
+ * @param visibilityRequirements
+ * @returns {boolean}
+ */
+export default function isVisible(visibilityRequirements) {
+  if (!visibilityRequirements) {
+    return true;
+  }
+
+  const { bundle, licenseValid, statesEnabled, permissions, capability, editions, requiresUser, browseableFormat } = visibilityRequirements;
+
+  // check that all our expected global dependencies are in place
+  if (!hasValidDependencies()) {
+    return false;
+  }
+
+  const Application = NX?.app?.Application;
+  const Security = NX?.Security;
+
+  if (bundle && !Application.bundleActive(bundle)) {
+    // check that the bundles required by the route are enabled
+    console.debug("bundleActive=false", bundle);
+
+    return false;
+  }
+
+  // check that all licenses required by this are present
+  if (licenseValid && !areAllRequiredLicensesPresent(licenseValid)) {
+    console.debug("licenseValid=false", licenseValid);
+    return false;
+  }
+
+  // check that all required statesEnabled for this route are present
+  if (statesEnabled && !areAllRequiredStatesEnabled(statesEnabled)) {
+    console.debug("statesEnabled=false", statesEnabled);
+    return false;
+  }
+
+  // check that all required permissions are present
+  if (permissions && !areAllRequiredPermissionsPresent(permissions)) {
+    console.debug('permissions=false', permissions);
+    return false
+  }
+
+  // check that edition requirements are met, i.e. must be PRO or COMMUNITY
+  if (editions && !meetsEditionRequirement(editions)) {
+    console.debug('editions=false', editions);
+    return false;
+  }
+
+  // check if the required capability is enabled and active
+  if (capability && !isTheRequiredCapabilityPresentAndActive(capability)) {
+    console.debug('capability=false', editions);
+    return false;
+  }
+
+  if (requiresUser && !Security.hasUser()) {
+    console.debug('requiresUser=false', requiresUser);
+    return false
+  }
+
+  if (browseableFormat && !isFormatBrowseable(browseableFormat)) {
+    console.debug('browseableFormat=false', browseableFormat);
+    return false;
+  }
+
+  return true;
+}
+
+function isFormatBrowseable(browseableFormat) {
+  return Ext.getApplication().getStore('BrowseableFormat').getById(browseableFormat) !== null;
+}
+
+function areAllRequiredStatesEnabled(statesEnabled) {
+  return statesEnabled.every(state => {
+    const stateValue = NX.State.getValue(state.key, state.defaultValue);
+
+    if (typeof stateValue === "boolean") {
+      return stateValue;
+    }
+    else if (Array.isArray(stateValue)) {
+      return stateValue.length > 0;
+    }
+    else {
+      return stateValue.enabled;
+    }
+  });
+}
+
+function areAllRequiredPermissionsPresent(permissions) {
+  return permissions.every((permission) => {
+    const hasPermission = NX.Permissions.check(permission);
+    if (!hasPermission) {
+      console.debug(`permission ${permission} was not present`);
+    }
+    return hasPermission;
+  });
+}
+
+function areAllRequiredLicensesPresent(licenseValid) {
+  return licenseValid.every(
+      licenseValid => {
+        const value = NX.State.getValue(licenseValid.key, licenseValid.defaultValue)
+        if (typeof value !== 'object') {
+          // I've only ever seen this happen when writing tests, when a value is not properly mocked, but when it
+          // happens it can result in a tricky to debug NPE, this should at least give better feedback to the user
+          // about how to fix the problem, while still throwing an exception that will fail the test, forcing them
+          // to properly mock it
+          throw new Error(`invalid state found for license key ${licenseValid.key}`);
+        }
+
+        return value['licenseValid'];
+      });
+}
+
+function isTheRequiredCapabilityPresentAndActive(capability) {
+  const activeTypes = NX.State.getValue('capabilityActiveTypes') || [];
+  const createdTypes = NX.State.getValue('capabilityCreatedTypes') || [];
+
+  return activeTypes.includes(capability) && createdTypes.includes(capability);
+}
+
+function meetsEditionRequirement(editions) {
+  return editions.some((edition) => {
+    const hasEdition = NX.State.getEdition() === edition;
+    if (hasEdition) {
+      console.debug(`edition ${edition} found`);
+    }
+    return hasEdition;
+  });
+}
+
+function hasValidDependencies() {
+  const Application = NX.app?.Application;
+  const State = NX.State;
+  const Permissions = NX.Permissions;
+  const Security = NX.Security;
+
+  if (!Application) {
+    console.warn('could not determine visibility of menu items without Ext JS Application');
+    return false;
+  }
+  if (!State) {
+    console.warn('could not determine visibility of menu items without NX State');
+    return false;
+  }
+  if (!Permissions) {
+    console.warn('could not determine visibility of menu items without NX Permissions');
+    return false;
+  }
+  if (!Security) {
+    console.warn('could not determine visibility of menu items without NX Security');
+    return false;
+  }
+
+  return true;
+}

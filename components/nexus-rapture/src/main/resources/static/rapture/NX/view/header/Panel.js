@@ -46,7 +46,6 @@ Ext.define('NX.view.header.Panel', {
     var me = this;
 
     me.items = [
-      { xtype: 'nx-header-branding', hidden: true },
       {
         xtype: 'toolbar',
 

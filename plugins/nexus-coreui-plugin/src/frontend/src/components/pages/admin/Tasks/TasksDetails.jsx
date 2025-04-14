@@ -17,7 +17,6 @@ import {ValidationUtils} from '@sonatype/nexus-ui-plugin';
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -51,9 +50,13 @@ export default function TasksDetails({itemId, onDone}) {
   const isEdit = ValidationUtils.notBlank(id);
   const showReadOnly = isEdit && !hasEditPermissions;
 
-  return <Page className="nxrm-task">
+  return <div className="nxrm-task">
     <PageHeader>
-      <PageTitle icon={faClock} {...UIStrings.TASKS.MENU} />
+      <PageTitle
+          icon={UIStrings.TASKS.MENU.icon}
+          text={UIStrings.TASKS.MENU.text}
+          description={UIStrings.TASKS.MENU.description}
+      />
     </PageHeader>
     <ContentBody className="nxrm-task-form">
       {showReadOnly
@@ -61,5 +64,5 @@ export default function TasksDetails({itemId, onDone}) {
           : <TasksForm service={service} onDone={onDone}/>
       }
     </ContentBody>
-  </Page>;
+  </div>;
 }

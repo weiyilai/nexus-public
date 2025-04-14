@@ -32,7 +32,6 @@ Ext.define('NX.app.Application', {
     'Ext.state.LocalStorageProvider',
     'Ext.util.Cookies',
     'Ext.util.LocalStorage',
-    'NX.view.Viewport',
     'NX.util.Url',
     'NX.I18n',
     'NX.State'
@@ -129,11 +128,7 @@ Ext.define('NX.app.Application', {
     'Features',
     'Icon',
     'KeyNav',
-    'Permissions',
-    'AnalyticsOptOut',
-    'UpgradeAlert',
-    'UpgradeModal',
-    'CEBanners'
+    'Permissions'
   ],
 
   /**
@@ -353,8 +348,6 @@ Ext.define('NX.app.Application', {
     me.logInfo('Starting');
     //</if>
 
-    Ext.create('NX.view.Viewport');
-
     me.syncManagedControllers();
     me.listen({
       controller: {
@@ -364,9 +357,6 @@ Ext.define('NX.app.Application', {
       }
     });
 
-    // Initialize react code
-    window.onStart();
-
     becomeReady = function () {
       // hide the loading mask after we have loaded
       Ext.get('loading').remove();
@@ -375,14 +365,9 @@ Ext.define('NX.app.Application', {
       // mark app as ready
       me.logInfo('Ready');
       me.ready = true;
-
-      // Relayout if necessary (fix for React breadcrumbs)
-      Ext.ComponentQuery.query('#breadcrumb')[0].updateLayout();
     };
 
-    // FIXME: Need a better way to know when the UI is actually rendered so we can hide the mask
-    // HACK: for now increasing delay slightly to cope with longer loading times
-    Ext.defer(becomeReady, 500);
+    waitForExtJS(becomeReady);
   },
 
   /**
@@ -467,3 +452,16 @@ Ext.define('NX.app.Application', {
     }
   }
 });
+
+/**
+ * Check every millisecond until Ext.getApplication() returns a truthy value
+ * @param callback to perform when the ExtJS application is ready
+ */
+function waitForExtJS(callback) {
+  const interval = setInterval(function () {
+    if (Ext.getApplication()) {
+      clearInterval(interval);
+      callback();
+    }
+  }, 1);
+}

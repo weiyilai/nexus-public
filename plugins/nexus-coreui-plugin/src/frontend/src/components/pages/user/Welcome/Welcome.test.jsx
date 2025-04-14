@@ -21,7 +21,7 @@ import {ExtJS, Permissions} from '@sonatype/nexus-ui-plugin';
 import UIStrings from '../../../../constants/UIStrings';
 import Welcome from './Welcome.jsx';
 import * as testData from './Welcome.testdata.js';
-import {helperFunctions} from '../../../widgets/CELimits/UsageHelper';
+import {helperFunctions} from '../../../widgets/SystemStatusAlerts/CELimits/UsageHelper';
 
 const {WELCOME: {
   ACTIONS: {
@@ -88,25 +88,6 @@ describe('Welcome', function() {
     render(<Welcome />);
 
     expect(selectors.main()).toBeInTheDocument();
-  });
-
-  it('renders headings saying "Welcome"', async function() {
-    jest.spyOn(axios, 'post').mockReturnValue(new Promise(() => {}));
-    render(<Welcome />);
-
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Welcome');
-  });
-
-  // Since the logo is next to the name of the product, it is supplementary from an a11y standpoint.
-  // See the spec referenced in the impl
-  it('renders a logo image that does NOT have the img role or an accessible name', async function() {
-    jest.spyOn(axios, 'post').mockReturnValue(new Promise(() => {}));
-    const { container } = render(<Welcome />),
-        img = container.querySelector('img');
-
-    expect(img).toBeInTheDocument();
-    expect(img).not.toHaveAccessibleName();
-    expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
   describe('loading', function() {

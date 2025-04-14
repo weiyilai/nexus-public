@@ -11,12 +11,14 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import React from 'react';
+import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   LOGS: {
     MENU: {
       text: 'Logs',
-      description: 'View the current log contents'
+      description: 'View the current log contents',
+      icon: faTerminal
     },
 
     LIST: {

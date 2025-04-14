@@ -11,12 +11,14 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import React from 'react';
+import { faScroll } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   LOGGING: {
     MENU: {
       text: 'Logging',
-      description: 'Control logging levels'
+      description: 'Control logging levels',
+      icon: faScroll
     },
 
     CREATE_BUTTON: 'Create Logger',

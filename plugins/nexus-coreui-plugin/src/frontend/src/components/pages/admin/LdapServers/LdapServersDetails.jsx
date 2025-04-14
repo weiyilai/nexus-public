@@ -23,7 +23,7 @@ import {
 } from '@sonatype/react-shared-components';
 import {faBook} from '@fortawesome/free-solid-svg-icons';
 
-import {Page, PageHeader, PageTitle} from '../../../layout';
+import {PageHeader, PageTitle} from '../../../layout';
 
 import LdapServersConfigurationForm from './LdapServersConfigurationForm';
 import LdapServersUserAndGroupForm from './LdapServersUserAndGroupForm';
@@ -115,7 +115,7 @@ export default function LdapServersDetails({itemId, onDone}) {
     );
 
   return (
-    <Page className="nxrm-ldap-servers">
+    <div className="nxrm-ldap-servers">
       <PageHeader>
         <PageTitle icon={faBook} {...MENU} />
       </PageHeader>
@@ -157,6 +157,6 @@ export default function LdapServersDetails({itemId, onDone}) {
           )}
         </NxLoadWrapper>
       </NxTile>
-    </Page>
+    </div>
   );
 }

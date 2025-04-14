@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faDatabase } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   REPOSITORIES: {
     MENU: {
       text: 'Repositories',
-      description: 'Configure repositories'
+      description: 'Create and manage repositories',
+      icon: faDatabase
     },
 
     LIST: {

@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faUsers } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   USERS: {
     MENU: {
       text: 'Users',
       description: 'Manage users',
+      icon: faUsers
     },
     MODAL: {
       TEXT: 'You must confirm your current password before you are able to change or update the password',

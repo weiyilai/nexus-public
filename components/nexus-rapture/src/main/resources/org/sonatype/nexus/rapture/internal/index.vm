@@ -13,7 +13,7 @@
 #set($raptureUrl="$relativePath/static/rapture")
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="nx-html">
 <head>
   <title>Sonatype Nexus Repository</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -36,7 +36,7 @@
   <link rel="icon" type="image/png" href="$raptureUrl/resources/favicon.svg?$urlSuffix" sizes="16x16">
 ## END favicon links
 
-  
+  ## Dynamically fetch all the css bundles declared by the UIPluginDescriptor objects
   #macro(style $src)
     <link rel="stylesheet" type="text/css" href="$src?$urlSuffix">
   #end
@@ -58,6 +58,8 @@
       document.getElementById('loading-msg').innerHTML=msg;
     }
   </script>
+
+  ## Provide initial configuration for the gainsight analytics/telemetry
   #if ( $analyticsEnabled )
     <script type="text/javascript">
       function servicePath(service) {
@@ -122,13 +124,13 @@
     <script type="text/javascript">progressMessage('$text');</script>
   #end
 </head>
-<body class="x-border-box">
+<body class="nx-body">
 
 <div id="loading-mask"></div>
 <div id="loading">
   <div id="loading-background">
     <div id="loading-content">
-      <img id="loading-logo" src="$raptureUrl/resources/images/sonatype-repository-logo-loading.svg?$urlSuffix" 
+      <img id="loading-logo" src="$raptureUrl/resources/images/sonatype-repository-logo-loading.svg?$urlSuffix"
         alt="Sonatype Nexus Repository Manager Logo"/>
       <div class="loading-indicator">
         <i class="fas fa-circle-notch fa-spin"></i>

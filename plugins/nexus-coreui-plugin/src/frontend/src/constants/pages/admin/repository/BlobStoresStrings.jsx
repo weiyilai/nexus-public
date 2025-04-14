@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faHdd } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   BLOB_STORES: {
     MENU: {
       text: 'Blob Stores',
-      description: 'Configure local and cloud blob storage'
+      description: 'Configure local and cloud blob storage',
+      icon: faHdd
     },
 
     MESSAGES: {

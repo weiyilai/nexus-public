@@ -32,12 +32,7 @@ Ext.define('NX.coreui.controller.SslTrustStore', {
     'ssl.SslUseTrustStore'
   ],
 
-  refs: [
-    {
-      ref: 'main',
-      selector: 'nx-main'
-    }
-  ],
+  refs: [{ ref: 'main', selector: '#feature-content' }],
 
   /**
    * @override

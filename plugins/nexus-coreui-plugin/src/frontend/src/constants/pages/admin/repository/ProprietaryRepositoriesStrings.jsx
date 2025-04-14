@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faDoorClosed } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   PROPRIETARY_REPOSITORIES: {
     MENU: {
       text: 'Proprietary Repositories',
-      description: 'Manage the set of hosted repositories that contain proprietary components'
+      description: 'Manage the set of hosted repositories that contain proprietary components',
+      icon: faDoorClosed
     },
     CONFIGURATION: {
       LABEL: 'Proprietary Repositories Configuration',

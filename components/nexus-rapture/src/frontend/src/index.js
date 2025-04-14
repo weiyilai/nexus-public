@@ -16,10 +16,8 @@
  */
 import exposeDependencies from './exposeDependencies';
 import configureAxios from './configureAxios';
-import configurePlugins from './configurePlugins';
 import configureDebug from './configureDebug.js';
 
 exposeDependencies();
 configureAxios();
-configurePlugins()
 configureDebug();

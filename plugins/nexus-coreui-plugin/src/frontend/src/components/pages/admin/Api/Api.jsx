@@ -66,7 +66,11 @@ export default function Api() {
   return (
     <Page>
       <PageHeader>
-        <PageTitle icon={faPlug} {...UIStrings.API.MENU} />
+        <PageTitle
+            icon={UIStrings.API.MENU.icon}
+            text={UIStrings.API.MENU.text}
+            description={UIStrings.API.MENU.description}
+        />
       </PageHeader>
       <ContentBody className="nxrm-api">
         <SwaggerUI

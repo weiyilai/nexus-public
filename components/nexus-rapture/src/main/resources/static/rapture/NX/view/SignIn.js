@@ -108,6 +108,17 @@ Ext.define('NX.view.SignIn', {
     if (messageCmp) {
       me.down('form').remove(messageCmp);
     }
-  }
+  },
 
+  close: function() {
+    var options = this.options
+    this.callParent(arguments);
+
+    if (!this.authenticatedSuccess &&
+        options &&
+        Ext.isFunction(options.cancel)
+    ) {
+      options.cancel();
+    }
+  }
 });

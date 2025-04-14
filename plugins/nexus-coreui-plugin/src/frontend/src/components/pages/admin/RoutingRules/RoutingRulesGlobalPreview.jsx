@@ -34,7 +34,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageTitle,
   Section,
   SectionToolbar
@@ -90,7 +89,7 @@ export default function RoutingRulesList() {
     send({type: 'RETRY'});
   }
 
-  return <Page className="nxrm-routing-rules">
+  return <div className="nxrm-routing-rules">
     <PageTitle text={ROUTING_RULES.PREVIEW.TITLE}/>
     <ContentBody className="global-preview">
       <Section>
@@ -186,5 +185,5 @@ export default function RoutingRulesList() {
         <footer className="nx-footer"><NxButton onClick={closeModal}>{UIStrings.CLOSE}</NxButton></footer>
       </NxModal>}
     </ContentBody>
-  </Page>;
+  </div>;
 }

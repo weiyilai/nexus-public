@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faUserTag } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   ROLES: {
     MENU: {
       text: 'Roles',
-      description: 'Manage roles'
+      description: 'Manage roles',
+      icon: faUserTag
     },
     LIST: {
       CREATE_BUTTON: 'Create Role',

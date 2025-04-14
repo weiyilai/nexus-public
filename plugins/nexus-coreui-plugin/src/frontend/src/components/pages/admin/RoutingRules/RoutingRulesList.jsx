@@ -28,7 +28,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle,
@@ -74,7 +73,7 @@ export default function RoutingRulesList({onCreate, onEdit}) {
     return <RoutingRulesGlobalPreview/>
   }
 
-  return <Page className="nxrm-routing-rules">
+  return <div className="nxrm-routing-rules">
     <PageHeader>
       <PageTitle icon={faMapSigns} {...MENU}/>
       <PageActions>
@@ -130,5 +129,5 @@ export default function RoutingRulesList({onCreate, onEdit}) {
       </Section>
       <HelpTile header={LABELS.HELP_TITLE} body={LABELS.HELP_TEXT}/>
     </ContentBody>
-  </Page>;
+  </div>;
 }

@@ -20,6 +20,14 @@ import Detail from './Detail';
 
 import {ExtJS} from '@sonatype/nexus-ui-plugin';
 
+jest.mock('@uirouter/react', () => ({
+  useRouter: jest.fn(() => ({
+    urlService: {
+      path: jest.fn(() => 'admin')
+    }
+  })),
+}));
+
 jest.mock('@sonatype/nexus-ui-plugin', () => ({
   ExtJS: {
     useHistory: jest.fn()
@@ -67,6 +75,19 @@ describe('MasterDetail', () => {
 
     expect(queryByTestId('master')).not.toBeInTheDocument();
     expect(queryByTestId('detail')).toBeInTheDocument();
+  });
+
+  it('does not render if the path does not match', () => {
+    ExtJS.useHistory.mockReturnValue({location: {pathname: ''}});
+    const {queryByTestId} = render(
+      <MasterDetail path="something">
+        <Master><TestMaster /></Master>
+        <Detail><TestDetail /></Detail>
+      </MasterDetail>
+    );
+
+    expect(queryByTestId('master')).not.toBeInTheDocument();
+    expect(queryByTestId('detail')).not.toBeInTheDocument();
   });
 });
 

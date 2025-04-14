@@ -29,13 +29,14 @@ import {Section} from '../../../layout';
 
 import ContentSelectorsPreview from './ContentSelectorsPreview';
 import UIStrings from '../../../../constants/UIStrings';
+import { isEmpty } from 'ramda';
 
 export default function ContentSelectorsForm({service, onDone}) {
   const stateMachine = useActor(service);
   const [state, send] = stateMachine;
 
   const {pristineData, data, loadError} = state.context;
-  const hasData = data && data !== {};
+  const hasData = data && !isEmpty(data);
   const canDelete = ExtJS.checkPermission('nexus:selectors:delete');
   const isEdit = Boolean(pristineData.name);
 

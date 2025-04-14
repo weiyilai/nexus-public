@@ -29,7 +29,6 @@ Ext.define('NX.view.Main', {
     'NX.Icons',
     'NX.view.header.QuickSearch',
     'Ext.button.Button',
-    'NX.view.footer.AnalyticsOptOut',
     'NX.view.UpgradeAlert',
     'NX.view.UpgradeModal',
     'NX.view.CEBanners'
@@ -77,11 +76,6 @@ Ext.define('NX.view.Main', {
         xtype: 'nx-component-upgrade-modal',
         region: 'south',
         hidden: true
-      },
-
-      {
-        xtype: 'nx-footer-analytics-opt-out',
-        region: 'south'
       },
 
       {

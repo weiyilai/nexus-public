@@ -35,7 +35,6 @@ import {faSortNumericUp, faTrashAlt} from '@fortawesome/free-solid-svg-icons';
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle,
@@ -111,7 +110,7 @@ export default function LdapServersList({onCreate, onEdit}) {
   }));
 
   return (
-    <Page className="nxrm-ldap-servers">
+    <div className="nxrm-ldap-servers">
       <PageHeader>
         <PageTitle
           icon={faBook}
@@ -246,6 +245,6 @@ export default function LdapServersList({onCreate, onEdit}) {
         </NxTile>
         <HelpTile header={LABELS.HELP.TITLE} body={LABELS.HELP.TEXT} />
       </ContentBody>
-    </Page>
+    </div>
   );
 }

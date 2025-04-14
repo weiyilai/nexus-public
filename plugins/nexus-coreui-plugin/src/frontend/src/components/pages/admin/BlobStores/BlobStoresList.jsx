@@ -46,11 +46,15 @@ import {HelpTile} from '../../../widgets';
 
 import BlobStoresListMachine from './BlobStoresListMachine';
 import UIStrings from '../../../../constants/UIStrings';
+import {useRouter} from "@uirouter/react";
 
 const {BLOB_STORES} = UIStrings;
 const {COLUMNS} = BLOB_STORES.LIST;
 
-export default function BlobStoresList({onCreate, onEdit}) {
+export default function BlobStoresList() {
+  const router = useRouter();
+  const onEdit = (itemId) => router.stateService.go('admin.repository.blobstores.details', {itemId});
+  const onCreate = () => router.stateService.go('admin.repository.blobstores.details', {itemId: null});
   const [current, send] = useMachine(BlobStoresListMachine, {devTools: true});
   const isLoading = current.matches('loading');
   const {data, error, filter: filterText} = current.context;

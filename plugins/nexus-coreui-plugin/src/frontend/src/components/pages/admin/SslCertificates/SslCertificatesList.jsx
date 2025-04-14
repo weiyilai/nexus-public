@@ -27,7 +27,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle,
@@ -76,7 +75,7 @@ export default function SslCertificatesList({onCreate, onEdit}) {
   const canCreate = canCreateCertificate();
 
   return (
-    <Page className="nxrm-ssl-certificates">
+    <div className="nxrm-ssl-certificates">
       <PageHeader>
         <PageTitle
           icon={faIdCardAlt}
@@ -154,6 +153,6 @@ export default function SslCertificatesList({onCreate, onEdit}) {
         </Section>
         <HelpTile header={LABELS.HELP.TITLE} body={LABELS.HELP.TEXT} />
       </ContentBody>
-    </Page>
+    </div>
   );
 }

@@ -12,24 +12,31 @@
  */
 import classNames from 'classnames';
 import React, {Children, cloneElement, useState} from 'react';
+import { useRouter } from '@uirouter/react';
 import PropTypes from 'prop-types';
 
 import {ExtJS} from '@sonatype/nexus-ui-plugin';
 
 import Master from './Master';
 import Detail from './Detail';
+import { NxPageMain } from '@sonatype/react-shared-components';
 
 /**
  * @since 3.24
  */
 export default function MasterDetail({className, children, path, ...attrs}) {
   const {location: {pathname}} = ExtJS.useHistory({basePath: path});
+  const currentPath = useRouter().urlService.path();
   const [isCreate, setCreate] = useState(false);
   const [response, setResponse] = useState(null);
 
   const classes = classNames('nxrm-master-detail', className);
   const isMasterRoute = pathname === '';
   const itemId = isMasterRoute ? '' : pathname.substring(1);
+
+  if (!currentPath?.includes(path)) {
+    return null;
+  }
 
   function onCreate() {
     setCreate(true);
@@ -63,10 +70,10 @@ export default function MasterDetail({className, children, path, ...attrs}) {
   });
 
   return (
-      <div className={classes} {...attrs}>
-        {isMasterRoute && !isCreate ? master : null}
-        {!isMasterRoute || isCreate ? detail : null}
-      </div>
+    <NxPageMain className={classes} {...attrs}>
+      {isMasterRoute && !isCreate ? master : null}
+      {!isMasterRoute || isCreate ? detail : null}
+    </NxPageMain>
   );
 }
 

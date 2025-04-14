@@ -56,6 +56,14 @@ import UpgradeAlertStrings from './UpgradeAlertStrings';
 import UpgradeTriggerModalStrings from './UpgradeTriggerModalStrings';
 import ZDUMarketingModalStrings from './ZDUMarketingModalStrings';
 import MaliciousRiskStrings  from "./pages/maliciousrisk/MaliciousRiskStrings";
+import SearchStrings from './pages/browse/search/SearchStrings';
+import Capabilities from './pages/admin/system/Capabilities';
+import UpgradeStrings from "./pages/admin/system/UpgradeStrings";
+import RepositoryDirectoryStrings from './pages/admin/repository/RepositoryDirectoryStrings';
+import AdminSecurityDirectoryStrings from './pages/admin/repository/AdminSecurityDirectoryStrings';
+import AdminSystemDirectoryStrings from './pages/admin/system/AdminSystemDirectoryStrings';
+import AdminSupportDirectoryStrings from './pages/admin/system/AdminSupportDirectoryStrings';
+import AdminDirectoryStrings from './pages/admin/system/AdminDirectoryStrings';
 
 export default {
   ...UIStrings,
@@ -68,6 +76,7 @@ export default {
   ...TagsStrings,
   ...BrowseStrings,
   ...UploadStrings,
+  ...SearchStrings,
 
   // admin
   ...IqServerStrings,
@@ -103,6 +112,7 @@ export default {
 
   // admin/system
   ...ApiStrings,
+  ...Capabilities,
   ...EmailServerStrings,
   ...HttpStrings,
   ...TasksStrings,
@@ -120,6 +130,14 @@ export default {
   ...UpgradeAlertStrings,
   ...UpgradeTriggerModalStrings,
   ...ZDUMarketingModalStrings,
+
+  // system/upgrade
+  ...UpgradeStrings,
+  ...RepositoryDirectoryStrings,
+  ...AdminSecurityDirectoryStrings,
+  ...AdminSystemDirectoryStrings,
+  ...AdminSupportDirectoryStrings,
+  ...AdminDirectoryStrings,
 
   // other
   FORMAT_PLACEHOLDER: 'Format',

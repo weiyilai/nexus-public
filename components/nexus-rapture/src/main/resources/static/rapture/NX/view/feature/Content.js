@@ -39,10 +39,6 @@ Ext.define('NX.view.feature.Content', {
 
   dockedItems: [
     {
-      xtype: 'nx-component-malicious-risk-on-disk',
-      dock: 'top'
-    },
-    {
       xtype: 'nx-breadcrumb',
       dock: 'top'
     }
@@ -52,36 +48,6 @@ Ext.define('NX.view.feature.Content', {
     afterrender: function(obj) {
       obj.rendered = true;
       obj.showRoot();
-      obj.maybeShowMaliciousRiskOnDisk();
-    }
-  },
-
-  maybeShowMaliciousRiskOnDisk: function() {
-    const me = this;
-    const maliciousRiskOnDisk = me.down('nx-component-malicious-risk-on-disk');
-    const titles = ['Browse', 'Search'];
-    const isCurrentTitleInTitles = titles.includes(me.currentTitle);
-    const user = NX.State.getUser();
-    const isRiskOnDiskEnabled = NX.State.getValue(NX.constants.FeatureFlags.MALWARE_RISK_ON_DISK_ENABLED);
-    const isRiskOnDiskNoneAdminOverrideEnabled = NX.State.getValue(
-        NX.constants.FeatureFlags.MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED);
-
-    const isAdmin = user && user.administrator;
-    const shouldHideForNonAdmin = isRiskOnDiskNoneAdminOverrideEnabled && !isAdmin;
-
-    if (!user) {
-      document.cookie = 'MALWARE_BANNER=; expires=Thu, 26 Feb 1950 00:00:00 UTC; path=/';
-    }
-
-    const malwareBanner = document.cookie.match(/MALWARE_BANNER_STATUS=([^;]*)/);
-    const hideMalwareBanner = malwareBanner && malwareBanner[1] === 'close';
-
-    if (isRiskOnDiskEnabled && isCurrentTitleInTitles && user && !shouldHideForNonAdmin && !hideMalwareBanner) {
-      maliciousRiskOnDisk.show();
-      maliciousRiskOnDisk.rerender();
-    }
-    else {
-      maliciousRiskOnDisk.hide();
     }
   },
 

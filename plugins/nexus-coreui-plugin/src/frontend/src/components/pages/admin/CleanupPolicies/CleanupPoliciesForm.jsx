@@ -29,7 +29,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -135,7 +134,7 @@ export default function CleanupPoliciesForm({itemId, onDone}) {
   }
 
   return (
-    <Page className="nxrm-cleanup-policies">
+    <div className="nxrm-cleanup-policies">
       <PageHeader>
         <PageTitle text={isEdit ? LABELS.EDIT_TITLE : LABELS.CREATE_TITLE} />
       </PageHeader>
@@ -340,6 +339,6 @@ export default function CleanupPoliciesForm({itemId, onDone}) {
           <CleanupPoliciesPreview policyData={data} />
         )}
       </ContentBody>
-    </Page>
+    </div>
   );
 }

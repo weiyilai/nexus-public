@@ -25,7 +25,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle,
@@ -101,7 +100,7 @@ export default function LogViewer({itemId}) {
     send({type: 'INSERT_MARK'});
   }
 
-  return <Page>
+  return <div className="nxrm-logs">
     <PageHeader>
       <PageTitle text={VIEW.TITLE(itemId)}/>
       <PageActions>
@@ -159,5 +158,5 @@ export default function LogViewer({itemId}) {
         />
       </Section>
     </ContentBody>
-  </Page>;
+  </div>;
 }

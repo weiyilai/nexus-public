@@ -83,21 +83,6 @@ Ext.define('NX.coreui.migration.Controller', {
       }
     });
 
-    me.getApplication().getFeaturesController().registerFeature({
-      mode: 'admin',
-      path: '/System/Upgrade',
-      text: NX.I18n.render(me, 'Feature_Text'),
-      description: NX.I18n.render(me, 'Feature_Description'),
-      view: {xtype: 'nx-coreui-migration-panel'},
-      iconConfig: {
-        file: 'server_go.png',
-        variants: ['x16', 'x32']
-      },
-      visible: function () {
-        return NX.Permissions.check('nexus:migration:read');
-      }
-    }, me);
-
     me.registerSteps(NX.State.isClustered() ?
         ['NX.coreui.migration.NoUpgradeHAStep'] :
         [
@@ -111,7 +96,6 @@ Ext.define('NX.coreui.migration.Controller', {
           'NX.coreui.migration.PhaseSyncStep',
           'NX.coreui.migration.PhaseFinishStep'
         ]);
-
 
 
     me.listen({

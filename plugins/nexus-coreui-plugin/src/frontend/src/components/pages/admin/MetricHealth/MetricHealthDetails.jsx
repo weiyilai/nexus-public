@@ -30,7 +30,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageTitle
 } from '../../../layout';
 
@@ -60,7 +59,7 @@ export default function MetricHealthDetails({itemId, onDone}) {
   );
 
   return (
-    <Page>
+    <div>
       <div>
         <PageTitle
           icon={faMedkit}
@@ -132,6 +131,6 @@ export default function MetricHealthDetails({itemId, onDone}) {
           </NxTable>
         </NxTile>
       </ContentBody>
-    </Page>
+    </div>
   );
 }

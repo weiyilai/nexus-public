@@ -60,12 +60,6 @@ Ext.define('NX.coreui.app.PluginConfig', {
     },
     'NX.coreui.controller.FeatureGroups',
     {
-      id: 'NX.coreui.controller.HttpSettings',
-      active: function () {
-        return NX.app.Application.bundleActive('org.sonatype.nexus.plugins.nexus-coreui-plugin');
-      }
-    },
-    {
       id: 'NX.coreui.controller.HealthCheckInfo',
       active: function () {
         return NX.app.Application.bundleActive('com.sonatype.nexus.plugins.nexus-clm-oss-plugin')

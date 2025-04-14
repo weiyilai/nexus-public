@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faIdCardAlt } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   LDAP_SERVERS: {
     MENU: {
       text: 'LDAP',
       description: 'Lightweight directory access protocol setup',
+      icon: faIdCardAlt
     },
     LIST: {
       LABEL: 'LDAP Connections',

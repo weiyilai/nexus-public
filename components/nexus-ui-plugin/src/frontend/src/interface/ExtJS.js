@@ -209,6 +209,34 @@ export default class {
     return this.useState(() => NX.State.getValue('license'));
   }
 
+  // don't use directly, use useIsVisible, where possible
+  static useVisiblityWithChanges(isVisibleMethod) {
+    const [isVisible, setIsVisible] = useState(isVisibleMethod());
+
+    useEffect(() => {
+      function handleChange() {
+        const newValue = isVisibleMethod();
+        if (isVisible !== newValue) {
+          setIsVisible(newValue);
+        }
+      }
+
+      const permissionsController = Ext.getApplication().getController('Permissions');
+      permissionsController.on('changed', handleChange);
+
+      const stateController = Ext.getApplication().getController('State');
+      stateController.on('changed', handleChange);
+
+      return () => {
+        // cleanup code
+        permissionsController.un('changed', handleChange);
+        stateController.un('changed', handleChange);
+      }
+    }, [isVisible]);
+
+    return isVisible;
+  }
+
   /**
    * A hook that automatically re-evaluates whenever any state is changed
    * @param getValue - A function to get the value from the state subsystem
@@ -233,7 +261,31 @@ export default class {
     return value;
   }
 
-    /**
+  /**
+   * A hook to add search criteria to the search subsystem
+   * @param {*} criterias 
+   */
+  static useCriteria(criterias) {
+    const state = Ext.getApplication().getStore('SearchCriteria');
+    const models = state.add(criterias);
+
+    useEffect(() => {
+      return () => {
+        state.remove(models);
+      }
+    }, []);
+  }
+
+  /**
+   * A hook to use a search filter model
+   * @param {*} filter 
+   * @returns 
+   */
+  static useSearchFilterModel(filter) {
+    return Ext.getApplication().getModel("NX.coreui.model.SearchFilter").create(filter);
+  }
+
+  /**
    * A hook that automatically re-evaluates whenever any state is changed
    * @param getValue - A function to get the value from the state subsystem
    * @returns {unknown}
@@ -262,4 +314,31 @@ export default class {
   
       return value;
     }
+
+  /**
+   * Show the sign in dialog
+   */
+  static askToAuthenticate() {
+    NX.Security.askToAuthenticate();
+  }
+
+  static signOut() {
+    NX.Security.signOut();
+  }
+
+  static showAbout() {
+    Ext.widget('nx-aboutwindow')
+  }
+
+  static refresh() {
+    Ext.getApplication().getController('Refresh').refresh();
+  }
+
+  static search(query) {
+    Ext.getApplication().getController('Search').onQuickSearch(null, query);
+  }
+
+  static isExtJsRendered() {
+    return !!document.getElementById('feature-content');
+  }
 }

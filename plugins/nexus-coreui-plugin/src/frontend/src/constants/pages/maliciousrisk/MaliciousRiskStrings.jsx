@@ -12,13 +12,15 @@
  */
 import {NxTextLink} from "@sonatype/react-shared-components";
 import React from "react";
+import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   MALICIOUS_RISK: {
     MENU: {
       text: 'Malware Risk',
       textComplement: '<span class="nxrm-new-tag">NEW</span>',
-      description: 'Visualize risk in your repositories'
+      description: 'Visualize risk in your repositories',
+      icon: faExclamationTriangle
     },
     TITLE: 'Malware Risk',
     DESCRIPTION: 'Open source malware is cached in the proxy repositories on your Nexus Repository.',

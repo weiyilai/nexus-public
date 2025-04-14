@@ -56,7 +56,7 @@ Ext.define('NX.coreui.controller.LdapServers', {
     'ldap.LdapSystemPasswordModal'
   ],
   refs: [
-    { ref: 'main', selector: 'nx-main' },
+    { ref: 'main', selector: '#feature-content' },
     { ref: 'feature', selector: 'nx-coreui-ldapserver-feature' },
     { ref: 'content', selector: 'nx-feature-content' },
     { ref: 'list', selector: 'nx-coreui-ldapserver-list' },
@@ -81,22 +81,6 @@ Ext.define('NX.coreui.controller.LdapServers', {
    */
   init: function() {
     var me = this;
-
-    me.features = {
-      mode: 'admin',
-      path: '/Security/LDAP',
-      text: NX.I18n.get('LdapServers_Text'),
-      description: NX.I18n.get('LdapServers_Description'),
-      view: {xtype: 'nx-coreui-ldapserver-feature'},
-      iconConfig: {
-        file: 'book_addresses.png',
-        variants: ['x16', 'x32']
-      },
-      visible: function() {
-        return NX.Permissions.check('nexus:ldap:read') &&
-            !NX.State.getValue('nexus.react.ldap', false);
-      }
-    };
 
     me.callParent();
 
@@ -628,6 +612,12 @@ Ext.define('NX.coreui.controller.LdapServers', {
     Ext.apply(values, userGroupForm.getForm().getFieldValues());
 
     return values;
+  },
+
+  onNavigate: function() {
+    if (NX.Bookmarks.getBookmark().getToken().includes('security/ldap')) {
+      this.reselect();
+    }
   }
 
 });

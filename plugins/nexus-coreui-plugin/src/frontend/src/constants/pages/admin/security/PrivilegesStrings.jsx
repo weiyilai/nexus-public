@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faIdBadge } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   PRIVILEGES: {
     MENU: {
       text: 'Privileges',
-      description: 'Manage Privileges'
+      description: 'Manage Privileges',
+      icon: faIdBadge
     },
     LIST: {
       CREATE_BUTTON: 'Create Privilege',

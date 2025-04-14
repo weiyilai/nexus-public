@@ -27,7 +27,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -57,7 +56,7 @@ export default function MetricHealthList({onEdit}) {
   );
 
   return (
-    <Page className="nxrm-metric-health">
+    <div className="nxrm-metric-health">
       <PageHeader>
         <PageTitle
           icon={faMedkit}
@@ -135,6 +134,6 @@ export default function MetricHealthList({onEdit}) {
           body={METRIC_HEALTH.HELP.SUB_LABEL}
         />
       </ContentBody>
-    </Page>
+    </div>
   );
 }

@@ -74,7 +74,14 @@ export default function SupportZipSingleNode() {
   }
 
   return <Page>
-    <PageHeader><PageTitle icon={faArchive} {...UIStrings.SUPPORT_ZIP.MENU}/></PageHeader>
+    <PageHeader>
+      {/* icon does not match what's in constants faArchive vs faFileArchive */}
+      <PageTitle
+          icon={faArchive}
+          text={UIStrings.SUPPORT_ZIP.MENU.text}
+          description={UIStrings.SUPPORT_ZIP.MENU.description}
+      />
+    </PageHeader>
     <ContentBody className="nxrm-support-zip">
       <Section>
         {!(isCreated || isHaZipsCreated) &&

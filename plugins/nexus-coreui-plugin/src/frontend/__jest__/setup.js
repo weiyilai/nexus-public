@@ -27,6 +27,36 @@ window.crypto = {
 window.plugins = [];
 window.BlobStoreTypes = {};
 window.HTMLElement.prototype.scrollIntoView = jest.fn();
+window.ResizeObserver = jest.fn().mockReturnValue({
+  observe: jest.fn(),
+  unobserve: jest.fn()
+});
+
+
+global.Ext = {
+  getApplication: jest.fn().mockReturnValue({
+    getStore: jest.fn().mockReturnValue({
+      on: jest.fn(),
+      un: jest.fn()
+    }),
+    getController: jest.fn().mockReturnValue({
+      on: jest.fn(),
+      un: jest.fn()
+    })
+  }),
+  // keep it async so it's closer to real world behavior, but no need to wait longer than we have to
+  defer: (callback) => setTimeout(callback, 0),
+  isEmpty: jest.fn().mockImplementation((value) => {
+    if (value === undefined || value === null) {
+      return true;
+    } else if (typeof value?.length === 'number') {
+      return value.length === 0;
+    } else {
+      return false;
+    }
+  }),
+  widget: jest.fn()
+}
 
 global.NX = {
   Messages: {
@@ -35,6 +65,20 @@ global.NX = {
   },
   Permissions: {
     check: jest.fn()
+  },
+  app: {
+    Application: {
+      bundleActive: jest.fn()
+    }
+  },
+  State: {
+    getValue: jest.fn(),
+    getUser: jest.fn(),
+    getEdition: jest.fn()
+  },
+  Security: {
+    hasUser: jest.fn(),
+    askToAuthenticate: jest.fn()
   }
 };
 
@@ -50,3 +94,39 @@ Range.prototype.getBoundingClientRect = jest.fn(() => {
   };
 });
 
+const getHeight = (el) => {
+  const isContainer = el.classList.contains('nx-transfer-list__item-list'),
+      isItem = el.classList.contains('nx-transfer-list__item'),
+      height = isContainer ? 520 :
+          isItem ? 40 :
+              0;
+  return height;
+};
+
+Element.prototype.getBoundingClientRect = jest.fn().mockImplementation(function() {
+  const height = getHeight(this),
+      siblingItems = this.parentElement?.children ?? [],
+      idx = Array.prototype.indexOf.call(siblingItems, this),
+      top = 40 * idx;
+
+  return {
+    bottom: 0,
+    height,
+    left: 0,
+    right: 0,
+    top,
+    width: 0
+  };
+});
+
+jest.spyOn(Element.prototype, 'clientHeight', 'get').mockImplementation(function() {
+  return getHeight(this);
+});
+
+jest.mock('../src/interfaces/ExtJSUtil', () => ({
+  waitForExtJs: jest.fn()
+}));
+
+jest.mock('swagger-ui-react', () => {
+  return jest.fn().mockReturnValue(null);
+});

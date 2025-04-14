@@ -817,6 +817,12 @@ Ext.define('NX.coreui.controller.Repositories', {
         }
       });
     });
-  }
+  },
+
+  onNavigate: function() {
+    if (NX.Bookmarks.getBookmark().getToken().includes('repository/repositories')) {
+      this.reselect();
+    }
+  },
 
 });

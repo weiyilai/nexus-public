@@ -12,12 +12,14 @@
  */
 import React from "react";
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faDungeon } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   REALMS: {
     MENU: {
       text: 'Realms',
-      description: 'Manage the active security realms and their order'
+      description: 'Manage the active security realms and their order',
+      icon: faDungeon
     },
     CONFIGURATION: {
       LABEL: 'Realms Configuration',

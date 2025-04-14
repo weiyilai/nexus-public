@@ -15,7 +15,7 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 /**
- * Utility functions to be shared between different implementations of HealthCheck.
+ * Utility functions to be shared between different implementations of SystemStatus.
  *
  * @since 3.0
  */

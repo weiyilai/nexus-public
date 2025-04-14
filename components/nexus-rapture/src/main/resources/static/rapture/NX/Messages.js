@@ -46,6 +46,8 @@ Ext.define('NX.Messages', {
 
   /** @private */
   toast: function(message, type, iconCls) {
+    const isFirst = !document.querySelector('.x-toast');
+    const extraStyle = isFirst ? 'position: absolute; transform: translate(-24px, 70px);' : 'transform: translateY(70px)';
     setTimeout(function delay() {
       Ext.toast({
         baseCls: type,
@@ -54,7 +56,7 @@ Ext.define('NX.Messages', {
             '<div class="text">' + Ext.htmlEncode(message) + '</div>' +
             '<div class="dismiss"><a aria-label="Dismiss" href="javascript:;" onclick="Ext.getCmp(this.closest(\'.x-toast\').id).close()"><i class="fa fa-times-circle"></i></a></div>',
         align: 'tr',
-        anchor: Ext.ComponentQuery.query('nx-feature-content')[0],
+        style: extraStyle,
         stickOnClick: true,
         minWidth: 150,
         maxWidth: 400,

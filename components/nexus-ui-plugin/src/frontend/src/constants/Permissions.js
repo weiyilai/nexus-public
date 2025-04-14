@@ -65,4 +65,5 @@ export default {
   COMPONENT: generatePermissions('component', [CREATE]),
   SEARCH: generatePermissions('search', [READ]),
   CAPABILITIES: generatePermissions('capabilities'),
+  MIGRATION: generatePermissions('migration', [READ]),
 };

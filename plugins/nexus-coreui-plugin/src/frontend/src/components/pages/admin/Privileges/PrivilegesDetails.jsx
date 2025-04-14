@@ -20,7 +20,6 @@ import {ExtJS, ValidationUtils} from '@sonatype/nexus-ui-plugin';
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -59,7 +58,7 @@ export default function PrivilegesDetails({itemId, onDone}) {
   const isEdit = ValidationUtils.notBlank(itemId);
   const showReadOnly = isEdit && !canEdit;
 
-  return <Page className="nxrm-privileges">
+  return <div className="nxrm-privileges">
     <PageHeader>
       <PageTitle
           text={isEdit ? LABELS.EDIT_TILE(pristineData.name || '') : LABELS.CREATE_TITLE}
@@ -74,5 +73,5 @@ export default function PrivilegesDetails({itemId, onDone}) {
         }
       </NxTile>
     </ContentBody>
-  </Page>;
+  </div>;
 }

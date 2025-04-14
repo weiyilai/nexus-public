@@ -29,7 +29,6 @@ import {
 
 import {
   ContentBody,
-  Page,
   PageActions,
   PageHeader,
   PageTitle,
@@ -59,9 +58,14 @@ export default function LoggingConfigurationList({onCreate, onEdit}) {
     send({type: 'RESET'});
   }
 
-  return <Page className="nxrm-logging-configuration">
+  return <div className="nxrm-logging-configuration">
     <PageHeader>
-      <PageTitle icon={faScroll} {...UIStrings.LOGGING.MENU}/>
+
+      <PageTitle
+          icon={UIStrings.LOGGING.MENU.icon}
+          text={UIStrings.LOGGING.MENU.text}
+          description={UIStrings.LOGGING.MENU.description}
+      />
       <PageActions>
         <NxButton variant="tertiary" onClick={reset}>
           <NxFontAwesomeIcon icon={faRedo}/>
@@ -106,5 +110,5 @@ export default function LoggingConfigurationList({onCreate, onEdit}) {
         </NxTable>
       </Section>
     </ContentBody>
-  </Page>;
+  </div>;
 }

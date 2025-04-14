@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import React from 'react';
+import React, {useCallback} from 'react';
 import {useMachine} from '@xstate/react';
 import {path} from 'ramda';
 import {faTrash} from "@fortawesome/free-solid-svg-icons";
@@ -43,11 +43,22 @@ import UIStrings from '../../../../constants/UIStrings';
 import CustomBlobStoreSettings from './CustomBlobStoreSettings';
 import BlobStoreWarning from './BlobStoreWarning';
 import BlobStoresConvertModal from './BlobStoresConvertModal';
+import {useCurrentStateAndParams, useRouter} from "@uirouter/react";
 
 const {BLOB_STORES: {FORM}} = UIStrings;
 
-export default function BlobStoresForm({itemId, onDone}) {
-  const idParts = itemId.split('/');
+// ui-router aware container separates ui-router from the BlobStoresForm component,
+// so that we can test the BlobStoresForm component in isolation (and reuse current tests)
+export function BlobStoresFormRouterAwareContainer() {
+  const router = useRouter();
+  const {params} = useCurrentStateAndParams();
+  const onDone = useCallback(() => router.stateService.go('admin.repository.blobstores.list'));
+  const itemId = params?.itemId;
+  return <BlobStoresForm itemId={itemId} onDone={onDone}/>;
+}
+
+export function BlobStoresForm({itemId, onDone}) {
+  const idParts = itemId?.split('/');
   const pristineData = idParts?.length ? {
     type: idParts[0] && decodeURIComponent(idParts[0]),
     name: idParts[1] && decodeURIComponent(idParts[1])

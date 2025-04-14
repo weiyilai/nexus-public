@@ -12,12 +12,14 @@
  */
 import React from 'react';
 import {NxTextLink} from '@sonatype/react-shared-components';
+import { faBroom } from '@fortawesome/free-solid-svg-icons';
 
 export default {
   CLEANUP_POLICIES: {
     MENU: {
       text: 'Cleanup Policies',
-      description: 'Manage component removal configuration'
+      description: 'Manage component removal configuration',
+      icon: faBroom
     },
 
     CREATE_TITLE: 'Create Cleanup Policy',

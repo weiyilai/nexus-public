@@ -14,11 +14,14 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
+import { faDatabase } from '@fortawesome/free-solid-svg-icons';
+
 export default {
   DATASTORE_CONFIGURATION: {
     MENU: {
       text: 'Data Store',
-      description: 'Configure the connection used for the database'
+      description: 'Configure the connection used for the database',
+      icon: faDatabase
     },
     FIELDS: {
       jdbcUrlLabel: 'JDBC URL',

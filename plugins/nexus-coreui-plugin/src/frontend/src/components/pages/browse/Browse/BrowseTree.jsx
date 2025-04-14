@@ -23,7 +23,6 @@ import {isEmpty} from 'ramda';
 
 import {
   ContentBody,
-  Page,
   PageHeader,
   PageTitle
 } from '../../../layout';
@@ -48,7 +47,7 @@ export default function BrowseTree({itemId}) {
   const isLoading = state.matches('chooseInitialState') || state.matches('loading');
 
   return (
-    <Page>
+    <div>
       <PageHeader>
         <PageTitle icon={faDatabase} {...BROWSE.MENU}/>
       </PageHeader>
@@ -72,6 +71,6 @@ export default function BrowseTree({itemId}) {
           </NxTile.Content>
         </NxTile>
       </ContentBody>
-    </Page>
+    </div>
   )
 };

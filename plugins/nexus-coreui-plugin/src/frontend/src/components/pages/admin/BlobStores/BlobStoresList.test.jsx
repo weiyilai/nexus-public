@@ -18,10 +18,28 @@ import userEvent from '@testing-library/user-event';
 import TestUtils from '@sonatype/nexus-ui-plugin/src/frontend/src/interface/TestUtils';
 
 import BlobStoresList from './BlobStoresList';
+import {UIRouter} from "@uirouter/react";
+import {getRouter} from "../../../../routerConfig/routerConfig";
+
+// This is used by the API view, it's not really something we need to
+// test here, but importing it trips up jest, it's simplest to just bypass it
+// with a mock
+jest.mock('swagger-ui-react', () => {
+  return jest.fn().mockReturnValue(null);
+});
 
 jest.mock('axios', () => ({
   get: jest.fn()
 }));
+
+function renderComponent() {
+  const router = getRouter();
+  return render(
+      <UIRouter router={router}>
+        <BlobStoresList />
+      </UIRouter>
+  );
+}
 
 describe('BlobStoresList', function() {
   const rows = [{
@@ -79,7 +97,7 @@ describe('BlobStoresList', function() {
   it('renders the loading spinner', async function() {
     axios.get.mockReturnValue(new Promise(() => {}));
 
-    render(<BlobStoresList/>);
+    renderComponent();
 
     expect(selectors.queryLoadingMask()).toBeInTheDocument();
   });
@@ -87,7 +105,7 @@ describe('BlobStoresList', function() {
   it('renders the resolved empty text', async function() {
     axios.get.mockResolvedValue({data: []});
 
-    render(<BlobStoresList/>);
+    renderComponent();
 
     await waitForElementToBeRemoved(selectors.queryLoadingMask());
 
@@ -108,7 +126,7 @@ describe('BlobStoresList', function() {
 
     axios.get.mockResolvedValue({data: rows});
 
-    render(<BlobStoresList/>);
+    renderComponent();
 
     await waitForElementToBeRemoved(queryLoadingMask());
 
@@ -142,7 +160,7 @@ describe('BlobStoresList', function() {
 
     axios.get.mockResolvedValue({data: rows});
 
-    render(<BlobStoresList/>);
+    renderComponent();
 
     await waitForElementToBeRemoved(queryLoadingMask());
 
@@ -162,7 +180,7 @@ describe('BlobStoresList', function() {
 
     axios.get.mockResolvedValue({data: rows});
 
-    render(<BlobStoresList/>);
+    renderComponent();
 
     await waitForElementToBeRemoved(queryLoadingMask());
 
@@ -182,7 +200,7 @@ describe('BlobStoresList', function() {
 
     axios.get.mockResolvedValue({data: rows});
 
-    render(<BlobStoresList/>);
+    renderComponent();
 
     await waitForElementToBeRemoved(queryLoadingMask());
 
@@ -204,7 +222,7 @@ describe('BlobStoresList', function() {
 
     axios.get.mockResolvedValue({data: rows});
 
-    render(<BlobStoresList/>);
+    renderComponent();
 
     await waitForElementToBeRemoved(queryLoadingMask());
 
@@ -226,7 +244,7 @@ describe('BlobStoresList', function() {
 
     axios.get.mockResolvedValue({data: rows});
 
-    render(<BlobStoresList/>);
+    renderComponent();
 
     await waitForElementToBeRemoved(queryLoadingMask());
 
@@ -248,7 +266,7 @@ describe('BlobStoresList', function() {
 
     axios.get.mockResolvedValue({data: rows});
 
-    render(<BlobStoresList/>);
+    renderComponent();
 
     await waitForElementToBeRemoved(queryLoadingMask());
 
@@ -270,7 +288,7 @@ describe('BlobStoresList', function() {
 
     axios.get.mockResolvedValue({data: rows});
 
-    render(<BlobStoresList/>);
+    renderComponent();
 
     await waitForElementToBeRemoved(queryLoadingMask());
 
@@ -292,7 +310,7 @@ describe('BlobStoresList', function() {
 
     axios.get.mockResolvedValue({data: rows});
 
-    render(<BlobStoresList/>);
+    renderComponent();
 
     await waitForElementToBeRemoved(queryLoadingMask());
 

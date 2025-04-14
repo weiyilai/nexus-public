@@ -13,14 +13,14 @@
 import React from 'react';
 import axios from 'axios';
 import {when} from 'jest-when';
-import {act, screen, waitFor, waitForElementToBeRemoved, within} from '@testing-library/react'
+import {screen, waitFor, waitForElementToBeRemoved, within} from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 
 import TestUtils from '@sonatype/nexus-ui-plugin/src/frontend/src/interface/TestUtils';
 
 import S3BlobStoreSettings from './S3/S3BlobStoreSettings';
 import S3BlobStoreWarning from './S3/S3BlobStoreWarning';
-import BlobStoresForm from './BlobStoresForm';
+import {BlobStoresForm} from './BlobStoresForm';
 
 import {URLs} from './BlobStoresHelper';
 // Include the blob stores types on the window

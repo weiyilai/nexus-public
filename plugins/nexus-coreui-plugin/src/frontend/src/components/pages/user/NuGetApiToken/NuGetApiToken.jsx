@@ -14,7 +14,7 @@ import React from 'react';
 import {useMachine} from '@xstate/react';
 import {NxButton, NxLoadWrapper} from '@sonatype/react-shared-components';
 import {NxFontAwesomeIcon} from '@sonatype/react-shared-components';
-import {faKey, faLock} from '@fortawesome/free-solid-svg-icons';
+import { faLock } from '@fortawesome/free-solid-svg-icons';
 
 import {
   ContentBody,
@@ -52,7 +52,13 @@ export default function NuGetApiToken() {
   }
 
   return <Page>
-    <PageHeader><PageTitle icon={faKey} {...UIStrings.NUGET_API_KEY.MENU}/></PageHeader>
+    <PageHeader>
+      <PageTitle
+          icon={UIStrings.NUGET_API_KEY.MENU.icon}
+          text={UIStrings.NUGET_API_KEY.MENU.text}
+          description={UIStrings.NUGET_API_KEY.MENU.description}
+      />
+    </PageHeader>
     <ContentBody>
       <Section>
         <NxLoadWrapper isLoading={isLoading} retryHandler={retry}>
