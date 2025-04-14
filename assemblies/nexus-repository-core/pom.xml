@@ -64,7 +64,7 @@
     </dependency>
     <dependency>
       <groupId>org.sonatype.nexus</groupId>
-      <artifactId>nexus-pax-logging</artifactId>
+      <artifactId>nexus-logging</artifactId>
     </dependency>
   </dependencies>
 

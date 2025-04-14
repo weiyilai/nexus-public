@@ -3,7 +3,7 @@
   <appender name="request.logfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <File>${karaf.data}/log/request.log</File>
     <Append>true</Append>
-    <encoder class="org.sonatype.nexus.pax.logging.AccessPatternLayoutEncoder">
+    <encoder class="org.sonatype.nexus.logging.AccessPatternLayoutEncoder">
       <pattern>%clientHost %l %user [%date] "%requestURL" %statusCode %header{Content-Length} %bytesSent %elapsedTime "%header{User-Agent}" [%thread]</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">

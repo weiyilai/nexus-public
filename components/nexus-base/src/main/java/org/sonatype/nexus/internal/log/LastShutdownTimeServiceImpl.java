@@ -52,7 +52,7 @@ public class LastShutdownTimeServiceImpl
 
   private static final String GROUP_NAME = "time";
 
-  private static final String START_INDICATOR = "org.sonatype.nexus.pax.logging.NexusLogActivator - start";
+  private static final String START_INDICATOR = "org.sonatype.nexus.logging.NexusLogActivator - start";
 
   private static final int DEFAULT_LINE_READING_LIMIT = 10_000;
 

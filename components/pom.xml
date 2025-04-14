@@ -32,7 +32,7 @@
     <module>nexus-common</module>
     <module>nexus-configuration</module>
     <module>nexus-extender-spring</module>
-    <module>nexus-pax-logging</module>
+    <module>nexus-logging</module>
     <module>nexus-repository-core-edition</module>
     <module>nexus-spring</module>
     <module>nexus-testsupport</module>
@@ -106,7 +106,7 @@
         <!-- THIS MODULE SHOULD BE REMOVED WHEN SPRING MIGRATION COMPLETE -->
         <module>nexus-guice-servlet</module>
         <module>nexus-mime</module>
-        <module>nexus-pax-logging</module>
+        <module>nexus-logging</module>
         <module>nexus-plugin-api</module>
         <!-- THIS MODULE SHOULD BE REMOVED WHEN SPRING MIGRATION COMPLETE -->
         <module>nexus-public-spring</module>
