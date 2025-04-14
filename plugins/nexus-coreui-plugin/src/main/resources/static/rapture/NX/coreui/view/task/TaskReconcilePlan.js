@@ -140,15 +140,13 @@ Ext.define('NX.coreui.view.task.TaskReconcilePlan', {
     }
     else {
       if (me.data.plansInPlannedState === 1) {
-        console.log(me.data.plan.id);
         labelComponent.setText(me.data.plan.id);
       }
       else {
         labelComponent.setText(NX.I18n.get('Task_TaskSettingsForm_PlanInformation_PlanId_Multiple'));
       }
-      console.log(me.data.plan.configuration['.created']);
       me.down('#labelPreviousPlanCreated').update(
-          Ext.Date.format(new Date(me.data.plan.configuration['.created']),
+          Ext.Date.format(new Date(me.data.plan.created),
               'Y-m-d\\TH:i:s.uP'));
     }
   },
@@ -172,7 +170,7 @@ Ext.define('NX.coreui.view.task.TaskReconcilePlan', {
       if (p.state === 'PLANNED' || p.state === 'EXECUTE') {
         data.planIds.push(p.id);
         data.plansInPlannedState++;
-        var date = new Date(p.configuration['.created']).getTime();
+        var date = new Date(p.created).getTime();
         if (timeLastPlan <= date) {
           timeLastPlan = date;
           data.plan = p;
