@@ -22,9 +22,10 @@ import {
   useToggle,
   NxDropdown
 } from '@sonatype/react-shared-components';
-import { ExtJS, useIsVisible } from '@sonatype/nexus-ui-plugin';
+import { ExtJS } from '@sonatype/nexus-ui-plugin';
 import { faSignInAlt, faUser } from '@fortawesome/free-solid-svg-icons';
 import { useRouter, useSref } from '@uirouter/react';
+import useIsVisible from '../../routerConfig/useIsVisible';
 import useHasUser from '../../hooks/useHasUser';
 import { ROUTE_NAMES } from '../../routerConfig/routeNames/routeNames';
 

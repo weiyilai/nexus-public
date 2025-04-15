@@ -12,51 +12,45 @@
  */
 import React from 'react';
 
-import { NxDivider, NxGlobalSidebar2 } from '@sonatype/react-shared-components';
-import { NxDivider, NxGlobalSidebar2NavigationLink } from '@sonatype/react-shared-components';
+import { NxDivider, NxStatefulGlobalSidebar2 } from '@sonatype/react-shared-components';
+import { NxDivider, NxGlobalSidebar2NavigationLink, NxStatefulGlobalSidebar2 } from '@sonatype/react-shared-components';
 import { faArrowLeft, faArrowRight, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import LeftNavigationMenuItem from './LeftNavigationMenuItem';
 import LeftNavigationMenuCollapsibleItem from './LeftNavigationMenuCollapsibleItem';
 import LeftNavigationMenuCollapsibleChildItem from './LeftNavigationMenuCollapsibleChildItem';
 import UIStrings from '../../constants/UIStrings';
-import { ROUTE_NAMES } from '../../routerConfig/routeNames/routeNames';
-import { ExtJS } from '@sonatype/nexus-ui-plugin';
-import { ROUTE_NAMES } from '../../routerConfig/routeNames/routeNames';
-import { useDefaultAdminRouteName } from './useDefaultAdminRouteName';
-import { ExtJS } from '@sonatype/nexus-ui-plugin';
+import {ROUTE_NAMES} from "../../routerConfig/routeNames/routeNames";
+import { useIsSettingsVisible } from './useIsSettingsVisible';
+import {ExtJS} from "@sonatype/nexus-ui-plugin";
 import './LeftNavigationMenu.scss';
-import useSideNavbarCollapsedState from '../../hooks/useSideNavbarCollapsedState';
 
 export default function LeftNavigationMenu() {
-  const { BROWSE, ADMIN } = ROUTE_NAMES;
-  const [isOpen, onToggleClick] = useSideNavbarCollapsedState(true);
+  const { BROWSE, ADMIN }  = ROUTE_NAMES;
 
-  const adminInitialRouteName = useDefaultAdminRouteName();
-  const isSettingsVisible = !!adminInitialRouteName;
+  const isSettingsVisible = useIsSettingsVisible();
 
-  const clmState = ExtJS.useState(() => {
+  const clmState = ExtJS.useState(() =>  {
     const clm = ExtJS.state().getValue('clm') || {};
     return {
       showDashboard: !!(clm?.enabled && clm?.showLink && clm?.url),
-      url: clm?.url,
+      url: clm?.url
     };
   });
 
   return (
-    <NxGlobalSidebar2
+    <NxStatefulGlobalSidebar2
       className='nxrm-left-nav'
-      isOpen={isOpen}
-      onToggleClick={onToggleClick}
+      isDefaultOpen={true}
       toggleOpenIcon={faArrowLeft}
       toggleCloseIcon={faArrowRight}
       logoAltText='Sonatype Nexus Repository'
       logoLink='#'
     >
       <LeftNavigationMenuItem
-        name={BROWSE.WELCOME}
-        text={UIStrings.WELCOME.MENU.text}
-        icon={UIStrings.WELCOME.MENU.icon}
-        data-analytics-id='nxrm-global-navbar-welcome'
+          name={BROWSE.WELCOME}
+          text={UIStrings.WELCOME.MENU.text}
+          icon={UIStrings.WELCOME.MENU.icon}
+          data-analytics-id='nxrm-global-navbar-welcome'
       />
 
       <LeftNavigationMenuCollapsibleItem
@@ -238,36 +232,35 @@ export default function LeftNavigationMenu() {
       />
 
       <LeftNavigationMenuItem
-        name={BROWSE.MALWARERISK}
-        text={UIStrings.MALICIOUS_RISK.MENU.text}
-        icon={UIStrings.MALICIOUS_RISK.MENU.icon}
-        data-analytics-id='nxrm-global-navbar-malwarerisk'
+          name={BROWSE.MALWARERISK}
+          text={UIStrings.MALICIOUS_RISK.MENU.text}
+          icon={UIStrings.MALICIOUS_RISK.MENU.icon}
+          data-analytics-id='nxrm-global-navbar-malwarerisk'
       />
 
-      {isSettingsVisible && (
-        <>
-          <NxDivider />
-          <LeftNavigationMenuItem
-            name={adminInitialRouteName}
-            selectedState={ADMIN.DIRECTORY}
-            text={UIStrings.ADMIN_DIRECTORY.MENU.text}
-            icon={UIStrings.ADMIN_DIRECTORY.MENU.icon}
-            data-analytics-id='nxrm-global-navbar-admin'
-          />
-        </>
-      )}
+      { isSettingsVisible &&
+          <>
+            <NxDivider />
+            <LeftNavigationMenuItem
+                name={ADMIN.DIRECTORY}
+                text={UIStrings.ADMIN_DIRECTORY.MENU.text}
+                icon={UIStrings.ADMIN_DIRECTORY.MENU.icon}
+                data-analytics-id='nxrm-global-navbar-admin'
+            />
+          </>
+      }
 
-      {clmState?.showDashboard ? (
-        <NxGlobalSidebar2NavigationLink
-          className='nxrm-left-nav__link'
-          text={UIStrings.IQ_SERVER.OPEN_DASHBOARD_LINK}
-          href={clmState.url}
-          icon={faExternalLinkAlt}
-          referrerPolicy='no-referrer'
-          target='_blank'
-          data-analytics-id='nxrm-global-navbar-iq-server'
-        />
-      ) : null}
-    </NxGlobalSidebar2>
+      { clmState?.showDashboard ? (
+          <NxGlobalSidebar2NavigationLink
+              className='nxrm-left-nav__link'
+              text={UIStrings.IQ_SERVER.OPEN_DASHBOARD_LINK}
+              href={clmState.url}
+              icon={faExternalLinkAlt}
+              referrerPolicy='no-referrer'
+              target='_blank'
+              data-analytics-id='nxrm-global-navbar-iq-server'
+          />
+      ) : null }
+    </NxStatefulGlobalSidebar2>
   );
 }

@@ -20,14 +20,11 @@
     "test-watch-debug": "node --inspect-brk node_modules/.bin/jest --config src/frontend/jest.config.js --runInBand --watchAll"
   },
   "dependencies": {
-    "@babel/plugin-transform-class-properties": "7.25.9",
-    "@babel/plugin-transform-optional-chaining": "7.25.9",
     "@babel/runtime": "7.17.2",
     "@fortawesome/fontawesome-svg-core": "1.2.25",
     "@fortawesome/free-solid-svg-icons": "5.11.2",
     "@fortawesome/react-fontawesome": "0.1.4",
     "@sonatype/react-shared-components": "13.5.2",
-    "@uirouter/react": "1.0.7",
     "classnames": "2.3.1",
     "file-size": "1.0.0",
     "node-gyp": "8.1.0",
@@ -38,10 +35,12 @@
   "devDependencies": {
     "@babel/cli": "7.17.6",
     "@babel/core": "7.17.5",
+    "@babel/plugin-proposal-class-properties": "7.16.7",
+    "@babel/plugin-proposal-optional-chaining": "7.16.7",
     "@babel/plugin-transform-runtime": "7.17.0",
     "@babel/preset-env": "7.16.11",
     "@babel/preset-react": "7.16.7",
-    "@testing-library/jest-dom": "5.17.0",
+    "@testing-library/jest-dom": "5.14.1",
     "@testing-library/react": "12.1.2",
     "@testing-library/user-event": "12.8.3",
     "cpx": "1.5.0",
@@ -54,7 +53,6 @@
   },
   "peerDependencies": {
     "@sonatype/react-shared-components": "13.5.2",
-    "@uirouter/react": "1.0.7",
     "react": "16.14.0",
     "react-dom": "16.14.0",
     "xstate": "4.38.3"

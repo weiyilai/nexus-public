@@ -11,11 +11,12 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 
 import { ExtJsContainer } from "../../../widgets/ExtJsContainer/ExtJsContainer";
 import { ExtJS } from "@sonatype/nexus-ui-plugin";
+
 export default function SearchFeatureExt({
   title,
   icon,
@@ -29,6 +30,27 @@ export default function SearchFeatureExt({
   if (criterias) {
     ExtJS.useCriteria(criterias);
   }
+
+  // This is a temporary fix for a issue caused by swagger-ui-react 
+  // to prevent the URL from being updated with a hash (#) when the user adds a criteria
+  // which causes the url parameters to dissapear and cause an error when searching
+  // A proper fix will be implemented in NEXUS-46710
+  useEffect(() => {
+    if (!window?.history) {
+      return;
+    }
+
+    history.pushState = function () {
+      console.debug("Intercepting pushState", arguments);
+      if (arguments?.[2] !== "#") {
+        History.prototype.pushState.apply(history, arguments);
+      }
+    };
+
+    return () => {
+      history.pushState = History.prototype.pushState;
+    };
+  }, []);
 
   return (
     <ExtJsContainer

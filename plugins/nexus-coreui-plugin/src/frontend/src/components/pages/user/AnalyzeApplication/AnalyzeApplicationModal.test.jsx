@@ -25,6 +25,12 @@ const component = {
   'repositoryName': 'hosted-repo'
 };
 
+jest.mock('axios', () => ({
+  ...jest.requireActual('axios'), // Use most functions from actual axios
+  get: jest.fn(() => Promise.resolve()),
+  post: jest.fn(() => Promise.resolve())
+}));
+
 jest.mock('@sonatype/nexus-ui-plugin', () => {
   return {
     ...jest.requireActual('@sonatype/nexus-ui-plugin'),
@@ -51,22 +57,18 @@ describe('AnalyzeApplicationModal', () => {
         selectedAsset: () => getByLabelText(UIStrings.ANALYZE_APPLICATION.SELECT_ASSET.LABEL),
       }));
 
-  beforeEach(() => {
-    Axios.get.mockReturnValue(Promise.resolve({
-      data: {
-        emailAddress: 'test@sonatype.com',
-        reportLabel: 'foo-1.0.0.jar',
-        assetMap: {
-          'foo': 'foo-app',
-          'bar': 'bar-app'
-        },
-        selectedAsset: 'foo',
-        tosAccepted: false
-      }
-    }));
-    Axios.post.mockResolvedValue(null);
-  });
-
+  Axios.get.mockReturnValue(Promise.resolve({
+    data: {
+      emailAddress: 'test@sonatype.com',
+      reportLabel: 'foo-1.0.0.jar',
+      assetMap: {
+        'foo': 'foo-app',
+        'bar': 'bar-app'
+      },
+      selectedAsset: 'foo',
+      tosAccepted: false
+    }
+  }));
 
   it('renders correctly', async() => {
     let {loadingMask, email, password, packages, reportName, cancelButton, analyzeButton, selectedAsset } = render();

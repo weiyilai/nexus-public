@@ -123,7 +123,6 @@ export default function S3BlobStoreSettings({service}) {
         label={FIELDS.S3BlobStore_Region_FieldLabel}
         sublabel={FIELDS.S3BlobStore_Region_HelpText}
         className={showPrimaryRegionInactiveMessage ? "nxrm-s3-region-select-message": ""}
-        data-testid="s3-primary-region"
     >
       <NxFormSelect {...FormUtils.fieldProps(bucketField('region'), current)}
                     onChange={FormUtils.handleUpdate(bucketField('region'), send)}>

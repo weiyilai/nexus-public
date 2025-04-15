@@ -61,7 +61,7 @@ export const userRoutes = [
 
   {
     name: USER.USER_TOKEN,
-    url: '/usertoken',
+    url: '/user-token',
     component: UserToken,
     data: {
       visibilityRequirements: {

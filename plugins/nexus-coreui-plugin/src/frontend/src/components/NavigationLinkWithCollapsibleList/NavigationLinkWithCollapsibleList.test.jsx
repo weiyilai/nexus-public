@@ -51,7 +51,7 @@ describe('NxCollapsibleNavigationLink', () => {
   });
 
   it('renders the link with the list expanded by default', () => {
-    renderComponent({ isOpen: true });
+    renderComponent({ isDefaultOpen: true });
     const expandableList = screen.queryByRole('list');
     expect(expandableList).toBeVisible();
   });

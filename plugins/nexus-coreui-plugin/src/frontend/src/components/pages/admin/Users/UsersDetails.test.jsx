@@ -54,6 +54,14 @@ const {
 
 const {EXT: {USER: {ACTION, METHODS}, URL: EXT_URL}} = APIConstants;
 
+jest.mock('axios', () => ({
+  ...jest.requireActual('axios'),
+  get: jest.fn(),
+  put: jest.fn(),
+  post: jest.fn(),
+  delete: jest.fn(),
+}));
+
 jest.mock('@sonatype/nexus-ui-plugin', () => ({
   ...jest.requireActual('@sonatype/nexus-ui-plugin'),
   ExtJS: {

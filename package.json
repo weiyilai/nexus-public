@@ -3,7 +3,8 @@
   "workspaces": [
     "components/nexus-ui-plugin",
     "components/nexus-rapture",
-    "plugins/nexus-coreui-plugin"
+    "plugins/nexus-coreui-plugin",
+    "private/plugins/nexus-cloudui-plugin"
   ],
   "packageManager": "yarn@3.2.3",
   "resolutions": {
@@ -15,6 +16,6 @@
     "@react-hook/resize-observer": "^2.0.2",
     "@uirouter/react": "1.0.7",
     "axios": "1.6.4",
-    "core-js-pure": "3.28.0"
+    "core-js-pure": "^3.28.0"
   }
 }

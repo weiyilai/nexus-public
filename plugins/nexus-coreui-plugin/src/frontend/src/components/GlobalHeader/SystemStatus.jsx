@@ -12,10 +12,11 @@
  */
 
 import React from 'react';
-import { ExtJS, useIsVisible } from '@sonatype/nexus-ui-plugin';
+import { ExtJS } from '@sonatype/nexus-ui-plugin';
 import { faCircle, faBell } from "@fortawesome/free-solid-svg-icons";
 import { NxButton, NxFontAwesomeIcon } from '@sonatype/react-shared-components';
 import { useRouter } from '@uirouter/react';
+import useIsVisible from '../../routerConfig/useIsVisible';
 
 export default function SystemStatus() {
   const supportStatusStateIdentifier = 'admin.support.status';

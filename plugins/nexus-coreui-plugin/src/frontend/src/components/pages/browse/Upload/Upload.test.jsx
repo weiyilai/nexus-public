@@ -26,6 +26,11 @@ import UIStrings from '../../../../constants/UIStrings';
 const {COLUMNS} = UIStrings.UPLOAD.LIST;
 const {EXT: {URL, UPLOAD, REPOSITORY}} = APIConstants;
 
+jest.mock('axios', () => ({
+  ...jest.requireActual('axios'),
+  post: jest.fn(),
+}));
+
 const selectors = {
   ...TestUtils.selectors,
   ...TestUtils.tableSelectors,

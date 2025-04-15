@@ -15,8 +15,9 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import { renderHook } from '@testing-library/react-hooks';
-import { ExtJS, isVisible } from '@sonatype/nexus-ui-plugin';
+import { ExtJS } from '@sonatype/nexus-ui-plugin';
 import { useCurrentStateAndParams, useRouter } from '@uirouter/react';
+import isVisible from '../routerConfig/isVisible';
 import { useRedirectOnLogout } from './useRedirectOnLogout';
 
 jest.mock('@uirouter/react', () => ({
@@ -28,8 +29,9 @@ jest.mock('@sonatype/nexus-ui-plugin', () => ({
   ExtJS: {
     useUser: jest.fn(),
   },
-  isVisible: jest.fn()
 }));
+
+jest.mock('../routerConfig/isVisible', () => jest.fn());
 
 describe('useRedirectOnLogout', () => {
   let goMock, onMock, offMock;

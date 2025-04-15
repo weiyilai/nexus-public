@@ -26,8 +26,8 @@ module.exports = {
     ]
   ],
   plugins: [
-    '@babel/plugin-transform-class-properties',
-    '@babel/plugin-transform-optional-chaining',
+    '@babel/plugin-proposal-class-properties',
+    '@babel/plugin-proposal-optional-chaining',
     '@babel/plugin-transform-runtime'
   ]
 };

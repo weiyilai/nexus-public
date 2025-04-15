@@ -11,9 +11,18 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-import ExtJS from '../interface/ExtJS';
-import isVisible from './isVisible';
+import isVisible from '../../routerConfig/isVisible';
+import { ROUTE_NAMES } from '../../routerConfig/routeNames/routeNames';
+import useFilteredRoutes from '../../hooks/useFilteredRoutes';
 
-export default function useIsVisible(visibilityRequirements) {
-  return ExtJS.useVisiblityWithChanges(() => isVisible(visibilityRequirements));
+const ADMIN = ROUTE_NAMES.ADMIN;
+
+export function useIsSettingsVisible() {
+  const visibleRoutes = useFilteredRoutes(state => (
+      state.name.startsWith(`${ADMIN.DIRECTORY}.`) &&
+      !state?.data?.visibilityRequirements?.ignoreForMenuVisibilityCheck &&
+      isVisible(state.data.visibilityRequirements)
+  ));
+
+  return visibleRoutes.length > 0;
 }

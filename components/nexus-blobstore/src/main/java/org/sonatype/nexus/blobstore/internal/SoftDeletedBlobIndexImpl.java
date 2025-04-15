@@ -13,7 +13,6 @@
 package org.sonatype.nexus.blobstore.internal;
 
 import java.time.OffsetDateTime;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import javax.annotation.Priority;
@@ -48,15 +47,9 @@ public class SoftDeletedBlobIndexImpl
 
   @Override
   public void init(final BlobStore blobStore) {
+    checkState(blobStoreName == null, "Previously initialized");
     checkNotNull(blobStore);
-    String newBlobStoreName = checkNotNull(blobStore.getBlobStoreConfiguration().getName());
-    checkState(blobStoreName == null || Objects.equals(newBlobStoreName, blobStoreName), "Previously initialized");
-
-    if (blobStoreName != null) {
-      return;
-    }
-
-    blobStoreName = newBlobStoreName;
+    this.blobStoreName = checkNotNull(blobStore.getBlobStoreConfiguration().getName());
     try {
       start();
     }

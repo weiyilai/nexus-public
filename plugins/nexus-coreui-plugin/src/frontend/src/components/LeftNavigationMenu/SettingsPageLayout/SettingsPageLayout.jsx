@@ -11,12 +11,37 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import React from 'react';
-import { UIView } from '@uirouter/react';
+import { UIView, useCurrentStateAndParams, useRouter } from '@uirouter/react';
 
 import SettingsSidebar from './SettingsSidebar';
+import isVisible from '../../../routerConfig/isVisible';
+import { ROUTE_NAMES } from '../../../routerConfig/routeNames/routeNames';
 
 export default function SettingsPageLayout() {
+  const { ADMIN, BROWSE } = ROUTE_NAMES;
 
+  const router = useRouter();
+
+  const {
+    state: { name: currentPageName },
+  } = useCurrentStateAndParams();
+
+  if (currentPageName === ADMIN.DIRECTORY) {
+    let redirectPage = BROWSE.WELCOME;
+    const adminStates = [ADMIN.REPOSITORY, ADMIN.SECURITY, ADMIN.SUPPORT, ADMIN.SYSTEM];
+
+    for (const stateName in adminStates) {
+      const state = router.stateRegistry.get(stateName);
+      const data = state?.data || {};
+      const { visibilityRequirements } = data;
+
+      if (isVisible(visibilityRequirements)) {
+        redirectPage = stateName;
+        break;
+      }
+    }
+    router.stateService.go(redirectPage);
+  }
 
   return (
     <>

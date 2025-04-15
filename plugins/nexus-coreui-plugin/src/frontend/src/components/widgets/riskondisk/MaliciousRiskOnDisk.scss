@@ -13,11 +13,12 @@
 $card-width: 1016px;
 
 .risk-on-disk-container {
-  padding-left: var(--nx-spacing-6x);
+  padding: var(--nx-spacing-6x);
 }
 
 .risk-on-disk-alert {
   max-width: $card-width;
+  margin: 0;
 
   &:hover .nx-collapsible-items__trigger {
     background-color: var(--nx-color-alert-error-background);

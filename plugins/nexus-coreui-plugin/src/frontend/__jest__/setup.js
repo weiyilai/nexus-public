@@ -15,17 +15,6 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import '@testing-library/jest-dom/extend-expect';
-import {ExtJS} from '@sonatype/nexus-ui-plugin';
-
-jest.mock('axios', () => ({
-  ...jest.requireActual('axios'), // Use most functions from actual axios
-  get: jest.fn(),
-  post: jest.fn(),
-  put: jest.fn(),
-  delete: jest.fn(),
-  all: jest.fn().mockImplementation((requests) => Promise.all(requests))
-}));
-
 
 let lastValue = 0;
 
@@ -134,7 +123,9 @@ jest.spyOn(Element.prototype, 'clientHeight', 'get').mockImplementation(function
   return getHeight(this);
 });
 
-jest.spyOn(ExtJS, 'waitForExtJs');
+jest.mock('../src/interfaces/ExtJSUtil', () => ({
+  waitForExtJs: jest.fn()
+}));
 
 jest.mock('swagger-ui-react', () => {
   return jest.fn().mockReturnValue(null);

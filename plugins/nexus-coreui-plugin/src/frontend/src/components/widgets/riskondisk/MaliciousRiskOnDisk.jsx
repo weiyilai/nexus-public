@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import React, {useEffect, useRef} from 'react';
+import React, { useEffect, forwardRef, useRef } from 'react';
 import {useMachine} from "@xstate/react";
 
 import {
@@ -21,7 +21,7 @@ import {
   NxH3,
   useToggle
 } from "@sonatype/react-shared-components";
-import {ExtJS, isPageHashIncluding} from '@sonatype/nexus-ui-plugin';
+import {ExtJS} from '@sonatype/nexus-ui-plugin';
 import {faExclamationCircle, faCaretRight} from "@fortawesome/free-solid-svg-icons";
 
 import MaliciousRiskOnDiskMachine from "./MaliciousRiskOnDiskMachine";
@@ -29,6 +29,7 @@ import UIStrings from '../../../constants/UIStrings';
 import "./MaliciousRiskOnDisk.scss";
 import FeatureFlags from '../../../constants/FeatureFlags';
 import {helperFunctions} from '../SystemStatusAlerts/CELimits/UsageHelper';
+import {isPageHashIncluding} from '../../../interfaces/LocationUtils';
 import { useSize } from '../../../hooks/useSize';
 import classNames from 'classnames';
 
@@ -63,10 +64,6 @@ export default function MaliciousRiskOnDisk({ toggle, onSizeChanged, className }
   const isRiskOnDiskNoneAdminOverrideEnabled = ExtJS.state().getValue(MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED);
   const isAdmin = user && user.administrator;
   const shouldHideForNonAdmin = isRiskOnDiskNoneAdminOverrideEnabled && !isAdmin;
-
-  if (!userIsLogged) {
-    document.cookie = 'MALWARE_BANNER=; expires=Thu, 26 Feb 1950 00:00:00 UTC; path=/';
-  }
 
   if (!showMaliciousRiskOnDisk || shouldHideForNonAdmin) {
     return null;

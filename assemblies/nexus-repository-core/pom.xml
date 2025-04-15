@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.sonatype.nexus.assemblies</groupId>
     <artifactId>nexus-assemblies</artifactId>
-    <version>3.80.0-06</version>
+    <version>3.81.0-SNAPSHOT</version>
   </parent>
 
   <groupId>org.sonatype.nexus</groupId>
@@ -66,23 +66,10 @@
       <groupId>org.sonatype.nexus</groupId>
       <artifactId>nexus-logging</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.sonatype.nexus</groupId>
-      <artifactId>nexus-test-common</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <excludePackageNames>org.sonatype.nexus.bootstrap.entrypoint.core</excludePackageNames>
-        </configuration>
-      </plugin>
-      
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>

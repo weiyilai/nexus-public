@@ -10,21 +10,10 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.formfields;
 
-public class TemplateFormField<T>
-    extends AbstractFormField<T>
-{
-  public TemplateFormField(
-      final String id,
-      final boolean required,
-      final T initialValue)
-  {
-    super(id, null, null, required, null, initialValue);
-  }
+import { ExtJS } from '@sonatype/nexus-ui-plugin';
+import isVisible from './isVisible';
 
-  @Override
-  public String getType() {
-    return "templateOnly";
-  }
+export default function useIsVisible(visibilityRequirements) {
+  return ExtJS.useVisiblityWithChanges(() => isVisible(visibilityRequirements));
 }

@@ -318,12 +318,8 @@ export default class {
   /**
    * Show the sign in dialog
    */
-  static askToAuthenticate(options) {
-    NX.Security.askToAuthenticate(null, options);
-  }
-
-  static hasUser() {
-    return NX.Security.hasUser();
+  static askToAuthenticate() {
+    NX.Security.askToAuthenticate();
   }
 
   static signOut() {
@@ -343,20 +339,6 @@ export default class {
   }
 
   static isExtJsRendered() {
-    return document.getElementsByClassName('nxrm-ext-js-wrapper').length > 0;
+    return !!document.getElementById('feature-content');
   }
-
-  /**
-   * This function will wait for the ExtJS application to be fully loaded before executing the callback
-   * @param callback
-   */
-  static waitForExtJs(callback) {
-    const interval = setInterval(() => {
-      if (Ext.getApplication() && NX.Permissions.permissions !== undefined) {
-        clearInterval(interval);
-        callback();
-      }
-    }, 1);
-  }
-
 }

@@ -75,7 +75,6 @@ export const browseRoutes = [
     name: BROWSE.SEARCH.ROOT,
     url: '/search',
     component: UIView,
-    abstract: true,
     data: {
       // make sure we don't inherit from BROWSE
       visibilityRequirements: {}

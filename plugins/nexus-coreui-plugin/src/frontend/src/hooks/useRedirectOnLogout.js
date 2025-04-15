@@ -17,7 +17,8 @@
 
 import { useCurrentStateAndParams, useRouter } from "@uirouter/react";
 import { useEffect, useState } from "react";
-import { ExtJS, isVisible } from '@sonatype/nexus-ui-plugin';
+import { ExtJS } from "@sonatype/nexus-ui-plugin";
+import isVisible from "../routerConfig/isVisible";
 
 const PERMISSIONS_UPDATE_DELAY_MS = 100;
 

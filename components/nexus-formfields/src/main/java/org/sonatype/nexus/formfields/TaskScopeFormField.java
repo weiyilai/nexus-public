@@ -16,10 +16,10 @@ package org.sonatype.nexus.formfields;
  * Task scope field.
  */
 public class TaskScopeFormField
-    extends AbstractFormField<String>
+    extends AbstractFormField<Void>
 {
-  public TaskScopeFormField(final String id, boolean required, String initialValue) {
-    super(id, "", "", required, null, initialValue);
+  public TaskScopeFormField(final String id) {
+    super(id, "", "", false);
   }
 
   @Override

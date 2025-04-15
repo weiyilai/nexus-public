@@ -100,10 +100,9 @@ public class RepositoryBrowseResource
   }
 
   @GET
-  public Response getHtml(
-      @PathParam("repositoryName") final String repositoryName,
-      @PathParam("repositoryPath") final String repositoryPath,
-      @Context final UriInfo uriInfo)
+  public Response getHtml(@PathParam("repositoryName") final String repositoryName,
+                          @PathParam("repositoryPath") final String repositoryPath,
+                          @Context final UriInfo uriInfo)
   {
     log.debug("Get HTML directory listing for repository {} on path {}", repositoryName, repositoryPath);
 
@@ -129,10 +128,11 @@ public class RepositoryBrowseResource
 
     final boolean permitted = securityHelper.allPermitted(new RepositoryViewPermission(repository, BROWSE));
     final boolean hasChildren = browseNodes != null && !Iterables.isEmpty(browseNodes);
-    final List<BrowseListItem> listItems =
-        hasChildren ? browseNodeQueryService.toListItems(repository, browseNodes) : Collections.emptyList();
+    final List<BrowseListItem> listItems = hasChildren ?
+        browseNodeQueryService.toListItems(repository, browseNodes) :
+        Collections.emptyList();
 
-    // if there are visible children return them, or if we are at the root node and permitted to browse the repo
+    //if there are visible children return them, or if we are at the root node and permitted to browse the repo
     if (hasChildren || (isRoot(repositoryPath) && permitted)) {
       return Response
           .ok(templateHelper.render(template, initializeTemplateParameters(repositoryName, repositoryPath, listItems)))
@@ -153,11 +153,7 @@ public class RepositoryBrowseResource
     }
   }
 
-  private TemplateParameters initializeTemplateParameters(
-      final String repositoryName,
-      final String path,
-      final List<BrowseListItem> listItems)
-  {
+  private TemplateParameters initializeTemplateParameters(final String repositoryName, final String path, final List<BrowseListItem> listItems) {
     TemplateParameters templateParameters = templateHelper.parameters();
 
     if (isRoot(path)) {
@@ -175,6 +171,7 @@ public class RepositoryBrowseResource
       String encodedPath = urlEncode("/" + path + "/");
       templateParameters.set("encodedPath", String.format("/#browse/browse:%s:%s", repositoryName, encodedPath));
     }
+    templateParameters.set("searchUrl", "/#browse/search");
 
     return templateParameters;
   }

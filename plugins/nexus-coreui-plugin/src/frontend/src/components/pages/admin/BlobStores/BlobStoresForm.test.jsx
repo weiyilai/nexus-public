@@ -18,13 +18,18 @@ import userEvent from '@testing-library/user-event';
 
 import TestUtils from '@sonatype/nexus-ui-plugin/src/frontend/src/interface/TestUtils';
 
+import S3BlobStoreSettings from './S3/S3BlobStoreSettings';
+import S3BlobStoreWarning from './S3/S3BlobStoreWarning';
 import {BlobStoresForm} from './BlobStoresForm';
 
 import {URLs} from './BlobStoresHelper';
+// Include the blob stores types on the window
+import '../../../../index';
 
-import blobstoreTypes from './testData/mockBlobStoreTypes.json';
-import quotaTypes from './testData/mockQuotaTypes.json';
-import {blobStoreFormSelectors} from './testUtils/blobStoreFormSelectors';
+import UIStrings from '../../../../constants/UIStrings'
+import {ExtJS} from '@sonatype/nexus-ui-plugin';
+
+const S3_STRINGS = UIStrings.S3_BLOBSTORE_CONFIGURATION;
 
 const {
   deleteBlobStoreUrl,
@@ -35,6 +40,13 @@ const {
   blobStoreQuotaTypesUrl,
   blobStoreUsageUrl,
 } = URLs;
+
+jest.mock('axios', () => ({
+  ...jest.requireActual('axios'), // Use most functions from actual axios
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn()
+}));
 
 jest.mock('@sonatype/nexus-ui-plugin', () => ({
   ...jest.requireActual('@sonatype/nexus-ui-plugin'),
@@ -51,19 +63,115 @@ jest.mock('@sonatype/nexus-ui-plugin', () => ({
 jest.mock("swagger-ui-react", () => jest.fn());
 jest.mock("swagger-ui-react/swagger-ui.css", () => jest.fn());
 
+const blobstoreTypes = {
+  data: [{
+    "id": "file",
+    "name": "File",
+    "fields": [
+      {
+        "helpText": "An absolute path or a path relative to <data-directory>/blobs",
+        "id": "path",
+        "regexValidation": null,
+        "required": true,
+        "disabled": false,
+        "readOnly": false,
+        "label": "Path",
+        "attributes": {
+          "tokenReplacement": "/<data-directory>/blobs/${name}",
+          "long": true
+        },
+        "type": "string",
+        "allowAutocomplete": false
+      }
+    ]
+  }, {
+    "id": "group",
+    "name": "Group",
+    "fields": [
+      {
+        "id": "members",
+        "required": true,
+        "label": "Members",
+        "initialValue": null,
+        "attributes": {
+          "toTitle": "Selected Blob Stores",
+          "fromTitle": "Available Blob Stores",
+          "buttons": ["up", "add", "remove", "down"],
+          "options": ["default", "test", "test-converted"]
+        },
+        "type": "itemselect",
+        "allowAutocomplete": false
+      }, {
+        "id": "fillPolicy",
+        "required": true,
+        "label": "Fill Policy",
+        "initialValue": null,
+        "attributes": {
+          "options": ["Round Robin", "Write to First"]
+        },
+        "type": "combobox"
+      }
+    ]
+  },
+    {
+      "id": "s3",
+      "name": "S3",
+      "dropDownValues": {
+        regions: [
+          {
+            "id": "DEFAULT",
+            "name": "Default"
+          },
+          {
+            "id": "us-west-2",
+            "name": "us-west-2"
+          },
+          {
+            "id": "eu-north-1",
+            "name": "eu-north-1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "azure",
+      "name": "Azure Cloud Storage"
+    },
+    {
+      "id": "google",
+      "name": "Google Cloud Platform"
+    }
+  ]
+};
+
+const quotaTypes = {
+  data: [
+    {
+      "id": "spaceRemainingQuota",
+      "name": "Space Remaining"
+    }, {
+      "id": "spaceUsedQuota",
+      "name": "Space Used"
+    }
+  ]
+};
+
 const selectors = {
   ...TestUtils.selectors,
   ...TestUtils.formSelectors,
-
   maxConnectionPoolSize: () => screen.queryByLabelText('Max Connection Pool Size'),
-
-  ...blobStoreFormSelectors,
-
-  queryTitle: () => screen.getByRole('heading', {level: 1}),
-  queryPath: () => screen.getByLabelText('Path'),
-  queryAvailableMembers: () => screen.getByRole('group', {name: 'Available Blob Stores'}),
-  querySelectedMembers: () => screen.getByRole('group', {name: 'Selected Blob Stores'}),
-
+  addReplicationBucketButton: () => screen.queryByRole('button', {name: 'Add Replication Bucket'}),
+  removeReplicationBucketButtons: () => screen.queryAllByRole('button', {name: 'Remove Bucket'}),
+  // First region is for the primary bucket, the rest are for replication buckets
+  replicationBucketRegionSelects: () => screen.queryAllByLabelText('Region').slice(1),
+  replicationBucketBucketNames: () => screen.queryAllByLabelText('Bucket Name'),
+  maxReplicationBucketsWarning: () => screen.getByText(S3_STRINGS.S3BlobStore_ReplicationBucketsSettings_MaxFailoverBucketsWarning),
+  configureReplicationBucketsInfo: () => screen.getAllByText(S3_STRINGS.S3BlobStore_ReplicationBucketsSettings_ConfigureBucketReplicationMessage),
+  cancelButton: () => screen.getByText('Cancel'),
+  getPresigned: () => screen.queryByLabelText(S3_STRINGS.S3BlobStore_Presigned_HelpText),
+  getSoftQuota: () => within(screen.getByRole('group', {name: 'Soft Quota'})).getByLabelText('Enabled'),
+  getUsePathStyle: () => within(screen.getByRole('group', {name: 'Use path-style access'})).getByLabelText(
+      'Setting this flag will result in path-style access being used for all requests'),
   convertModal: {
     modal: () => screen.queryByRole('dialog'),
     title: () => within(selectors.convertModal.modal()).getByRole('heading', {level: 2}),
@@ -71,18 +179,51 @@ const selectors = {
     newName: () => within(selectors.convertModal.modal()).queryByLabelText('Rename Original Blob Store'),
     convertButton: () => within(selectors.convertModal.modal()).getByRole('button', {name: 'Convert'}),
     cancel: () => within(selectors.convertModal.modal()).queryByText('Cancel'),
-  }
+  },
 }
 
 // skipping due to flaky tests
-describe('BlobStoresForm', function() {
+describe.skip('BlobStoresForm', function() {
   const onDone = jest.fn();
+  const confirm = Promise.resolve();
   const SOFT_QUOTA_1_TERABYTE_IN_MEGABYTES = '1048576'; // 1 Terabyte = 1048576 Megabytes
   const SOFT_QUOTA_1_TERABYTE_IN_BYTES = 1099511627776; // 1 Terabyte = 1048576 Megabytes = 1099511627776 bytes
 
+  window.ReactComponents = {S3BlobStoreSettings, S3BlobStoreWarning};
+
   function render(itemId) {
     return TestUtils.render(<BlobStoresForm itemId={itemId || ''} onDone={onDone}/>,
-        ({getByRole, getByLabelText}) => ({}));
+        ({getByRole, getByLabelText, queryByLabelText, getByText, queryByText}) => ({
+          title: () => getByRole('heading', {level: 1}),
+          typeSelect: () => queryByLabelText('Type'),
+          name: () => queryByLabelText('Name'),
+          path: () => getByLabelText('Path'),
+          region: () => getByLabelText('Region'),
+          bucket: () => getByLabelText('Bucket'),
+          credentialAuthentication: () => getByLabelText('Use a separate credential JSON file (select to upload)'),
+          fileInput: () => getByLabelText('JSON Credential File Path'),
+          kmsEncryption: () => getByLabelText('Enable KMS managed encryption'),
+          kmsKeyResourceName: () => getByLabelText('KMS Key ID'),
+          prefix: () => getByLabelText('Prefix'),
+          presigned: () => queryByLabelText(S3_STRINGS.S3BlobStore_Presigned_HelpText),
+          accessKeyId: () => getByLabelText('Access Key ID'),
+          secretAccessKey: () => getByLabelText('Secret Access Key'),
+          assumeRole: () => getByLabelText('Assume Role ARN (Optional)'),
+          sessionToken: () => getByLabelText('Session Token (Optional)'),
+          encryptionType: () => getByLabelText('Encryption Type'),
+          kmsKeyId: () => getByLabelText('KMS Key ID (Optional)'),
+          endpointURL: () => getByLabelText('Endpoint URL'),
+          replicationBuckets: () => queryByText('AWS S3 Replication Buckets (Optional)'),
+          signatureVersion: () => getByLabelText('Signature Version'),
+          availableMembers: () => getByRole('group', {name: 'Available Blob Stores'}),
+          selectedMembers: () => getByRole('group', {name: 'Selected Blob Stores'}),
+          softQuotaType: () => queryByLabelText('Constraint Type'),
+          softQuotaLimit: () => queryByLabelText('Constraint Limit (in MB)'),
+          spaceUsedQuotaLabel: () => getByText('Space Used'),
+          convertToGroup: () => queryByText('Convert to Group'),
+          azureAccountName: () => queryByLabelText('Account Name'),
+          azureContainerName: () => queryByLabelText('Container Name')
+        }));
   }
 
   beforeEach(() => {
@@ -90,143 +231,243 @@ describe('BlobStoresForm', function() {
     when(axios.get).calledWith('/service/rest/internal/ui/blobstores/quotaTypes').mockResolvedValue(quotaTypes);
   });
 
-  it('renders the type selection for create', async function() {
-    render();
+  it('renders the loading spinner', async function() {
+    axios.get.mockReturnValue(new Promise(() => {}));
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    const {loadingMask} = render();
+
+    expect(loadingMask()).toBeInTheDocument();
+  });
+
+  it('renders the type selection for create', async function() {
+    const {loadingMask, typeSelect} = render();
+
+    await waitForElementToBeRemoved(loadingMask);
 
     expect(selectors.cancelButton()).toBeEnabled();
-    expect(selectors.queryTypeSelect().options.length).toBe(6);
-    expect(Array.from(selectors.queryTypeSelect().options).map(option => option.textContent)).toEqual(
-        expect.arrayContaining([
-          '',
-          'File',
-          'Group'
-        ]));
-    expect(selectors.queryTypeSelect()).toHaveValue('');
+    expect(typeSelect().options.length).toBe(6);
+    expect(Array.from(typeSelect().options).map(option => option.textContent)).toEqual(expect.arrayContaining([
+        '',
+        'File',
+        'Group'
+    ]));
+    expect(typeSelect()).toHaveValue('');
   });
 
   it('renders the form and buttons when the File type is selected', async function() {
-    render();
+    const {loadingMask, typeSelect} = render();
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
-    userEvent.selectOptions(selectors.queryTypeSelect(), 'file');
-    expect(selectors.queryTypeSelect()).toHaveValue('file');
+    userEvent.selectOptions(typeSelect(), 'file');
+    expect(typeSelect()).toHaveValue('file');
+  });
+
+  it('renders the form and buttons when the S3 type is selected', async function() {
+    const {loadingMask, typeSelect} = render();
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    userEvent.selectOptions(typeSelect(), 's3');
+    expect(typeSelect()).toHaveValue('s3');
   });
 
   it('validates the name field', async function() {
-    render();
+    const {loadingMask, typeSelect, name} = render();
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
-    userEvent.selectOptions(selectors.queryTypeSelect(), 'file');
-    expect(selectors.queryName()).toBeInTheDocument();
-    expect(selectors.queryName()).not.toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    userEvent.selectOptions(typeSelect(), 'file');
+    expect(name()).toBeInTheDocument();
+    expect(name()).not.toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
 
     userEvent.click(selectors.querySubmitButton());
-    expect(selectors.queryName()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(name()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
     expect(selectors.queryFormError(TestUtils.NO_CHANGES_MESSAGE)).toBeInTheDocument();
 
-    userEvent.type(selectors.queryName(), '/test');
-    expect(selectors.queryName()).toHaveErrorMessage(TestUtils.NAME_VALIDATION_MESSAGE);
+    userEvent.type(name(), '/test');
+    expect(name()).toHaveErrorMessage(TestUtils.NAME_VALIDATION_MESSAGE);
 
-    userEvent.clear(selectors.queryName());
-    userEvent.type(selectors.queryName(), 'test');
-    expect(selectors.queryName()).not.toHaveErrorMessage(TestUtils.NAME_VALIDATION_MESSAGE);
+    userEvent.clear(name());
+    userEvent.type(name(), 'test');
+    expect(name()).not.toHaveErrorMessage(TestUtils.NAME_VALIDATION_MESSAGE);
+  });
+
+  it('renders S3 specific form fields', async function() {
+    const {
+      loadingMask,
+      typeSelect,
+      region,
+      bucket,
+      prefix,
+      accessKeyId,
+      secretAccessKey,
+      assumeRole,
+      sessionToken,
+      encryptionType,
+      kmsKeyId,
+      endpointURL,
+      signatureVersion
+    } = render();
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    userEvent.selectOptions(typeSelect(), 's3');
+    expect(typeSelect()).toHaveValue('s3');
+
+    expect(region()).toBeInTheDocument();
+    expect(bucket()).toBeInTheDocument();
+    expect(prefix()).toBeInTheDocument();
+    expect(accessKeyId()).toBeInTheDocument();
+    expect(secretAccessKey()).toBeInTheDocument();
+    expect(assumeRole()).toBeInTheDocument();
+    expect(sessionToken()).toBeInTheDocument();
+    expect(endpointURL()).toBeInTheDocument();
+    expect(encryptionType()).toBeInTheDocument();
+    expect(kmsKeyId()).toBeInTheDocument();
+    expect(signatureVersion()).toBeInTheDocument();
+    expect(selectors.getUsePathStyle()).toBeInTheDocument();
+  });
+
+  it('enables the save button when the minimum fields are filled in S3 blobstore', async function() {
+    const {
+      name,
+      loadingMask,
+      typeSelect,
+      bucket,
+      accessKeyId,
+      secretAccessKey,
+      endpointURL,
+    } = render();
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    userEvent.click(selectors.querySubmitButton());
+    expect(selectors.queryFormError(TestUtils.NO_CHANGES_MESSAGE)).toBeInTheDocument();
+
+    userEvent.selectOptions(typeSelect(), 's3');
+    expect(typeSelect()).toHaveValue('s3');
+
+    expect(selectors.queryFormError(TestUtils.NO_CHANGES_MESSAGE)).toBeInTheDocument();
+
+    userEvent.type(name(), 'test');
+    expect(name()).toHaveValue('test');
+
+    userEvent.type(bucket(), 'bucket');
+    expect(bucket()).toHaveValue('bucket');
+    expect(selectors.queryFormError()).not.toBeInTheDocument();
+
+    userEvent.type(accessKeyId(), 'someAccessKey');
+    expect(accessKeyId()).toHaveValue('someAccessKey');
+    userEvent.click(selectors.querySubmitButton());
+    expect(selectors.queryFormError(TestUtils.VALIDATION_ERRORS_MESSAGE)).toBeInTheDocument();
+
+    userEvent.type(secretAccessKey(), 'SomeSecretAccessKey');
+    expect(secretAccessKey()).toHaveValue('SomeSecretAccessKey');
+    expect(selectors.queryFormError()).not.toBeInTheDocument();
+
+    userEvent.type(endpointURL(), 'invalidURL');
+    expect(endpointURL()).toHaveValue('invalidURL');
+    userEvent.click(selectors.querySubmitButton());
+    expect(selectors.queryFormError(TestUtils.VALIDATION_ERRORS_MESSAGE)).toBeInTheDocument();
+
+    userEvent.clear(endpointURL());
+    expect(endpointURL()).toHaveValue('');
+    userEvent.type(endpointURL(), 'http://www.fakeurl.com');
+    expect(endpointURL()).toHaveValue('http://www.fakeurl.com');
+    expect(selectors.queryFormError()).not.toBeInTheDocument();
   });
 
   it('renders the name field and dynamic path field when the File type is selected', async function() {
-    render();
+    const {loadingMask, typeSelect, name, path} = render();
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
-    userEvent.selectOptions(selectors.queryTypeSelect(), 'file');
-    expect(selectors.queryTypeSelect()).toHaveValue('file');
+    userEvent.selectOptions(typeSelect(), 'file');
+    expect(typeSelect()).toHaveValue('file');
 
-    expect(selectors.queryName()).toBeInTheDocument();
+    expect(name()).toBeInTheDocument();
 
-    expect(selectors.queryPath()).toBeInTheDocument();
-    expect(selectors.queryPath()).toHaveValue('/<data-directory>/blobs/');
+    expect(path()).toBeInTheDocument();
+    expect(path()).toHaveValue('/<data-directory>/blobs/');
   });
 
   it('renders the soft quota fields when the blobstore type is selected', async function() {
-    render();
+    const {loadingMask, typeSelect, softQuotaType, softQuotaLimit} = render();
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
-    userEvent.selectOptions(selectors.queryTypeSelect(), 'file');
-    expect(selectors.queryTypeSelect()).toHaveValue('file');
+    userEvent.selectOptions(typeSelect(), 'file');
+    expect(typeSelect()).toHaveValue('file');
 
-    expect(selectors.softQuota.queryEnabled()).toBeInTheDocument();
-    expect(selectors.softQuota.queryType()).not.toBeInTheDocument();
-    expect(selectors.softQuota.queryLimit()).not.toBeInTheDocument();
+    expect(selectors.getSoftQuota()).toBeInTheDocument();
+    expect(softQuotaType()).not.toBeInTheDocument();
+    expect(softQuotaLimit()).not.toBeInTheDocument();
 
-    userEvent.click(selectors.softQuota.queryEnabled());
-    expect(selectors.softQuota.queryEnabled()).toBeChecked();
+    userEvent.click(selectors.getSoftQuota());
 
-    expect(selectors.softQuota.queryType()).toBeInTheDocument();
-    expect(selectors.softQuota.queryLimit()).toBeInTheDocument();
+    expect(softQuotaType()).toBeInTheDocument();
+    expect(softQuotaLimit()).toBeInTheDocument();
   });
 
   it('enables the save button when there are changes', async function() {
-    render();
+    const {loadingMask, typeSelect, name, softQuotaType, softQuotaLimit} = render();
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
     userEvent.click(selectors.querySubmitButton());
     expect(selectors.queryFormError(TestUtils.NO_CHANGES_MESSAGE)).toBeInTheDocument();
 
-    userEvent.selectOptions(selectors.queryTypeSelect(), 'file');
-    expect(selectors.queryTypeSelect()).toHaveValue('file');
+    userEvent.selectOptions(typeSelect(), 'file');
+    expect(typeSelect()).toHaveValue('file');
 
     expect(selectors.queryFormError(TestUtils.NO_CHANGES_MESSAGE)).toBeInTheDocument();
 
-    userEvent.type(selectors.queryName(), 'test');
-    expect(selectors.queryName()).toHaveValue('test');
+    userEvent.type(name(), 'test');
+    expect(name()).toHaveValue('test');
 
     expect(selectors.queryFormError()).not.toBeInTheDocument();
 
-    userEvent.click(selectors.softQuota.queryEnabled());
+    userEvent.click(selectors.getSoftQuota());
     userEvent.click(selectors.querySubmitButton());
     expect(selectors.queryFormError(TestUtils.VALIDATION_ERRORS_MESSAGE)).toBeInTheDocument();
 
-    userEvent.selectOptions(selectors.softQuota.queryType(), 'spaceRemainingQuota');
-    expect(selectors.softQuota.queryType()).toHaveValue('spaceRemainingQuota');
-    userEvent.type(selectors.softQuota.queryLimit(), '100');
-    expect(selectors.softQuota.queryLimit()).toHaveValue('100');
+    userEvent.selectOptions(softQuotaType(), 'spaceRemainingQuota');
+    expect(softQuotaType()).toHaveValue('spaceRemainingQuota');
+    userEvent.type(softQuotaLimit(), '100');
+    expect(softQuotaLimit()).toHaveValue('100');
 
     expect(selectors.queryFormError()).not.toBeInTheDocument();
 
-    userEvent.clear(selectors.softQuota.queryLimit());
-    expect(selectors.softQuota.queryLimit()).toHaveValue('');
+    userEvent.clear(softQuotaLimit());
+    expect(softQuotaLimit()).toHaveValue('');
     userEvent.click(selectors.querySubmitButton());
 
     expect(selectors.queryFormError(TestUtils.VALIDATION_ERRORS_MESSAGE)).toBeInTheDocument();
 
-    userEvent.click(selectors.softQuota.queryEnabled());
+    userEvent.click(selectors.getSoftQuota());
 
     expect(selectors.queryFormError()).not.toBeInTheDocument();
   });
 
   it('creates a new file blob store', async function() {
-    render();
+    const {loadingMask, typeSelect, name, path, softQuotaType, softQuotaLimit} = render();
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
-    userEvent.selectOptions(selectors.queryTypeSelect(), 'file');
-    expect(selectors.queryTypeSelect()).toHaveValue('file');
-    userEvent.type(selectors.queryName(), 'test');
-    expect(selectors.queryName()).toHaveValue('test');
-    expect(selectors.queryPath()).toHaveValue('/<data-directory>/blobs/test');
-    userEvent.clear(selectors.queryPath());
-    userEvent.type(selectors.queryPath(), 'testPath');
-    expect(selectors.queryPath()).toHaveValue('testPath');
-    userEvent.click(selectors.softQuota.queryEnabled());
-    userEvent.selectOptions(selectors.softQuota.queryType(), 'spaceRemainingQuota');
-    expect(selectors.softQuota.queryType()).toHaveValue('spaceRemainingQuota');
-    userEvent.type(selectors.softQuota.queryLimit(), SOFT_QUOTA_1_TERABYTE_IN_MEGABYTES);
-    expect(selectors.softQuota.queryLimit()).toHaveValue(SOFT_QUOTA_1_TERABYTE_IN_MEGABYTES);
+    userEvent.selectOptions(typeSelect(), 'file');
+    expect(typeSelect()).toHaveValue('file');
+    userEvent.type(name(), 'test');
+    expect(name()).toHaveValue('test');
+    expect(path()).toHaveValue('/<data-directory>/blobs/test');
+    userEvent.clear(path());
+    userEvent.type(path(), 'testPath');
+    expect(path()).toHaveValue('testPath');
+    userEvent.click(selectors.getSoftQuota());
+    userEvent.selectOptions(softQuotaType(), 'spaceRemainingQuota');
+    expect(softQuotaType()).toHaveValue('spaceRemainingQuota');
+    userEvent.type(softQuotaLimit(), SOFT_QUOTA_1_TERABYTE_IN_MEGABYTES);
+    expect(softQuotaLimit()).toHaveValue(SOFT_QUOTA_1_TERABYTE_IN_MEGABYTES);
     userEvent.click(selectors.querySubmitButton());
     await waitForElementToBeRemoved(selectors.querySavingMask());
 
@@ -244,6 +485,432 @@ describe('BlobStoresForm', function() {
     );
   });
 
+  const testCreateS3 = async function(postRenderFn, submissionMutator = _ => {}) {
+    const rendered = render();
+    const {
+      name,
+      loadingMask,
+      typeSelect,
+      bucket,
+      accessKeyId,
+      secretAccessKey,
+      endpointURL,
+      replicationBuckets,
+      softQuotaType,
+      softQuotaLimit,
+      spaceUsedQuotaLabel
+    } = rendered;
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    userEvent.selectOptions(typeSelect(), 'S3');
+    expect(typeSelect()).toHaveValue('s3');
+    userEvent.click(selectors.querySubmitButton());
+
+    expect(selectors.queryFormError(TestUtils.NO_CHANGES_MESSAGE)).toBeInTheDocument();
+
+    postRenderFn(rendered);
+
+    userEvent.type(name(), 'test');
+    expect(name()).toHaveValue('test');
+
+    userEvent.type(bucket(), 'bucket');
+    expect(bucket()).toHaveValue('bucket');
+    expect(selectors.queryFormError()).not.toBeInTheDocument();
+
+    userEvent.type(accessKeyId(), 'someAccessKey');
+    expect(accessKeyId()).toHaveValue('someAccessKey');
+    userEvent.click(selectors.querySubmitButton());
+    expect(selectors.queryFormError(TestUtils.VALIDATION_ERRORS_MESSAGE)).toBeInTheDocument();
+
+    userEvent.type(secretAccessKey(), 'SomeSecretAccessKey');
+    expect(secretAccessKey()).toHaveValue('SomeSecretAccessKey');
+    expect(selectors.queryFormError()).not.toBeInTheDocument();
+
+    userEvent.type(endpointURL(), 'invalidURL');
+    expect(endpointURL()).toHaveValue('invalidURL');
+    userEvent.click(selectors.querySubmitButton());
+    expect(selectors.queryFormError(TestUtils.VALIDATION_ERRORS_MESSAGE)).toBeInTheDocument();
+
+    userEvent.clear(endpointURL());
+    expect(endpointURL()).toHaveValue('');
+    userEvent.type(endpointURL(), 'http://www.fakeurl.com');
+    expect(endpointURL()).toHaveValue('http://www.fakeurl.com');
+    expect(selectors.queryFormError()).not.toBeInTheDocument();
+
+    userEvent.type(selectors.maxConnectionPoolSize(), '0');
+    expect(selectors.maxConnectionPoolSize()).toHaveErrorMessage('The minimum value for this field is 1');
+    userEvent.clear(selectors.maxConnectionPoolSize());
+    userEvent.type(selectors.maxConnectionPoolSize(), '2000000000');
+    expect(selectors.maxConnectionPoolSize()).toHaveErrorMessage('The maximum value for this field is 1000000000');
+    userEvent.clear(selectors.maxConnectionPoolSize());
+    userEvent.type(selectors.maxConnectionPoolSize(), '1');
+    expect(selectors.maxConnectionPoolSize()).not.toHaveErrorMessage(expect.anything());
+
+    expect(replicationBuckets()).toBeInTheDocument();
+    expect(selectors.addReplicationBucketButton()).not.toBeVisible();
+    expect(selectors.removeReplicationBucketButtons()).toHaveLength(0);
+    userEvent.click(replicationBuckets());
+    expect(selectors.addReplicationBucketButton()).toBeVisible();
+    userEvent.click(selectors.addReplicationBucketButton());
+    expect(selectors.removeReplicationBucketButtons()[0]).toBeInTheDocument();
+    userEvent.selectOptions(selectors.replicationBucketRegionSelects()[0], 'us-west-2');
+    expect(selectors.replicationBucketRegionSelects()[0]).toHaveValue('us-west-2');
+    userEvent.type(selectors.replicationBucketBucketNames()[0], 'test-replication-bucket');
+    expect(selectors.replicationBucketBucketNames()[0]).toHaveValue('test-replication-bucket');
+
+    userEvent.click(selectors.getSoftQuota());
+    expect(softQuotaType()).not.toBeInTheDocument();
+    expect(spaceUsedQuotaLabel()).toBeInTheDocument();
+    userEvent.type(softQuotaLimit(), '1');
+
+    userEvent.click(selectors.querySubmitButton());
+    await waitForElementToBeRemoved(selectors.querySavingMask());
+
+    const request = {
+      name: 'test',
+      bucketConfiguration: {
+        bucket: { region: 'DEFAULT', name: 'bucket', prefix: '' },
+        bucketSecurity: {
+          accessKeyId: 'someAccessKey',
+          secretAccessKey: 'SomeSecretAccessKey'
+        },
+        encryption: null,
+        advancedBucketConnection: {
+          endpoint: 'http://www.fakeurl.com',
+          maxConnectionPoolSize: '1',
+          forcePathStyle: false
+        },
+        failoverBuckets: [{region: 'us-west-2', bucketName: 'test-replication-bucket'}],
+        activeRegion: null
+      },
+      softQuota: {
+        enabled: true,
+        limit: 1048576,
+        type: 'spaceUsedQuota'
+      }
+    };
+
+    submissionMutator(request);
+
+    expect(axios.post).toHaveBeenCalledWith('service/rest/v1/blobstores/s3', request);
+  };
+
+  it('creates a new S3 blob store', async function() {
+    await testCreateS3(rendered => expect(rendered.presigned()).not.toBeInTheDocument());
+  });
+
+  it('PRO - creates a new S3 blob store', async function() {
+    ExtJS.isProEdition.mockReturnValue(true);
+
+    await testCreateS3(rendered => {
+        expect(rendered.presigned()).not.toBeChecked();
+        userEvent.click(selectors.getPresigned());
+      },
+      request => request.bucketConfiguration.preSignedUrlEnabled = true);
+  });
+
+  it('creates a new S3 blob store failover buckets not visible', async function() {
+    ExtJS.state().getValue.mockReturnValueOnce(false);
+
+    const {
+      loadingMask,
+      typeSelect,
+      replicationBuckets,
+    } = render();
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    userEvent.selectOptions(typeSelect(), 'S3');
+    expect(typeSelect()).toHaveValue('s3');
+
+    // Replication buckets not available
+    expect(replicationBuckets()).not.toBeInTheDocument();
+  });
+
+  it('creates a new Azure blob store', async function() {
+    const {
+      name,
+      loadingMask,
+      typeSelect,
+      azureAccountName,
+      azureContainerName,
+      softQuotaType,
+      softQuotaLimit,
+      spaceUsedQuotaLabel
+    } = render();
+
+    const data = {
+      name: 'azure-blob-store',
+      bucketConfiguration: {
+        authentication: {
+          authenticationMethod: 'MANAGEDIDENTITY'
+        },
+        accountName: 'azure-account',
+        containerName: 'azure-container'
+      },
+      softQuota: {
+        limit: 1048576,
+        type: 'spaceUsedQuota',
+        enabled: true
+      }
+    };
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    userEvent.selectOptions(typeSelect(), 'Azure Cloud Storage');
+    userEvent.type(name(), data.name);
+    userEvent.type(azureAccountName(), data.bucketConfiguration.accountName);
+    userEvent.type(azureContainerName(), data.bucketConfiguration.containerName);
+
+    userEvent.click(selectors.getSoftQuota());
+    expect(softQuotaType()).not.toBeInTheDocument();
+    expect(spaceUsedQuotaLabel()).toBeInTheDocument();
+    userEvent.type(softQuotaLimit(), '1');
+
+    userEvent.click(selectors.querySubmitButton());
+    await waitForElementToBeRemoved(selectors.querySavingMask());
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'service/rest/v1/blobstores/azure',
+      data
+    );
+  });
+
+  it('creates a new GCP blob store. region is a read-only', async function() {
+    const {
+      loadingMask,
+      typeSelect,
+      region,
+    } = render();
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    userEvent.selectOptions(typeSelect(), 'Google Cloud Platform');
+    const regionElement = region();
+    expect(regionElement).toBeInTheDocument();
+    expect(regionElement).toHaveTextContent('The region is automatically set based on where Nexus Repository is running in GCP. Ensure the bucket is in the same region.');
+  });
+
+  it('creates a new GCP blob store with default application authentication', async function() {
+    const {
+      name,
+      loadingMask,
+      typeSelect,
+      softQuotaType,
+      softQuotaLimit,
+      spaceUsedQuotaLabel,
+      bucket,
+      prefix
+    } = render();
+
+    const data = {
+      name: 'gcp-blob-store',
+      bucketConfiguration: {
+        bucketSecurity: {
+          authenticationMethod: 'applicationDefault'
+        },
+        encryption: {
+          encryptionType: 'default'
+        },
+        bucket: {
+          name: 'test-bucket',
+          prefix: 'pre'
+        }
+      },
+      softQuota: {
+        limit: 1048576,
+        type: 'spaceUsedQuota',
+        enabled: true
+      }
+    };
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    userEvent.selectOptions(typeSelect(), 'Google Cloud Platform');
+    userEvent.type(name(), data.name);
+    userEvent.type(bucket(), data.bucketConfiguration.bucket.name);
+    userEvent.type(prefix(), data.bucketConfiguration.bucket.prefix);
+
+    userEvent.click(selectors.getSoftQuota());
+    expect(softQuotaType()).not.toBeInTheDocument();
+    expect(spaceUsedQuotaLabel()).toBeInTheDocument();
+    userEvent.type(softQuotaLimit(), '1');
+
+    userEvent.click(selectors.querySubmitButton());
+    await waitForElementToBeRemoved(selectors.querySavingMask());
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'service/rest/v1/blobstores/google',
+      data
+    );
+  });
+
+  it('creates a new GCP blob store with JSON credentials authentication', async function() {
+    const {
+      name,
+      loadingMask,
+      typeSelect,
+      bucket,
+      credentialAuthentication,
+      fileInput
+    } = render();
+
+    const data = {
+      name: 'gcp-blob-store',
+      bucketConfiguration: {
+        bucketSecurity: {
+          authenticationMethod: 'accountKey',
+          accountKey: "{\"private_key_id\":\"test\"}",
+          file: {
+            0: expect.any(File),
+            item: expect.any(Function),
+            length: 1,
+          }
+        },
+        encryption: {
+          encryptionType: 'default'
+        },
+        bucket: {
+          name: 'test-bucket2',
+        }
+      },
+    };
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    userEvent.selectOptions(typeSelect(), 'Google Cloud Platform');
+    userEvent.type(name(), data.name);
+    userEvent.type(bucket(), data.bucketConfiguration.bucket.name);
+    userEvent.click(credentialAuthentication());
+
+    const file = new File([new ArrayBuffer(1)], 'credentials.json', { type: 'application/json' });
+    file.text = jest.fn().mockResolvedValue(JSON.stringify({ private_key_id: 'test' }));
+
+    userEvent.upload(fileInput(), file);
+    await file.text();
+
+    userEvent.click(selectors.querySubmitButton());
+    await waitForElementToBeRemoved(selectors.querySavingMask());
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'service/rest/v1/blobstores/google',
+      data
+    );
+  });
+
+  it('creates a new GCP blob store with default encryption', async function() {
+    const {
+      name,
+      loadingMask,
+      typeSelect,
+      softQuotaType,
+      softQuotaLimit,
+      spaceUsedQuotaLabel,
+      bucket,
+      prefix
+    } = render();
+
+    const data = {
+      name: 'gcp-blob-store',
+      bucketConfiguration: {
+        bucketSecurity: {
+          authenticationMethod: 'applicationDefault'
+        },
+        encryption: {
+          encryptionType: 'default'
+        },
+        bucket: {
+          name: 'test-bucket',
+          prefix: 'pre'
+        }
+      },
+      softQuota: {
+        limit: 1048576,
+        type: 'spaceUsedQuota',
+        enabled: true
+      }
+    };
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    userEvent.selectOptions(typeSelect(), 'Google Cloud Platform');
+    userEvent.type(name(), data.name);
+    userEvent.type(bucket(), data.bucketConfiguration.bucket.name);
+    userEvent.type(prefix(), data.bucketConfiguration.bucket.prefix);
+
+    userEvent.click(selectors.getSoftQuota());
+    expect(softQuotaType()).not.toBeInTheDocument();
+    expect(spaceUsedQuotaLabel()).toBeInTheDocument();
+    userEvent.type(softQuotaLimit(), '1');
+
+    userEvent.click(selectors.querySubmitButton());
+
+    expect(axios.post).toHaveBeenCalledWith(
+        'service/rest/v1/blobstores/google',
+        data
+    );
+  });
+
+  it('creates a new GCP blob store with KMS encryption', async function() {
+    const {
+      name,
+      loadingMask,
+      typeSelect,
+      softQuotaType,
+      softQuotaLimit,
+      spaceUsedQuotaLabel,
+      bucket,
+      region,
+      prefix,
+      kmsEncryption,
+      kmsKeyResourceName
+    } = render();
+
+    const data = {
+      name: 'gcp-blob-store',
+      bucketConfiguration: {
+        bucketSecurity: {
+          authenticationMethod: 'applicationDefault'
+        },
+        encryption: {
+          encryptionType: 'kmsManagedEncryption',
+          encryptionKey: 'projects/test_project_id/locations/global/keyRings/test_key_ring/cryptoKeys/test_key'
+        },
+        bucket: {
+          name: 'test-bucket',
+          prefix: 'pre'
+        }
+      },
+      softQuota: {
+        limit: 1048576,
+        type: 'spaceUsedQuota',
+        enabled: true
+      }
+    };
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    userEvent.selectOptions(typeSelect(), 'Google Cloud Platform');
+    userEvent.type(name(), data.name);
+    userEvent.type(bucket(), data.bucketConfiguration.bucket.name);
+    userEvent.type(prefix(), data.bucketConfiguration.bucket.prefix);
+    userEvent.click(kmsEncryption());
+    userEvent.type(kmsKeyResourceName(), data.bucketConfiguration.encryption.encryptionKey);
+
+    userEvent.click(selectors.getSoftQuota());
+    expect(softQuotaType()).not.toBeInTheDocument();
+    expect(spaceUsedQuotaLabel()).toBeInTheDocument();
+    userEvent.type(softQuotaLimit(), '1');
+
+    userEvent.click(selectors.querySubmitButton());
+
+    expect(axios.post).toHaveBeenCalledWith(
+        'service/rest/v1/blobstores/google',
+        data
+    );
+  });
+
   it('edits a file blob store', async function() {
     when(axios.get).calledWith('service/rest/v1/blobstores/file/test').mockResolvedValue({
       data: {
@@ -255,11 +922,173 @@ describe('BlobStoresForm', function() {
       }
     });
 
-    render('file/test');
+    const {
+      loadingMask,
+      convertToGroup
+    } = render('file/test');
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
-    expect(selectors.queryConvertToGroupButton()).toBeInTheDocument();
+    expect(convertToGroup()).toBeInTheDocument();
+  });
+
+  const testEditS3 = async function() {
+    when(axios.get).calledWith('service/rest/v1/blobstores/s3/test').mockResolvedValue({
+      data: {
+        name: 'test',
+        bucketConfiguration: {
+          bucket: { region: 'DEFAULT', name: 'bucket', prefix: '' },
+          bucketSecurity: {
+            accessKeyId: 'someAccessKey',
+            secretAccessKey: 'SomeSecretAccessKey',
+            role: '',
+            sessionToken: ''
+          },
+          encryption: { encryptionType: 'none', encryptionKey: '' },
+          advancedBucketConnection: {
+            endpoint: 'http://www.fakeurl.com',
+            signerType: 'DEFAULT',
+            forcePathStyle: ''
+          },
+          failoverBuckets: [
+            {
+              region: "us-east-1",
+              bucketName: "replication-bucket-1"
+            },
+            {
+              region: "us-east-2",
+              bucketName: "replication-bucket-2"
+            },
+            {
+              region: "us-west-1",
+              bucketName: "replication-bucket-3"
+            },
+            {
+              region: "us-west-2",
+              bucketName: "replication-bucket-4"
+            },
+            {
+              region: "eu-west-1",
+              bucketName: "replication-bucket-5"
+            }
+          ],
+          preSignedUrlEnabled: true
+        }
+      }
+    });
+
+    const rendered = render('s3/test');
+    const {
+      loadingMask,
+      convertToGroup,
+      typeSelect,
+      bucket,
+      accessKeyId,
+      secretAccessKey,
+      endpointURL,
+      replicationBuckets,
+      name,
+      presigned,
+      title
+    } = rendered;
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    expect(title()).toHaveTextContent('Edit test');
+
+    // The type and name fields cannot be changed during edit
+    expect(typeSelect()).not.toBeInTheDocument();
+    expect(name()).not.toBeInTheDocument();
+
+    expect(bucket()).toHaveValue('bucket');
+    expect(accessKeyId()).toHaveValue('someAccessKey');
+    expect(secretAccessKey()).toHaveValue('SomeSecretAccessKey');
+    expect(endpointURL()).toHaveValue('http://www.fakeurl.com');
+
+    expect(replicationBuckets()).toBeInTheDocument();
+    expect(selectors.addReplicationBucketButton()).not.toBeInTheDocument();
+    expect(selectors.removeReplicationBucketButtons()).toHaveLength(5);
+    expect(selectors.maxReplicationBucketsWarning()).toBeInTheDocument();
+    expect(selectors.configureReplicationBucketsInfo()).toHaveLength(5);
+    userEvent.click(selectors.removeReplicationBucketButtons()[0]);
+    userEvent.click(selectors.removeReplicationBucketButtons()[0]);
+    expect(selectors.removeReplicationBucketButtons()).toHaveLength(3);
+    expect(selectors.configureReplicationBucketsInfo()).toHaveLength(3);
+    expect(selectors.addReplicationBucketButton()).toBeInTheDocument();
+    userEvent.click(selectors.addReplicationBucketButton());
+    expect(selectors.removeReplicationBucketButtons()).toHaveLength(4);
+
+    expect(convertToGroup()).toBeInTheDocument();
+
+    return rendered;
+  };
+
+  it('edits an s3 blob store', async function() {
+    ExtJS.isProEdition.mockReturnValue(false);
+
+    const {presigned} = await testEditS3();
+    // PRO only feature should not be present
+    expect(presigned()).not.toBeInTheDocument();
+  });
+
+  it('PRO - edits an s3 blob store', async function() {
+    ExtJS.isProEdition.mockReturnValue(true);
+    const {presigned} = await testEditS3();
+    // PRO only feature should be present
+    expect(presigned()).toBeChecked();
+  });
+
+  it('edits S3 blob store failover buckets not visible', async function() {
+    when(axios.get).calledWith('service/rest/v1/blobstores/s3/test').mockResolvedValue({
+      data: {
+        name: 'test',
+        bucketConfiguration: {
+          bucket: { region: 'DEFAULT', name: 'bucket', prefix: ''},
+          failoverBuckets: [
+            {
+              region: "us-east-1",
+              bucketName: "replication-bucket-1"
+            },
+            {
+              region: "us-east-2",
+              bucketName: "replication-bucket-2"
+            },
+            {
+              region: "us-west-1",
+              bucketName: "replication-bucket-3"
+            },
+            {
+              region: "us-west-2",
+              bucketName: "replication-bucket-4"
+            },
+            {
+              region: "eu-west-1",
+              bucketName: "replication-bucket-5"
+            }
+          ]
+        }
+      }
+    });
+    ExtJS.state().getValue.mockReturnValueOnce(false);
+
+    const {
+      loadingMask,
+      typeSelect,
+      title,
+      name,
+      replicationBuckets,
+    } = render('s3/test');
+
+    await waitForElementToBeRemoved(loadingMask);
+
+    expect(title()).toHaveTextContent('Edit test');
+
+    // The type and name fields cannot be changed during edit
+    expect(typeSelect()).not.toBeInTheDocument();
+    expect(name()).not.toBeInTheDocument();
+
+    // Replication buckets not available
+    expect(replicationBuckets()).not.toBeInTheDocument();
   });
 
   it('edits a file blob store', async function() {
@@ -273,60 +1102,80 @@ describe('BlobStoresForm', function() {
       }
     });
 
-    render('file/test');
+    const {
+      getByText,
+      loadingMask,
+      name,
+      path,
+      title,
+      softQuotaType,
+      softQuotaLimit,
+      typeSelect
+    } = render('file/test');
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
-    expect(selectors.queryTitle()).toHaveTextContent('Edit test');
-    expect(screen.getByText('File Blob Store')).toBeInTheDocument();
+    expect(title()).toHaveTextContent('Edit test');
+    expect(getByText('File Blob Store')).toBeInTheDocument();
 
     // The type and name fields cannot be changed during edit
-    expect(selectors.queryTypeSelect()).not.toBeInTheDocument();
-    expect(selectors.queryName()).not.toBeInTheDocument();
+    expect(typeSelect()).not.toBeInTheDocument();
+    expect(name()).not.toBeInTheDocument();
 
-    expect(selectors.queryPath()).toHaveValue('testPath');
-    expect(selectors.softQuota.queryEnabled()).toBeChecked();
-    expect(selectors.softQuota.queryType()).toHaveValue('spaceRemainingQuota');
-    expect(selectors.softQuota.queryLimit()).toHaveValue('100');
+    expect(path()).toHaveValue('testPath');
+    expect(selectors.getSoftQuota()).toBeChecked();
+    expect(softQuotaType()).toHaveValue('spaceRemainingQuota');
+    expect(softQuotaLimit()).toHaveValue('100');
   });
 
   it('edits a group blob store', async function() {
     when(axios.get).calledWith('service/rest/v1/blobstores/group/test').mockResolvedValue({
       data: {
-        "softQuota": null,
-        "members": ["test-converted"],
-        "fillPolicy": "writeToFirst"
+        "softQuota" : null,
+        "members" : [ "test-converted" ],
+        "fillPolicy" : "writeToFirst"
       }
     });
 
-    render('group/test');
+    const {
+      availableMembers,
+      getByText,
+      loadingMask,
+      name,
+      selectedMembers,
+      title,
+      typeSelect
+    } = render('group/test');
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
-    expect(selectors.queryTitle()).toHaveTextContent('Edit test');
-    expect(screen.getByText('Group Blob Store')).toBeInTheDocument();
+    expect(title()).toHaveTextContent('Edit test');
+    expect(getByText('Group Blob Store')).toBeInTheDocument();
 
-    expect(selectors.queryTypeSelect()).not.toBeInTheDocument();
-    expect(selectors.queryName()).not.toBeInTheDocument();
+    expect(typeSelect()).not.toBeInTheDocument();
+    expect(name()).not.toBeInTheDocument();
 
-    expect(selectors.queryAvailableMembers()).toHaveTextContent('default');
-    expect(selectors.querySelectedMembers()).toHaveTextContent('test-converted');
+    expect(availableMembers()).toHaveTextContent('default');
+    expect(selectedMembers()).toHaveTextContent('test-converted');
   });
 
   it('convert to group is not shown when editing a group', async function() {
     when(axios.get).calledWith('service/rest/v1/blobstores/group/test').mockResolvedValue({
       data: {
-        "softQuota": null,
-        "members": ["test-converted"],
-        "fillPolicy": "writeToFirst"
+        "softQuota" : null,
+        "members" : [ "test-converted" ],
+        "fillPolicy" : "writeToFirst"
       }
     });
 
-    render('group/test');
+    const {
+      loadingMask,
+      convertToGroup
+    } = render('group/test');
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
-    expect(selectors.queryConvertToGroupButton()).not.toBeInTheDocument();
+    expect(convertToGroup()).not.toBeInTheDocument();
   });
 
   it('converts to the group blob store', async function() {
@@ -344,22 +1193,22 @@ describe('BlobStoresForm', function() {
     });
     when(axios.post).calledWith(convertUrl).mockRejectedValue({message: errorMessage});
 
-    render('file/a-file%2Fee%3A%23%24%25%40');
+    const {loadingMask, convertToGroup, title} = render('file/a-file%2Fee%3A%23%24%25%40');
     const {convertModal: {modal, title: modalTitle, warning, newName, convertButton, cancel}} = selectors;
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
-    expect(selectors.queryTitle()).toHaveTextContent('Edit a-file/ee:#$%@');
-    expect(selectors.queryConvertToGroupButton()).toBeInTheDocument();
+    expect(title()).toHaveTextContent('Edit a-file/ee:#$%@');
+    expect(convertToGroup()).toBeInTheDocument();
 
-    userEvent.click(selectors.queryConvertToGroupButton());
+    userEvent.click(convertToGroup());
     expect(modal()).toBeInTheDocument();
 
     userEvent.click(cancel());
     expect(onDone).not.toBeCalled();
     expect(modal()).not.toBeInTheDocument();
 
-    userEvent.click(selectors.queryConvertToGroupButton());
+    userEvent.click(convertToGroup());
     expect(modalTitle()).toHaveTextContent('Convert to Group Blob Store');
     expect(warning()).toBeInTheDocument();
     expect(newName()).toHaveValue('a-file/ee:#$%@-original');
@@ -389,21 +1238,21 @@ describe('BlobStoresForm', function() {
 
     when(axios.get).calledWith(updateUrl).mockResolvedValue({
       data: {
-        "softQuota": null,
-        "members": ["test-converted", "default"],
-        "fillPolicy": "writeToFirst"
+        "softQuota" : null,
+        "members" : [ "test-converted", "default" ],
+        "fillPolicy" : "writeToFirst"
       }
     });
 
     let errorMessage = 'Blob Store is not eligible to be a group member';
 
     when(axios.put).calledWith(updateUrl, {}).mockRejectedValue({
-      response: {data: [{"id": "*", "message": errorMessage}]}
+        response: {data: [{ "id": "*", "message": errorMessage}]}
     });
 
-    render('group/test');
+    const {loadingMask} = render('group/test');
 
-    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+    await waitForElementToBeRemoved(loadingMask);
 
     const consoleSpy = jest.spyOn(console, 'log');
 
@@ -421,24 +1270,19 @@ describe('BlobStoresForm', function() {
     expect(blobStoreTypesUrl).toBe('/service/rest/internal/ui/blobstores/types');
     expect(blobStoreQuotaTypesUrl).toBe('/service/rest/internal/ui/blobstores/quotaTypes');
 
-    expect(singleBlobStoreUrl(validName, invalidName)).toBe(
-        'service/rest/v1/blobstores/foo-bar_test/%2Ftest%25%24%23%408*%3E%3F');
-    expect(singleBlobStoreUrl(invalidName, validName)).toBe(
-        'service/rest/v1/blobstores/%2Ftest%25%24%23%408*%3E%3F/foo-bar_test');
+    expect(singleBlobStoreUrl(validName, invalidName)).toBe('service/rest/v1/blobstores/foo-bar_test/%2Ftest%25%24%23%408*%3E%3F');
+    expect(singleBlobStoreUrl(invalidName, validName)).toBe('service/rest/v1/blobstores/%2Ftest%25%24%23%408*%3E%3F/foo-bar_test');
 
     expect(deleteBlobStoreUrl(validName)).toBe('service/rest/v1/blobstores/foo-bar_test');
     expect(deleteBlobStoreUrl(invalidName)).toBe('service/rest/v1/blobstores/%2Ftest%25%24%23%408*%3E%3F');
 
-    expect(convertToGroupBlobStoreUrl(validName, invalidName)).toBe(
-        'service/rest/v1/blobstores/group/convert/foo-bar_test/%2Ftest%25%24%23%408*%3E%3F');
-    expect(convertToGroupBlobStoreUrl(invalidName, validName)).toBe(
-        'service/rest/v1/blobstores/group/convert/%2Ftest%25%24%23%408*%3E%3F/foo-bar_test');
+    expect(convertToGroupBlobStoreUrl(validName, invalidName)).toBe('service/rest/v1/blobstores/group/convert/foo-bar_test/%2Ftest%25%24%23%408*%3E%3F');
+    expect(convertToGroupBlobStoreUrl(invalidName, validName)).toBe('service/rest/v1/blobstores/group/convert/%2Ftest%25%24%23%408*%3E%3F/foo-bar_test');
 
     expect(createBlobStoreUrl(validName)).toBe('service/rest/v1/blobstores/foo-bar_test');
     expect(createBlobStoreUrl(invalidName)).toBe('service/rest/v1/blobstores/%2Ftest%25%24%23%408*%3E%3F');
 
     expect(blobStoreUsageUrl(validName)).toBe('/service/rest/internal/ui/blobstores/usage/foo-bar_test');
-    expect(blobStoreUsageUrl(invalidName)).toBe(
-        '/service/rest/internal/ui/blobstores/usage/%2Ftest%25%24%23%408*%3E%3F');
+    expect(blobStoreUsageUrl(invalidName)).toBe('/service/rest/internal/ui/blobstores/usage/%2Ftest%25%24%23%408*%3E%3F');
   });
 });

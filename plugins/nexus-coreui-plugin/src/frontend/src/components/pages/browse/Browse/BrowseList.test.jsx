@@ -33,6 +33,10 @@ import {
   ROW_INDICES
 } from './BrowseList.testdata';
 
+jest.mock('axios', () => ({
+  post: jest.fn()
+}));
+
 jest.mock('../../admin/Repositories/IQServerColumns/IQServerHelpers', () => ({
   isIqServerEnabled: jest.fn().mockReturnValue(true),
   canReadHealthCheck: jest.fn().mockReturnValue(true),

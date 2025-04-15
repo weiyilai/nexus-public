@@ -35,17 +35,7 @@ export default function isVisible(visibilityRequirements) {
     return true;
   }
 
-  const {
-    bundle,
-    licenseValid,
-    statesEnabled,
-    permissions,
-    capability,
-    editions,
-    requiresUser,
-    browseableFormat,
-    notClustered
-  } = visibilityRequirements;
+  const { bundle, licenseValid, statesEnabled, permissions, capability, editions, requiresUser, browseableFormat } = visibilityRequirements;
 
   // check that all our expected global dependencies are in place
   if (!hasValidDependencies()) {
@@ -54,12 +44,6 @@ export default function isVisible(visibilityRequirements) {
 
   const Application = NX?.app?.Application;
   const Security = NX?.Security;
-
-  // hide this route on HA
-  if (visibilityRequirements.notClustered && isClustered()) {
-    console.debug("notClustered=true; isClustered=true", bundle);
-    return false;
-  }
 
   if (bundle && !Application.bundleActive(bundle)) {
     // check that the bundles required by the route are enabled
@@ -146,7 +130,11 @@ function areAllRequiredLicensesPresent(licenseValid) {
       licenseValid => {
         const value = NX.State.getValue(licenseValid.key, licenseValid.defaultValue)
         if (typeof value !== 'object') {
-          return false;
+          // I've only ever seen this happen when writing tests, when a value is not properly mocked, but when it
+          // happens it can result in a tricky to debug NPE, this should at least give better feedback to the user
+          // about how to fix the problem, while still throwing an exception that will fail the test, forcing them
+          // to properly mock it
+          throw new Error(`invalid state found for license key ${licenseValid.key}`);
         }
 
         return value['licenseValid'];
@@ -168,10 +156,6 @@ function meetsEditionRequirement(editions) {
     }
     return hasEdition;
   });
-}
-
-function isClustered() {
-  return !!NX.State.getValue('nexus.datastore.clustered.enabled');
 }
 
 function hasValidDependencies() {

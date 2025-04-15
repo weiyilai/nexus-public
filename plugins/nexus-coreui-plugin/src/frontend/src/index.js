@@ -26,7 +26,6 @@ import GoogleBlobStoreActions from './components/pages/admin/BlobStores/Google/G
 import CommunityEulaOnboarding from './components/pages/onboarding/CommunityEulaOnboarding';
 import CommunityDiscoverOnboarding from './components/pages/onboarding/CommunityDiscoverOnboarding';
 import './styles/extjs.scss';
-import AnalyzeApplication from './components/pages/user/AnalyzeApplication/AnalyzeApplication';
 
 window.BlobStoreTypes = {
   ...window.BlobStoreTypes,
@@ -48,6 +47,5 @@ window.BlobStoreTypes = {
 window.ReactComponents = {
   ...window.ReactComponents,
   CommunityEulaOnboarding,
-  CommunityDiscoverOnboarding,
-  AnalyzeApplication,
+  CommunityDiscoverOnboarding
 };
