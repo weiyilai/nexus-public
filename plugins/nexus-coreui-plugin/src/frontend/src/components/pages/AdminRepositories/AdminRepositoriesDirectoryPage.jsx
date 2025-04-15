@@ -21,12 +21,16 @@ export default function AdminRepositoriesDirectoryPage() {
   const ADMIN = ROUTE_NAMES.ADMIN;
 
   return (
-      <DirectoryPage routeName={ROUTE_NAMES.ADMIN.REPOSITORY.DIRECTORY} {...UIStrings.REPOSITORY_DIRECTORY.MENU}>
+      <DirectoryPage
+        routeName={ROUTE_NAMES.ADMIN.REPOSITORY.DIRECTORY}
+        text={UIStrings.REPOSITORY_DIRECTORY.MENU.text}
+        description={UIStrings.REPOSITORY_DIRECTORY.MENU.description}
+      >
         <DirectoryList>
           <DirectoryList.DirectoryListItem
               data-analytics-id="nxrm-admin-repository-directory-repositories-lnk"
-              text={UIStrings.REPOSITORY_DIRECTORY.MENU.text}
-              description={UIStrings.REPOSITORY_DIRECTORY.MENU.description}
+              text={UIStrings.REPOSITORIES.MENU.text}
+              description={UIStrings.REPOSITORIES.MENU.description}
               routeName={ADMIN.REPOSITORY.REPOSITORIES}
               params={{ itemId: null }}
           />

@@ -54,8 +54,15 @@ export function MissingRoutePage()  {
           </NxP>
 
           <div>
-            <NxTextLink className="nx-btn" href={dashboardHref}>Return to Dashboard</NxTextLink>
             <NxTextLink
+                data-analytics-id="nxrm-404-page-dashboard-lnk"
+                className="nx-btn"
+                href={dashboardHref}
+            >
+              Return to Dashboard
+            </NxTextLink>
+            <NxTextLink
+                data-analytics-id="nxrm-404-page-support-lnk"
                 className="nx-btn"
                 href="https://links.sonatype.com/products/nexus/support"
                 referrerPolicy='no-referrer'

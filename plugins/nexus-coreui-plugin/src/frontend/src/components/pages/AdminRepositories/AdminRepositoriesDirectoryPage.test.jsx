@@ -38,13 +38,13 @@ describe('AdminRepositoriesDirectoryPage', () => {
     it('shows given permissions', async () => {
       givenPermissions({ 'nexus:repository-admin:*:*:read': true });
 
-      await runLinkVisiblityTestForRepositoriesPage(UIStrings.REPOSITORY_DIRECTORY.MENU);
+      await runLinkVisiblityTestForRepositoriesPage(UIStrings.REPOSITORIES.MENU);
     });
 
     it('does not show without permissions', async () => {
       givenPermissions({ 'nexus:repository-admin:*:*:read': false });
 
-      await runLinkNotVisibleTestForRepositoriesPage( UIStrings.REPOSITORY_DIRECTORY.MENU);
+      await runLinkNotVisibleTestForRepositoriesPage( UIStrings.REPOSITORIES.MENU);
     });
   });
 
