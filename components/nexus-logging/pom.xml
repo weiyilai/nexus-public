@@ -96,13 +96,13 @@
               <configuration>
                 <excludes>
                   <exclude>ch/qos/logback/access/jetty/RequestLogImpl2.java</exclude>
-                  <exclude>org/sonatype/nexus/pax/logging/AccessPatternLayoutEncoder.java</exclude>
-                  <exclude>org/sonatype/nexus/pax/logging/NexusThreadConverter.java</exclude>
-                  <exclude>org/sonatype/nexus/pax/logging/NexusUserIdConverter.java</exclude>
+                  <exclude>org/sonatype/nexus/logging/AccessPatternLayoutEncoder.java</exclude>
+                  <exclude>org/sonatype/nexus/logging/NexusThreadConverter.java</exclude>
+                  <exclude>org/sonatype/nexus/logging/NexusUserIdConverter.java</exclude>
                 </excludes>
                 <testExcludes>
-                  <testExclude>org/sonatype/nexus/pax/logging/NexusLogFilterTest.java</testExclude>
-                  <testExclude>org/sonatype/nexus/pax/logging/TaskLogsFilterTest.java</testExclude>
+                  <testExclude>org/sonatype/nexus/logging/NexusLogFilterTest.java</testExclude>
+                  <testExclude>org/sonatype/nexus/logging/TaskLogsFilterTest.java</testExclude>
                 </testExcludes>
               </configuration>
             </plugin>
