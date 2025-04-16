@@ -20,7 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.equalTo;
 
 /**
  * Tests for {@link ApplicationVersionSupport}.
@@ -54,17 +54,17 @@ public class ApplicationVersionSupportTest
    */
   @Test
   public void testGetEdition() {
-    assertThat(underTest.getEdition(), is("TEST"));
+    assertThat(underTest.getEdition(), equalTo("TEST"));
   }
 
   @Test
   public void testGetVersion() {
     props.setProperty(ApplicationVersionSupport.VERSION, "123");
-    assertThat(underTest.getVersion(), is("123"));
+    assertThat(underTest.getVersion(), equalTo("123"));
   }
 
   @Test
   public void testGetVersion_missing() {
-    assertThat(underTest.getVersion(), is(ApplicationVersionSupport.UNKNOWN));
+    assertThat(underTest.getVersion(), equalTo(ApplicationVersionSupport.UNKNOWN));
   }
 }

@@ -36,6 +36,7 @@
     <module>nexus-repository-core-edition</module>
     <module>nexus-spring</module>
     <module>nexus-testsupport</module>
+    <module>nexus-version</module>
   </modules>
 
   <dependencyManagement>
