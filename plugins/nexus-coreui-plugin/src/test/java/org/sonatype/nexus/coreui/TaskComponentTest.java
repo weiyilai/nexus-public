@@ -37,6 +37,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -161,8 +163,32 @@ public class TaskComponentTest
   }
 
   @Test
-  public void testAppendPlanReconciliationText() {
+  public void testAppendPlanReconciliationText_NoDryRun() {
     TaskConfiguration taskConfiguration = mock(TaskConfiguration.class);
+    setupTask(taskConfiguration);
+
+    List<TaskXO> tasks = component.read();
+    assertEquals(1, tasks.size());
+    assertEquals(TaskComponent.PLAN_RECONCILIATION_TASK_ID, tasks.get(0).getTypeId());
+
+    assertEquals("Ok [0s]", tasks.get(0).getLastRunResult());
+  }
+
+  @Test
+  public void testAppendPlanReconciliationText_DryRun() {
+    TaskConfiguration taskConfiguration = mock(TaskConfiguration.class);
+    setupTask(taskConfiguration);
+    when(taskConfiguration.getBoolean(anyString(), anyBoolean())).thenReturn(true);
+
+    List<TaskXO> tasks = component.read();
+    assertEquals(1, tasks.size());
+    assertEquals(TaskComponent.PLAN_RECONCILIATION_TASK_ID, tasks.get(0).getTypeId());
+
+    tasks = component.read();
+    assertEquals("Ok [0s]" + TaskComponent.PLAN_RECONCILIATION_TASK_OK_TEXT, tasks.get(0).getLastRunResult());
+  }
+
+  private void setupTask(TaskConfiguration taskConfiguration) {
     when(taskConfiguration.isVisible()).thenReturn(true);
     when(taskConfiguration.getTypeId()).thenReturn(TaskComponent.PLAN_RECONCILIATION_TASK_ID);
 
@@ -183,10 +209,5 @@ public class TaskComponentTest
     when(extState.getLastEndState()).thenReturn(TaskState.OK);
     when(extState.getLastRunStarted()).thenReturn(new Date());
     when(extState.getLastRunDuration()).thenReturn(100L);
-
-    List<TaskXO> tasks = component.read();
-    assertEquals(1, tasks.size());
-    assertEquals(TaskComponent.PLAN_RECONCILIATION_TASK_ID, tasks.get(0).getTypeId());
-    assertEquals("Ok [0s]" + TaskComponent.PLAN_RECONCILIATION_TASK_OK_TEXT, tasks.get(0).getLastRunResult());
   }
 }
