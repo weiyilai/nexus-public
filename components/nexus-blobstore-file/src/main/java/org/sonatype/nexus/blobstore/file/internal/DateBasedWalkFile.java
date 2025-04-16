@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -95,7 +96,7 @@ public class DateBasedWalkFile
     }
   }
 
-  private Map<String, OffsetDateTime> getAllFiles(
+  protected Map<String, OffsetDateTime> getAllFiles(
       final Path startPath,
       final OffsetDateTime fromDateTime) throws IOException
   {
@@ -131,7 +132,7 @@ public class DateBasedWalkFile
 
       if (matcher.matches()) {
         getDateFromMatch(matcher.group(1))
-            .filter(date -> date.isAfter(this.fromDateTime))
+            .filter(date -> !date.isBefore(this.fromDateTime.truncatedTo(ChronoUnit.MINUTES)))
             .map(date -> blobIds.put(matcher.group(2), date));
       }
 
