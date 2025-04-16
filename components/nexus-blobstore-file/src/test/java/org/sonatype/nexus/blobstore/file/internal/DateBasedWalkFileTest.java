@@ -217,6 +217,15 @@ public class DateBasedWalkFileTest
     assertThat(blobIds, containsInAnyOrder(BYTES_FILE_3_H_OLD));
   }
 
+  @Test
+  public void testWalkFilesWithPrefixExactMinutes() {
+    Duration threeMinutes = Duration.ofMinutes(3);
+    DateBasedWalkFile walkFile = new DateBasedWalkFile(contentDir.toPath(), blobCreated.minus(threeMinutes));
+    Path prefix = Path.of(getDatePath(blobCreated.minus(threeMinutes)));
+    Collection<String> blobIds = walkFile.getBlobIdToDateRef(prefix).keySet();
+    assertThat(blobIds, containsInAnyOrder(BYTES_FILE_3_MIN_OLD));
+  }
+
   private static String getDatePath(final OffsetDateTime blobCreated) {
     return blobCreated.format(BlobRef.DATE_TIME_PATH_FORMATTER);
   }
