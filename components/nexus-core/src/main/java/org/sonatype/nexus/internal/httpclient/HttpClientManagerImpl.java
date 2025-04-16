@@ -100,7 +100,8 @@ public class HttpClientManagerImpl
   private HttpClientConfiguration configuration;
 
   @Inject
-  public HttpClientManagerImpl(final EventManager eventManager,
+  public HttpClientManagerImpl(
+      final EventManager eventManager,
       final HttpClientConfigurationStore store,
       @Named("initial") final Provider<HttpClientConfiguration> defaults,
       final SharedHttpClientConnectionManager sharedConnectionManager,
@@ -257,8 +258,7 @@ public class HttpClientManagerImpl
     builder.setDefaultCredentialsProvider(plan.getCredentials());
 
     builder.addInterceptorFirst(
-        (HttpRequest request, HttpContext context) ->
-        {
+        (HttpRequest request, HttpContext context) -> {
           // add custom http-context attributes
           for (Entry<String, Object> entry : plan.getAttributes().entrySet()) {
             // only set context attribute if not already set, to allow per request overrides
@@ -271,30 +271,24 @@ public class HttpClientManagerImpl
           for (Entry<String, String> entry : plan.getHeaders().entrySet()) {
             request.addHeader(entry.getKey(), entry.getValue());
           }
-        }
-    );
+        });
     builder.addInterceptorLast(
-        (HttpRequest httpRequest, HttpContext httpContext) ->
-        {
+        (HttpRequest httpRequest, HttpContext httpContext) -> {
           httpContext.setAttribute(CTX_REQ_STOPWATCH, Stopwatch.createStarted());
           if (outboundLog.isDebugEnabled()) {
             httpContext.setAttribute(CTX_REQ_URI, getRequestURI(httpContext));
             outboundLog.debug("{} > {}", httpContext.getAttribute(CTX_REQ_URI), httpRequest.getRequestLine());
           }
-        }
-    );
+        });
     builder.addInterceptorLast(
-        (HttpResponse httpResponse, HttpContext httpContext) ->
-        {
+        (HttpResponse httpResponse, HttpContext httpContext) -> {
           URI requestURI = (URI) httpContext.getAttribute(CTX_REQ_URI);
           if (requestURI != null) {
             Stopwatch stopwatch = (Stopwatch) httpContext.getAttribute(CTX_REQ_STOPWATCH);
             outboundLog.debug("{} < {} @ {}", requestURI, httpResponse.getStatusLine(), stopwatch);
           }
           printOutboundLog(httpResponse, httpContext);
-        }
-    );
-
+        });
     return builder;
   }
 
