@@ -485,7 +485,8 @@ public class TaskComponent
   }
 
   private static void appendPlanReconciliationText(StringBuilder lastRunResult, TaskState endState, TaskInfo taskInfo) {
-    if (OK.equals(endState) && taskInfo.getTypeId().equals(PLAN_RECONCILIATION_TASK_ID)) {
+    if (OK.equals(endState) && taskInfo.getTypeId().equals(PLAN_RECONCILIATION_TASK_ID) &&
+        taskInfo.getConfiguration().getBoolean("dryRun", false)) {
       lastRunResult.append(PLAN_RECONCILIATION_TASK_OK_TEXT);
     }
   }
