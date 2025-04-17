@@ -122,7 +122,6 @@ export default function GoogleBlobStoreSettings({ service }) {
               checkboxId="encryptionKey"
               name="bucketConfiguration.encryption.encryptionType"
               isChecked={isChecked}
-              isDisabled={bucketConfiguration.encryption?.encryptionType === 'default'}
               onChange={handleCheckboxChange}
           >
             {GOOGLE.ENCRYPTION.KMS_MANAGED}

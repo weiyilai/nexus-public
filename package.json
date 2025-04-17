@@ -16,6 +16,6 @@
     "@react-hook/resize-observer": "^2.0.2",
     "@uirouter/react": "1.0.7",
     "axios": "1.6.4",
-    "core-js-pure": "^3.28.0"
+    "core-js-pure": "3.28.0"
   }
 }
