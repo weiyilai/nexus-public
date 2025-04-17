@@ -79,7 +79,7 @@ const ACTIONS = [
     subTitle: SEARCH.subTitle,
     icon: faSearch,
     isVisible: () => ExtJS.checkPermission(Permissions.SEARCH.READ),
-    event: {type: 'REDIRECT', url: '#browse/search'},
+    event: {type: 'REDIRECT', url: '#browse/search/generic'},
   },
   {
     title: CONNECT.title,
