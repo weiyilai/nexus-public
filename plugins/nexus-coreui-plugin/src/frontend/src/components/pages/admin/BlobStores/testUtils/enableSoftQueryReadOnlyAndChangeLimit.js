@@ -14,20 +14,13 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-module.exports = {
-  presets: [
-    '@babel/preset-react',
-    [
-      '@babel/preset-env',
-      {
-        // see https://help.sonatype.com/repomanager3/system-requirements#SystemRequirements-WebBrowser
-        targets: 'last 1 Chrome version, last 1 Firefox version, Firefox ESR, last 1 Safari version, ie >= 11, last 1 Edge version'
-      }
-    ]
-  ],
-  plugins: [
-    '@babel/plugin-transform-class-properties',
-    '@babel/plugin-transform-optional-chaining',
-    '@babel/plugin-transform-runtime'
-  ]
-};
+import userEvent from '@testing-library/user-event';
+import {blobStoreFormSelectors as selectors} from './blobStoreFormSelectors';
+
+export function enableSoftQueryReadOnlyAndChangeLimit(softQuotaLimit) {
+  userEvent.click(selectors.softQuota.queryEnabled());
+  expect(selectors.softQuota.queryType()).not.toBeInTheDocument();
+  expect(selectors.softQuota.querySpaceUsedQuotaReadOnly()).toBeInTheDocument();
+  userEvent.type(selectors.softQuota.queryLimit(), softQuotaLimit);
+  expect(selectors.softQuota.queryLimit()).toHaveValue(softQuotaLimit);
+}

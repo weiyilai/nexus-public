@@ -16,6 +16,15 @@
  */
 import '@testing-library/jest-dom/extend-expect';
 
+jest.mock('axios', () => ({
+  ...jest.requireActual('axios'), // Use most functions from actual axios
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn()
+}));
+
+
 let lastValue = 0;
 
 window.crypto = {
