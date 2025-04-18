@@ -16,7 +16,6 @@ import Axios from 'axios';
 import LicensingHistorcalUsage from './LicensingHistoricalUsage';
 import TestUtils from '@sonatype/nexus-ui-plugin/src/frontend/src/interface/TestUtils';
 
-
 describe('Licensing Historical Usage', () => {
   async function renderView() {
     return render(<LicensingHistorcalUsage />);
@@ -38,6 +37,7 @@ describe('Licensing Historical Usage', () => {
     expect(screen.getByText("Total Requests")).toBeInTheDocument();
     expect(screen.getByText("Requests % Change")).toBeInTheDocument();
     expect(screen.getByText("Peak Storage")).toBeInTheDocument();
+    expect(screen.getByText("Total Egress")).toBeInTheDocument();
   });
 
   it('renders data rows correctly', async () => {
@@ -48,7 +48,8 @@ describe('Licensing Historical Usage', () => {
         percentageChangeComponent: 10,
         requestCount: 2000,
         percentageChangeRequest: -5,
-        peakStorage: 1073741824
+        peakStorage: 1073741824,
+        responseSize: 536870912,
       }
     ];
 
@@ -62,6 +63,7 @@ describe('Licensing Historical Usage', () => {
     expect(screen.getByText("2,000")).toBeInTheDocument();
     expect(screen.getByText("5%")).toBeInTheDocument();
     expect(screen.getByText("1.00 GB")).toBeInTheDocument();
+    expect(screen.getByText("512.00 MB")).toBeInTheDocument();
   });
 
   it('renders change icons correctly', async () => {
@@ -71,7 +73,9 @@ describe('Licensing Historical Usage', () => {
         componentCount: 1000,
         percentageChangeComponent: 10,
         requestCount: 2000,
-        percentageChangeRequest: -5
+        percentageChangeRequest: -5,
+        peakStorage: 1073741824,
+        responseSize: 536870912,
       }
     ];
 
@@ -91,7 +95,9 @@ describe('Licensing Historical Usage', () => {
         componentCount: 'N/A',
         percentageChangeComponent: 'N/A',
         requestCount: 'N/A',
-        percentageChangeRequest: 'N/A'
+        percentageChangeRequest: 'N/A',
+        peakStorage: 'N/A',
+        responseSize: 'N/A',
       }
     ];
 

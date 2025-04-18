@@ -57,6 +57,7 @@ export default function LicensingHistorcalUsage() {
                 <span><FontAwesomeIcon icon={faInfoCircle} /></span>
               </NxTooltip>
             </NxTableCell>
+            <NxTableCell>{LicensingStrings.LICENSING.HISTORICAL_USAGE.TOTAL_EGRESS}</NxTableCell>
             <NxTableCell>{LicensingStrings.LICENSING.HISTORICAL_USAGE.PEAK_STORAGE}</NxTableCell>
           </NxTableRow>
         </NxTableHead>
@@ -72,6 +73,7 @@ export default function LicensingHistorcalUsage() {
                 <NxTableCell>
                   <ChangeIcon value={item.percentageChangeRequest} /> {formatPercentage(item.percentageChangeRequest)}
                 </NxTableCell>
+                <NxTableCell>{HumanReadableUtils.bytesToString(item.responseSize)}</NxTableCell>
                 <NxTableCell>{HumanReadableUtils.bytesToString(item.peakStorage)}</NxTableCell>
               </NxTableRow>
             ))}
