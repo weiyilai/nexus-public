@@ -70,12 +70,10 @@ export function createRouter({
   
   // explicitely register the missing route
   router.stateRegistry.register(missingRoute);
-  // catch-all fallback state showing 404 page component for any unknown path
-  router.stateRegistry.register({
-    name: "catchAll",
-    url: "*path",
-    component: missingRoute.component,
-    data: missingRoute.data,
+  // send any unrecognized routes to the 404 page
+  router.urlService.rules.otherwise((matchValue, urlParts, router) => {
+    console.warn('url not recognized', matchValue, urlParts);
+    router.stateService.go(missingRoute.name, {}, {location: false});
   });
 
   console.info('States added to router:', router.stateRegistry.get());
