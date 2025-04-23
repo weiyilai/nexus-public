@@ -44,7 +44,8 @@ final class MyBatisCipher
   private PbeCipher pbeCipher;
 
   @Inject
-  MyBatisCipher(final LegacyCipherFactory legacyCipherFactory,
+  MyBatisCipher(
+      final LegacyCipherFactory legacyCipherFactory,
       @Named("${nexus.mybatis.cipher.password:-changeme}") final String password,
       @Named("${nexus.mybatis.cipher.salt:-changeme}") final String salt,
       @Named("${nexus.mybatis.cipher.iv:-0123456789ABCDEF}") final String iv) throws Exception
@@ -57,7 +58,7 @@ final class MyBatisCipher
    */
   @VisibleForTesting
   MyBatisCipher() throws Exception {
-    this(new LegacyCipherFactoryImpl(new CryptoHelperImpl()), "changeme", "changeme", "0123456789ABCDEF");
+    this(new LegacyCipherFactoryImpl(new CryptoHelperImpl(false, null)), "changeme", "changeme", "0123456789ABCDEF");
   }
 
   @Override

@@ -58,7 +58,7 @@ public class MavenCipherImplTest
   @Before
   public void prepare() {
     Security.addProvider(new BouncyCastleProvider());
-    testSubject = new MavenCipherImpl(new CryptoHelperImpl());
+    testSubject = new MavenCipherImpl(new CryptoHelperImpl(false, null));
   }
 
   @After

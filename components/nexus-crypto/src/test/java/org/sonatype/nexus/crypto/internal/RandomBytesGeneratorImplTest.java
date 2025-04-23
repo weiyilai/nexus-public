@@ -27,7 +27,7 @@ public class RandomBytesGeneratorImplTest
 
   @Before
   public void setUp() throws Exception {
-    this.generator = new RandomBytesGeneratorImpl(new CryptoHelperImpl());
+    this.generator = new RandomBytesGeneratorImpl(new CryptoHelperImpl(false, null));
   }
 
   @Test(expected = IllegalArgumentException.class)

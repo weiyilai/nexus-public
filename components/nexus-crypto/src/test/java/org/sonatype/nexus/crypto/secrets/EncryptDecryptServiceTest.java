@@ -22,7 +22,8 @@ import static org.junit.Assert.*;
 public class EncryptDecryptServiceTest
 {
 
-  EncryptDecryptService encryptDecryptService = new EncryptDecryptService(new PbeCipherFactoryImpl(new CryptoHelperImpl()));
+  EncryptDecryptService encryptDecryptService =
+      new EncryptDecryptService(new PbeCipherFactoryImpl(new CryptoHelperImpl(false, null)));
 
   @Test
   public void testEncryptionDecryption() {

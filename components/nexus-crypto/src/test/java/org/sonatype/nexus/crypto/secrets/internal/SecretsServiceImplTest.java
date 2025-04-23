@@ -71,11 +71,11 @@ public class SecretsServiceImplTest
   @Captor
   private ArgumentCaptor<String> encryptedValue;
 
-  private final LegacyCipherFactory cipherFactory = new LegacyCipherFactoryImpl(new CryptoHelperImpl());
+  private final LegacyCipherFactory cipherFactory = new LegacyCipherFactoryImpl(new CryptoHelperImpl(false, null));
 
-  private final PbeCipherFactory pbeCipherFactory = new PbeCipherFactoryImpl(new CryptoHelperImpl());
+  private final PbeCipherFactory pbeCipherFactory = new PbeCipherFactoryImpl(new CryptoHelperImpl(false, null));
 
-  private final MavenCipher mavenCipher = new MavenCipherImpl(new CryptoHelperImpl());
+  private final MavenCipher mavenCipher = new MavenCipherImpl(new CryptoHelperImpl(false, null));
 
   private SecretsServiceImpl underTest;
 
@@ -107,7 +107,7 @@ public class SecretsServiceImplTest
     char[] secret = "my-secret".toCharArray();
 
     Secret encrypted = underTest.encryptMaven("testing", secret, null);
-    //validate encrypted value was encrypted using maven cipher
+    // validate encrypted value was encrypted using maven cipher
     assertTrue(mavenCipher.isPasswordCipher(encrypted.getId()));
 
     // Simulate reading an old value
@@ -153,11 +153,11 @@ public class SecretsServiceImplTest
 
     Secret encrypted = underTest.encrypt("testing", secret, null);
 
-    //validate legacy secret was stored
+    // validate legacy secret was stored
     verify(secretsStore).create(eq("testing"), eq(null), encryptedValue.capture(), eq(null));
     assertThat(encrypted.getId(), is(String.format("_%d", fakeId)));
 
-    //set up decryption flow
+    // set up decryption flow
     when(secretsStore.read(fakeId)).thenReturn(Optional.of(getMockSecretData(fakeId, null, encryptedValue.getValue())));
     assertThat(encrypted.decrypt(), is(secret));
   }
@@ -179,7 +179,7 @@ public class SecretsServiceImplTest
     assertThat(encrypted.getId(), is(String.format("_%d", fakeId)));
     assertIsPhcSecret(encryptedValue.getValue());
 
-    //set up decryption fow
+    // set up decryption fow
     when(encryptionKeySource.getKey("test")).thenReturn(Optional.of(mockSecretKey));
     when(secretsStore.read(fakeId)).thenReturn(
         Optional.of(getMockSecretData(fakeId, "test", encryptedValue.getValue())));
@@ -201,7 +201,7 @@ public class SecretsServiceImplTest
 
     verify(secretsStore).create(eq("phc-testing"), eq("fake-key"), encryptedValue.capture(), eq("test-userid"));
 
-    //set up decryption failure
+    // set up decryption failure
     when(secretsStore.read(fakeId)).thenReturn(
         Optional.of(getMockSecretData(fakeId, "fake-key", encryptedValue.getValue())));
     when(encryptionKeySource.getKey("fake-key")).thenReturn(Optional.empty());
@@ -296,12 +296,12 @@ public class SecretsServiceImplTest
       EncryptedSecret encryptedSecret = EncryptedSecret.parse(value);
       assertNotNull(encryptedSecret);
 
-      //none of these three should be null
+      // none of these three should be null
       assertThat(encryptedSecret.getAlgorithm(), is(notNullValue()));
       assertThat(encryptedSecret.getSalt(), is(notNullValue()));
       assertThat(encryptedSecret.getValue(), is(notNullValue()));
 
-      //initialization vector is present in phcSecret as extra attribute
+      // initialization vector is present in phcSecret as extra attribute
       assertThat(encryptedSecret.getAttributes().get("iv"), is(notNullValue()));
     }
     catch (IllegalArgumentException e) {

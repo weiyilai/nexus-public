@@ -81,19 +81,64 @@
     </dependency>
 
     <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcprov-jdk15to18</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcpg-jdk15to18</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.sonatype.nexus</groupId>
       <artifactId>nexus-cleanup</artifactId>
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>standard-encryption-algorithms</id>
+      <activation>
+        <property>
+          <name>nexus.security.fips.enabled</name>
+          <value>!true</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcprov-jdk15to18</artifactId>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpg-jdk15to18</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpg-fips</artifactId>
+          <scope>test, compile</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <profile>
+      <id>fips-compliant-encryption-algorithms</id>
+      <activation>
+        <property>
+          <name>nexus.security.fips.enabled</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpg-fips</artifactId>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcprov-jdk15to18</artifactId>
+          <scope>test, compile</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpg-jdk15to18</artifactId>
+          <scope>test, compile</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 </project>

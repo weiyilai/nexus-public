@@ -230,4 +230,6 @@ public class FeatureFlags
   public static final String SECRETS_API_ENABLED = "nexus.secrets.api.enabled";
 
   public static final String NEXUS_SECURITY_OAUTH2_ENABLED = "nexus.security.oauth2.enabled";
+
+  public static final String NEXUS_SECURITY_FIPS_ENABLED = "${nexus.security.fips.enabled:-false}";
 }

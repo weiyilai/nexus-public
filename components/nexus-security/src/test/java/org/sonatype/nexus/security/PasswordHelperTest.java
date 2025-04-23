@@ -52,14 +52,16 @@ public class PasswordHelperTest
 
   @Before
   public void init() throws Exception {
-    legacyPasswordHelper = new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl()), LEGACY_PHRASE_SERVICE);
-    customPasswordHelper = new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl()), new AbstractPhraseService(true)
-    {
-      @Override
-      protected String getMasterPhrase() {
-        return "sterces, sterces, sterces";
-      }
-    });
+    legacyPasswordHelper =
+        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false, null)), LEGACY_PHRASE_SERVICE);
+    customPasswordHelper =
+        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false, null)), new AbstractPhraseService(true)
+        {
+          @Override
+          protected String getMasterPhrase() {
+            return "sterces, sterces, sterces";
+          }
+        });
   }
 
   @Test
@@ -99,7 +101,7 @@ public class PasswordHelperTest
 
   @Test
   public void testEncrypt_StringIncludingShields() throws Exception {
-    //check the resultant value is protected by braces and has been encrypted (not equal to the input string)
+    // check the resultant value is protected by braces and has been encrypted (not equal to the input string)
     assertEncrypt(legacyPasswordHelper, "{test}", is(startsWith("{")));
     assertEncrypt(legacyPasswordHelper, "{test}", is(endsWith("}")));
     assertEncrypt(legacyPasswordHelper, "{test}", is(not("{test}")));
@@ -209,7 +211,8 @@ public class PasswordHelperTest
   @Test
   public void testCustomPhraseFile() throws Exception {
     PhraseService phraseService = new FilePhraseService(util.resolveFile("target/test-classes/custom.enc"));
-    PasswordHelper underTest = new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl()), phraseService);
+    PasswordHelper underTest =
+        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false, null)), phraseService);
 
     String password = "clear-text-password";
     String encodedPass = underTest.encrypt(password);
@@ -220,7 +223,8 @@ public class PasswordHelperTest
   @Test
   public void testMissingPhraseFile() throws Exception {
     PhraseService phraseService = new FilePhraseService(util.resolveFile("target/test-classes/missing.enc"));
-    PasswordHelper underTest = new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl()), phraseService);
+    PasswordHelper underTest =
+        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false, null)), phraseService);
 
     String password = "clear-text-password";
     try {

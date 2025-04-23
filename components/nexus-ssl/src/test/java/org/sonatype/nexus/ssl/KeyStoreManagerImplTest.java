@@ -27,6 +27,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
@@ -82,6 +83,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -102,7 +104,7 @@ import static org.sonatype.nexus.ssl.KeyStoreManagerImpl.PRIVATE_KEY_ALIAS;
 public class KeyStoreManagerImplTest
     extends TestSupport
 {
-  private final CryptoHelper crypto = new CryptoHelperImpl();
+  private final CryptoHelper crypto = new CryptoHelperImpl(false, null);
 
   private KeyStoreStorageManager storageManager;
 
@@ -146,10 +148,12 @@ public class KeyStoreManagerImplTest
     KeyManager[] keyManagers = keyStoreManager.getKeyManagers();
     assertThat(keyManagers, notNullValue());
     assertThat(keyManagers, arrayWithSize(1));
+    X509Certificate x509Certificate = ((X509KeyManager) keyManagers[0]).getCertificateChain(PRIVATE_KEY_ALIAS)[0];
+
     assertThat(keyManagers[0], instanceOf(X509KeyManager.class));
     assertThat(
-        ((X509KeyManager) keyManagers[0]).getCertificateChain(PRIVATE_KEY_ALIAS)[0].getSubjectDN().getName(),
-        equalTo("CN=Joe Coder,OU=dev,O=codeSoft,L=AnyTown,ST=state,C=US"));
+        ((X509KeyManager) keyManagers[0]).getCertificateChain(PRIVATE_KEY_ALIAS)[0].getSubjectX500Principal().getName(),
+        equalTo("C=US,ST=state,L=AnyTown,O=codeSoft,OU=dev,CN=Joe Coder"));
 
     // verify the TrustManager[] does not have any certs, we have not trusted anyone yet.
     TrustManager[] trustManagers = keyStoreManager.getTrustManagers();
@@ -171,36 +175,37 @@ public class KeyStoreManagerImplTest
 
     keyStoreManager.generateAndStoreKeyPair("New Key", "dev", "codeSoft", "AnyTown", "state", "US");
 
-    String expectedDN = "CN=New Key,OU=dev,O=codeSoft,L=AnyTown,ST=state,C=US";
+    String expectedDN = "C=US,ST=state,L=AnyTown,O=codeSoft,OU=dev,CN=New Key";
 
     assertThat(originalKeyManagers, notNullValue());
     assertThat(originalKeyManagers, arrayWithSize(1));
     assertThat(originalKeyManagers[0], instanceOf(X509KeyManager.class));
     assertThat(((X509KeyManager) originalKeyManagers[0]).getCertificateChain(
-        PRIVATE_KEY_ALIAS)[0].getSubjectDN().getName(), equalTo(expectedDN));
+        PRIVATE_KEY_ALIAS)[0].getSubjectX500Principal().getName(), equalTo(expectedDN));
 
     KeyManager[] newKeyManagers = keyStoreManager.getKeyManagers();
     assertThat(newKeyManagers, notNullValue());
     assertThat(newKeyManagers, arrayWithSize(1));
     assertThat(newKeyManagers[0], instanceOf(X509KeyManager.class));
     assertThat(
-        ((X509KeyManager) newKeyManagers[0]).getCertificateChain(PRIVATE_KEY_ALIAS)[0].getSubjectDN().getName(),
+        ((X509KeyManager) newKeyManagers[0]).getCertificateChain(PRIVATE_KEY_ALIAS)[0].getSubjectX500Principal()
+            .getName(),
         equalTo(expectedDN));
   }
 
   @Test
-  public void testEmptyPrincipalAttributes() throws Exception {
-    // create the key pair
-    keyStoreManager.generateAndStoreKeyPair(null, null, null, null, null, null);
+  public void testEmptyPrincipalAttributes() {
+    KeystoreException exception = assertThrows(KeystoreException.class, () -> {
+      keyStoreManager.generateAndStoreKeyPair(null, null, null, null, null, null);
+    });
 
-    // verify the KeyManager[] only contains one key
-    KeyManager[] keyManagers = keyStoreManager.getKeyManagers();
-    assertThat(keyManagers, notNullValue());
-    assertThat(keyManagers, arrayWithSize(1));
-    assertThat(keyManagers[0], instanceOf(X509KeyManager.class));
-    assertThat(
-        ((X509KeyManager) keyManagers[0]).getCertificateChain(PRIVATE_KEY_ALIAS)[0].getSubjectDN().getName(),
-        equalTo(""));
+    Throwable cause = exception.getCause();
+    assertThat(cause, instanceOf(CertificateEncodingException.class));
+    assertThat(cause.getMessage(), equalTo("Error generating X.509 certificate"));
+
+    cause = cause.getCause();
+    assertThat(cause, instanceOf(CertificateParsingException.class));
+    assertThat(cause.getMessage(), equalTo("Empty issuer DN not allowed in X509Certificates"));
   }
 
   /**
@@ -471,7 +476,7 @@ public class KeyStoreManagerImplTest
     Certificate clientCertificate = serverKeyStoreManager.getCertificate();
     serverKeyStoreManager.importTrustCertificate(clientCertificate, "client-side");
 
-    //TODO: the server cert needs to be imported on the client side, we need to figure out how to deal with this.
+    // TODO: the server cert needs to be imported on the client side, we need to figure out how to deal with this.
     Certificate serverCertificate = serverKeyStoreManager.getCertificate();
     clientKeyStoreManager.importTrustCertificate(serverCertificate, "server-side");
 
@@ -506,8 +511,7 @@ public class KeyStoreManagerImplTest
         .when(trustStore)
         .importTrustCertificate(
             any(Certificate.class), any(String.class),
-            any(char[].class)
-        );
+            any(char[].class));
 
     KeyStoreManagerImpl manager = new KeyStoreManagerImpl(crypto, configuration, null, trustStore);
     ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
@@ -527,9 +531,11 @@ public class KeyStoreManagerImplTest
       List<String> results = Futures.successfulAsList(futures).get(100, TimeUnit.MILLISECONDS);
       assertEquals(0, results.size());
 
-    } catch (TimeoutException e) {
+    }
+    catch (TimeoutException e) {
       // expected; from Futures.successfulAsList().get()
-    } finally {
+    }
+    finally {
       // release the latch so those threads are unblocked
       block.countDown();
       service.shutdownNow();
@@ -581,9 +587,11 @@ public class KeyStoreManagerImplTest
       List<String> results = Futures.successfulAsList(futures).get(100, TimeUnit.MILLISECONDS);
       assertEquals(0, results.size());
 
-    } catch (TimeoutException e) {
+    }
+    catch (TimeoutException e) {
       // expected; from Futures.successfulAsList().get()
-    } finally {
+    }
+    finally {
       // release the latch so those threads are unblocked
       block.countDown();
       service.shutdownNow();
@@ -599,7 +607,8 @@ public class KeyStoreManagerImplTest
   }
 
   private Answer<?> blockingAnswer(CountDownLatch latch) {
-    return new Answer<Object>() {
+    return new Answer<Object>()
+    {
       @Override
       public Object answer(final InvocationOnMock invocation) throws Throwable {
         latch.await();
@@ -608,14 +617,14 @@ public class KeyStoreManagerImplTest
     };
   }
 
-  private X509Certificate generateCertificate(int validity,
-                                              String commonName,
-                                              String orgUnit,
-                                              String organization,
-                                              String locality,
-                                              String state,
-                                              String country)
-      throws Exception
+  private X509Certificate generateCertificate(
+      int validity,
+      String commonName,
+      String orgUnit,
+      String organization,
+      String locality,
+      String state,
+      String country) throws Exception
   {
     KeyPairGenerator kpgen = KeyPairGenerator.getInstance("RSA");
     kpgen.initialize(512);
@@ -794,8 +803,9 @@ public class KeyStoreManagerImplTest
       }
 
       @Override
-      public void load(final KeyStore keyStore, final char[] password)
-          throws NoSuchAlgorithmException, CertificateException, IOException
+      public void load(
+          final KeyStore keyStore,
+          final char[] password) throws NoSuchAlgorithmException, CertificateException, IOException
       {
         byte[] bytes = storages.get(keyStoreName);
         checkState(bytes != null);
@@ -803,8 +813,9 @@ public class KeyStoreManagerImplTest
       }
 
       @Override
-      public void save(final KeyStore keyStore, final char[] password)
-          throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException
+      public void save(
+          final KeyStore keyStore,
+          final char[] password) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException
       {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         keyStore.store(baos, password);

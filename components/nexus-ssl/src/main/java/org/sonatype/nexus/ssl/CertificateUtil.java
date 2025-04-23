@@ -16,11 +16,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -28,23 +25,24 @@ import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Vector;
-
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 
 import com.google.common.hash.Hashing;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
-import org.bouncycastle.x509.X509V3CertificateGenerator;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +52,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Simple utility methods when dealing with certificates.
  * <p/>
  * In order to use the methods decodePEMFormattedCertificate or serializeCertificateInPEM, the BouncyCastleProvider
- * must be registered. <BR/><BR/>
+ * must be registered. <BR/>
+ * <BR/>
+ * 
  * <pre>
  * <code>
  *    if (Security.getProvider("BC") == null) {
@@ -73,68 +73,60 @@ public final class CertificateUtil
     // empty
   }
 
-  public static X509Certificate generateCertificate(final PublicKey publicKey,
-                                                    final PrivateKey privateKey,
-                                                    final String algorithm,
-                                                    final int validDays,
-                                                    final String commonName,
-                                                    final String orgUnit,
-                                                    final String organization,
-                                                    final String locality,
-                                                    final String state,
-                                                    final String country)
-      throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, CertificateEncodingException
+  public static X509Certificate generateCertificate(
+      final PublicKey publicKey,
+      final PrivateKey privateKey,
+      final String algorithm,
+      final int validDays,
+      final String commonName,
+      final String orgUnit,
+      final String organization,
+      final String locality,
+      final String state,
+      final String country) throws CertificateEncodingException
   {
-    X509V3CertificateGenerator certificateGenerator = new X509V3CertificateGenerator();
-    Vector<ASN1ObjectIdentifier> order = new Vector<>();
-    Hashtable<ASN1ObjectIdentifier, String> attributeMap = new Hashtable<>();
+
+    X500NameBuilder nameBuilder = new X500NameBuilder(BCStyle.INSTANCE);
 
     if (commonName != null) {
-      attributeMap.put(X509Name.CN, commonName);
-      order.add(X509Name.CN);
+      nameBuilder.addRDN(BCStyle.CN, commonName);
     }
-
     if (orgUnit != null) {
-      attributeMap.put(X509Name.OU, orgUnit);
-      order.add(X509Name.OU);
+      nameBuilder.addRDN(BCStyle.OU, orgUnit);
     }
-
     if (organization != null) {
-      attributeMap.put(X509Name.O, organization);
-      order.add(X509Name.O);
+      nameBuilder.addRDN(BCStyle.O, organization);
     }
-
     if (locality != null) {
-      attributeMap.put(X509Name.L, locality);
-      order.add(X509Name.L);
+      nameBuilder.addRDN(BCStyle.L, locality);
     }
-
     if (state != null) {
-      attributeMap.put(X509Name.ST, state);
-      order.add(X509Name.ST);
+      nameBuilder.addRDN(BCStyle.ST, state);
     }
-
     if (country != null) {
-      attributeMap.put(X509Name.C, country);
-      order.add(X509Name.C);
+      nameBuilder.addRDN(BCStyle.C, country);
     }
 
-    X509Name issuerDN = new X509Name(order, attributeMap);
+    X500Name issuerDN = nameBuilder.build();
 
-    // validity
     long now = System.currentTimeMillis();
     long expire = now + (long) validDays * 24 * 60 * 60 * 1000;
 
-    certificateGenerator.setNotBefore(new Date(now));
-    certificateGenerator.setNotAfter(new Date(expire));
-    certificateGenerator.setIssuerDN(issuerDN);
-    certificateGenerator.setSubjectDN(issuerDN);
-    certificateGenerator.setPublicKey(publicKey);
-    certificateGenerator.setSignatureAlgorithm(algorithm);
-    certificateGenerator.setSerialNumber(BigInteger.valueOf(now));
+    Date startDate = new Date(now);
+    Date endDate = new Date(expire);
+    BigInteger serialNumber = BigInteger.valueOf(now);
 
-    // make certificate
-    return certificateGenerator.generate(privateKey);
+    X509v3CertificateBuilder certificateBuilder = new JcaX509v3CertificateBuilder(
+        issuerDN, serialNumber, startDate, endDate, issuerDN, publicKey);
+
+    try {
+      ContentSigner signer = new JcaContentSignerBuilder(algorithm).build(privateKey);
+      X509CertificateHolder certificateHolder = certificateBuilder.build(signer);
+      return new JcaX509CertificateConverter().getCertificate(certificateHolder);
+    }
+    catch (Exception e) {
+      throw new CertificateEncodingException("Error generating X.509 certificate", e);
+    }
   }
 
   /**
@@ -158,10 +150,10 @@ public final class CertificateUtil
    * @param pemFormattedCertificate text to be decoded as a PEM certificate.
    * @return the Certificate decoded from the input text.
    * @throws CertificateParsingException
-   *          thrown if the PEM formatted string cannot be parsed into a Certificate.
+   *           thrown if the PEM formatted string cannot be parsed into a Certificate.
    */
-  public static Certificate decodePEMFormattedCertificate(final String pemFormattedCertificate)
-      throws CertificateException
+  public static Certificate decodePEMFormattedCertificate(
+      final String pemFormattedCertificate) throws CertificateException
   {
     log.trace("Parsing PEM formatted certificate string:\n{}", pemFormattedCertificate);
 
@@ -174,7 +166,7 @@ public final class CertificateUtil
         log.trace("Object found while paring PEM formatted string: {}", object);
 
         if (object instanceof X509CertificateHolder) {
-          X509CertificateHolder holder = (X509CertificateHolder)object;
+          X509CertificateHolder holder = (X509CertificateHolder) object;
           JcaX509CertificateConverter converter = new JcaX509CertificateConverter();
           return converter.getCertificate(holder);
         }
@@ -182,7 +174,8 @@ public final class CertificateUtil
       catch (IOException e) {
         throw new CertificateParsingException(
             "Failed to parse valid certificate from expected PEM formatted certificate:\n"
-                + pemFormattedCertificate, e);
+                + pemFormattedCertificate,
+            e);
       }
     }
 

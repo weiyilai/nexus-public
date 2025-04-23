@@ -130,6 +130,12 @@
 
     <!-- max heap memory for surefire-plugin -->
     <surefire.maxHeap>-Xmx300M</surefire.maxHeap>
+
+    <bouncycastle.version>1.78.1</bouncycastle.version>
+    <bcpkix.fips.version>2.1.9</bcpkix.fips.version>
+    <bcpg.fips.version>2.1.11</bcpg.fips.version>
+    <bcutil.fips.version>2.1.4</bcutil.fips.version>
+    <bc.fips.version>2.1.0</bc.fips.version>
   </properties>
 
   <modules>
@@ -535,6 +541,54 @@
         <artifactId>nexus-base-overlay</artifactId>
         <version>3.81.0-SNAPSHOT</version>
         <type>zip</type>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk15to18</artifactId>
+        <version>${bouncycastle.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpg-jdk15to18</artifactId>
+        <version>${bouncycastle.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpkix-jdk15to18</artifactId>
+        <version>${bouncycastle.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpkix-jdk15on</artifactId>
+        <version>1.70</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcutil-jdk15to18</artifactId>
+        <version>${bouncycastle.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpkix-fips</artifactId>
+        <version>${bcpkix.fips.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpg-fips</artifactId>
+        <version>${bcpg.fips.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bc-fips</artifactId>
+        <version>${bc.fips.version}</version>
       </dependency>
 
     </dependencies>

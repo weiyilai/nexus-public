@@ -28,7 +28,6 @@
   <packaging>pom</packaging>
 
   <properties>
-    <bouncycastle.version>1.78.1</bouncycastle.version>
     <apache-shiro.version>1.13.0</apache-shiro.version>
     <java-jwt.version>3.16.0</java-jwt.version>
     <nimbusds.jwt.version>10.0.2</nimbusds.jwt.version>
@@ -56,32 +55,6 @@
         <groupId>com.nimbusds</groupId>
         <artifactId>nimbus-jose-jwt</artifactId>
         <version>${nimbusds.jwt.version}</version>
-      </dependency>
-
-      <!-- bouncycastle -->
-
-      <dependency>
-        <groupId>org.bouncycastle</groupId>
-        <artifactId>bcprov-jdk15to18</artifactId>
-        <version>${bouncycastle.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.bouncycastle</groupId>
-        <artifactId>bcpg-jdk15to18</artifactId>
-        <version>${bouncycastle.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.bouncycastle</groupId>
-        <artifactId>bcpkix-jdk15to18</artifactId>
-        <version>${bouncycastle.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.bouncycastle</groupId>
-        <artifactId>bcutil-jdk15to18</artifactId>
-        <version>${bouncycastle.version}</version>
       </dependency>
 
       <!-- shiro -->
@@ -135,5 +108,133 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <profiles>
+    <profile>
+      <id>standard-encryption-algorithms</id>
+      <activation>
+        <property>
+          <name>nexus.security.fips.enabled</name>
+          <value>!true</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcprov-jdk15to18</artifactId>
+          <version>${bouncycastle.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpg-jdk15to18</artifactId>
+          <version>${bouncycastle.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpkix-jdk15to18</artifactId>
+          <version>${bouncycastle.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcutil-jdk15to18</artifactId>
+          <version>${bouncycastle.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpkix-fips</artifactId>
+          <version>${bcpkix.fips.version}</version>
+          <scope>test, compile</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpg-fips</artifactId>
+          <version>${bcpg.fips.version}</version>
+          <scope>test, compile</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcutil-fips</artifactId>
+          <version>${bcutil.fips.version}</version>
+          <scope>test, compile</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bc-fips</artifactId>
+          <version>${bc.fips.version}</version>
+          <scope>test, compile</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <profile>
+      <id>fips-compliant-encryption-algorithms</id>
+      <activation>
+        <property>
+          <name>nexus.security.fips.enabled</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpkix-fips</artifactId>
+          <version>${bcpkix.fips.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpg-fips</artifactId>
+          <version>${bcpg.fips.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcutil-fips</artifactId>
+          <version>${bcutil.fips.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bc-fips</artifactId>
+          <version>${bc.fips.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcprov-jdk15to18</artifactId>
+          <version>${bouncycastle.version}</version>
+          <scope>test, compile</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpg-jdk15to18</artifactId>
+          <version>${bouncycastle.version}</version>
+          <scope>test, compile</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpkix-jdk15to18</artifactId>
+          <version>${bouncycastle.version}</version>
+          <scope>test, compile</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcutil-jdk15to18</artifactId>
+          <version>${bouncycastle.version}</version>
+          <scope>test, compile</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 
 </project>

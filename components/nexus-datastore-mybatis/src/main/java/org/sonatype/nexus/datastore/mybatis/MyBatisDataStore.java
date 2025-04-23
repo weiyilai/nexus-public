@@ -231,7 +231,7 @@ public class MyBatisDataStore
     try {
       // use static configuration for testing
       this.databaseCipher = new MyBatisCipher();
-      MavenCipherImpl passwordCipher = new MavenCipherImpl(new CryptoHelperImpl());
+      MavenCipherImpl passwordCipher = new MavenCipherImpl(new CryptoHelperImpl(false, null));
       this.passwordHelper = new PasswordHelper(passwordCipher, LEGACY_PHRASE_SERVICE);
       this.uberClassLoader = Thread.currentThread().getContextClassLoader();
     }

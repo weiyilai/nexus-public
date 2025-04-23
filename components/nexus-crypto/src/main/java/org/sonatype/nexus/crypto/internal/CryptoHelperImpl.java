@@ -23,10 +23,10 @@ import java.security.Security;
 import java.security.Signature;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKeyFactory;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.net.ssl.KeyManagerFactory;
@@ -35,12 +35,16 @@ import javax.net.ssl.TrustManagerFactory;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.CryptoHelper;
 
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.eclipse.sisu.Nullable;
+import org.eclipse.sisu.space.ClassSpace;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.sonatype.nexus.common.app.FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED;
 
 /**
- * Default {@link CryptoHelper} using {@link BouncyCastleProvider}.
+ * Default {@link CryptoHelper} using provider from BouncyCastleProvider or BouncyCastleFipsProvider.
  *
  * @since 3.0
  */
@@ -52,22 +56,56 @@ public class CryptoHelperImpl
 {
   private final Provider provider;
 
-  public CryptoHelperImpl() {
-    this.provider = configureProvider();
+  @Inject
+  public CryptoHelperImpl(
+      @Named(NEXUS_SECURITY_FIPS_ENABLED) boolean nexusSecurityFipsEnabled,
+      @Nullable @Named("bouncycastle-fips") ClassSpace fipsClassSpace)
+  {
+    this.provider = configureProvider(nexusSecurityFipsEnabled,
+        fipsClassSpace);
   }
 
-  /**
-   * Configures the {@link BouncyCastleProvider} if its has not already been added.
-   *
-   * @return The {@link BouncyCastleProvider} instance.
-   */
-  public static Provider configureProvider() {
-    Provider provider = Security.getProvider(BouncyCastleProvider.PROVIDER_NAME);
-    if (provider == null) {
-      provider = new BouncyCastleProvider();
-      Security.addProvider(provider);
+  public Provider configureProvider(final boolean nexusSecurityFipsEnabled, ClassSpace fipsClassSpace) {
+    String providerName = nexusSecurityFipsEnabled
+        ? BouncyCastleFipsProvider.PROVIDER_NAME
+        : BouncyCastleProvider.PROVIDER_NAME;
+
+    Provider providerChosen = Security.getProvider(providerName);
+    if (providerChosen != null) {
+      return providerChosen;
     }
-    return provider;
+
+    if (nexusSecurityFipsEnabled) {
+      if (fipsClassSpace == null) {
+        throw new IllegalStateException("FIPS mode enabled but BouncyCastle FIPS ClassSpace not available");
+      }
+      loadFipsProvider(fipsClassSpace);
+    }
+    else {
+      loadNonFipsProvider();
+    }
+
+    return Security.getProvider(providerName);
+  }
+
+  private void loadNonFipsProvider() {
+    Security.addProvider(new BouncyCastleProvider());
+  }
+
+  private void loadFipsProvider(ClassSpace fipsClassSpace) {
+    Provider providerFips = createFipsProvider(fipsClassSpace);
+    Security.addProvider(providerFips);
+  }
+
+  private Provider createFipsProvider(ClassSpace fipsClassSpace) {
+    try {
+      Class<?> providerClass = fipsClassSpace.loadClass(
+          "org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider");
+      return (Provider) providerClass.getConstructor().newInstance();
+    }
+    catch (Exception e) {
+      throw new RuntimeException("Failed to create FIPS provider", e);
+    }
   }
 
   public Provider getProvider() {
@@ -263,4 +301,3 @@ public class CryptoHelperImpl
     return obj;
   }
 }
-
