@@ -114,6 +114,9 @@ Ext.define('NX.coreui.app.PluginStrings', {
     AnalyzeApplicationWindow_No_Assets_Error_Title: 'Component has no application assets',
     AnalyzeApplicationWindow_No_Assets_Error_Message: 'This component has no application assets or you do not have read permission for any of its application assets',
 
+    // see NEXUS-46990
+    FirewallRepositoryColumn_Header: 'Firewall Report',
+
     HealthCheckInfo_Most_Popular_Version_Label: 'Most popular version',
     HealthCheckInfo_Age_Label: 'Age',
     HealthCheckInfo_Popularity_Label: 'Popularity',
