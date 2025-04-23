@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.rapture.internal.state;
+package org.sonatype.nexus.self.hosted.state;
 
 import java.util.Map;
 
@@ -22,6 +22,7 @@ import javax.inject.Singleton;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.rapture.StateContributor;
+import org.sonatype.nexus.rapture.internal.state.StatusXO;
 
 import com.google.common.collect.ImmutableMap;
 

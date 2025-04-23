@@ -91,12 +91,14 @@ Ext.define('NX.view.AboutWindow', {
 
     me.callParent();
 
-    // populate initial details
-    me.down('#aboutInfo').showInfo({
-      'Version': NX.State.getVersion(),
-      'Edition': NX.State.getEdition(),
-      'Build Revision': NX.State.getBuildRevision(),
-      'Build Timestamp': NX.State.getBuildTimestamp()
-    });
+    // populate initial details only if not running in the cloud
+    if (!NX.State.getValue('isCloud')) {
+      me.down('#aboutInfo').showInfo({
+        'Version': NX.State.getVersion(),
+        'Edition': NX.State.getEdition(),
+        'Build Revision': NX.State.getBuildRevision(),
+        'Build Timestamp': NX.State.getBuildTimestamp()
+      });
+    };
   }
 });
