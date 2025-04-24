@@ -16,12 +16,15 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,11 +54,13 @@ import org.sonatype.nexus.repository.httpclient.RemoteBlockedIOException;
 import org.sonatype.nexus.repository.replication.PullReplicationSupport;
 import org.sonatype.nexus.repository.view.Content;
 import org.sonatype.nexus.repository.view.Context;
+import org.sonatype.nexus.repository.view.Request;
 import org.sonatype.nexus.repository.view.payloads.HttpEntityPayload;
 import org.sonatype.nexus.transaction.RetryDeniedException;
 import org.sonatype.nexus.validation.constraint.Url;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.Closeables;
@@ -71,12 +76,15 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.DateUtils;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Boolean.TRUE;
 import static java.util.Objects.isNull;
+import static org.sonatype.nexus.logging.task.TaskLoggingMarkers.OUTBOUND_REQUESTS_LOG_ONLY;
 
 /**
  * A support class which implements basic payload logic; subclasses provide format-specific operations.
@@ -165,6 +173,18 @@ public abstract class ProxyFacetSupport
   private Cooperation2Factory.Builder cooperationBuilder;
 
   private Cooperation2 proxyCooperation;
+
+  private static final String CTX_REQ_STOPWATCH = "request.stopwatch";
+
+  private static final String HTTP_RESPONSE = "request.http_response";
+
+  static final String HTTPCLIENT_OUTBOUND_REQ_LOGGER_NAME = "outboundRequests";
+
+  static final String HTTPCLIENT_OUTBOUND_LOGGER_NAME = "org.sonatype.nexus.httpclient.outbound";
+
+  private final Logger outboundReqLog = LoggerFactory.getLogger(HTTPCLIENT_OUTBOUND_REQ_LOGGER_NAME);
+
+  private final Logger outboundLog = LoggerFactory.getLogger(HTTPCLIENT_OUTBOUND_LOGGER_NAME);
 
   @Override
   public ProxyRepositoryConfiguration getConfiguration() {
@@ -357,9 +377,11 @@ public abstract class ProxyFacetSupport
       if (!nested) {
         downloading.set(TRUE);
       }
+      context.setAttribute(CTX_REQ_STOPWATCH, Stopwatch.createStarted());
       remote = fetch(context, content);
       if (remote != null) {
         content = store(context, remote);
+        printOutboundLogging(context);
         if (remote.equals(content)) {
           // remote wasn't stored; make reusable copy for cooperation
           content = new TempContent(remote);
@@ -385,6 +407,34 @@ public abstract class ProxyFacetSupport
       }
     }
     return content;
+  }
+
+  private void printOutboundLogging(final Context context) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MMM/yyyy:HH:mm:ss Z");
+    Request request = context.getRequest();
+    HttpResponse httpResponse = context.getAttribute(HTTP_RESPONSE, HttpResponse.class);
+
+    if (httpResponse == null) {
+      return;
+    }
+
+    int statusCode = httpResponse.getStatusLine().getStatusCode();
+    long responseLength = 0;
+    if (null != httpResponse.getEntity())
+      responseLength = httpResponse.getEntity().getContentLength();
+    Stopwatch stopwatch = context.getAttribute(CTX_REQ_STOPWATCH, Stopwatch.class);
+    String logMessage = String.format("[%s] \"%s %s %s\" %d %d %d [%s]",
+        dateFormat.format(new Date()),
+        request.getAction(),
+        getRemoteUrl().toString() + getUrl(context),
+        httpResponse.getProtocolVersion(),
+        statusCode,
+        responseLength,
+        stopwatch.elapsed(TimeUnit.MILLISECONDS),
+        Thread.currentThread().getName());
+    outboundReqLog.info(OUTBOUND_REQUESTS_LOG_ONLY, "{}", logMessage);
+    outboundLog.debug("{} < {} @ {}", getRemoteUrl().toString() + getUrl(context), httpResponse.getStatusLine(),
+        stopwatch);
   }
 
   /**
@@ -528,6 +578,7 @@ public abstract class ProxyFacetSupport
     log.debug("Fetching Request Headers: {}", Arrays.toString(request.getAllHeaders()));
 
     HttpResponse response = execute(context, client, request);
+    context.setAttribute(HTTP_RESPONSE, response);
     log.debug("Response: {}", response);
 
     StatusLine status = response.getStatusLine();

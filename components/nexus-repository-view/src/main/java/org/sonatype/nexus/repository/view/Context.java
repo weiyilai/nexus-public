@@ -58,6 +58,14 @@ public class Context
     this.request = checkNotNull(request);
   }
 
+  public void setAttribute(String key, Object value) {
+    attributes.set(key, value);
+  }
+
+  public <R> R getAttribute(String key, Class<R> type) {
+    return attributes.get(key, type);
+  }
+
   public AttributesMap getAttributes() {
     return attributes;
   }

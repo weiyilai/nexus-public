@@ -283,13 +283,20 @@ public class HttpClientManagerImpl
     builder.addInterceptorLast(
         (HttpResponse httpResponse, HttpContext httpContext) -> {
           URI requestURI = (URI) httpContext.getAttribute(CTX_REQ_URI);
-          if (requestURI != null) {
-            Stopwatch stopwatch = (Stopwatch) httpContext.getAttribute(CTX_REQ_STOPWATCH);
-            outboundLog.debug("{} < {} @ {}", requestURI, httpResponse.getStatusLine(), stopwatch);
+          if (nonTwoHundredStatusCode(httpResponse)) {
+            if (requestURI != null) {
+              Stopwatch stopwatch = (Stopwatch) httpContext.getAttribute(CTX_REQ_STOPWATCH);
+              outboundLog.debug("{} < {} @ {}", requestURI, httpResponse.getStatusLine(), stopwatch);
+            }
+            printOutboundLog(httpResponse, httpContext);
           }
-          printOutboundLog(httpResponse, httpContext);
         });
     return builder;
+  }
+
+  public boolean nonTwoHundredStatusCode(HttpResponse httpResponse) {
+    int statusCode = httpResponse.getStatusLine().getStatusCode();
+    return statusCode < 200 || statusCode >= 300;
   }
 
   private void printOutboundLog(final HttpResponse httpResponse, final HttpContext httpContext) {
@@ -303,7 +310,7 @@ public class HttpClientManagerImpl
       responseLength = httpResponse.getEntity().getContentLength();
     Stopwatch stopwatch = (Stopwatch) httpContext.getAttribute(CTX_REQ_STOPWATCH);
 
-    String logMessage = String.format("[%s] %s \"%s %s %s\" %d %d %d \"%s\" [%s]",
+    String logMessage = String.format("[%s] %s \"%s %s %s\" %d %d %d [%s]",
         dateFormat.format(new Date()),
         getAuthUser(httpContext),
         request.getRequestLine().getMethod(),
@@ -312,7 +319,6 @@ public class HttpClientManagerImpl
         statusCode,
         responseLength,
         stopwatch.elapsed(TimeUnit.MILLISECONDS),
-        userAgent,
         Thread.currentThread().getName());
     outboundReqLog.info(OUTBOUND_REQUESTS_LOG_ONLY, "{}", logMessage);
   }
