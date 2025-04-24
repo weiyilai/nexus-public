@@ -28,6 +28,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -63,6 +64,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.http.protocol.HttpDateGenerator.PATTERN_RFC1123;
@@ -101,10 +103,10 @@ public class AptHostedMetadataFacet
       final ObjectMapper mapper,
       final Clock clock,
       final Cooperation2Factory cooperationFactory,
-      @Named("${nexus.apt.metadata.cooperation.enabled:-true}") final boolean cooperationEnabled,
-      @Named("${nexus.apt.metadata.cooperation.majorTimeout:-0s}") final Duration majorTimeout,
-      @Named("${nexus.apt.metadata.cooperation.minorTimeout:-30s}") final Duration minorTimeout,
-      @Named("${nexus.apt.metadata.cooperation.threadsPerKey:-100}") final int threadsPerKey)
+      @Named("${nexus.apt.metadata.cooperation.enabled:-true}") @Value("${nexus.apt.metadata.cooperation.enabled:true}") final boolean cooperationEnabled,
+      @Named("${nexus.apt.metadata.cooperation.majorTimeout:-0s}") @Value("${nexus.apt.metadata.cooperation.majorTimeout:0s}") final Duration majorTimeout,
+      @Named("${nexus.apt.metadata.cooperation.minorTimeout:-30s}") @Value("${nexus.apt.metadata.cooperation.minorTimeout:30s}") final Duration minorTimeout,
+      @Named("${nexus.apt.metadata.cooperation.threadsPerKey:-100}") @Value("${nexus.apt.metadata.cooperation.threadsPerKey:100}") final int threadsPerKey)
   {
     this.mapper = checkNotNull(mapper);
     this.clock = checkNotNull(clock);
@@ -124,17 +126,15 @@ public class AptHostedMetadataFacet
   public void addPackageMetadata(final FluentAsset asset) {
     checkNotNull(asset);
     log.debug("Storing metadata for repository: {} asset: {}", getRepository().getName(), asset.path());
-    componentId(asset).ifPresent(componentId ->
-        data().addPackageMetadata(componentId, InternalIds.internalAssetId(asset), serialize(asset))
-    );
+    componentId(asset).ifPresent(
+        componentId -> data().addPackageMetadata(componentId, InternalIds.internalAssetId(asset), serialize(asset)));
   }
 
   public void removePackageMetadata(final FluentAsset asset) {
     checkNotNull(asset);
     log.debug("Removing metadata for repository: {} asset: {}", getRepository().getName(), asset.path());
-    componentId(asset).ifPresent(componentId ->
-        data().removePackageMetadata(componentId, InternalIds.internalAssetId(asset))
-    );
+    componentId(asset)
+        .ifPresent(componentId -> data().removePackageMetadata(componentId, InternalIds.internalAssetId(asset)));
   }
 
   public void removeInReleaseIndex() {
@@ -144,8 +144,7 @@ public class AptHostedMetadataFacet
   public Optional<Content> rebuildMetadata(final List<AssetChange> changeList) throws IOException {
     return Optional.ofNullable(
         cooperation.on(() -> doRebuildMetadata(changeList))
-            .cooperate(changeList.toString())
-    );
+            .cooperate(changeList.toString()));
   }
 
   /**
@@ -172,23 +171,20 @@ public class AptHostedMetadataFacet
       for (Map.Entry<String, CompressingTempFileStore.FileMetadata> entry : store.getFiles().entrySet()) {
         FluentAsset metadataAsset = aptFacet.put(
             packageIndexName(entry.getKey(), StringUtils.EMPTY),
-            new StreamPayload(entry.getValue().plainSupplier(), entry.getValue().plainSize(), AptMimeTypes.TEXT)
-        );
+            new StreamPayload(entry.getValue().plainSupplier(), entry.getValue().plainSize(), AptMimeTypes.TEXT));
         addSignatureItem(md5Builder, MD5, metadataAsset, packageRelativeIndexName(entry.getKey(), StringUtils.EMPTY));
         addSignatureItem(sha256Builder, SHA256, metadataAsset,
             packageRelativeIndexName(entry.getKey(), StringUtils.EMPTY));
 
         FluentAsset gzMetadataAsset = aptFacet.put(
             packageIndexName(entry.getKey(), GZ),
-            new StreamPayload(entry.getValue().gzSupplier(), entry.getValue().bzSize(), AptMimeTypes.GZIP)
-        );
+            new StreamPayload(entry.getValue().gzSupplier(), entry.getValue().bzSize(), AptMimeTypes.GZIP));
         addSignatureItem(md5Builder, MD5, gzMetadataAsset, packageRelativeIndexName(entry.getKey(), GZ));
         addSignatureItem(sha256Builder, SHA256, gzMetadataAsset, packageRelativeIndexName(entry.getKey(), GZ));
 
         FluentAsset bzMetadataAsset = aptFacet.put(
             packageIndexName(entry.getKey(), BZ2),
-            new StreamPayload(entry.getValue().bzSupplier(), entry.getValue().bzSize(), AptMimeTypes.BZIP)
-        );
+            new StreamPayload(entry.getValue().bzSupplier(), entry.getValue().bzSize(), AptMimeTypes.BZIP));
         addSignatureItem(md5Builder, MD5, bzMetadataAsset, packageRelativeIndexName(entry.getKey(), BZ2));
         addSignatureItem(sha256Builder, SHA256, bzMetadataAsset, packageRelativeIndexName(entry.getKey(), BZ2));
       }
@@ -197,22 +193,18 @@ public class AptHostedMetadataFacet
           aptFacet.getDistribution(),
           store.getFiles().keySet(),
           md5Builder.toString(),
-          sha256Builder.toString()
-      );
+          sha256Builder.toString());
     }
 
     FluentAsset releaseFileAsset = aptFacet.put(
         releaseIndexName(RELEASE),
-        new BytesPayload(releaseFile.getBytes(StandardCharsets.UTF_8), AptMimeTypes.TEXT)
-    );
+        new BytesPayload(releaseFile.getBytes(StandardCharsets.UTF_8), AptMimeTypes.TEXT));
     aptFacet.put(
         releaseIndexName(INRELEASE),
-        new BytesPayload(signingFacet.signInline(releaseFile), AptMimeTypes.TEXT)
-    );
+        new BytesPayload(signingFacet.signInline(releaseFile), AptMimeTypes.TEXT));
     aptFacet.put(
         releaseIndexName(RELEASE_GPG),
-        new BytesPayload(signingFacet.signExternal(releaseFile), AptMimeTypes.SIGNATURE)
-    );
+        new BytesPayload(signingFacet.signExternal(releaseFile), AptMimeTypes.SIGNATURE));
 
     if (log.isDebugEnabled()) {
       long finishTime = System.currentTimeMillis();
@@ -222,9 +214,7 @@ public class AptHostedMetadataFacet
     return releaseFileAsset.download();
   }
 
-  private CompressingTempFileStore buildPackageIndexes(final List<AssetChange> changes)
-      throws IOException
-  {
+  private CompressingTempFileStore buildPackageIndexes(final List<AssetChange> changes) throws IOException {
     CompressingTempFileStore result = new CompressingTempFileStore();
     Map<String, Writer> streams = new HashMap<>();
     boolean ok = false;
@@ -239,7 +229,8 @@ public class AptHostedMetadataFacet
           .map(this::deserialize)
           .collect(Collectors.toList());
 
-      packagesInfo.stream().map(x -> x.get(P_ARCHITECTURE).toString())
+      packagesInfo.stream()
+          .map(x -> x.get(P_ARCHITECTURE).toString())
           .collect(Collectors.toCollection(() -> architectures));
 
       Map<String, List<Map<String, Object>>> assetsPerArch = new HashMap<>();
@@ -284,7 +275,7 @@ public class AptHostedMetadataFacet
       final Map<String, Writer> streams,
       final List<Map<String, Object>> assets) throws IOException
   {
-    // NOTE:  We exclude added assets as well to account for the case where we are replacing an asset
+    // NOTE: We exclude added assets as well to account for the case where we are replacing an asset
     Set<String> excludeNames = changes.stream().map(c -> c.getAsset().path()).collect(Collectors.toSet());
 
     for (Map<String, Object> asset : assets) {
@@ -396,7 +387,9 @@ public class AptHostedMetadataFacet
 
   private Map<String, Object> deserialize(final String value) {
     try {
-      return mapper.readValue(value, new TypeReference<Map<String, Object>>() { });
+      return mapper.readValue(value, new TypeReference<Map<String, Object>>()
+      {
+      });
     }
     catch (JsonProcessingException e) {
       throw new IllegalStateException(e);

@@ -28,6 +28,7 @@ import org.sonatype.nexus.logging.task.TaskLogHome;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.filefilter.AgeFileFilter;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.commons.io.FileUtils.forceDelete;
@@ -35,7 +36,7 @@ import static org.apache.commons.io.FileUtils.iterateFiles;
 
 /**
  * Cleanup the task log files based on how old in days they are
- * 
+ *
  * @since 3.5
  */
 @Named
@@ -48,7 +49,9 @@ public class TaskLogCleanup
   private String taskLogHome;
 
   @Inject
-  public TaskLogCleanup(@Named("${nexus.tasks.log.cleanup.numberOfDays:-30}") final Integer numberOfDays) {
+  public TaskLogCleanup(
+      @Named("${nexus.tasks.log.cleanup.numberOfDays:-30}") @Value("${nexus.tasks.log.cleanup.numberOfDays:30}") final Integer numberOfDays)
+  {
     this.numberOfDays = checkNotNull(numberOfDays);
   }
 

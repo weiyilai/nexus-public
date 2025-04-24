@@ -43,15 +43,21 @@ public class FeatureFlags
 
   public static final String DATASTORE_DEVELOPER_NAMED = "${nexus.datastore.developer:-false}";
 
+  public static final String DATASTORE_DEVELOPER_NAMED_VALUE = "${nexus.datastore.developer:false}";
+
   /* Distributed event service. Available values: true, false. Default value: false */
   public static final String DATASTORE_CLUSTERED_ENABLED = "nexus.datastore.clustered.enabled";
 
   public static final String DATASTORE_CLUSTERED_ENABLED_NAMED = "${nexus.datastore.clustered.enabled:-false}";
 
+  public static final String DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE = "${nexus.datastore.clustered.enabled:false}";
+
   /* Zero downtime upgrades while clustered. Available values: true, false. Default value: false */
   public static final String CLUSTERED_ZERO_DOWNTIME_ENABLED = "nexus.zero.downtime.enabled";
 
   public static final String CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED = "${nexus.zero.downtime.enabled:-false}";
+
+  public static final String CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED_VALUE = "${nexus.zero.downtime.enabled:false}";
 
   public static final String CLUSTERED_ZERO_DOWNTIME_ENABLED_ENV = "NEXUS_ZERO_DOWNTIME_ENABLED";
 
@@ -62,6 +68,8 @@ public class FeatureFlags
   public static final String ELASTIC_SEARCH_ENABLED = "nexus.elasticsearch.enabled";
 
   public static final String ELASTIC_SEARCH_ENABLED_NAMED = "${nexus.elasticsearch.enabled:-false}";
+
+  public static final String ELASTIC_SEARCH_ENABLED_NAMED_VALUE = "${nexus.elasticsearch.enabled:false}";
 
   /* JWT externalization. Available values: true, false. Default value: false */
   public static final String JWT_ENABLED = "nexus.jwt.enabled";
@@ -90,6 +98,8 @@ public class FeatureFlags
 
   public static final String DATASTORE_TABLE_SEARCH_NAMED = "${nexus.datastore.table.search.enabled:-false}";
 
+  public static final String DATASTORE_TABLE_SEARCH_NAMED_VALUE = "${nexus.datastore.table.search.enabled:false}";
+
   /**
    * The Key-Value DB storage which can be used as a distributed cache. Use it intelligently,
    * for example it makes sense to cache IQ results in a DB rather than request IQ Server each time.
@@ -107,6 +117,9 @@ public class FeatureFlags
   public static final String CHANGE_REPO_BLOBSTORE_TASK_ENABLED_NAMED =
       "${nexus.change.repo.blobstore.task.enabled:-false}";
 
+  public static final String CHANGE_REPO_BLOBSTORE_TASK_ENABLED_NAMED_VALUE =
+      "${nexus.change.repo.blobstore.task.enabled:false}";
+
   /**
    * Feature flag to enable/disable RecalculateBlobStoreSizeTask
    */
@@ -115,11 +128,16 @@ public class FeatureFlags
   public static final String RECALCULATE_BLOBSTORE_SIZE_TASK_ENABLED_NAMED =
       "${" + RECALCULATE_BLOBSTORE_SIZE_TASK_ENABLED + ":-true}";
 
+  public static final String RECALCULATE_BLOBSTORE_SIZE_TASK_ENABLED_NAMED_VALUE =
+      "${" + RECALCULATE_BLOBSTORE_SIZE_TASK_ENABLED + ":true}";
+
   public static final String FIREWALL_ONBOARDING_ENABLED = "nexus.firewall.onboarding.enabled";
 
   public static final String CLEANUP_PREVIEW_ENABLED = "nexus.cleanup.preview.enabled";
 
   public static final String CLEANUP_PREVIEW_ENABLED_NAMED = "${nexus.cleanup.preview.enabled:-true}";
+
+  public static final String CLEANUP_PREVIEW_ENABLED_NAMED_VALUE = "${nexus.cleanup.preview.enabled:true}";
 
   public static final String CLEANUP_MAVEN_RETAIN = "nexus.cleanup.mavenRetain";
 
@@ -137,13 +155,20 @@ public class FeatureFlags
 
   public static final String FIREWALL_QUARANTINE_FIX_ENABLED_NAMED = "${nexus.firewall.quarantineFix.enabled:-false}";
 
+  public static final String FIREWALL_QUARANTINE_FIX_ENABLED_NAMED_VALUE =
+      "${nexus.firewall.quarantineFix.enabled:false}";
+
   public static final String REACT_PRIVILEGES = "nexus.react.privileges";
 
   public static final String REACT_PRIVILEGES_NAMED = "${nexus.react.privileges:-true}";
 
+  public static final String REACT_PRIVILEGES_NAMED_VALUE = "${nexus.react.privileges:true}";
+
   public static final String REACT_PRIVILEGES_MODAL_ENABLED = "nexus.react.privileges.modal.enabled";
 
   public static final String REACT_PRIVILEGES_MODAL_NAMED = "${nexus.react.privileges.modal.enabled:-true}";
+
+  public static final String REACT_PRIVILEGES_MODAL_NAMED_VALUE = "${nexus.react.privileges.modal.enabled:true}";
 
   /**
    * Feature flag to determine if we should include the repository sizes feature
@@ -152,16 +177,27 @@ public class FeatureFlags
 
   public static final String REPOSITORY_SIZE_ENABLED_NAMED = "${nexus.repository.size:-true}";
 
+  public static final String REPOSITORY_SIZE_ENABLED_NAMED_VALUE = "${nexus.repository.size:true}";
+
   public static final String CONTENT_USAGE_ENABLED_NAMED = "${nexus.contentUsageMetrics.enabled:-true}";
+
+  public static final String CONTENT_USAGE_ENABLED_NAMED_VALUE = "${nexus.contentUsageMetrics.enabled:true}";
 
   public static final String REACT_ROLES_MODAL_ENABLED = "nexus.react.roles.modal.enabled";
 
   public static final String REACT_ROLES_MODAL_NAMED = "${nexus.react.roles.modal.enabled:-true}";
 
+  public static final String REACT_ROLES_MODAL_NAMED_VALUE = "${nexus.react.roles.modal.enabled:true}";
+
   public static final String BLOBSTORE_OWNERSHIP_CHECK_DISABLED_NAMED =
       "${nexus.blobstore.s3.ownership.check.disabled:-false}";
 
+  public static final String BLOBSTORE_OWNERSHIP_CHECK_DISABLED_NAMED_VALUE =
+      "${nexus.blobstore.s3.ownership.check.disabled:false}";
+
   public static final String STARTUP_TASKS_DELAY_SECONDS = "${nexus.startup.task.delay.seconds:-0}";
+
+  public static final String STARTUP_TASKS_DELAY_SECONDS_VALUE = "${nexus.startup.task.delay.seconds:0}";
 
   /**
    * Feature flag to expose H2 export database to script task
@@ -176,6 +212,8 @@ public class FeatureFlags
 
   public static final String ORIENT_WARNING_NAMED = "${nexus.orient.warning:-true}";
 
+  public static final String ORIENT_WARNING_NAMED_VALUE = "${nexus.orient.warning:true}";
+
   /**
    * When true (default), the Secure attribute will be set on the NXSESSIONID Cookie when delivered over https.
    * In deployments with HTTP-only listeners, this setting will typically have no effect.
@@ -185,12 +223,17 @@ public class FeatureFlags
    */
   public static final String NXSESSIONID_SECURE_COOKIE_NAMED = "${nexus.session.secureCookie:-true}";
 
+  public static final String NXSESSIONID_SECURE_COOKIE_NAMED_VALUE = "${nexus.session.secureCookie:true}";
+
   public static final String ASSET_AUDITOR_ATTRIBUTE_CHANGES_ENABLED_NAMED =
       "${nexus.audit.attribute.changes.enabled:-true}";
 
   public static final String ZERO_DOWNTIME_MARKETING_MODAL_ENABLED = "zero.downtime.marketing.modal";
 
   public static final String ZERO_DOWNTIME_MARKETING_MODAL_ENABLED_NAMED = "${zero.downtime.marketing.modal:-false}";
+
+  public static final String ZERO_DOWNTIME_MARKETING_MODAL_ENABLED_NAMED_VALUE =
+      "${zero.downtime.marketing.modal:false}";
 
   /* For testing purposes only */
   public static final String ZERO_DOWNTIME_BASELINE_FAIL = "nexus.zdu.baseline.fail";
@@ -202,9 +245,13 @@ public class FeatureFlags
 
   public static final String MALWARE_RISK_ENABLED_NAMED = "${nexus.malware.risk.enabled:-true}";
 
+  public static final String MALWARE_RISK_ENABLED_NAMED_VALUE = "${nexus.malware.risk.enabled:true}";
+
   public static final String MALWARE_RISK_ON_DISK_ENABLED = "nexus.malware.risk.on.disk.enabled";
 
   public static final String MALWARE_RISK_ON_DISK_ENABLED_NAMED = "${nexus.malware.risk.on.disk.enabled:-true}";
+
+  public static final String MALWARE_RISK_ON_DISK_ENABLED_NAMED_VALUE = "${nexus.malware.risk.on.disk.enabled:true}";
 
   public static final String MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED =
       "nexus.malware.risk.on.disk.nonadmin.override.enabled";
@@ -212,11 +259,20 @@ public class FeatureFlags
   public static final String MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED_NAMED =
       "${nexus.malware.risk.on.disk.nonadmin.override.enabled:-false}";
 
+  public static final String MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED_NAMED_VALUE =
+      "${nexus.malware.risk.on.disk.nonadmin.override.enabled:false}";
+
   public static final String MALWARE_REMEDIATOR_TASK_CHECK_REPOSITORY_IN_KNOWN_REGISTRIES_NAMED =
       "${nexus.malware.remediator.task.check.repository.in.known.registries:-true}";
 
+  public static final String MALWARE_REMEDIATOR_TASK_CHECK_REPOSITORY_IN_KNOWN_REGISTRIES_NAMED_VALUE =
+      "${nexus.malware.remediator.task.check.repository.in.known.registries:true}";
+
   public static final String MALWARE_REMEDIATOR_TASK_IGNORE_QUARANTINE_STATE_NAMED =
       "${nexus.malware.remediator.task.ignore.quarantine.state:-true}";
+
+  public static final String MALWARE_REMEDIATOR_TASK_IGNORE_QUARANTINE_STATE_NAMED_VALUE =
+      "${nexus.malware.remediator.task.ignore.quarantine.state:true}";
 
   /* properties/env vars used by secrets service */
   public static final String SECRETS_FILE = "nexus.secrets.file";
@@ -225,7 +281,11 @@ public class FeatureFlags
 
   public static final String RECONCILE_CLEANUP_DAYS_AGO = "${nexus.reconcile.cleanup.daysAgo:-7}";
 
+  public static final String RECONCILE_CLEANUP_DAYS_AGO_VALUE = "${nexus.reconcile.cleanup.daysAgo:7}";
+
   public static final String RECONCILE_EXECUTE_CREATED_HOURS_AGO = "${nexus.reconcile.execute.plans.created:-2h}";
+
+  public static final String RECONCILE_EXECUTE_CREATED_HOURS_AGO_VALUE = "${nexus.reconcile.execute.plans.created:2h}";
 
   public static final String SECRETS_API_ENABLED = "nexus.secrets.api.enabled";
 

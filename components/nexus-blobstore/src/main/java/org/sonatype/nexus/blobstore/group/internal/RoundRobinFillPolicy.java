@@ -29,6 +29,7 @@ import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaResult;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaService;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Value;
 
 import static java.util.Collections.rotate;
 import static org.sonatype.nexus.common.app.FeatureFlags.BLOBSTORE_SKIP_ON_SOFTQUOTA_VIOLATION;
@@ -55,6 +56,7 @@ public class RoundRobinFillPolicy
 
   @Inject
   @Named("${" + BLOBSTORE_SKIP_ON_SOFTQUOTA_VIOLATION + ":-false}")
+  @Value("${" + BLOBSTORE_SKIP_ON_SOFTQUOTA_VIOLATION + ":false}")
   boolean skipOnSoftQuotaViolation;
 
   @Override

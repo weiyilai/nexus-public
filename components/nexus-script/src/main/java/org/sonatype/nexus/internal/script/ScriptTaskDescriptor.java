@@ -25,6 +25,8 @@ import org.sonatype.nexus.formfields.StringTextFormField;
 import org.sonatype.nexus.formfields.TextAreaFormField;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * {@link ScriptTask} descriptor.
  *
@@ -72,7 +74,7 @@ public class ScriptTaskDescriptor
   @Inject
   public ScriptTaskDescriptor(
       final NodeAccess nodeAccess,
-      @Named("${nexus.scripts.allowCreation:-false}") boolean allowCreation)
+      @Named("${nexus.scripts.allowCreation:-false}") @Value("${nexus.scripts.allowCreation:false}") final boolean allowCreation)
   {
     super(TYPE_ID,
         ScriptTask.class,

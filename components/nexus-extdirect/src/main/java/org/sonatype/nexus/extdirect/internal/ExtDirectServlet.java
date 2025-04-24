@@ -66,6 +66,7 @@ import org.eclipse.sisu.BeanEntry;
 import org.eclipse.sisu.inject.BeanLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.net.HttpHeaders.X_FRAME_OPTIONS;
@@ -98,11 +99,12 @@ public class ExtDirectServlet
   private final XFrameOptions xFrameOptions;
 
   @Inject
-  public ExtDirectServlet(final ApplicationDirectories directories,
-                          final BeanLocator beanLocator,
-                          final ExtDirectDispatcher extDirectDispatcher,
-                          final XFrameOptions xFrameOptions,
-                          @Named("${nexus.security.anticsrftoken.enabled:-true}") final boolean antiCsrfTokenEnabled)
+  public ExtDirectServlet(
+      final ApplicationDirectories directories,
+      final BeanLocator beanLocator,
+      final ExtDirectDispatcher extDirectDispatcher,
+      final XFrameOptions xFrameOptions,
+      @Named("${nexus.security.anticsrftoken.enabled:-true}") @Value("${nexus.security.anticsrftoken.enabled:true}") final boolean antiCsrfTokenEnabled)
   {
     super(antiCsrfTokenEnabled, AntiCsrfHelper.ANTI_CSRF_TOKEN_NAME, -1);
     this.directories = checkNotNull(directories);
@@ -135,7 +137,8 @@ public class ExtDirectServlet
 
     try {
       super.doPost(wrappedRequest, response);
-    } catch (FileUploadException fileUploadException) {
+    }
+    catch (FileUploadException fileUploadException) {
       try {
         FileItemIterator fileItems = new ServletFileUpload(new DiskFileItemFactory()).getItemIterator(request);
         String tid = getTransactionId(fileItems);
@@ -143,9 +146,11 @@ public class ExtDirectServlet
         // Send the error from the exception in a json object so we may capture it on the frontend.
         response.setContentType("text/html");
         response.setHeader(X_FRAME_OPTIONS, xFrameOptions.getValueForPath(request.getPathInfo()));
-        response.getWriter().append("<html><body><textarea>{\"tid\":" + tid +
-            ",\"action\":\"coreui_Upload\",\"method\":\"doUpload\",\"result\":{\"success\": false,\"message\":\"" +
-            escapeHtml(fileUploadException.getMessage()) + "\"},\"type\":\"rpc\"}</textarea></body></html>").flush();
+        response.getWriter()
+            .append("<html><body><textarea>{\"tid\":" + tid +
+                ",\"action\":\"coreui_Upload\",\"method\":\"doUpload\",\"result\":{\"success\": false,\"message\":\"" +
+                escapeHtml(fileUploadException.getMessage()) + "\"},\"type\":\"rpc\"}</textarea></body></html>")
+            .flush();
       }
       catch (Exception e) {
         log.warn("Unable to read the ext direct transaction id for upload", e);
@@ -156,13 +161,14 @@ public class ExtDirectServlet
     // Silence warnings about "clickjacking" (even though it doesn't actually apply to API calls)
     // note that we don't apply this logic for FORM_UPLOAD_POST as extjs means of uploading files uses a hidden iframe
     // which a value of DENY will not be allowed to load
-    if (StringUtils.isBlank(response.getHeader(X_FRAME_OPTIONS)) && !FORM_UPLOAD_POST.equals(getFromRequestContentType(request))) {
+    if (StringUtils.isBlank(response.getHeader(X_FRAME_OPTIONS))
+        && !FORM_UPLOAD_POST.equals(getFromRequestContentType(request))) {
       response.setHeader(X_FRAME_OPTIONS, DENY);
     }
   }
 
-  private String getTransactionId(final FileItemIterator fileItems)
-      throws org.apache.commons.fileupload.FileUploadException, IOException
+  private String getTransactionId(
+      final FileItemIterator fileItems) throws org.apache.commons.fileupload.FileUploadException, IOException
   {
     String tid = null;
     while (tid == null && fileItems.hasNext()) {
@@ -206,8 +212,7 @@ public class ExtDirectServlet
             log.debug("Registering Ext.Direct component '{}'", implementationClass);
             return implementationClass;
           }
-        })
-    );
+        }));
     File apiFile = new File(directories.getTemporaryDirectory(), "nexus-extdirect/api.js");
     return Lists.newArrayList(
         new ApiConfiguration(
@@ -216,9 +221,7 @@ public class ExtDirectServlet
             apiFile.getAbsolutePath(),
             "NX.direct.api",
             "NX.direct",
-            apiClasses
-        )
-    );
+            apiClasses));
   }
 
   @Override
@@ -232,16 +235,17 @@ public class ExtDirectServlet
     return new RequestRouter(registry, globalConfiguration, dispatcher)
     {
       @Override
-      public void processPollRequest(final Reader reader, final Writer writer, final String pathInfo)
-          throws IOException
+      public void processPollRequest(
+          final Reader reader,
+          final Writer writer,
+          final String pathInfo) throws IOException
       {
         new PollRequestProcessor(registry, dispatcher, globalConfiguration)
         {
           @Override
           // HACK: we determine parameters from request not by reading request content as request content could had
           // been already read exactly for getting the params, case when request content is already empty
-          protected Object[] getParameters()
-          {
+          protected Object[] getParameters() {
             if (reader instanceof RequestBoundReader) {
               ServletRequest request = ((RequestBoundReader) reader).getRequest();
               Map<String, String[]> parameterMap = request.getParameterMap();

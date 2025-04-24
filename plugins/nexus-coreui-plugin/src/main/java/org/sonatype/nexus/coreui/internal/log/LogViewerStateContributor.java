@@ -22,6 +22,8 @@ import javax.inject.Singleton;
 
 import org.sonatype.nexus.rapture.StateContributor;
 
+import org.springframework.beans.factory.annotation.Value;
+
 @Named
 @Singleton
 public class LogViewerStateContributor
@@ -29,6 +31,7 @@ public class LogViewerStateContributor
 {
   @Inject
   @Named("${nexus.datastore.clustered.enabled:-false}")
+  @Value("${nexus.datastore.clustered.enabled:false}")
   private boolean enabled;
 
   @Override

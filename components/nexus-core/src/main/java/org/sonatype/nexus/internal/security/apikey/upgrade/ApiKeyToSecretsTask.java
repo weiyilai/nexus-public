@@ -27,6 +27,8 @@ import org.sonatype.nexus.kv.GlobalKeyValueStore;
 import org.sonatype.nexus.scheduling.CancelableHelper;
 import org.sonatype.nexus.scheduling.TaskSupport;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.internal.security.apikey.ApiKeyServiceImpl.MIGRATION_COMPLETE;
 
@@ -55,7 +57,7 @@ public class ApiKeyToSecretsTask
   public ApiKeyToSecretsTask(
       @Named("v1") final ApiKeyStoreImpl apiKeyStoreV1,
       @Named("v2") final ApiKeyStoreV2Impl apiKeyStoreV2,
-      @Named("${nexus.distributed.events.fetch.interval.seconds:-5}") final int interval,
+      @Named("${nexus.distributed.events.fetch.interval.seconds:-5}") @Value("${nexus.distributed.events.fetch.interval.seconds:5}") final int interval,
       final GlobalKeyValueStore kv)
   {
     this.apiKeyStoreV1 = checkNotNull(apiKeyStoreV1);

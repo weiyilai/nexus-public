@@ -44,6 +44,7 @@ import com.amazonaws.services.s3.NexusS3ClientBuilder;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.google.common.base.Predicates;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -80,10 +81,10 @@ public class AmazonS3Factory
 
   @Inject
   public AmazonS3Factory(
-      @Named("${nexus.s3.connection.pool:--1}") final int connectionPoolSize,
-      @Nullable @Named("${nexus.s3.connection.ttl:-null}") final Time connectionTtl,
-      @Named("${nexus.s3.cloudwatchmetrics.enabled:-false}") final boolean cloudWatchMetricsEnabled,
-      @Named("${nexus.s3.cloudwatchmetrics.namespace:-nexus-blobstore-s3}") final String cloudWatchMetricsNamespace,
+      @Named("${nexus.s3.connection.pool:--1}") @Value("${nexus.s3.connection.pool:-1}") final int connectionPoolSize,
+      @Nullable @Named("${nexus.s3.connection.ttl:-null}") @Value("${nexus.s3.connection.ttl:null}") final Time connectionTtl,
+      @Named("${nexus.s3.cloudwatchmetrics.enabled:-false}") @Value("${nexus.s3.cloudwatchmetrics.enabled:false}") final boolean cloudWatchMetricsEnabled,
+      @Named("${nexus.s3.cloudwatchmetrics.namespace:-nexus-blobstore-s3}") @Value("${nexus.s3.cloudwatchmetrics.namespace:nexus-blobstore-s3}") final String cloudWatchMetricsNamespace,
       final SecretsFactory secretsFactory)
   {
     this.defaultConnectionPoolSize = connectionPoolSize;

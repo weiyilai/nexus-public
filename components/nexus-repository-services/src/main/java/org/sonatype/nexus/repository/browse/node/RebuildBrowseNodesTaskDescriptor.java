@@ -23,6 +23,8 @@ import org.sonatype.nexus.formfields.ItemselectFormField;
 import org.sonatype.nexus.repository.types.GroupType;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * Task descriptor for {@link RebuildBrowseNodesTask}.
  *
@@ -44,14 +46,17 @@ public class RebuildBrowseNodesTaskDescriptor
   public RebuildBrowseNodesTaskDescriptor(
       final NodeAccess nodeAccess,
       final GroupType groupType,
-      @Named(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED) final boolean datastoreClustered)
+      @Named(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED) @Value(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean datastoreClustered)
   {
     super(TYPE_ID, RebuildBrowseNodesTask.class, TASK_NAME, VISIBLE, EXPOSED,
         new ItemselectFormField(REPOSITORY_NAME_FIELD_ID, "Repository",
             "Select the repository(ies) to rebuild browse tree",
             true).withStoreApi("coreui_Repository.readReferencesAddingEntryForAll")
-            .withButtons("up", "add", "remove", "down").withFromTitle("Available").withToTitle("Selected")
-            .withStoreFilter("type", "!" + groupType.getValue()).withValueAsString(true),
+                .withButtons("up", "add", "remove", "down")
+                .withFromTitle("Available")
+                .withToTitle("Selected")
+                .withStoreFilter("type", "!" + groupType.getValue())
+                .withValueAsString(true),
         (nodeAccess.isClustered() && !datastoreClustered) ? newLimitNodeFormField() : null);
   }
 }

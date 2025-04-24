@@ -38,6 +38,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -91,11 +92,11 @@ class EventExecutor
 
   @Inject
   public EventExecutor(
-      @Named("${nexus.event.affinityEnabled:-true}") final boolean affinityEnabled,
-      @Named("${nexus.event.affinityCacheSize:-1000}") final int affinityCacheSize,
-      @Named("${nexus.event.affinityTimeout:-1s}") final Time affinityTimeout,
-      @Named("${nexus.event.singleCoordinator:-false}") final boolean singleCoordinator,
-      @Named("${nexus.event.fairThreading:-false}") final boolean fairThreading)
+      @Named("${nexus.event.affinityEnabled:-true}") @Value("${nexus.event.affinityEnabled:true}") final boolean affinityEnabled,
+      @Named("${nexus.event.affinityCacheSize:-1000}") @Value("${nexus.event.affinityCacheSize:1000}") final int affinityCacheSize,
+      @Named("${nexus.event.affinityTimeout:-1s}") @Value("${nexus.event.affinityTimeout:1s}") final Time affinityTimeout,
+      @Named("${nexus.event.singleCoordinator:-false}") @Value("${nexus.event.singleCoordinator:false}") final boolean singleCoordinator,
+      @Named("${nexus.event.fairThreading:-false}") @Value("${nexus.event.fairThreading:false}") final boolean fairThreading)
   {
     this.affinityEnabled = affinityEnabled;
     this.affinityCacheSize = affinityCacheSize;

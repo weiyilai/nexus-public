@@ -46,6 +46,7 @@ import com.google.common.hash.HashCode;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.archetype.catalog.ArchetypeCatalog;
+import org.springframework.beans.factory.annotation.Value;
 
 import static java.util.stream.Collectors.toList;
 import static org.sonatype.nexus.repository.maven.internal.MavenModels.writeArchetypeCatalog;
@@ -78,7 +79,9 @@ public class MavenArchetypeCatalogFacetImpl
   private final int componentPageSize;
 
   @Inject
-  public MavenArchetypeCatalogFacetImpl(@Named("${maven.archetypes.page.size:-10}") final int componentPageSize) {
+  public MavenArchetypeCatalogFacetImpl(
+      @Named("${maven.archetypes.page.size:-10}") @Value("${maven.archetypes.page.size:10}") final int componentPageSize)
+  {
     this.componentPageSize = componentPageSize;
   }
 
@@ -141,14 +144,14 @@ public class MavenArchetypeCatalogFacetImpl
     return hostedCatalog;
   }
 
-  private HashedPayload createArchetypeCatalogFile(final ArchetypeCatalog hostedCatalog, final Path path)
-      throws IOException
+  private HashedPayload createArchetypeCatalogFile(
+      final ArchetypeCatalog hostedCatalog,
+      final Path path) throws IOException
   {
     return createStreamPayload(
         path,
         APPLICATION_XML,
-        (OutputStream outputStream) -> writeArchetypeCatalog(outputStream, hostedCatalog)
-    );
+        (final OutputStream outputStream) -> writeArchetypeCatalog(outputStream, hostedCatalog));
   }
 
   private Iterable<Archetype> getArchetypes() {

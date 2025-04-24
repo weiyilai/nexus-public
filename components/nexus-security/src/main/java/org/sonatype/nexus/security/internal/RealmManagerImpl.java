@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -48,6 +49,7 @@ import org.apache.shiro.realm.AuthenticatingRealm;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.realm.Realm;
 import org.eclipse.sisu.inject.BeanLocator;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
@@ -91,7 +93,7 @@ public class RealmManagerImpl
       @Named("initial") final Provider<RealmConfiguration> defaults,
       final RealmSecurityManager realmSecurityManager,
       final Map<String, Realm> availableRealms,
-      @Named("${nexus.security.enableAuthorizationRealmManagement:-false}") final boolean enableAuthorizationRealmManagement)
+      @Named("${nexus.security.enableAuthorizationRealmManagement:-false}") @Value("${nexus.security.enableAuthorizationRealmManagement:false}") final boolean enableAuthorizationRealmManagement)
   {
     this.beanLocator = checkNotNull(beanLocator);
     this.eventManager = checkNotNull(eventManager);

@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import javax.cache.Cache;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
@@ -72,6 +73,7 @@ import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.subject.Subject;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
@@ -120,7 +122,7 @@ public class SelectorManagerImpl
       final SecuritySystem securitySystem,
       final SelectorFactory selectorFactory,
       final CacheHelper cacheHelper,
-      @Named("${nexus.shiro.cache.defaultTimeToLive:-2m}") final Time userCacheTimeout)
+      @Named("${nexus.shiro.cache.defaultTimeToLive:-2m}") @Value("${nexus.shiro.cache.defaultTimeToLive:2m}") final Time userCacheTimeout)
   {
     this.store = checkNotNull(store);
     this.securitySystem = checkNotNull(securitySystem);

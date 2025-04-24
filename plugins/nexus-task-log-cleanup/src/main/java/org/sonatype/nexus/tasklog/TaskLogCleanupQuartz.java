@@ -24,12 +24,14 @@ import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.scheduling.schedule.Schedule;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
 
 /**
  * Adds the {@link TaskLogCleanupTask} to the quartz cron definition in the database
- * 
+ *
  * @since 3.5
  */
 @Named
@@ -45,7 +47,7 @@ public class TaskLogCleanupQuartz
   @Inject
   public TaskLogCleanupQuartz(
       final TaskScheduler taskScheduler,
-      @Named("${nexus.tasks.log.cleanup.cron:-0 0 0 * * ?}") final String taskLogCleanupCron)
+      @Named("${nexus.tasks.log.cleanup.cron:-0 0 0 * * ?}") @Value("${nexus.tasks.log.cleanup.cron:0 0 0 * * ?}") final String taskLogCleanupCron)
   {
     this.taskScheduler = checkNotNull(taskScheduler);
     this.taskLogCleanupCron = checkNotNull(taskLogCleanupCron);

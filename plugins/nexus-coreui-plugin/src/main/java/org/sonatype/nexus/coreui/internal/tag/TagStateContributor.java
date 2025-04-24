@@ -22,6 +22,7 @@ import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 @Named
 @Singleton
@@ -32,7 +33,9 @@ public class TagStateContributor
   private final Map<String, Object> state;
 
   @Inject
-  public TagStateContributor(@Named("${nexus.react.tags:-true}") final boolean featureFlag) {
+  public TagStateContributor(
+      @Named("${nexus.react.tags:-true}") @Value("${nexus.react.tags:true}") final boolean featureFlag)
+  {
     state = ImmutableMap.of("nexus.react.tags", featureFlag);
   }
 

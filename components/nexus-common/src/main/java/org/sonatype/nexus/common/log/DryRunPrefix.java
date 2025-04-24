@@ -16,6 +16,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -30,7 +32,9 @@ public class DryRunPrefix
   private final String prefix;
 
   @Inject
-  public DryRunPrefix(@Named("${nexus.log.dryrun.prefix:-::DRY RUN:: }") final String prefix) {
+  public DryRunPrefix(
+      @Named("${nexus.log.dryrun.prefix:-::DRY RUN:: }") @Value("${nexus.log.dryrun.prefix:::DRY RUN:: }") final String prefix)
+  {
     this.prefix = checkNotNull(prefix);
   }
 

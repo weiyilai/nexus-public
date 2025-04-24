@@ -43,6 +43,7 @@ import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.permission.RolePermissionResolver;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -62,23 +63,25 @@ public class RolePermissionResolverImpl
   /**
    * Privilege-id to permission cache.
    */
-  private final Cache<String,Permission> permissionsCache = CacheBuilder.newBuilder().softValues().build();
+  private final Cache<String, Permission> permissionsCache = CacheBuilder.newBuilder().softValues().build();
 
   /**
    * Role-id to role permissions cache.
    */
-  private final Cache<String, Collection<Permission>> rolePermissionsCache = CacheBuilder.newBuilder().softValues().build();
+  private final Cache<String, Collection<Permission>> rolePermissionsCache =
+      CacheBuilder.newBuilder().softValues().build();
 
   /**
    * role not found cache.
    */
-  private final Cache<String,String> roleNotFoundCache;
+  private final Cache<String, String> roleNotFoundCache;
 
   @Inject
-  public RolePermissionResolverImpl(final SecurityConfigurationManager configuration,
-                                    final List<PrivilegeDescriptor> privilegeDescriptors,
-                                    final EventManager eventManager,
-                                    @Named("${security.roleNotFoundCacheSize:-100000}") final int roleNotFoundCacheSize)
+  public RolePermissionResolverImpl(
+      final SecurityConfigurationManager configuration,
+      final List<PrivilegeDescriptor> privilegeDescriptors,
+      final EventManager eventManager,
+      @Named("${security.roleNotFoundCacheSize:-100000}") @Value("${security.roleNotFoundCacheSize:100000}") final int roleNotFoundCacheSize)
   {
     this.configuration = checkNotNull(configuration);
     this.privilegeDescriptors = checkNotNull(privilegeDescriptors);

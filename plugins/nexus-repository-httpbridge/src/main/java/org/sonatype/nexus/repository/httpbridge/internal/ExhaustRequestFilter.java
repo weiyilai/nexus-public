@@ -33,6 +33,7 @@ import org.sonatype.nexus.repository.http.HttpMethods;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.net.HttpHeaders;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * {@link Filter} which exhausts request bodies for specific user-agents when errors occur.
@@ -55,11 +56,11 @@ public class ExhaustRequestFilter
 
   @Inject
   public ExhaustRequestFilter(
-      @Named("${nexus.view.exhaustForAgents:-Apache-Maven.*|Apache Ivy.*}") final String exhaustForAgents)
+      @Named("${nexus.view.exhaustForAgents:-Apache-Maven.*|Apache Ivy.*}") @Value("${nexus.view.exhaustForAgents:Apache-Maven.*|Apache Ivy.*}") final String exhaustForAgents)
   {
     /*
-      NOTE: An exhaustForAgents pattern delimited by "\\s,\\s" is supported for backwards-compatibility reasons but
-            using a pattern that is instead pipe-delimited is recommended.
+     * NOTE: An exhaustForAgents pattern delimited by "\\s,\\s" is supported for backwards-compatibility reasons but
+     * using a pattern that is instead pipe-delimited is recommended.
      */
     this.exhaustForAgentsPattern = Pattern.compile(exhaustForAgents.replace("\\s,\\s", "|"));
     if (log.isDebugEnabled()) {
@@ -73,8 +74,10 @@ public class ExhaustRequestFilter
   }
 
   @Override
-  public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
-      throws IOException, ServletException
+  public void doFilter(
+      final ServletRequest request,
+      final ServletResponse response,
+      final FilterChain chain) throws IOException, ServletException
   {
     try {
       chain.doFilter(request, response);

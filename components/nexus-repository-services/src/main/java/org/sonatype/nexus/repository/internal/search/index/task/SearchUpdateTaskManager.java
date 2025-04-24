@@ -29,6 +29,8 @@ import org.sonatype.nexus.repository.search.index.SearchUpdateService;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskScheduler;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.requireNonNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
@@ -62,7 +64,7 @@ public class SearchUpdateTaskManager
       final RepositoryManager repositoryManager,
       final SearchUpdateService searchUpdateService,
       final PeriodicJobService periodicJobService,
-      @Named("${nexus.search.updateIndexesOnStartup.enabled:-true}") final boolean enabled)
+      @Named("${nexus.search.updateIndexesOnStartup.enabled:-true}") @Value("${nexus.search.updateIndexesOnStartup.enabled:true}") final boolean enabled)
   {
     this.taskScheduler = requireNonNull(taskScheduler);
     this.repositoryManager = requireNonNull(repositoryManager);

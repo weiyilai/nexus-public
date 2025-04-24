@@ -13,6 +13,7 @@
 package org.sonatype.nexus.coreui.internal;
 
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -20,9 +21,11 @@ import javax.inject.Singleton;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_ROLES_MODAL_ENABLED;
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_ROLES_MODAL_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.REACT_ROLES_MODAL_NAMED_VALUE;
 
 @Singleton
 @Named
@@ -33,7 +36,7 @@ public class RolesModalStateContributor
 
   @Inject
   public RolesModalStateContributor(
-  @Named(REACT_ROLES_MODAL_NAMED) boolean isRolesModalEnabled)
+      @Named(REACT_ROLES_MODAL_NAMED) @Value(REACT_ROLES_MODAL_NAMED_VALUE) final boolean isRolesModalEnabled)
   {
     this.isRolesModalEnabled = isRolesModalEnabled;
   }

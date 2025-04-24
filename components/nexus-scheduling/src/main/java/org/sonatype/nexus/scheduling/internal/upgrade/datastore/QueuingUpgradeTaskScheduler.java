@@ -14,6 +14,7 @@ package org.sonatype.nexus.scheduling.internal.upgrade.datastore;
 
 import java.time.Duration;
 import java.util.Optional;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -42,6 +43,7 @@ import org.sonatype.nexus.scheduling.events.TaskEventStoppedDone;
 import org.sonatype.nexus.scheduling.events.TaskEventStoppedFailed;
 
 import com.google.common.eventbus.Subscribe;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
@@ -78,8 +80,8 @@ public class QueuingUpgradeTaskScheduler
       final PeriodicJobService periodicJobService,
       final TaskScheduler taskScheduler,
       final UpgradeTaskStore upgradeTaskStore,
-      @Named("${nexus.upgrade.tasks.checkOnStartup:-true}") final boolean checkRequiresMigration,
-      @Named("${nexus.upgrade.tasks.delay:-10s}") final Duration delayOnStart,
+      @Named("${nexus.upgrade.tasks.checkOnStartup:-true}") @Value("${nexus.upgrade.tasks.checkOnStartup:true}") final boolean checkRequiresMigration,
+      @Named("${nexus.upgrade.tasks.delay:-10s}") @Value("${nexus.upgrade.tasks.delay:10s}") final Duration delayOnStart,
       final Cooperation2Selector cooperation2Selector,
       @Named("distributed") @Nullable final Cooperation2Selector distributedCooperationSelector)
   {

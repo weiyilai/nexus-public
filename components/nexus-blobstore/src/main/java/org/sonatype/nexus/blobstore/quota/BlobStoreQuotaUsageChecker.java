@@ -20,6 +20,8 @@ import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 import org.sonatype.nexus.common.scheduling.PeriodicJobService.PeriodicJob;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -45,7 +47,7 @@ public class BlobStoreQuotaUsageChecker
   @Inject
   public BlobStoreQuotaUsageChecker(
       final PeriodicJobService jobService,
-      @Named("${nexus.blobstore.quota.warnIntervalSeconds:-60}") final int quotaCheckInterval,
+      @Named("${nexus.blobstore.quota.warnIntervalSeconds:-60}") @Value("${nexus.blobstore.quota.warnIntervalSeconds:60}") final int quotaCheckInterval,
       final BlobStoreQuotaService quotaService)
   {
     this.jobService = checkNotNull(jobService);

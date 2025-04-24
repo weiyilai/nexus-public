@@ -33,6 +33,7 @@ import org.sonatype.nexus.webresources.WebResourceService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -70,7 +71,7 @@ public class WebResourceServlet
   public WebResourceServlet(
       final WebResourceService webResources,
       final XFrameOptions xframeOptions,
-      @Named("${nexus.webresources.maxAge:-30days}") final Time maxAge)
+      @Named("${nexus.webresources.maxAge:-30days}") @Value("${nexus.webresources.maxAge:30days}") final Time maxAge)
   {
     this.webResources = checkNotNull(webResources);
     this.maxAgeSeconds = checkNotNull(maxAge.toSeconds());

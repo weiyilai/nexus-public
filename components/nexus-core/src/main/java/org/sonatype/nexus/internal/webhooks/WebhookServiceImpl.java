@@ -57,6 +57,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -99,7 +100,7 @@ public class WebhookServiceImpl
   public WebhookServiceImpl(
       final Provider<CloseableHttpClient> httpClientProvider,
       final List<Webhook> webhooks,
-      @Named("${nexus.webhook.pool.size:-128}") final int poolSize)
+      @Named("${nexus.webhook.pool.size:-128}") @Value("${nexus.webhook.pool.size:128}") final int poolSize)
   {
     this.httpClientProvider = checkNotNull(httpClientProvider);
     this.webhooks = checkNotNull(webhooks);

@@ -35,6 +35,7 @@ import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptySet;
@@ -54,7 +55,7 @@ public class NexusWebSecurityManager
   public NexusWebSecurityManager(
       final Provider<EventManager> eventManager,
       final Provider<CacheHelper> cacheHelper,
-      @Named("${nexus.shiro.cache.defaultTimeToLive:-2m}") final Provider<Time> defaultTimeToLive)
+      @Named("${nexus.shiro.cache.defaultTimeToLive:-2m}") @Value("${nexus.shiro.cache.defaultTimeToLive:2m}") final Provider<Time> defaultTimeToLive)
   {
     this.eventManager = checkNotNull(eventManager);
     setCacheManager(new ShiroJCacheManagerAdapter(cacheHelper, defaultTimeToLive));

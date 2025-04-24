@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -69,6 +70,7 @@ import com.softwarementors.extjs.djn.config.annotations.DirectAction;
 import com.softwarementors.extjs.djn.config.annotations.DirectMethod;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -109,7 +111,7 @@ public class TaskComponent
   public TaskComponent(
       final TaskScheduler taskScheduler,
       final Provider<Validator> validatorProvider,
-      @Named("${nexus.scripts.allowCreation:-false}") final boolean allowCreation)
+      @Named("${nexus.scripts.allowCreation:-false}") @Value("${nexus.scripts.allowCreation:false}") final boolean allowCreation)
   {
     this.taskScheduler = checkNotNull(taskScheduler);
     this.validatorProvider = checkNotNull(validatorProvider);

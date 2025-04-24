@@ -54,6 +54,7 @@ import org.apache.maven.index.reader.Record;
 import org.apache.maven.index.reader.WritableResourceHandler;
 import org.apache.maven.index.reader.WritableResourceHandler.WritableResource;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Optional.ofNullable;
@@ -61,12 +62,12 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.maven.index.reader.Record.*;
 import static org.apache.maven.index.reader.Record.Type.ARTIFACT_ADD;
-import static org.sonatype.nexus.repository.maven.internal.Attributes.AssetKind.ARTIFACT;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_BASE_VERSION;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_CLASSIFIER;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_PACKAGING;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_POM_DESCRIPTION;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_POM_NAME;
+import static org.sonatype.nexus.repository.maven.internal.Attributes.AssetKind.ARTIFACT;
 import static org.sonatype.nexus.repository.view.Content.CONTENT_LAST_MODIFIED;
 
 /**
@@ -83,7 +84,7 @@ public class MavenContentIndexPublisher
 
   @Inject
   public MavenContentIndexPublisher(
-      @Named("${nexus.maven.index.publisher.browseAssetsPageSize:-1000}") final int browseAssetsPageSize)
+      @Named("${nexus.maven.index.publisher.browseAssetsPageSize:-1000}") @Value("${nexus.maven.index.publisher.browseAssetsPageSize:1000}") final int browseAssetsPageSize)
   {
     this.browseAssetsPageSize = browseAssetsPageSize;
   }
@@ -119,8 +120,8 @@ public class MavenContentIndexPublisher
 
   @Override
   public void publishHostedIndex(
-      final Repository repository, final DuplicateDetectionStrategy<Record> duplicateDetectionStrategy)
-      throws IOException
+      final Repository repository,
+      final DuplicateDetectionStrategy<Record> duplicateDetectionStrategy) throws IOException
   {
     try (Maven2WritableResourceHandler resourceHandler = new Maven2WritableResourceHandler(repository)) {
       try (IndexWriter indexWriter = new IndexWriter(resourceHandler, repository.getName(), false)) {
@@ -141,7 +142,8 @@ public class MavenContentIndexPublisher
 
   private List<Record> getHostedRecords(
       final Repository repository,
-      final DuplicateDetectionStrategy<Record> duplicateDetectionStrategy) {
+      final DuplicateDetectionStrategy<Record> duplicateDetectionStrategy)
+  {
 
     List<Record> records = new ArrayList<>();
     MavenContentFacet mavenContentFacet = repository.facet(MavenContentFacet.class);
@@ -196,8 +198,8 @@ public class MavenContentIndexPublisher
     assetRecord.put(FILE_EXTENSION, pathExtension(mavenPath.getFileName()));
 
     ofNullable(asset.download().getAttributes().get(CONTENT_LAST_MODIFIED))
-        .ifPresent(contentLastModified ->
-            assetRecord.put(FILE_MODIFIED, DateTime.parse(contentLastModified.toString()).getMillis()));
+        .ifPresent(contentLastModified -> assetRecord.put(FILE_MODIFIED,
+            DateTime.parse(contentLastModified.toString()).getMillis()));
 
     copyBlobAttributes(asset, assetRecord);
     return assetRecord;
@@ -217,7 +219,8 @@ public class MavenContentIndexPublisher
     assetRecord.put(PACKAGING, packaging);
 
     assetRecord.put(NAME, ofNullable(componentFormatAttributes.get(P_POM_NAME))
-        .map(Object::toString).orElse(EMPTY));
+        .map(Object::toString)
+        .orElse(EMPTY));
 
     assetRecord.put(NAME,
         ofNullable(componentFormatAttributes.get(P_POM_DESCRIPTION)).map(Object::toString).orElse(EMPTY));

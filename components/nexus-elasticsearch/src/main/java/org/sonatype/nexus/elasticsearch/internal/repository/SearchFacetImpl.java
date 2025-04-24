@@ -37,6 +37,7 @@ import org.sonatype.nexus.repository.content.search.elasticsearch.SearchDocument
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -74,8 +75,8 @@ public class SearchFacetImpl
   public SearchFacetImpl(
       final ElasticSearchIndexService elasticSearchIndexService,
       final Map<String, SearchDocumentProducer> searchDocumentProducersByFormat,
-      @Named("${nexus.elasticsearch.reindex.pageSize:-1000}") final int pageSize,
-      @Named("${nexus.elasticsearch.bulkProcessing:-true}") final boolean bulkProcessing)
+      @Named("${nexus.elasticsearch.reindex.pageSize:-1000}") @Value("${nexus.elasticsearch.reindex.pageSize:1000}") final int pageSize,
+      @Named("${nexus.elasticsearch.bulkProcessing:-true}") @Value("${nexus.elasticsearch.bulkProcessing:true}") final boolean bulkProcessing)
   {
     this.elasticSearchIndexService = checkNotNull(elasticSearchIndexService);
     this.searchDocumentProducersByFormat = checkNotNull(searchDocumentProducersByFormat);

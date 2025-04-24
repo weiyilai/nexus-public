@@ -26,6 +26,7 @@ import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 
 import org.h2.tools.Server;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
@@ -54,8 +55,8 @@ public class H2WebConsole
   @Inject
   public H2WebConsole(
       final ApplicationDirectories applicationDirectories,
-      @Named("${nexus.h2.httpListenerEnabled:-false}") final boolean httpListenerEnabled,
-      @Named("${nexus.h2.httpListenerPort:-8082}") final int httpListenerPort,
+      @Named("${nexus.h2.httpListenerEnabled:-false}") @Value("${nexus.h2.httpListenerEnabled:false}") final boolean httpListenerEnabled,
+      @Named("${nexus.h2.httpListenerPort:-8082}") @Value("${nexus.h2.httpListenerPort:8082}") final int httpListenerPort,
       final NodeAccess nodeAccess)
   {
     checkNotNull(applicationDirectories);

@@ -17,7 +17,10 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
+import org.sonatype.nexus.crypto.secrets.SecretsService;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
+
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * This task should only be run on systems where {@link SecretsService.SECRETS_MIGRATION_VERSION} is valid, for
@@ -34,12 +37,16 @@ public class SecretsMigrationTaskDescriptor
 
   private static final String EXPOSED_FLAG = "${nexus.secrets.migration.exposed:-false}";
 
+  private static final String EXPOSED_FLAG_VALUE = "${nexus.secrets.migration.exposed:false}";
+
   private static final String VISIBLE_FLAG = "${nexus.secrets.migration.visible:-false}";
+
+  private static final String VISIBLE_FLAG_VALUE = "${nexus.secrets.migration.visible:false}";
 
   @Inject
   public SecretsMigrationTaskDescriptor(
-      @Named(EXPOSED_FLAG) final boolean exposed,
-      @Named(VISIBLE_FLAG) final boolean visible)
+      @Named(EXPOSED_FLAG) @Value(EXPOSED_FLAG_VALUE) final boolean exposed,
+      @Named(VISIBLE_FLAG) @Value(VISIBLE_FLAG_VALUE) final boolean visible)
   {
     super(TYPE_ID,
         SecretsMigrationTask.class,

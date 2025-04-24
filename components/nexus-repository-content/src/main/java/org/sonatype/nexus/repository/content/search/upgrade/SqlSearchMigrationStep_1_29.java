@@ -18,7 +18,10 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_TABLE_SEARCH_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_TABLE_SEARCH_NAMED_VALUE;
 
 /**
  * For SQL Search, change the column created to last_updated and trigger a re-index
@@ -40,7 +43,9 @@ public class SqlSearchMigrationStep_1_29
   private final boolean sqlSearchEnabled;
 
   @Inject
-  public SqlSearchMigrationStep_1_29(@Named(DATASTORE_TABLE_SEARCH_NAMED) final boolean sqlSearchEnabled) {
+  public SqlSearchMigrationStep_1_29(
+      @Named(DATASTORE_TABLE_SEARCH_NAMED) @Value(DATASTORE_TABLE_SEARCH_NAMED_VALUE) final boolean sqlSearchEnabled)
+  {
     this.sqlSearchEnabled = sqlSearchEnabled;
   }
 

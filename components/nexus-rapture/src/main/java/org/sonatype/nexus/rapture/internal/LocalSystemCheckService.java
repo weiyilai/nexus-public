@@ -33,6 +33,7 @@ import com.codahale.metrics.health.HealthCheckRegistry;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
@@ -70,7 +71,7 @@ public class LocalSystemCheckService
       final PeriodicJobService jobService,
       final HealthCheckRegistry registry,
       final NodeAccess nodeAccess,
-      @Named("${nexus.healthcheck.refreshInterval:-15}") final int refreshInterval)
+      @Named("${nexus.healthcheck.refreshInterval:-15}") @Value("${nexus.healthcheck.refreshInterval:15}") final int refreshInterval)
   {
     this.jobService = checkNotNull(jobService);
     this.registry = checkNotNull(registry);

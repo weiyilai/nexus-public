@@ -41,9 +41,10 @@ import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.eclipse.sisu.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
-import static  org.sonatype.nexus.security.internal.DefaultRealmConstants.DEFAULT_REALM_NAME;
-import static  org.sonatype.nexus.security.internal.DefaultRealmConstants.DESCRIPTION;
+import static org.sonatype.nexus.security.internal.DefaultRealmConstants.DEFAULT_REALM_NAME;
+import static org.sonatype.nexus.security.internal.DefaultRealmConstants.DESCRIPTION;
 
 /**
  * Default {@link AuthenticatingRealm}.
@@ -73,7 +74,7 @@ public class AuthenticatingRealmImpl
   public AuthenticatingRealmImpl(
       final SecurityConfigurationManager configuration,
       final PasswordService passwordService,
-      @Named("${nexus.orient.enabled:-false}") final boolean orient)
+      @Named("${nexus.orient.enabled:-false}") @Value("${nexus.orient.enabled:false}") final boolean orient)
   {
     this.configuration = configuration;
     this.passwordService = passwordService;
@@ -154,7 +155,7 @@ public class AuthenticatingRealmImpl
    * Checks to see if the credentials in token match the credentials stored on user
    *
    * @param token the username/password token containing the credentials to verify
-   * @param user  object containing the stored credentials
+   * @param user object containing the stored credentials
    * @return true if credentials match, false otherwise
    */
   private boolean isValidCredentials(final UsernamePasswordToken token, final CUser user) {
@@ -175,14 +176,15 @@ public class AuthenticatingRealmImpl
    * Checks to see if the specified user is a legacy user. A legacy user has an unsalted password.
    */
   private boolean hasLegacyPassword(final CUser user) {
-    //Legacy users have a shorter, unsalted, SHA1 or MD5 based hash
+    // Legacy users have a shorter, unsalted, SHA1 or MD5 based hash
     return user.getPassword().length() <= MAX_LEGACY_PASSWORD_LENGTH;
   }
 
   private AuthenticationInfo createAuthenticationInfo(final CUser user) {
-    return orient ? new NexusSimpleAuthenticationInfo(user.getId(), user.getPassword().toCharArray(),
-        new RealmCaseMapping(getName(), true)) :
-        new SimpleAuthenticationInfo(user.getId(), user.getPassword().toCharArray(), getName());
+    return orient
+        ? new NexusSimpleAuthenticationInfo(user.getId(), user.getPassword().toCharArray(),
+            new RealmCaseMapping(getName(), true))
+        : new SimpleAuthenticationInfo(user.getId(), user.getPassword().toCharArray(), getName());
   }
 
   /**

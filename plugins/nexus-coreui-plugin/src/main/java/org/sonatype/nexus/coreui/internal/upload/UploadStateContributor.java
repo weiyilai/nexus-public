@@ -22,6 +22,7 @@ import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 @Named
 @Singleton
@@ -32,7 +33,9 @@ public class UploadStateContributor
   private final Map<String, Object> state;
 
   @Inject
-  public UploadStateContributor(@Named("${nexus.react.upload:-true}") final boolean featureFlag) {
+  public UploadStateContributor(
+      @Named("${nexus.react.upload:-true}") @Value("${nexus.react.upload:true}") final boolean featureFlag)
+  {
     state = ImmutableMap.of("nexus.react.upload", featureFlag);
   }
 

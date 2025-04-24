@@ -25,6 +25,7 @@ import org.sonatype.nexus.blobstore.s3.internal.S3BlobStore;
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 @Named(S3BlobStore.TYPE)
 @Priority(Integer.MAX_VALUE)
@@ -35,7 +36,7 @@ public class DatastoreS3BlobStoreMetricsService
 
   @Inject
   public DatastoreS3BlobStoreMetricsService(
-      @Named("${nexus.blobstore.metrics.flushInterval:-2}") final int metricsFlushPeriodSeconds,
+      @Named("${nexus.blobstore.metrics.flushInterval:-2}") @Value("${nexus.blobstore.metrics.flushInterval:2}") final int metricsFlushPeriodSeconds,
       final BlobStoreMetricsStore blobStoreMetricsStore,
       final PeriodicJobService jobService)
   {

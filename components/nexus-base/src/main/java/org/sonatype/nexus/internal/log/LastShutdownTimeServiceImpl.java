@@ -32,6 +32,7 @@ import org.sonatype.nexus.common.log.LogManager;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.input.ReversedLinesFileReader;
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.log.LogManager.DEFAULT_LOGGER;
 
@@ -67,7 +68,7 @@ public class LastShutdownTimeServiceImpl
   @Inject
   public LastShutdownTimeServiceImpl(
       final LogManager logManager,
-      @Named("${nexus.log.lastShutdownTime.enabled:-true}") final boolean enabled)
+      @Named("${nexus.log.lastShutdownTime.enabled:-true}") @Value("${nexus.log.lastShutdownTime.enabled:true}") final boolean enabled)
   {
     this.logManager = logManager;
     if (!enabled) {

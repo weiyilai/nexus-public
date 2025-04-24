@@ -30,13 +30,14 @@ import com.amazonaws.services.s3.model.CopyPartResult;
 import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
+import org.springframework.beans.factory.annotation.Value;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Math.min;
 import static java.util.stream.Collectors.toList;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
- * Copies a file, using multipart copy if the file is larger or equal to the chunk size.  A normal copyObject request is
+ * Copies a file, using multipart copy if the file is larger or equal to the chunk size. A normal copyObject request is
  * used instead if only a single chunk would be copied.
  *
  * @since 3.15
@@ -50,7 +51,9 @@ public class MultipartCopier
   private final int chunkSize;
 
   @Inject
-  public MultipartCopier(@Named("${nexus.s3.multipartupload.chunksize:-5242880}") final int chunkSize) {
+  public MultipartCopier(
+      @Named("${nexus.s3.multipartupload.chunksize:-5242880}") @Value("${nexus.s3.multipartupload.chunksize:5242880}") final int chunkSize)
+  {
     this.chunkSize = chunkSize;
   }
 
@@ -67,23 +70,27 @@ public class MultipartCopier
         copyMultiPart(s3, bucket, sourcePath, destinationPath, length);
       }
     }
-    catch(SdkClientException e) {
+    catch (SdkClientException e) {
       throw new BlobStoreException("Error copying blob", e, null);
     }
   }
 
-  private void copySinglePart(final AmazonS3 s3,
-                              final String bucket,
-                              final String sourcePath,
-                              final String destinationPath) {
+  private void copySinglePart(
+      final AmazonS3 s3,
+      final String bucket,
+      final String sourcePath,
+      final String destinationPath)
+  {
     s3.copyObject(bucket, sourcePath, bucket, destinationPath);
   }
 
-  private void copyMultiPart(final AmazonS3 s3,
-                             final String bucket,
-                             final String sourcePath,
-                             final String destinationPath,
-                             final long length) {
+  private void copyMultiPart(
+      final AmazonS3 s3,
+      final String bucket,
+      final String sourcePath,
+      final String destinationPath,
+      final long length)
+  {
     checkState(length > 0);
     String uploadId = null;
     try {
@@ -96,7 +103,7 @@ public class MultipartCopier
       log.debug("Starting multipart copy {} to key {} from key {}", uploadId, destinationPath, sourcePath);
 
       List<CopyPartResult> results = new ArrayList<>();
-      for (int partNumber = 1; ; partNumber++) {
+      for (int partNumber = 1;; partNumber++) {
         if (remaining <= 0) {
           break;
         }
@@ -126,12 +133,12 @@ public class MultipartCopier
       s3.completeMultipartUpload(compRequest);
       log.debug("Copy {} complete", uploadId);
     }
-    catch(SdkClientException e) {
+    catch (SdkClientException e) {
       if (uploadId != null) {
         try {
           s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, destinationPath, uploadId));
         }
-        catch(Exception inner) {
+        catch (Exception inner) {
           log.error("Error aborting S3 multipart copy to bucket {} with key {}", bucket, destinationPath,
               log.isDebugEnabled() ? inner : null);
         }

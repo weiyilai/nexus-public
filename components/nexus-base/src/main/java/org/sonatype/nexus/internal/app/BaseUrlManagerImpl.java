@@ -26,6 +26,7 @@ import org.sonatype.nexus.common.app.BaseUrlHolder;
 import org.sonatype.nexus.common.app.BaseUrlManager;
 
 import com.google.common.base.Strings;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -49,7 +50,7 @@ public class BaseUrlManagerImpl
   @Inject
   public BaseUrlManagerImpl(
       final Provider<HttpServletRequest> requestProvider,
-      @Named("${org.sonatype.nexus.internal.app.BaseUrlManagerImpl.force:-false}") final boolean force)
+      @Named("${org.sonatype.nexus.internal.app.BaseUrlManagerImpl.force:-false}") @Value("${org.sonatype.nexus.internal.app.BaseUrlManagerImpl.force:false}") final boolean force)
   {
     this.requestProvider = checkNotNull(requestProvider);
     this.force = force;

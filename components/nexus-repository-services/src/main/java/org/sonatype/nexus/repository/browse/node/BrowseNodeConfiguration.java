@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Configuration options for browse tree
@@ -36,11 +37,12 @@ public class BrowseNodeConfiguration
   private final int maxHtmlNodes;
 
   @Inject
-  public BrowseNodeConfiguration(@Named("${nexus.browse.component.tree.automaticRebuild:-true}") final boolean automaticRebuild,
-                                 @Named("${nexus.browse.component.tree.rebuildPageSize:-1000}") final int rebuildPageSize,
-                                 @Named("${nexus.browse.component.tree.deletePageSize:-1000}") final int deletePageSize,
-                                 @Named("${nexus.browse.component.tree.maxNodes:-10000}") final int maxNodes,
-                                 @Named("${nexus.browse.component.tree.maxHtmlNodes:-10000}") final int maxHtmlNodes)
+  public BrowseNodeConfiguration(
+      @Named("${nexus.browse.component.tree.automaticRebuild:-true}") @Value("${nexus.browse.component.tree.automaticRebuild:true}") final boolean automaticRebuild,
+      @Named("${nexus.browse.component.tree.rebuildPageSize:-1000}") @Value("${nexus.browse.component.tree.rebuildPageSize:1000}") final int rebuildPageSize,
+      @Named("${nexus.browse.component.tree.deletePageSize:-1000}") @Value("${nexus.browse.component.tree.deletePageSize:1000}") final int deletePageSize,
+      @Named("${nexus.browse.component.tree.maxNodes:-10000}") @Value("${nexus.browse.component.tree.maxNodes:10000}") final int maxNodes,
+      @Named("${nexus.browse.component.tree.maxHtmlNodes:-10000}") @Value("${nexus.browse.component.tree.maxHtmlNodes:10000}") final int maxHtmlNodes)
   {
     this.automaticRebuild = automaticRebuild;
     this.rebuildPageSize = rebuildPageSize;

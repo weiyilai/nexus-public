@@ -42,6 +42,7 @@ import org.sonatype.nexus.repository.task.DeletionProgress;
 import org.sonatype.nexus.repository.types.GroupType;
 
 import com.google.common.base.Predicates;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.nonNull;
@@ -85,7 +86,7 @@ public class CleanupServiceImpl
       final CleanupPolicyStorage cleanupPolicyStorage,
       final CleanupMethod cleanupMethod,
       final GroupType groupType,
-      @Named("${nexus.cleanup.retries:-3}") final int cleanupRetryLimit,
+      @Named("${nexus.cleanup.retries:-3}") @Value("${nexus.cleanup.retries:3}") final int cleanupRetryLimit,
       final CleanupBrowseServiceFactory browseServiceFactory,
       @Nullable final CleanupFeatureCheck cleanupFeatureCheck)
   {

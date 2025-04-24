@@ -30,6 +30,8 @@ import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.scheduling.CancelableHelper;
 import org.sonatype.nexus.scheduling.TaskInterruptedException;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.FacetSupport.State.STARTED;
@@ -56,7 +58,7 @@ public class PurgeUnusedSnapshotsFacetImpl
   public PurgeUnusedSnapshotsFacetImpl(
       @Named(GroupType.NAME) final Type groupType,
       @Named(HostedType.NAME) final Type hostedType,
-      @Named("${nexus.tasks.purgeUnusedSnapshots.findUnusedLimit:-100}") int findUnusedLimit)
+      @Named("${nexus.tasks.purgeUnusedSnapshots.findUnusedLimit:-100}") @Value("${nexus.tasks.purgeUnusedSnapshots.findUnusedLimit:100}") final int findUnusedLimit)
   {
     this.groupType = checkNotNull(groupType);
     this.hostedType = checkNotNull(hostedType);
@@ -85,7 +87,8 @@ public class PurgeUnusedSnapshotsFacetImpl
    * Processes this facet's associated repository as a group repository, iterating over its members.
    */
   private void processAsGroup(final MavenGroupFacet groupFacet, final int numberOfDays) {
-    groupFacet.leafMembers().stream()
+    groupFacet.leafMembers()
+        .stream()
         .filter(member -> hostedType.equals(member.getType()))
         .forEach(member -> member.facet(PurgeUnusedSnapshotsFacet.class).purgeUnusedSnapshots(numberOfDays));
   }

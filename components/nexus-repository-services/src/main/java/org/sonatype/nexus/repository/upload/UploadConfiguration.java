@@ -15,6 +15,8 @@ package org.sonatype.nexus.repository.upload;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * @since 3.7
  */
@@ -28,7 +30,9 @@ public class UploadConfiguration
   private final boolean enabled;
 
   @Inject
-  public UploadConfiguration(@Named("${" + ENABLED + ":-true}") final boolean enabled) {
+  public UploadConfiguration(
+      @Named("${" + ENABLED + ":-true}") @Value("${" + ENABLED + ":true}") final boolean enabled)
+  {
     this.enabled = enabled;
   }
 

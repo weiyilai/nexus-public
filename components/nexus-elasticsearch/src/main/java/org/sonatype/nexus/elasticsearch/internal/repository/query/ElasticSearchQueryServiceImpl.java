@@ -62,6 +62,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.internal.InternalSearchResponse;
 import org.elasticsearch.search.profile.ProfileShardResult;
 import org.elasticsearch.search.sort.SortBuilder;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
@@ -114,7 +115,7 @@ public class ElasticSearchQueryServiceImpl
       final SecurityHelper securityHelper,
       final SearchSubjectHelper searchSubjectHelper,
       final IndexNamingPolicy indexNamingPolicy,
-      @Named("${nexus.elasticsearch.profile:-false}") final boolean profile)
+      @Named("${nexus.elasticsearch.profile:-false}") @Value("${nexus.elasticsearch.profile:false}") final boolean profile)
   {
     this.client = checkNotNull(client);
     this.repositoryManager = checkNotNull(repositoryManager);

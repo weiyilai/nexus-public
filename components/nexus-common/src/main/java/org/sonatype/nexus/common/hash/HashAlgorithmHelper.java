@@ -29,6 +29,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import com.google.common.hash.HashCode;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -45,7 +46,9 @@ public class HashAlgorithmHelper
   private final int bufferSize;
 
   @Inject
-  public HashAlgorithmHelper(@Named("${nexus.calculateChecksums.bufferSize:-32768}") final int bufferSize) {
+  public HashAlgorithmHelper(
+      @Named("${nexus.calculateChecksums.bufferSize:-32768}") @Value("${nexus.calculateChecksums.bufferSize:32768}") final int bufferSize)
+  {
     checkState(bufferSize > 0, String.format("Buffer size should be a positive value: %s", bufferSize));
     this.bufferSize = bufferSize;
   }

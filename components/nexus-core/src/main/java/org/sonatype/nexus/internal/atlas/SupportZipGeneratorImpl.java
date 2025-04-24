@@ -47,6 +47,7 @@ import org.sonatype.nexus.supportzip.SupportBundleCustomizer;
 import org.sonatype.nexus.supportzip.SupportZipGenerator;
 
 import com.google.common.io.CountingOutputStream;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -83,8 +84,8 @@ public class SupportZipGeneratorImpl
   SupportZipGeneratorImpl(
       final DownloadService downloadService,
       final List<SupportBundleCustomizer> bundleCustomizers,
-      final @Named("${atlas.supportZipGenerator.maxFileSize:-30mb}") ByteSize maxFileSize,
-      final @Named("${atlas.supportZipGenerator.maxZipFileSize:-50mb}") ByteSize maxZipFileSize)
+      final @Named("${atlas.supportZipGenerator.maxFileSize:-30mb}") @Value("${atlas.supportZipGenerator.maxFileSize:30mb}") ByteSize maxFileSize,
+      final @Named("${atlas.supportZipGenerator.maxZipFileSize:-50mb}") @Value("${atlas.supportZipGenerator.maxZipFileSize:50mb}") ByteSize maxZipFileSize)
   {
     this.bundleCustomizers = checkNotNull(bundleCustomizers);
     this.downloadService = checkNotNull(downloadService);

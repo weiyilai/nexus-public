@@ -45,6 +45,7 @@ import org.sonatype.nexus.thread.NexusThreadFactory;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -81,8 +82,8 @@ public class ExternalMetadataTask
   @Inject
   public ExternalMetadataTask(
       final BlobStoreManager blobStoreManager,
-      @Named("${external.metadata.repository.concurrencyLimit:-5}") final int concurrencyLimit,
-      @Named("${external.metadata.repository.queueCapacity:-15}") final int queueCapacity)
+      @Named("${external.metadata.repository.concurrencyLimit:-5}") @Value("${external.metadata.repository.concurrencyLimit:5}") final int concurrencyLimit,
+      @Named("${external.metadata.repository.queueCapacity:-15}") @Value("${external.metadata.repository.queueCapacity:15}") final int queueCapacity)
   {
     this.blobStoreManager = checkNotNull(blobStoreManager);
 

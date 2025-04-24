@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -62,6 +63,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -134,7 +136,7 @@ public class RepositoryManagerImpl
       final RepositoryAdminSecurityContributor securityContributor,
       final List<DefaultRepositoriesContributor> defaultRepositoriesContributors,
       final FreezeService freezeService,
-      @Named("${nexus.skipDefaultRepositories:-false}") final boolean skipDefaultRepositories,
+      @Named("${nexus.skipDefaultRepositories:-false}") @Value("${nexus.skipDefaultRepositories:false}") final boolean skipDefaultRepositories,
       final BlobStoreManager blobStoreManager,
       final GroupMemberMappingCache groupMemberMappingCache,
       final List<ConfigurationValidator> configurationValidators,

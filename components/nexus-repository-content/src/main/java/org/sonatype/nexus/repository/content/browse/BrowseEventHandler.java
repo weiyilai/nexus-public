@@ -52,6 +52,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -123,12 +124,13 @@ public class BrowseEventHandler
       final Cooperation2Factory cooperation2Factory,
       final PeriodicJobService periodicJobService,
       final EventManager eventManager,
-      @Named("${nexus.browse.cooperation.enabled:-true}") final boolean cooperationEnabled,
-      @Named("${nexus.browse.cooperation.majorTimeout:-0s}") final Duration majorTimeout,
-      @Named("${nexus.browse.cooperation.minorTimeout:-30s}") final Duration minorTimeout,
-      @Named("${" + FLUSH_ON_COUNT_KEY + ":-100}") final int flushOnCount,
-      @Named("${" + FLUSH_ON_SECONDS_KEY + ":-2}") final int flushOnSeconds,
-      @Named("${" + NO_PURGE_DELAY_KEY + ":-true}") final boolean noPurgeDelay,
+      @Named("${nexus.browse.cooperation.enabled:-true}") @Value("${nexus.browse.cooperation.enabled:true}") final boolean cooperationEnabled,
+      @Named("${nexus.browse.cooperation.majorTimeout:-0s}") @Value("${nexus.browse.cooperation.majorTimeout:0s}") final Duration majorTimeout,
+      @Named("${nexus.browse.cooperation.minorTimeout:-30s}") @Value("${nexus.browse.cooperation.minorTimeout:30s}") final Duration minorTimeout,
+      @Named("${" + FLUSH_ON_COUNT_KEY + ":-100}") @Value("${" + FLUSH_ON_COUNT_KEY + ":100}") final int flushOnCount,
+      @Named("${" + FLUSH_ON_SECONDS_KEY + ":-2}") @Value("${" + FLUSH_ON_SECONDS_KEY + ":2}") final int flushOnSeconds,
+      @Named("${" + NO_PURGE_DELAY_KEY + ":-true}") @Value("${" + NO_PURGE_DELAY_KEY
+          + ":true}") final boolean noPurgeDelay,
       final DatabaseCheck databaseCheck)
   {
     this.cooperation = checkNotNull(cooperation2Factory).configure()

@@ -22,6 +22,8 @@ import org.sonatype.nexus.formfields.StringTextFormField;
 import org.sonatype.nexus.repository.RepositoryTaskSupport;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * This task should only be run after an upgrade to 3.79 is finalized as its intended to be invoked in the context of an
  * upgrade step in the same context as the database upgrade we use 1.0 for the availability version.
@@ -37,7 +39,9 @@ public class ExternalMetadataTaskDescriptor
   private static final String NAME = "Retrieve external blobstore metadata";
 
   @Inject
-  public ExternalMetadataTaskDescriptor(@Named("${external.blobstore.metadata:-false}") final boolean visibleExposed) {
+  public ExternalMetadataTaskDescriptor(
+      @Named("${external.blobstore.metadata:-false}") @Value("${external.blobstore.metadata:false}") final boolean visibleExposed)
+  {
     super(TYPE_ID,
         ExternalMetadataTask.class,
         NAME,

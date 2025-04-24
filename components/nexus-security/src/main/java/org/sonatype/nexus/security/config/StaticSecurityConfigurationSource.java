@@ -30,6 +30,7 @@ import org.sonatype.nexus.security.config.memory.MemoryCUserRoleMapping;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authc.credential.PasswordService;
+import org.springframework.beans.factory.annotation.Value;
 
 // FIXME: Perhaps this would be better in nexus-core internal.security?
 
@@ -64,7 +65,7 @@ public class StaticSecurityConfigurationSource
   public StaticSecurityConfigurationSource(
       final PasswordService passwordService,
       @Nullable final AdminPasswordSource adminPasswordSource,
-      @Named("${nexus.security.randompassword:-true}") final boolean randomPassword)
+      @Named("${nexus.security.randompassword:-true}") @Value("${nexus.security.randompassword:true}") final boolean randomPassword)
   {
     this(passwordService, adminPasswordSource, randomPassword, System.getenv(NEXUS_SECURITY_INITIAL_PASSWORD));
   }

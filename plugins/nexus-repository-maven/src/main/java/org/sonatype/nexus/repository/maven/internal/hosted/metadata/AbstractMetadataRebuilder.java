@@ -39,6 +39,7 @@ import org.sonatype.nexus.repository.view.payloads.StringPayload;
 
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptySet;
@@ -59,8 +60,8 @@ public abstract class AbstractMetadataRebuilder
 
   @Inject
   public AbstractMetadataRebuilder(
-      @Named("${nexus.maven.metadata.rebuild.bufferSize:-1000}") final int bufferSize,
-      @Named("${nexus.maven.metadata.rebuild.timeoutSeconds:-60}") final int timeoutSeconds)
+      @Named("${nexus.maven.metadata.rebuild.bufferSize:-1000}") @Value("${nexus.maven.metadata.rebuild.bufferSize:1000}") final int bufferSize,
+      @Named("${nexus.maven.metadata.rebuild.timeoutSeconds:-60}") @Value("${nexus.maven.metadata.rebuild.timeoutSeconds:60}") final int timeoutSeconds)
   {
     this.bufferSize = bufferSize;
     this.timeoutSeconds = timeoutSeconds;
@@ -69,9 +70,9 @@ public abstract class AbstractMetadataRebuilder
   /**
    * Collect all {@link MavenPath} for the provided GAbV.
    *
-   * @param repository  The repository associated with the provided GAbV (Maven2 format, Hosted type only).
-   * @param groupId     scope the work to given groupId.
-   * @param artifactId  scope the work to given artifactId (groupId must be given).
+   * @param repository The repository associated with the provided GAbV (Maven2 format, Hosted type only).
+   * @param groupId scope the work to given groupId.
+   * @param artifactId scope the work to given artifactId (groupId must be given).
    * @param baseVersion scope the work to given baseVersion (groupId and artifactId must ge given).
    * @return list of all paths for the input coordinates
    * @since 3.14
@@ -93,7 +94,8 @@ public abstract class AbstractMetadataRebuilder
     // Build path for specific GAV
     paths.add(metadataPath(groupId, artifactId, baseVersion));
 
-    // Build path for the GA; will be rebuilt as necessary but may hold the last GAV in which case rebuild would ignore it
+    // Build path for the GA; will be rebuilt as necessary but may hold the last GAV in which case rebuild would ignore
+    // it
     paths.add(metadataPath(groupId, artifactId, null));
 
     // Check explicitly for whether or not we have Group level metadata that might need rebuilding, since this
@@ -162,8 +164,7 @@ public abstract class AbstractMetadataRebuilder
         final int bufferSize,
         final int timeoutSeconds,
         final AbstractMetadataUpdater metadataUpdater,
-        final MavenPathParser mavenPathParser
-    )
+        final MavenPathParser mavenPathParser)
     {
       this.repository = repository;
       this.metadataBuilder = new MetadataBuilder();
@@ -191,8 +192,7 @@ public abstract class AbstractMetadataRebuilder
      * approach, and calls {@link #rebuildMetadataInner(String, String, Set, MultipleFailures)} method as results are
      * arriving.
      */
-    public boolean rebuildMetadata()
-    {
+    public boolean rebuildMetadata() {
       final MultipleFailures failures = new MultipleFailures();
       boolean metadataRebuilt = false;
 
@@ -248,11 +248,11 @@ public abstract class AbstractMetadataRebuilder
     }
 
     /**
-     * Method refreshing metadata that performs the group level processing.  It uses a similar approach to {@code rebuildMetadata},
+     * Method refreshing metadata that performs the group level processing. It uses a similar approach to
+     * {@code rebuildMetadata},
      * except that it tries to trust the existing state and refresh things only if we know they need to be refreshed.
      */
-    public boolean refreshMetadata()
-    {
+    public boolean refreshMetadata() {
       final MultipleFailures failures = new MultipleFailures();
 
       checkCancellation();
@@ -280,7 +280,7 @@ public abstract class AbstractMetadataRebuilder
           final String a = (String) gav.get("artifactId");
           final Set<String> bv = (Set<String>) gav.get("baseVersions");
 
-          log.debug("Group: {} Artifact: {} Base versions: {}",g, a, bv);
+          log.debug("Group: {} Artifact: {} Base versions: {}", g, a, bv);
 
           final boolean groupChange = !Objects.equals(prevGroupId, g);
           if (groupChange) {
@@ -290,7 +290,7 @@ public abstract class AbstractMetadataRebuilder
             prevGroupId = g;
             metadataBuilder.onEnterGroupId(g);
           }
-          boolean rebuildGA =  refreshArtifact(g, a, bv, failures);
+          boolean rebuildGA = refreshArtifact(g, a, bv, failures);
           rebuilt = rebuilt || rebuildGA;
         }
 
@@ -366,12 +366,14 @@ public abstract class AbstractMetadataRebuilder
 
     /**
      * Verifies and may fix/create the broken/non-existent Maven hashes (.sha1/.md5 files).
+     * 
      * @return true if the checksum was rebuilt
      */
     protected boolean mayUpdateChecksum(final MavenPath mavenPath, final HashType hashType) {
       Optional<HashCode> checksum = getChecksum(mavenPath, hashType);
       if (!checksum.isPresent()) {
-        // this means that an asset stored in maven repository lacks checksum required by maven repository (see maven facet)
+        // this means that an asset stored in maven repository lacks checksum required by maven repository (see maven
+        // facet)
         log.warn("Asset with path {} lacks checksum {}", mavenPath, hashType);
         return false;
       }

@@ -37,10 +37,12 @@ import org.sonatype.nexus.security.privilege.rest.PrivilegeAction;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import org.apache.shiro.authz.Permission;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_VALUE;
 
 /**
  * Repository view {@link PrivilegeDescriptor}.
@@ -101,7 +103,7 @@ public class RepositoryViewPrivilegeDescriptor
   public RepositoryViewPrivilegeDescriptor(
       final RepositoryManager repositoryManager,
       final List<Format> formats,
-      @Named(REACT_PRIVILEGES_NAMED) final boolean isReactPrivileges)
+      @Named(REACT_PRIVILEGES_NAMED) @Value(REACT_PRIVILEGES_NAMED_VALUE) final boolean isReactPrivileges)
   {
     super(TYPE, repositoryManager, formats);
     this.formFields = ImmutableList.of(
@@ -109,29 +111,24 @@ public class RepositoryViewPrivilegeDescriptor
             P_FORMAT,
             messages.format(),
             messages.formatHelp(),
-            FormField.MANDATORY
-        ),
+            FormField.MANDATORY),
         new RepositoryCombobox(
             P_REPOSITORY,
             messages.repository(),
             messages.repositoryHelp(),
-            true
-        ).includeAnEntryForAllRepositories(),
-        isReactPrivileges ?
-        new SetOfCheckboxesFormField(
-            P_ACTIONS,
-            messages.actions(),
-            messages.actionsCheckboxesHelp(),
-            FormField.MANDATORY
-        ).withAttribute(P_OPTIONS, PrivilegeAction.getBreadActionStrings()) :
-        new StringTextFormField(
-            P_ACTIONS,
-            messages.actions(),
-            messages.actionsHelp(),
-            FormField.MANDATORY,
-            "(^(browse|read|edit|add|delete)(,(browse|read|edit|add|delete)){0,4}$)|(^\\*$)"
-        )
-    );
+            true).includeAnEntryForAllRepositories(),
+        isReactPrivileges
+            ? new SetOfCheckboxesFormField(
+                P_ACTIONS,
+                messages.actions(),
+                messages.actionsCheckboxesHelp(),
+                FormField.MANDATORY).withAttribute(P_OPTIONS, PrivilegeAction.getBreadActionStrings())
+            : new StringTextFormField(
+                P_ACTIONS,
+                messages.actions(),
+                messages.actionsHelp(),
+                FormField.MANDATORY,
+                "(^(browse|read|edit|add|delete)(,(browse|read|edit|add|delete)){0,4}$)|(^\\*$)"));
   }
 
   @Override

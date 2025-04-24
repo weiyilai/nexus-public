@@ -28,6 +28,7 @@ import org.quartz.impl.SchedulerRepository;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.JobStore;
 import org.quartz.spi.ThreadExecutor;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -35,7 +36,7 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 
 /**
  * {@link Scheduler} provider.
- * 
+ *
  * @since 3.19
  */
 @Named
@@ -59,11 +60,12 @@ public class QuartzSchedulerProvider
   private volatile Scheduler scheduler;
 
   @Inject
-  public QuartzSchedulerProvider(final NodeAccess nodeAccess,
-                                 final Provider<JobStore> jobStore,
-                                 final JobFactory jobFactory,
-                                 @Named("${nexus.quartz.poolSize:-20}") final int threadPoolSize,
-                                 @Named("${nexus.quartz.taskThreadPriority:-5}") final int threadPriority)
+  public QuartzSchedulerProvider(
+      final NodeAccess nodeAccess,
+      final Provider<JobStore> jobStore,
+      final JobFactory jobFactory,
+      @Named("${nexus.quartz.poolSize:-20}") @Value("${nexus.quartz.poolSize:20}") final int threadPoolSize,
+      @Named("${nexus.quartz.taskThreadPriority:-5}") @Value("${nexus.quartz.taskThreadPriority:5}") final int threadPriority)
   {
     this.nodeAccess = checkNotNull(nodeAccess);
     this.jobStore = checkNotNull(jobStore);
@@ -110,22 +112,23 @@ public class QuartzSchedulerProvider
       };
 
       // create Scheduler (implicitly registers it with repository)
-      DirectSchedulerFactory.getInstance().createScheduler(
-          SCHEDULER_NAME,
-          nodeAccess.getId(), // instance-id
-          new QuartzThreadPool(threadPoolSize, threadPriority),
-          threadExecutor,
-          jobStore.get(),
-          null, // scheduler plugin-map
-          null, // rmi-registry host
-          0,    // rmi-registry port
-          -1,   // idle-wait time
-          -1,   // db-failure retry-interval
-          true, // jmx-export
-          null, // custom jmx object-name, lets use the default
-          1,    // max batch-size
-          0L    // batch time-window
-      );
+      DirectSchedulerFactory.getInstance()
+          .createScheduler(
+              SCHEDULER_NAME,
+              nodeAccess.getId(), // instance-id
+              new QuartzThreadPool(threadPoolSize, threadPriority),
+              threadExecutor,
+              jobStore.get(),
+              null, // scheduler plugin-map
+              null, // rmi-registry host
+              0, // rmi-registry port
+              -1, // idle-wait time
+              -1, // db-failure retry-interval
+              true, // jmx-export
+              null, // custom jmx object-name, lets use the default
+              1, // max batch-size
+              0L // batch time-window
+          );
       Scheduler s = DirectSchedulerFactory.getInstance().getScheduler(SCHEDULER_NAME);
       s.setJobFactory(jobFactory);
 

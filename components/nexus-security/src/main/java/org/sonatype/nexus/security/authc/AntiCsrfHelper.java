@@ -14,6 +14,7 @@ package org.sonatype.nexus.security.authc;
 
 import java.util.List;
 import java.util.Optional;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -29,13 +30,15 @@ import org.sonatype.nexus.common.text.Strings2;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * @since 3.16
  */
 @Named
 @Singleton
-public class AntiCsrfHelper extends ComponentSupport
+public class AntiCsrfHelper
+    extends ComponentSupport
 {
   public static final String ENABLED = "nexus.security.anticsrftoken.enabled";
 
@@ -49,7 +52,7 @@ public class AntiCsrfHelper extends ComponentSupport
 
   @Inject
   public AntiCsrfHelper(
-      @Named("${" + ENABLED + ":-true}") final boolean enabled,
+      @Named("${" + ENABLED + ":-true}") @Value("${" + ENABLED + ":true}") final boolean enabled,
       final List<CsrfExemption> csrfExemptPaths)
   {
     this.enabled = enabled;
@@ -83,7 +86,8 @@ public class AntiCsrfHelper extends ComponentSupport
    * @throws UnauthorizedException when the provided token is missing or does not match the request
    */
   public void requireValidToken(final HttpServletRequest httpRequest, @Nullable final String token) {
-    Optional<String> optToken = token == null ? Optional.ofNullable(httpRequest.getHeader(ANTI_CSRF_TOKEN_NAME))
+    Optional<String> optToken = token == null
+        ? Optional.ofNullable(httpRequest.getHeader(ANTI_CSRF_TOKEN_NAME))
         : Optional.of(token);
     if (!enabled || !isSessionAuthentication() || isAntiCsrfTokenValid(httpRequest, optToken)) {
       return;

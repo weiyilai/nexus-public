@@ -32,6 +32,7 @@ import org.apache.http.impl.conn.DefaultHttpClientConnectionOperator;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycleManager.isShuttingDown;
@@ -62,19 +63,18 @@ public class SharedHttpClientConnectionManager
   @Inject
   public SharedHttpClientConnectionManager(
       final List<SSLContextSelector> sslContextSelectors,
-      @Named("${nexus.httpclient.connectionpool.size:-20}") final int connectionPoolSize,
-      @Named("${nexus.httpclient.connectionpool.maxSize:-200}") final int connectionPoolMaxSize,
-      @Named("${nexus.httpclient.connectionpool.idleTime:-30s}") final Time connectionPoolIdleTime,
-      @Named("${nexus.httpclient.connectionpool.evictingDelayTime:-5s}") final Time connectionPoolEvictingDelayTime,
-      @Named("${nexus.httpclient.connectionpool.validateAfterInactivityTime:-2s}") final Time connectionPoolValidateAfterInactivityTime,
-      @Named("${nexus.httpclient.connectionpool.default.requestTimeout:-20s}") final Time defaultSocketTimeout)
+      @Named("${nexus.httpclient.connectionpool.size:-20}") @Value("${nexus.httpclient.connectionpool.size:20}") final int connectionPoolSize,
+      @Named("${nexus.httpclient.connectionpool.maxSize:-200}") @Value("${nexus.httpclient.connectionpool.maxSize:200}") final int connectionPoolMaxSize,
+      @Named("${nexus.httpclient.connectionpool.idleTime:-30s}") @Value("${nexus.httpclient.connectionpool.idleTime:30s}") final Time connectionPoolIdleTime,
+      @Named("${nexus.httpclient.connectionpool.evictingDelayTime:-5s}") @Value("${nexus.httpclient.connectionpool.evictingDelayTime:5s}") final Time connectionPoolEvictingDelayTime,
+      @Named("${nexus.httpclient.connectionpool.validateAfterInactivityTime:-2s}") @Value("${nexus.httpclient.connectionpool.validateAfterInactivityTime:2s}") final Time connectionPoolValidateAfterInactivityTime,
+      @Named("${nexus.httpclient.connectionpool.default.requestTimeout:-20s}") @Value("${nexus.httpclient.connectionpool.default.requestTimeout:20s}") final Time defaultSocketTimeout)
   {
     super(
         new DefaultHttpClientConnectionOperator(createRegistry(sslContextSelectors), null, null),
         null,
         connectionPoolIdleTime.toMillis(),
-        TimeUnit.MILLISECONDS
-    );
+        TimeUnit.MILLISECONDS);
 
     setMaxTotal(connectionPoolMaxSize);
     log.debug("Connection pool max-size: {}", connectionPoolMaxSize);

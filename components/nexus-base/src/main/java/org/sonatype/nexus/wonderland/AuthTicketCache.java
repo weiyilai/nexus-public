@@ -21,6 +21,8 @@ public interface AuthTicketCache
 {
   String EXPIRE = "${wonderland.authTicketCache.expireAfter:-20s}";
 
+  String EXPIRE_VALUE = "${wonderland.authTicketCache.expireAfter:20s}";
+
   /**
    * Add token to the cache.
    */

@@ -30,6 +30,7 @@ import org.sonatype.nexus.blobstore.metrics.DatastoreBlobStoreMetricsServiceSupp
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 @Named(FileBlobStore.TYPE)
 @Priority(Integer.MAX_VALUE)
@@ -38,7 +39,7 @@ public class DatastoreFileBlobStoreMetricsService
 {
   @Inject
   public DatastoreFileBlobStoreMetricsService(
-      @Named("${nexus.blobstore.metrics.flushInterval:-2}") final int metricsFlushPeriodSeconds,
+      @Named("${nexus.blobstore.metrics.flushInterval:-2}") @Value("${nexus.blobstore.metrics.flushInterval:2}") final int metricsFlushPeriodSeconds,
       final BlobStoreMetricsStore blobStoreMetricsStore,
       final PeriodicJobService jobService)
   {

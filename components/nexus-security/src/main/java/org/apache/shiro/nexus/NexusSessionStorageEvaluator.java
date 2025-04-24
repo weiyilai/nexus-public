@@ -20,6 +20,7 @@ import org.sonatype.nexus.security.anonymous.AnonymousHelper;
 import org.apache.shiro.mgt.SessionStorageEvaluator;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.mgt.DefaultWebSessionStorageEvaluator;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Custom {@link SessionStorageEvaluator}.
@@ -27,10 +28,11 @@ import org.apache.shiro.web.mgt.DefaultWebSessionStorageEvaluator;
  * @since 3.0
  */
 public class NexusSessionStorageEvaluator
-  extends DefaultWebSessionStorageEvaluator
+    extends DefaultWebSessionStorageEvaluator
 {
   @Inject
   @Named("${nexus.session.enabled:-true}")
+  @Value("${nexus.session.enabled:true}")
   private boolean sessionsEnabled;
 
   /**
@@ -39,7 +41,7 @@ public class NexusSessionStorageEvaluator
   @Override
   public boolean isSessionStorageEnabled(final Subject subject) {
     if (sessionsEnabled) {
-       return !AnonymousHelper.isAnonymous(subject) && super.isSessionStorageEnabled(subject);
+      return !AnonymousHelper.isAnonymous(subject) && super.isSessionStorageEnabled(subject);
     }
     return false;
   }

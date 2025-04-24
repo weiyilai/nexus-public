@@ -77,6 +77,7 @@ import org.sonatype.nexus.transaction.Transactional;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Model;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toSet;
@@ -90,15 +91,15 @@ import static org.sonatype.nexus.repository.config.WritePolicy.ALLOW_ONCE;
 import static org.sonatype.nexus.repository.content.AttributeOperation.OVERLAY;
 import static org.sonatype.nexus.repository.maven.MavenMetadataRebuildFacet.METADATA_FORCE_REBUILD;
 import static org.sonatype.nexus.repository.maven.MavenMetadataRebuildFacet.METADATA_REBUILD;
-import static org.sonatype.nexus.repository.maven.internal.Attributes.AssetKind.ARTIFACT_SUBORDINATE;
-import static org.sonatype.nexus.repository.maven.internal.Attributes.AssetKind.REPOSITORY_INDEX;
-import static org.sonatype.nexus.repository.maven.internal.Attributes.AssetKind.REPOSITORY_METADATA;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_ARTIFACT_ID;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_BASE_VERSION;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_CLASSIFIER;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_EXTENSION;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_GROUP_ID;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_VERSION;
+import static org.sonatype.nexus.repository.maven.internal.Attributes.AssetKind.ARTIFACT_SUBORDINATE;
+import static org.sonatype.nexus.repository.maven.internal.Attributes.AssetKind.REPOSITORY_INDEX;
+import static org.sonatype.nexus.repository.maven.internal.Attributes.AssetKind.REPOSITORY_METADATA;
 import static org.sonatype.nexus.repository.maven.internal.Constants.METADATA_FILENAME;
 import static org.sonatype.nexus.repository.maven.internal.MavenModels.readModel;
 import static org.sonatype.nexus.repository.maven.internal.hosted.metadata.MetadataUtils.metadataPath;
@@ -155,7 +156,7 @@ public class MavenContentFacetImpl
       final MetadataRebuilder metadataRebuilder,
       final MavenMetadataContentValidator metadataValidator,
       final EventManager eventManager,
-      @Named("${nexus.maven.metadata.validation.enabled:-true}") final boolean metadataValidationEnabled)
+      @Named("${nexus.maven.metadata.validation.enabled:-true}") @Value("${nexus.maven.metadata.validation.enabled:true}") final boolean metadataValidationEnabled)
   {
     super(formatStoreManager);
     this.mavenPathParsers = checkNotNull(mavenPathParsers);
@@ -264,8 +265,7 @@ public class MavenContentFacetImpl
   }
 
   @Transactional
-  private FluentComponent createOrGetComponent(final MavenPath mavenPath, final Optional<Model> model)
-  {
+  private FluentComponent createOrGetComponent(final MavenPath mavenPath, final Optional<Model> model) {
     Optional<String> optionalKind = model.map(MavenAttributesHelper::getPackaging);
     Coordinates coordinates = mavenPath.getCoordinates();
 
@@ -280,7 +280,7 @@ public class MavenContentFacetImpl
 
     boolean isNew = isNewRepositoryContent(component);
     MavenAttributesHelper.setMavenAttributes(
-          (Maven2ComponentStore) stores().componentStore, component, coordinates, model, contentRepositoryId());
+        (Maven2ComponentStore) stores().componentStore, component, coordinates, model, contentRepositoryId());
 
     if (isNew) {
       publishEvents(component);
@@ -297,8 +297,7 @@ public class MavenContentFacetImpl
   }
 
   @Override
-  public void maybeUpdateComponentAttributes(final MavenPath mavenPath) throws IOException
-  {
+  public void maybeUpdateComponentAttributes(final MavenPath mavenPath) throws IOException {
     if (mavenPath.isPom()) {
       Optional<FluentAsset> optAsset = assets().path(assetPath(mavenPath)).find();
       if (optAsset.isPresent()) {
@@ -315,8 +314,7 @@ public class MavenContentFacetImpl
     }
   }
 
-  private Optional<Model> maybeReadMavenModel(final MavenPath mavenPath, final TempBlob blob) throws IOException
-  {
+  private Optional<Model> maybeReadMavenModel(final MavenPath mavenPath, final TempBlob blob) throws IOException {
     Model model = null;
     if (mavenPath.isPom()) {
       model = readModel(blob.getBlob().getInputStream());
@@ -500,7 +498,7 @@ public class MavenContentFacetImpl
     boolean gaNonEmpty = gNonEmpty && components()
         .byFilter("namespace = #{filterParams.groupId} AND name = #{filterParams.artifactId}", gabvQueryParameters)
         .count() > 0;
-    boolean gabvNonEmpty = gaNonEmpty &&  components().byFilter(
+    boolean gabvNonEmpty = gaNonEmpty && components().byFilter(
         "namespace = #{filterParams.groupId} AND name = #{filterParams.artifactId} AND base_version = #{filterParams.baseVersion}",
         gabvQueryParameters).count() > 0;
 
@@ -540,15 +538,17 @@ public class MavenContentFacetImpl
 
   @Override
   public Set<GAV> findGavsWithSnaphots(final int minimumRetained) {
-    Maven2ComponentStore componentStore = (Maven2ComponentStore)stores().componentStore;
+    Maven2ComponentStore componentStore = (Maven2ComponentStore) stores().componentStore;
     return componentStore.findGavsWithSnaphots(contentRepositoryId(), minimumRetained);
   }
 
   @Override
-  public List<Maven2ComponentData> findComponentsForGav(final String name,
-                                                       final String group,
-                                                       final String baseVersion,
-                                                       final String releaseVersion) {
+  public List<Maven2ComponentData> findComponentsForGav(
+      final String name,
+      final String group,
+      final String baseVersion,
+      final String releaseVersion)
+  {
     Maven2ComponentStore componentStore = (Maven2ComponentStore) stores().componentStore;
     return componentStore.findComponentsForGav(contentRepositoryId(), name, group, baseVersion, releaseVersion);
   }
@@ -664,7 +664,6 @@ public class MavenContentFacetImpl
             + "AND base_version = #{filterParams.baseVersion}", filterParams)
         .browse(limit, continuationToken);
   }
-
 
   @Transactional
   private FluentComponent createOrGetComponent(final Coordinates coordinates) {

@@ -30,6 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -68,6 +69,7 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -133,11 +135,11 @@ public class ElasticSearchIndexServiceImpl
       final IndexNamingPolicy indexNamingPolicy,
       final List<IndexSettingsContributor> indexSettingsContributors,
       final EventManager eventManager,
-      @Named("${nexus.elasticsearch.bulkCapacity:-1000}") final int bulkCapacity,
-      @Named("${nexus.elasticsearch.concurrentRequests:-1}") final int concurrentRequests,
-      @Named("${nexus.elasticsearch.flushInterval:-0}") final int flushInterval,
-      @Named("${nexus.elasticsearch.calmTimeout:-3000}") final int calmTimeout,
-      @Named("${nexus.elasticsearch.batching.threads.count:-1}") final int batchingThreads)
+      @Named("${nexus.elasticsearch.bulkCapacity:-1000}") @Value("${nexus.elasticsearch.bulkCapacity:1000}") final int bulkCapacity,
+      @Named("${nexus.elasticsearch.concurrentRequests:-1}") @Value("${nexus.elasticsearch.concurrentRequests:1}") final int concurrentRequests,
+      @Named("${nexus.elasticsearch.flushInterval:-0}") @Value("${nexus.elasticsearch.flushInterval:0}") final int flushInterval,
+      @Named("${nexus.elasticsearch.calmTimeout:-3000}") @Value("${nexus.elasticsearch.calmTimeout:3000}") final int calmTimeout,
+      @Named("${nexus.elasticsearch.batching.threads.count:-1}") @Value("${nexus.elasticsearch.batching.threads.count:1}") final int batchingThreads)
   {
     checkState(batchingThreads > 0,
         "'nexus.elasticsearch.batching.threads.count' must be positive.");

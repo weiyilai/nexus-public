@@ -23,8 +23,10 @@ import org.sonatype.nexus.repository.content.store.AssetStore;
 import org.sonatype.nexus.transaction.Transactional;
 
 import com.google.inject.assistedinject.Assisted;
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE;
 
 public class Maven2AssetStore
     extends AssetStore<Maven2AssetDAO>
@@ -32,14 +34,15 @@ public class Maven2AssetStore
   @Inject
   public Maven2AssetStore(
       final DataSessionSupplier sessionSupplier,
-      @Named(DATASTORE_CLUSTERED_ENABLED_NAMED) final boolean clustered,
+      @Named(DATASTORE_CLUSTERED_ENABLED_NAMED) @Value(DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean clustered,
       @Assisted final String storeName)
   {
     super(sessionSupplier, clustered, storeName, Maven2AssetDAO.class);
   }
 
   @Transactional
-  public Continuation<Asset> findMavenPluginAssetsForNamespace(final int repositoryId,
+  public Continuation<Asset> findMavenPluginAssetsForNamespace(
+      final int repositoryId,
       final int limit,
       @Nullable final String continuationToken,
       final String namespace)

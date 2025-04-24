@@ -22,6 +22,8 @@ import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 import org.sonatype.nexus.repository.content.search.SearchEventHandler;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 
@@ -36,10 +38,11 @@ public class DefaultSearchEventHandler
   public DefaultSearchEventHandler(
       final RepositoryManager repositoryManager,
       final PeriodicJobService periodicJobService,
-      @Named("${" + FLUSH_ON_COUNT_KEY + ":-100}") final int flushOnCount,
-      @Named("${" + FLUSH_ON_SECONDS_KEY + ":-2}") final int flushOnSeconds,
-      @Named("${" + NO_PURGE_DELAY_KEY + ":-true}") final boolean noPurgeDelay,
-      @Named("${" + FLUSH_POOL_SIZE + ":-128}") final int poolSize)
+      @Named("${" + FLUSH_ON_COUNT_KEY + ":-100}") @Value("${" + FLUSH_ON_COUNT_KEY + ":100}") final int flushOnCount,
+      @Named("${" + FLUSH_ON_SECONDS_KEY + ":-2}") @Value("${" + FLUSH_ON_SECONDS_KEY + ":2}") final int flushOnSeconds,
+      @Named("${" + NO_PURGE_DELAY_KEY + ":-true}") @Value("${" + NO_PURGE_DELAY_KEY
+          + ":true}") final boolean noPurgeDelay,
+      @Named("${" + FLUSH_POOL_SIZE + ":-128}") @Value("${" + FLUSH_POOL_SIZE + ":128}") final int poolSize)
   {
     super(repositoryManager, periodicJobService, flushOnCount, flushOnSeconds, noPurgeDelay, poolSize);
   }

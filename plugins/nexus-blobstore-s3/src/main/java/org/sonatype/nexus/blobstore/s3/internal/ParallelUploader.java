@@ -33,6 +33,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.UploadPartRequest;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -54,8 +55,9 @@ public class ParallelUploader
   private static final Chunk EMPTY_CHUNK = new ChunkReader.Chunk(0, new byte[0], 0);
 
   @Inject
-  public ParallelUploader(@Named("${nexus.s3.parallelRequests.chunksize:-5242880}") final int chunkSize,
-                          @Named("${nexus.s3.parallelRequests.parallelism:-0}") final int nThreads)
+  public ParallelUploader(
+      @Named("${nexus.s3.parallelRequests.chunksize:-5242880}") @Value("${nexus.s3.parallelRequests.chunksize:5242880}") final int chunkSize,
+      @Named("${nexus.s3.parallelRequests.parallelism:-0}") @Value("${nexus.s3.parallelRequests.parallelism:0}") final int nThreads)
   {
     super(chunkSize, nThreads, "uploadThreads");
   }
@@ -87,12 +89,12 @@ public class ParallelUploader
     }
   }
 
-  private List<PartETag> uploadChunks(final AmazonS3 s3,
-                                      final String bucket,
-                                      final String key,
-                                      final String uploadId,
-                                      final ChunkReader chunkReader)
-      throws IOException
+  private List<PartETag> uploadChunks(
+      final AmazonS3 s3,
+      final String bucket,
+      final String key,
+      final String uploadId,
+      final ChunkReader chunkReader) throws IOException
   {
     List<PartETag> tags = new ArrayList<>();
     Optional<Chunk> chunk;
@@ -123,8 +125,7 @@ public class ParallelUploader
       this.input = checkNotNull(input);
     }
 
-    synchronized Optional<Chunk> readChunk(final int size) throws IOException
-    {
+    synchronized Optional<Chunk> readChunk(final int size) throws IOException {
       byte[] buf = new byte[size];
       int bytesRead = 0;
       int readSize;
@@ -146,7 +147,7 @@ public class ParallelUploader
 
       Chunk(final int dataLength, final byte[] data, final int chunkNumber) {
         this.dataLength = dataLength;
-        this.data = data;  //NOSONAR
+        this.data = data; // NOSONAR
         this.chunkNumber = chunkNumber;
       }
     }

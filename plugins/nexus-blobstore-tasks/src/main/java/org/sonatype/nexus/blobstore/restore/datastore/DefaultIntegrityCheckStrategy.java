@@ -40,6 +40,7 @@ import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.content.fluent.FluentAssets;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.time.LocalDate.now;
@@ -93,7 +94,7 @@ public class DefaultIntegrityCheckStrategy
 
   @Inject
   public DefaultIntegrityCheckStrategy(
-      @Named("${nexus.blobstore.restore.integrityCheck.batchSize:-1000}") final int browseBatchSize)
+      @Named("${nexus.blobstore.restore.integrityCheck.batchSize:-1000}") @Value("${nexus.blobstore.restore.integrityCheck.batchSize:1000}") final int browseBatchSize)
   {
     checkArgument(browseBatchSize > 0);
     this.browseBatchSize = browseBatchSize;
@@ -203,7 +204,7 @@ public class DefaultIntegrityCheckStrategy
    * Check the asset for integrity. By default checks name and SHA1.
    *
    * @param blobAttributes the {@link BlobAttributes} from the {@link Blob}
-   * @param asset          the {@link Asset}
+   * @param asset the {@link Asset}
    * @return true if asset integrity is intact, false otherwise
    */
   protected boolean checkAssetIntegrity(final BlobAttributes blobAttributes, final Asset asset) {

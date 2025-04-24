@@ -12,8 +12,14 @@
  */
 package org.sonatype.nexus.script.plugin.internal.security;
 
-import com.google.common.base.Joiner;
-import org.apache.shiro.authz.Permission;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
 import org.sonatype.nexus.formfields.FormField;
@@ -29,20 +35,18 @@ import org.sonatype.nexus.security.privilege.Privilege;
 import org.sonatype.nexus.security.privilege.PrivilegeDescriptorSupport;
 import org.sonatype.nexus.security.privilege.rest.PrivilegeAction;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.List;
+import com.google.common.base.Joiner;
+import org.apache.shiro.authz.Permission;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_VALUE;
 
 /**
  * Descriptor for {@link ScriptPermission}
- * 
+ *
  * @since 3.0
  */
 @Named("script")
@@ -91,7 +95,7 @@ public class ScriptPrivilegeDescriptor
   @Inject
   public ScriptPrivilegeDescriptor(
       final ScriptManager scriptManager,
-      @Named(REACT_PRIVILEGES_NAMED) final boolean isReactPrivileges)
+      @Named(REACT_PRIVILEGES_NAMED) @Value(REACT_PRIVILEGES_NAMED_VALUE) final boolean isReactPrivileges)
   {
     super(TYPE);
     this.formFields = List.of(

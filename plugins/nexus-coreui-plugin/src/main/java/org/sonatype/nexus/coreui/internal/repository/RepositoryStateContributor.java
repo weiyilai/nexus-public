@@ -22,6 +22,7 @@ import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 @Named
 @Singleton
@@ -32,7 +33,9 @@ public class RepositoryStateContributor
   private final Map<String, Object> state;
 
   @Inject
-  public RepositoryStateContributor(@Named("${nexus.react.repositories:-false}") final Boolean featureFlag) {
+  public RepositoryStateContributor(
+      @Named("${nexus.react.repositories:-false}") @Value("${nexus.react.repositories:false}") final Boolean featureFlag)
+  {
     state = ImmutableMap.of("nexus.react.repositories", featureFlag);
   }
 

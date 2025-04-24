@@ -40,6 +40,7 @@ import org.sonatype.nexus.scheduling.CancelableHelper;
 import org.sonatype.nexus.scheduling.TaskInterruptedException;
 
 import com.google.common.hash.HashCode;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.BLOB_STORE_NAME;
@@ -72,8 +73,10 @@ public abstract class GenerateChecksumTaskSupport
   private MessageDigest messageDigest;
 
   @Inject
-  public void init(@Named("${nexus.calculateChecksums.bufferSize:-32768}") final int bufferSize,
-      final BlobStoreManager blobStoreManager) throws NoSuchAlgorithmException {
+  public void init(
+      @Named("${nexus.calculateChecksums.bufferSize:-32768}") @Value("${nexus.calculateChecksums.bufferSize:32768}") final int bufferSize,
+      final BlobStoreManager blobStoreManager) throws NoSuchAlgorithmException
+  {
     // Ensure at least a 4K buffer
     this.bufferSize = Math.max(4096, bufferSize);
     this.blobStoreManager = checkNotNull(blobStoreManager);
@@ -110,8 +113,10 @@ public abstract class GenerateChecksumTaskSupport
   }
 
   private void processAssetChecksums(
-      final BlobStore blobStore, final AssetBlobStore<?> assetBlobStore,
-      final FluentAsset asset, final ResultCount resultCount,
+      final BlobStore blobStore,
+      final AssetBlobStore<?> assetBlobStore,
+      final FluentAsset asset,
+      final ResultCount resultCount,
       final ProgressLogIntervalHelper progressLogger)
   {
     CancelableHelper.checkCancellation();
@@ -167,7 +172,7 @@ public abstract class GenerateChecksumTaskSupport
     }
     catch (IOException e) {
       log.warn(String.format("Exception whilst calculating SHA256 checksum for %s: %s", assetPath,
-              e.getLocalizedMessage()),
+          e.getLocalizedMessage()),
           log.isDebugEnabled() ? e : null);
     }
     return null;

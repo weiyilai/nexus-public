@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -40,6 +41,7 @@ import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.transaction.RetryDeniedException;
 
 import com.google.common.base.Predicate;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Predicates.or;
 import static java.util.Optional.empty;
@@ -64,11 +66,11 @@ public class MergingGroupHandler
 
   @Inject
   public MergingGroupHandler(
-      @Named Cooperation2Factory cooperationFactory,
-      @Named("${nexus.maven.group.cooperation.enabled:-true}") final boolean cooperationEnabled,
-      @Named("${nexus.maven.group.cooperation.majorTimeout:-0s}") final Duration majorTimeout,
-      @Named("${nexus.maven.group.cooperation.minorTimeout:-30s}") final Duration minorTimeout,
-      @Named("${nexus.maven.group.cooperation.threadsPerKey:-100}") final int threadsPerKey)
+      @Named final Cooperation2Factory cooperationFactory,
+      @Named("${nexus.maven.group.cooperation.enabled:-true}") @Value("${nexus.maven.group.cooperation.enabled:true}") final boolean cooperationEnabled,
+      @Named("${nexus.maven.group.cooperation.majorTimeout:-0s}") @Value("${nexus.maven.group.cooperation.majorTimeout:0s}") final Duration majorTimeout,
+      @Named("${nexus.maven.group.cooperation.minorTimeout:-30s}") @Value("${nexus.maven.group.cooperation.minorTimeout:30s}") final Duration minorTimeout,
+      @Named("${nexus.maven.group.cooperation.threadsPerKey:-100}") @Value("${nexus.maven.group.cooperation.threadsPerKey:100}") final int threadsPerKey)
   {
     this.metadataCooperation = cooperationFactory.configure()
         .majorTimeout(majorTimeout)

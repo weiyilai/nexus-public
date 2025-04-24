@@ -34,6 +34,7 @@ import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.security.subject.FakeAlmightySubject;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -70,9 +71,9 @@ public class DatabaseStatusDelayedExecutor
   @Inject
   public DatabaseStatusDelayedExecutor(
       final FreezeService freezeService,
-      @Named("${nexus.delayedExecutor.threadPoolSize:-1}") final int delayedExecutorThreadPoolSize,
-      @Named("${nexus.delayedExecutor.sleepIntervalMs:-5000}") final int sleepInterval,
-      @Named("${nexus.delayedExecutor.maxRetries:-8640}") final int maxRetries)
+      @Named("${nexus.delayedExecutor.threadPoolSize:-1}") @Value("${nexus.delayedExecutor.threadPoolSize:1}") final int delayedExecutorThreadPoolSize,
+      @Named("${nexus.delayedExecutor.sleepIntervalMs:-5000}") @Value("${nexus.delayedExecutor.sleepIntervalMs:5000}") final int sleepInterval,
+      @Named("${nexus.delayedExecutor.maxRetries:-8640}") @Value("${nexus.delayedExecutor.maxRetries:8640}") final int maxRetries)
   {
     this.freezeService = checkNotNull(freezeService);
     checkArgument(delayedExecutorThreadPoolSize > 0, delayedExecutorThreadPoolSize);

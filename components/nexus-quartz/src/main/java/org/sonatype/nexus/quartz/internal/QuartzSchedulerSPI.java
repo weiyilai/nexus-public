@@ -26,6 +26,7 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -75,6 +76,7 @@ import org.quartz.TriggerKey;
 import org.quartz.UnableToInterruptJobException;
 import org.quartz.core.QuartzScheduler;
 import org.quartz.spi.JobStore;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -147,7 +149,7 @@ public abstract class QuartzSchedulerSPI
       final Provider<Scheduler> schedulerProvider,
       final LastShutdownTimeService lastShutdownTimeService,
       final DatabaseStatusDelayedExecutor delayedExecutor,
-      @Named("${nexus.quartz.recoverInterruptedJobs:-true}") final boolean recoverInterruptedJobs)
+      @Named("${nexus.quartz.recoverInterruptedJobs:-true}") @Value("${nexus.quartz.recoverInterruptedJobs:true}") final boolean recoverInterruptedJobs)
   {
     this.eventManager = checkNotNull(eventManager);
     this.nodeAccess = checkNotNull(nodeAccess);

@@ -13,6 +13,7 @@
 package org.sonatype.nexus.repository.apt.datastore.internal.data;
 
 import java.util.stream.Stream;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -25,6 +26,7 @@ import org.sonatype.nexus.repository.content.kv.KeyValue;
 import org.sonatype.nexus.repository.content.kv.KeyValueFacetSupport;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -39,8 +41,7 @@ public class AptKeyValueFacet
 
   @Inject
   public AptKeyValueFacet(
-      @Named("${nexus.apt.paging.size:-100}") final int limit
-  )
+      @Named("${nexus.apt.paging.size:-100}") @Value("${nexus.apt.paging.size:100}") final int limit)
   {
     super(AptFormat.NAME, AptKeyValueDAO.class);
     checkArgument(limit > 0);
@@ -50,9 +51,9 @@ public class AptKeyValueFacet
   /**
    * Store AptDeb metadata
    *
-   * @param assetId     the assetId
+   * @param assetId the assetId
    * @param componentId the componentId
-   * @param metadata    the json of an AptDeb metadata
+   * @param metadata the json of an AptDeb metadata
    */
   public void addPackageMetadata(final int componentId, final int assetId, final String metadata) {
     set(CATEGORY, aptKey(componentId, assetId), metadata);
@@ -61,7 +62,7 @@ public class AptKeyValueFacet
   /**
    * Remove the AptDeb metadata.
    *
-   * @param assetId     the assetId
+   * @param assetId the assetId
    * @param componentId the componentId
    */
   public void removePackageMetadata(final int componentId, final int assetId) {

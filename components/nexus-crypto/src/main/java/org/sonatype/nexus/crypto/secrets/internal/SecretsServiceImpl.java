@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -49,6 +50,7 @@ import com.fasterxml.jackson.core.Base64Variants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -107,13 +109,13 @@ public class SecretsServiceImpl
       final SecretsStore secretsStore,
       final EncryptionKeySource encryptionKeySource,
       final DatabaseCheck databaseCheck,
-      @Named("${nexus.mybatis.cipher.password:-changeme}") final String legacyPassword,
-      @Named("${nexus.mybatis.cipher.salt:-changeme}") final String legacySalt,
-      @Named("${nexus.mybatis.cipher.iv:-0123456789ABCDEF}") final String legacyIv)
+      @Named("${nexus.mybatis.cipher.password:-changeme}") @Value("${nexus.mybatis.cipher.password:changeme}") final String legacyPassword,
+      @Named("${nexus.mybatis.cipher.salt:-changeme}") @Value("${nexus.mybatis.cipher.salt:changeme}") final String legacySalt,
+      @Named("${nexus.mybatis.cipher.iv:-0123456789ABCDEF}") @Value("${nexus.mybatis.cipher.iv:0123456789ABCDEF}") final String legacyIv)
   {
-    this.legacyCipher = checkNotNull(legacyCipherFactory).create(legacyPassword, legacySalt, legacyIv);//NOSONAR
-    this.mavenCipher = checkNotNull(mavenCipher);//NOSONAR
-    this.phraseService = checkNotNull(phraseService);//NOSONAR
+    this.legacyCipher = checkNotNull(legacyCipherFactory).create(legacyPassword, legacySalt, legacyIv);// NOSONAR
+    this.mavenCipher = checkNotNull(mavenCipher);// NOSONAR
+    this.phraseService = checkNotNull(phraseService);// NOSONAR
     this.cipherFactory = checkNotNull(pbeCipherFactory);
     this.secretsStore = checkNotNull(secretsStore);
     this.encryptionKeySource = checkNotNull(encryptionKeySource);
@@ -148,15 +150,19 @@ public class SecretsServiceImpl
   }
 
   @Override
-  public Secret encrypt(final String purpose, final char[] secret, @Nullable final String userId)
-      throws CipherException
+  public Secret encrypt(
+      final String purpose,
+      final char[] secret,
+      @Nullable final String userId) throws CipherException
   {
     return this.encrypt(purpose, secret, this::encryptWithLegacyPBE, userId);
   }
 
   @Override
-  public Secret encryptMaven(final String purpose, final char[] secret, @Nullable final String userid)
-      throws CipherException
+  public Secret encryptMaven(
+      final String purpose,
+      final char[] secret,
+      @Nullable final String userid) throws CipherException
   {
     return this.encrypt(purpose, secret, this::encryptWithMavenCipher, userid);
   }
@@ -173,7 +179,7 @@ public class SecretsServiceImpl
 
     Optional<SecretEncryptionKey> customKey = encryptionKeySource.getActiveKey();
 
-    //defaulting key_id as NULL, since NULL means legacy encryption
+    // defaulting key_id as NULL, since NULL means legacy encryption
     String activeKeyId = null;
 
     if (customKey.isPresent()) {
@@ -258,7 +264,7 @@ public class SecretsServiceImpl
 
   /**
    * @deprecated this is used to encrypt legacy values with {@link LegacyCipherFactory.PbeCipher} until the system
-   * migrates to the new version.
+   *             migrates to the new version.
    */
   @Deprecated
   private String encryptWithLegacyPBE(final char[] secret) {
@@ -270,7 +276,7 @@ public class SecretsServiceImpl
 
   /**
    * @deprecated this is used to encrypt legacy values with {@link MavenCipher} until the system migrates to the new
-   * version
+   *             version
    */
   @Deprecated
   private String encryptWithMavenCipher(final char[] secret) {

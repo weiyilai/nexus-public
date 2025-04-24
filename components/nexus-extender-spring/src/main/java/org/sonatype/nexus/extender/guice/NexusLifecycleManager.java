@@ -18,13 +18,13 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.Lifecycle;
-
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.app.ManagedLifecycle.Phase;
 import org.sonatype.nexus.common.app.ManagedLifecycleManager;
@@ -36,7 +36,7 @@ import com.google.common.collect.Multimap;
 import com.google.inject.Key;
 import org.eclipse.sisu.BeanEntry;
 import org.eclipse.sisu.inject.BeanLocator;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -44,6 +44,7 @@ import static com.google.common.collect.Lists.reverse;
 import static java.lang.Math.max;
 import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.sonatype.nexus.common.app.FeatureFlags.STARTUP_TASKS_DELAY_SECONDS;
+import static org.sonatype.nexus.common.app.FeatureFlags.STARTUP_TASKS_DELAY_SECONDS_VALUE;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.KERNEL;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.OFF;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
@@ -85,7 +86,7 @@ public class NexusLifecycleManager
 
   public NexusLifecycleManager(
       final BeanLocator beanLocator,
-      @Named(STARTUP_TASKS_DELAY_SECONDS) final int timeToDelay)
+      @Named(STARTUP_TASKS_DELAY_SECONDS) @Value(STARTUP_TASKS_DELAY_SECONDS_VALUE) final int timeToDelay)
   {
     this.beanLocator = checkNotNull(beanLocator);
     this.timeToDelay = timeToDelay;

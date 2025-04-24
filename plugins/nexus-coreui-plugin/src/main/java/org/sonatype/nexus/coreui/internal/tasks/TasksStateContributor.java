@@ -13,6 +13,7 @@
 package org.sonatype.nexus.coreui.internal.tasks;
 
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -21,6 +22,7 @@ import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 @Named
 @Singleton
@@ -31,7 +33,9 @@ public class TasksStateContributor
   private final Map<String, Object> state;
 
   @Inject
-  public TasksStateContributor(@Named("${nexus.react.tasks:-false}") final Boolean featureFlag) {
+  public TasksStateContributor(
+      @Named("${nexus.react.tasks:-false}") @Value("${nexus.react.tasks:false}") final Boolean featureFlag)
+  {
     state = ImmutableMap.of("nexus.react.tasks", featureFlag);
   }
 

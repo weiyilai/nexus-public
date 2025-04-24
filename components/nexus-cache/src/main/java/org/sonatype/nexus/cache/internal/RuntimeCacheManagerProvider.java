@@ -23,6 +23,8 @@ import javax.inject.Provider;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.node.NodeAccess;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -49,7 +51,7 @@ public class RuntimeCacheManagerProvider
   public RuntimeCacheManagerProvider(
       final Map<String, Provider<CacheManager>> providers,
       @Nullable @Named("${nexus.cache.provider}") final String customName,
-      @Named("${nexus.orient.enabled:-false}") final boolean orient,
+      @Named("${nexus.orient.enabled:-false}") @Value("${nexus.orient.enabled:false}") final boolean orient,
       final NodeAccess nodeAccess)
   {
     this.providers = checkNotNull(providers);

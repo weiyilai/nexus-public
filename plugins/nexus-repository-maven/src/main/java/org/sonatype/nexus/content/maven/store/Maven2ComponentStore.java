@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -24,8 +25,10 @@ import org.sonatype.nexus.repository.content.store.ComponentStore;
 import org.sonatype.nexus.transaction.Transactional;
 
 import com.google.inject.assistedinject.Assisted;
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE;
 
 /**
  * @since 3.29
@@ -36,7 +39,7 @@ public class Maven2ComponentStore
   @Inject
   public Maven2ComponentStore(
       final DataSessionSupplier sessionSupplier,
-      @Named(DATASTORE_CLUSTERED_ENABLED_NAMED) final boolean clustered,
+      @Named(DATASTORE_CLUSTERED_ENABLED_NAMED) @Value(DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean clustered,
       @Assisted final String storeName)
   {
     super(sessionSupplier, clustered, storeName, Maven2ComponentDAO.class);
@@ -48,8 +51,7 @@ public class Maven2ComponentStore
    * @param component the component to update
    */
   @Transactional
-  public void updateBaseVersion(final Maven2ComponentData component)
-  {
+  public void updateBaseVersion(final Maven2ComponentData component) {
     dao().updateBaseVersion(component);
   }
 
@@ -83,8 +85,8 @@ public class Maven2ComponentStore
    * Selects snapshot components ids last used before provided date
    *
    * @param repositoryId the repository to select from
-   * @param olderThan    selects component before this date
-   * @param limit        limit the selection
+   * @param olderThan selects component before this date
+   * @param limit limit the selection
    * @return snapshot components last used before provided date
    */
   @Transactional

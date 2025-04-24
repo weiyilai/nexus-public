@@ -46,6 +46,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
@@ -98,7 +99,7 @@ public class RaptureWebResourceBundle
       final List<UiPluginDescriptor> pluginDescriptors,
       final List<org.sonatype.nexus.rapture.UiPluginDescriptor> extJsPluginDescriptors,
       @Nullable @Named("${" + PROPERTY_WEBRESOURCES_CACHEBUSTER + "}") final String cacheBuster,
-      @Named("${nexus.analytics.enabled:-true}") final boolean analyticsEnabled)
+      @Named("${nexus.analytics.enabled:-true}") @Value("${nexus.analytics.enabled:true}") final boolean analyticsEnabled)
   {
     this.applicationVersion = checkNotNull(applicationVersion);
     this.servletRequestProvider = checkNotNull(servletRequestProvider);

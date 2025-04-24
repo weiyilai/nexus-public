@@ -18,9 +18,11 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -45,11 +47,11 @@ import org.sonatype.nexus.repository.content.store.FormatStoreManager;
 import org.sonatype.nexus.repository.ossindex.PackageUrlService;
 
 import com.google.common.base.Stopwatch;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Math.max;
-import static java.util.Map.Entry;
 import static org.sonatype.nexus.repository.FacetSupport.State.STARTED;
 import static org.sonatype.nexus.repository.content.store.InternalIds.internalComponentId;
 import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
@@ -91,7 +93,7 @@ public class BrowseFacetImpl
       final Map<String, FormatStoreManager> formatStoreManagersByFormat,
       final Map<String, BrowseNodeGenerator> browseNodeGeneratorsByFormat,
       final PackageUrlService packageUrlService,
-      @Named("${nexus.browse.rebuild.pageSize:-1000}") final int pageSize)
+      @Named("${nexus.browse.rebuild.pageSize:-1000}") @Value("${nexus.browse.rebuild.pageSize:1000}") final int pageSize)
   {
     this.formatStoreManagersByFormat = checkNotNull(formatStoreManagersByFormat);
     this.browseNodeGeneratorsByFormat = checkNotNull(browseNodeGeneratorsByFormat);

@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -46,9 +47,11 @@ import org.sonatype.nexus.transaction.Transactional;
 
 import com.google.inject.assistedinject.Assisted;
 import org.apache.ibatis.annotations.Param;
+import org.springframework.beans.factory.annotation.Value;
 
 import static java.util.Arrays.stream;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE;
 import static org.sonatype.nexus.repository.content.AttributesHelper.applyAttributeChange;
 import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
 
@@ -68,7 +71,7 @@ public class ComponentStore<T extends ComponentDAO>
   @Inject
   public ComponentStore(
       final DataSessionSupplier sessionSupplier,
-      @Named(DATASTORE_CLUSTERED_ENABLED_NAMED) final boolean clustered,
+      @Named(DATASTORE_CLUSTERED_ENABLED_NAMED) @Value(DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean clustered,
       @Assisted final String contentStoreName,
       @Assisted final Class<T> daoClass)
   {

@@ -21,6 +21,8 @@ import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.RepositoryCombobox;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * Task descriptor for {@link RebuildIndexTask}.
  *
@@ -39,7 +41,7 @@ public class RebuildIndexTaskDescriptor
   @Inject
   public RebuildIndexTaskDescriptor(
       final NodeAccess nodeAccess,
-      @Named("${nexus.elasticsearch.enabled:-true}") final boolean esEnabled)
+      @Named("${nexus.elasticsearch.enabled:-true}") @Value("${nexus.elasticsearch.enabled:true}") final boolean esEnabled)
   {
     super(TYPE_ID,
         RebuildIndexTask.class,
@@ -50,10 +52,8 @@ public class RebuildIndexTaskDescriptor
             REPOSITORY_NAME_FIELD_ID,
             "Repository",
             "Select the repository to rebuild index",
-            true
-        ).includingAnyOfFacets(SearchIndexFacet.class).includeAnEntryForAllRepositories(),
+            true).includingAnyOfFacets(SearchIndexFacet.class).includeAnEntryForAllRepositories(),
 
-        esEnabled && nodeAccess.isClustered() ? newMultinodeFormField().withInitialValue(true) : null
-    );
+        esEnabled && nodeAccess.isClustered() ? newMultinodeFormField().withInitialValue(true) : null);
   }
 }

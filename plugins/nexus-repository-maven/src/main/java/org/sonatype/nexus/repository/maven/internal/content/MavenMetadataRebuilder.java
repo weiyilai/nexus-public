@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -58,8 +60,10 @@ public class MavenMetadataRebuilder
   private final ExecutorService executor;
 
   @Inject
-  public MavenMetadataRebuilder(@Named("${nexus.maven.metadata.rebuild.bufferSize:-1000}") final int bufferSize,
-                                @Named("${nexus.maven.metadata.rebuild.threadPoolSize:-1}") final int maxTreads) {
+  public MavenMetadataRebuilder(
+      @Named("${nexus.maven.metadata.rebuild.bufferSize:-1000}") @Value("${nexus.maven.metadata.rebuild.bufferSize:1000}") final int bufferSize,
+      @Named("${nexus.maven.metadata.rebuild.threadPoolSize:-1}") @Value("${nexus.maven.metadata.rebuild.threadPoolSize:1}") final int maxTreads)
+  {
     checkArgument(bufferSize > 0, "Buffer size must be greater than 0");
 
     this.bufferSize = bufferSize;
@@ -78,7 +82,8 @@ public class MavenMetadataRebuilder
       @Nullable final String baseVersion)
   {
     checkNotNull(repository);
-    MetadataRebuildWorker worker = new MetadataRebuildWorker(repository, update, groupId, artifactId, baseVersion, bufferSize);
+    MetadataRebuildWorker worker =
+        new MetadataRebuildWorker(repository, update, groupId, artifactId, baseVersion, bufferSize);
     return rebuildWithWorker(worker, rebuildChecksums, cascadeUpdate, groupId, artifactId, baseVersion);
   }
 
@@ -164,13 +169,15 @@ public class MavenMetadataRebuilder
       final Collection<String> baseVersions,
       final boolean rebuildChecksums)
   {
-      executor.submit(() -> {
-        log.debug("Started asynchronously rebuild metadata/recalculate checksums for GAVs. Namespace: {}, name: {}, baseVersions {}",
-            namespace, name, baseVersions);
-        worker.rebuildBaseVersionsAndChecksums(namespace, name, baseVersions, rebuildChecksums);
-        log.debug("Finished asynchronously rebuild metadata/recalculate checksums for GAVs. Namespace: {}, name: {}, baseVersions {}",
-            namespace, name, baseVersions);
-      });
+    executor.submit(() -> {
+      log.debug(
+          "Started asynchronously rebuild metadata/recalculate checksums for GAVs. Namespace: {}, name: {}, baseVersions {}",
+          namespace, name, baseVersions);
+      worker.rebuildBaseVersionsAndChecksums(namespace, name, baseVersions, rebuildChecksums);
+      log.debug(
+          "Finished asynchronously rebuild metadata/recalculate checksums for GAVs. Namespace: {}, name: {}, baseVersions {}",
+          namespace, name, baseVersions);
+    });
   }
 
   /*

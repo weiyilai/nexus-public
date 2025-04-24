@@ -42,10 +42,12 @@ import org.sonatype.nexus.selector.SelectorManager;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import org.apache.shiro.authz.Permission;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_VALUE;
 
 /**
  * Repository selector {@link PrivilegeDescriptor}.
@@ -56,7 +58,8 @@ import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED;
 @Named(RepositoryContentSelectorPrivilegeDescriptor.TYPE)
 @Singleton
 public class RepositoryContentSelectorPrivilegeDescriptor
-    extends RepositoryPrivilegeDescriptorSupport<ApiPrivilegeRepositoryContentSelector, ApiPrivilegeRepositoryContentSelectorRequest>
+    extends
+    RepositoryPrivilegeDescriptorSupport<ApiPrivilegeRepositoryContentSelector, ApiPrivilegeRepositoryContentSelectorRequest>
 {
   public static final String INVALID_SELECTOR = "\"Invalid selector '%s' supplied.\"";
 
@@ -111,7 +114,7 @@ public class RepositoryContentSelectorPrivilegeDescriptor
       final RepositoryManager repositoryManager,
       final SelectorManager selectorManager,
       final List<Format> formats,
-      @Named(REACT_PRIVILEGES_NAMED) final boolean isReactPrivileges)
+      @Named(REACT_PRIVILEGES_NAMED) @Value(REACT_PRIVILEGES_NAMED_VALUE) final boolean isReactPrivileges)
   {
     super(TYPE, repositoryManager, formats);
     this.selectorManager = checkNotNull(selectorManager);
@@ -120,29 +123,24 @@ public class RepositoryContentSelectorPrivilegeDescriptor
             P_CONTENT_SELECTOR,
             messages.contentSelector(),
             messages.contentSelectorHelp(),
-            FormField.MANDATORY
-        ),
+            FormField.MANDATORY),
         new RepositoryCombobox(
             P_REPOSITORY,
             messages.repository(),
             messages.repositoryHelp(),
-            true
-        ).includeEntriesForAllFormats(),
-        isReactPrivileges ?
-        new SetOfCheckboxesFormField(
-            P_ACTIONS,
-            messages.actions(),
-            messages.actionsCheckboxesHelp(),
-            FormField.MANDATORY
-        ).withAttribute(P_OPTIONS, PrivilegeAction.getBreadActionStrings()) :
-        new StringTextFormField(
-            P_ACTIONS,
-            messages.actions(),
-            messages.actionsHelp(),
-            FormField.MANDATORY,
-            "(^(browse|read|edit|add|delete)(,(browse|read|edit|add|delete)){0,4}$)|(^\\*$)"
-        )
-    );
+            true).includeEntriesForAllFormats(),
+        isReactPrivileges
+            ? new SetOfCheckboxesFormField(
+                P_ACTIONS,
+                messages.actions(),
+                messages.actionsCheckboxesHelp(),
+                FormField.MANDATORY).withAttribute(P_OPTIONS, PrivilegeAction.getBreadActionStrings())
+            : new StringTextFormField(
+                P_ACTIONS,
+                messages.actions(),
+                messages.actionsHelp(),
+                FormField.MANDATORY,
+                "(^(browse|read|edit|add|delete)(,(browse|read|edit|add|delete)){0,4}$)|(^\\*$)"));
   }
 
   @Override
@@ -169,18 +167,20 @@ public class RepositoryContentSelectorPrivilegeDescriptor
   // Helpers
   //
 
-  public static String id(final String contentSelector,
-                          final String format,
-                          final String name,
-                          final String... actions)
+  public static String id(
+      final String contentSelector,
+      final String format,
+      final String name,
+      final String... actions)
   {
     return String.format("nx-%s-%s-%s-%s-%s", TYPE, contentSelector, format, name, Joiner.on(',').join(actions));
   }
 
-  public static CPrivilege privilege(final String contentSelector,
-                                     final String format,
-                                     final String name,
-                                     final String... actions)
+  public static CPrivilege privilege(
+      final String contentSelector,
+      final String format,
+      final String name,
+      final String... actions)
   {
     checkArgument(actions.length > 0);
     RepositorySelector selector = RepositorySelector.fromNameAndFormat(name, format);

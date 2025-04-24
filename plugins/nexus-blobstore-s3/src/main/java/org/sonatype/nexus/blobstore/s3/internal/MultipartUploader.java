@@ -33,6 +33,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -51,7 +52,9 @@ public class MultipartUploader
   private final int chunkSize;
 
   @Inject
-  public MultipartUploader(@Named("${nexus.s3.multipartupload.chunksize:-5242880}") final int chunkSize) {
+  public MultipartUploader(
+      @Named("${nexus.s3.multipartupload.chunksize:-5242880}") @Value("${nexus.s3.multipartupload.chunksize:5242880}") final int chunkSize)
+  {
     this.chunkSize = chunkSize;
   }
 

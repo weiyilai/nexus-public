@@ -14,19 +14,20 @@ package org.sonatype.nexus.repository.content.tasks.normalize;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.entity.Continuations;
 import org.sonatype.nexus.common.event.EventManager;
+import org.sonatype.nexus.kv.GlobalKeyValueStore;
+import org.sonatype.nexus.kv.NexusKeyValue;
+import org.sonatype.nexus.kv.ValueType;
 import org.sonatype.nexus.logging.task.ProgressLogIntervalHelper;
 import org.sonatype.nexus.logging.task.TaskLogType;
 import org.sonatype.nexus.logging.task.TaskLogging;
 import org.sonatype.nexus.repository.Format;
-import org.sonatype.nexus.kv.GlobalKeyValueStore;
-import org.sonatype.nexus.kv.NexusKeyValue;
-import org.sonatype.nexus.kv.ValueType;
 import org.sonatype.nexus.repository.content.store.ComponentData;
 import org.sonatype.nexus.repository.content.store.ComponentStore;
 import org.sonatype.nexus.repository.content.store.FormatStoreManager;
@@ -34,6 +35,8 @@ import org.sonatype.nexus.repository.search.normalize.VersionNormalizerService;
 import org.sonatype.nexus.scheduling.Cancelable;
 import org.sonatype.nexus.scheduling.TaskInterruptedException;
 import org.sonatype.nexus.scheduling.TaskSupport;
+
+import org.springframework.beans.factory.annotation.Value;
 
 import static java.lang.String.format;
 import static org.sonatype.nexus.common.app.FeatureFlags.DISABLE_NORMALIZE_VERSION_TASK;
@@ -68,7 +71,8 @@ public class NormalizeComponentVersionTask
       final VersionNormalizerService versionNormalizerService,
       final GlobalKeyValueStore globalKeyValueStore,
       final EventManager eventManager,
-      @Named("${" + DISABLE_NORMALIZE_VERSION_TASK + ":-false}") final boolean disableTask)
+      @Named("${" + DISABLE_NORMALIZE_VERSION_TASK + ":-false}") @Value("${" + DISABLE_NORMALIZE_VERSION_TASK
+          + ":false}") final boolean disableTask)
   {
     this.normalizationPriorityService = normalizationPriorityService;
     this.versionNormalizerService = versionNormalizerService;
@@ -83,8 +87,7 @@ public class NormalizeComponentVersionTask
   }
 
   @Override
-  protected Object execute() throws Exception
-  {
+  protected Object execute() throws Exception {
     if (disableTask) {
       throw new TaskInterruptedException("The normalize version task was disabled", disableTask);
     }
@@ -114,12 +117,12 @@ public class NormalizeComponentVersionTask
     ComponentStore<?> componentStore = manager.componentStore(DEFAULT_DATASTORE_NAME);
 
     if (!isFormatNormalized(format)) {
-      //initially set normalization state as false
+      // initially set normalization state as false
       setNormalizationState(format, false);
       normalizeFormat(format, componentStore);
-      //once normalization is done set state as true
+      // once normalization is done set state as true
       setNormalizationState(format, true);
-      //publish an event to let interested know the format has been normalized
+      // publish an event to let interested know the format has been normalized
       eventManager.post(new FormatVersionNormalizedEvent(format.getValue()));
 
       int currentCount = processedCount.incrementAndGet();
@@ -153,7 +156,7 @@ public class NormalizeComponentVersionTask
    * Sets a normalization state for the given format
    *
    * @param format the format to set the as part of the key
-   * @param value  a {@link Boolean} flag indicating if the normalized version is available
+   * @param value a {@link Boolean} flag indicating if the normalized version is available
    */
   private void setNormalizationState(final Format format, final boolean value) {
     NexusKeyValue kv = new NexusKeyValue();
@@ -175,9 +178,9 @@ public class NormalizeComponentVersionTask
   }
 
   /**
-   * Normalizes version of  {format}_component 's records
+   * Normalizes version of {format}_component 's records
    *
-   * @param format         the given format
+   * @param format the given format
    * @param componentStore the format component store
    */
   private void normalizeFormat(final Format format, final ComponentStore<?> componentStore) {

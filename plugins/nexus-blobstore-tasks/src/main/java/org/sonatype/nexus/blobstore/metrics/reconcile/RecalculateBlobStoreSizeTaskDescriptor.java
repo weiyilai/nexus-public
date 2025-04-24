@@ -20,8 +20,11 @@ import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.ComboboxFormField;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static org.sonatype.nexus.blobstore.common.BlobStoreTaskSupport.BLOBSTORE_NAME_FIELD_ID;
 import static org.sonatype.nexus.common.app.FeatureFlags.RECALCULATE_BLOBSTORE_SIZE_TASK_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.RECALCULATE_BLOBSTORE_SIZE_TASK_ENABLED_NAMED_VALUE;
 import static org.sonatype.nexus.formfields.FormField.MANDATORY;
 
 /**
@@ -37,7 +40,7 @@ public class RecalculateBlobStoreSizeTaskDescriptor
 
   @Inject
   public RecalculateBlobStoreSizeTaskDescriptor(
-      @Named(RECALCULATE_BLOBSTORE_SIZE_TASK_ENABLED_NAMED) final boolean taskEnabled)
+      @Named(RECALCULATE_BLOBSTORE_SIZE_TASK_ENABLED_NAMED) @Value(RECALCULATE_BLOBSTORE_SIZE_TASK_ENABLED_NAMED_VALUE) final boolean taskEnabled)
   {
     super(TYPE_ID,
         RecalculateBlobStoreSizeTask.class,

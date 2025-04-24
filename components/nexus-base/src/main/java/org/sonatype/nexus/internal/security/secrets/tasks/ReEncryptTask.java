@@ -14,6 +14,7 @@ package org.sonatype.nexus.internal.security.secrets.tasks;
 
 import java.time.Duration;
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -26,6 +27,8 @@ import org.sonatype.nexus.logging.task.TaskLogType;
 import org.sonatype.nexus.logging.task.TaskLogging;
 import org.sonatype.nexus.scheduling.Cancelable;
 import org.sonatype.nexus.scheduling.TaskSupport;
+
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
@@ -46,7 +49,7 @@ public class ReEncryptTask
   public ReEncryptTask(
       final SecretsService secretsService,
       final SecretsStore secretsStore,
-      @Named("${nexus.distributed.events.fetch.interval.seconds:-5}") int pollInterval)
+      @Named("${nexus.distributed.events.fetch.interval.seconds:-5}") @Value("${nexus.distributed.events.fetch.interval.seconds:5}") final int pollInterval)
   {
     this.secretsService = checkNotNull(secretsService);
     this.secretsStore = checkNotNull(secretsStore);

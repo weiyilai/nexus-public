@@ -27,11 +27,12 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CopyPartRequest;
 import com.amazonaws.services.s3.model.PartETag;
 import com.codahale.metrics.annotation.Timed;
+import org.springframework.beans.factory.annotation.Value;
 
 import static java.lang.Math.min;
 
 /**
- * Copies a file, using multipart copy in parallel if the file is larger or equal to the chunk size.  A normal
+ * Copies a file, using multipart copy in parallel if the file is larger or equal to the chunk size. A normal
  * copyObject request is
  * used instead if only a single chunk would be copied.
  *
@@ -44,8 +45,9 @@ public class ParallelCopier
     implements S3Copier
 {
   @Inject
-  public ParallelCopier(@Named("${nexus.s3.parallelRequests.chunksize:-5242880}") final int chunkSize,
-                        @Named("${nexus.s3.parallelRequests.parallelism:-0}") final int nThreads)
+  public ParallelCopier(
+      @Named("${nexus.s3.parallelRequests.chunksize:-5242880}") @Value("${nexus.s3.parallelRequests.chunksize:5242880}") final int chunkSize,
+      @Named("${nexus.s3.parallelRequests.parallelism:-0}") @Value("${nexus.s3.parallelRequests.parallelism:0}") final int nThreads)
   {
     super(chunkSize, nThreads, "copyThreads");
   }
@@ -70,13 +72,14 @@ public class ParallelCopier
     }
   }
 
-  private List<PartETag> copyParts(final AmazonS3 s3,
-                                   final String uploadId,
-                                   final String bucket,
-                                   final String srcKey,
-                                   final String destKey,
-                                   final long size,
-                                   final AtomicInteger offset)
+  private List<PartETag> copyParts(
+      final AmazonS3 s3,
+      final String uploadId,
+      final String bucket,
+      final String srcKey,
+      final String destKey,
+      final long size,
+      final AtomicInteger offset)
   {
     List<PartETag> tags = new ArrayList<>();
     int partNumber;

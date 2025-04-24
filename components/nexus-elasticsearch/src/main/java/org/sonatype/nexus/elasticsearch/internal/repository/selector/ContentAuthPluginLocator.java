@@ -23,6 +23,7 @@ import org.sonatype.nexus.repository.security.ContentPermissionChecker;
 import org.sonatype.nexus.repository.security.VariableResolverAdapterManager;
 
 import org.elasticsearch.plugins.Plugin;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * {@link PluginLocator} for {@link ContentAuthPlugin}. Also responsible for setting some required objects into static
@@ -41,7 +42,7 @@ public class ContentAuthPluginLocator
       final VariableResolverAdapterManager variableResolverAdapterManager,
       final SearchSubjectHelper searchSubjectHelper,
       final RepositoryManager repositoryManager,
-      @Named("${nexus.elasticsearch.contentAuthSleep:-false}") final boolean contentAuthSleep)
+      @Named("${nexus.elasticsearch.contentAuthSleep:-false}") @Value("${nexus.elasticsearch.contentAuthSleep:false}") final boolean contentAuthSleep)
   {
     ContentAuthPlugin.setDependencies(contentPermissionChecker, variableResolverAdapterManager,
         searchSubjectHelper, repositoryManager, contentAuthSleep);

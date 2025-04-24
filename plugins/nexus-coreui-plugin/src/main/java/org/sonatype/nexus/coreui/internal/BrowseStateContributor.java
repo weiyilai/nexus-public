@@ -32,6 +32,7 @@ import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.scheduling.TaskState;
 
 import com.google.common.base.Suppliers;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.RepositoryTaskSupport.ALL_REPOSITORIES;
@@ -54,7 +55,7 @@ public class BrowseStateContributor
   public BrowseStateContributor(
       final BrowseNodeConfiguration browseNodeConfiguration,
       final TaskScheduler taskScheduler,
-      @Named("${nexus.coreui.state.rebuildingRepositoryTasksCacheTTL:-60}") long rebuildingRepositoriesCacheTTL)
+      @Named("${nexus.coreui.state.rebuildingRepositoryTasksCacheTTL:-60}") @Value("${nexus.coreui.state.rebuildingRepositoryTasksCacheTTL:60}") long rebuildingRepositoriesCacheTTL)
   {
     this.browseNodeConfiguration = checkNotNull(browseNodeConfiguration);
     this.taskScheduler = checkNotNull(taskScheduler);
@@ -82,7 +83,7 @@ public class BrowseStateContributor
           .equals(taskInfo.getCurrentState().getRunState())) {
         String repositoryName = taskInfo.getConfiguration().getString(REPOSITORY_NAME_FIELD_ID);
         if (ALL_REPOSITORIES.equals(repositoryName)) {
-          //if all repos, just return a single entry denoting that, save the time to check other tasks
+          // if all repos, just return a single entry denoting that, save the time to check other tasks
           return Collections.singleton(ALL_REPOSITORIES);
         }
         else {

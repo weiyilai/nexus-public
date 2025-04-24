@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,8 +33,8 @@ import org.sonatype.nexus.common.node.NodeAccess;
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.common.time.Clock;
-import org.sonatype.nexus.crypto.secrets.KeyAccessValidator;
 import org.sonatype.nexus.crypto.secrets.EncryptionKeyValidator;
+import org.sonatype.nexus.crypto.secrets.KeyAccessValidator;
 import org.sonatype.nexus.crypto.secrets.MissingKeyException;
 import org.sonatype.nexus.crypto.secrets.ReportKnownSecretKeyEvent;
 import org.sonatype.nexus.kv.GlobalKeyValueStore;
@@ -46,6 +47,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.node.datastore.NodeHeartbeatManager.NODE_ID;
@@ -92,7 +94,7 @@ public class KeyAccessValidatorImpl
       final NodeAccess nodeAccess,
       final GlobalKeyValueStore globalKeyValueStore,
       final Clock clock,
-      @Named("${nexus.distributed.events.fetch.interval.seconds:-5}") final int pollIntervalSeconds)
+      @Named("${nexus.distributed.events.fetch.interval.seconds:-5}") @Value("${nexus.distributed.events.fetch.interval.seconds:5}") final int pollIntervalSeconds)
   {
     this.encryptionKeyValidator = checkNotNull(encryptionKeyValidator);
     this.nodeHeartbeatManager = nodeHeartbeatManager;

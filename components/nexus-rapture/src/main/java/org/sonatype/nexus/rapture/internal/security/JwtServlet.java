@@ -32,12 +32,14 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.net.HttpHeaders.X_FRAME_OPTIONS;
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
 import static org.sonatype.nexus.common.app.FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED_VALUE;
 import static org.sonatype.nexus.security.JwtHelper.JWT_COOKIE_NAME;
 import static org.sonatype.nexus.servlet.XFrameOptions.DENY;
 
@@ -66,9 +68,13 @@ public class JwtServlet
   public JwtServlet(final String contextPath, final EventManager eventManager) {
     this(contextPath, eventManager, false);
   }
+
   @Inject
-  public JwtServlet(@Named("${nexus-context-path}") final String contextPath, final EventManager eventManager,
-                    @Named(NXSESSIONID_SECURE_COOKIE_NAMED) final boolean cookieSecure) {
+  public JwtServlet(
+      @Named("${nexus-context-path}") final String contextPath,
+      final EventManager eventManager,
+      @Named(NXSESSIONID_SECURE_COOKIE_NAMED) @Value(NXSESSIONID_SECURE_COOKIE_NAMED_VALUE) final boolean cookieSecure)
+  {
     this.contextPath = contextPath;
     this.eventManager = eventManager;
     this.cookieSecure = cookieSecure;
@@ -78,8 +84,9 @@ public class JwtServlet
    * Create token.
    */
   @Override
-  protected void doPost(final HttpServletRequest request, final HttpServletResponse response)
-      throws ServletException, IOException
+  protected void doPost(
+      final HttpServletRequest request,
+      final HttpServletResponse response) throws ServletException, IOException
   {
     Subject subject = SecurityUtils.getSubject();
     log.debug("Created token for user: {}", subject.getPrincipal());
@@ -99,8 +106,9 @@ public class JwtServlet
    * Delete token.
    */
   @Override
-  protected void doDelete(final HttpServletRequest request, final HttpServletResponse response)
-      throws ServletException, IOException
+  protected void doDelete(
+      final HttpServletRequest request,
+      final HttpServletResponse response) throws ServletException, IOException
   {
     Subject subject = SecurityUtils.getSubject();
     log.debug("Deleting token for user: {}", subject.getPrincipal());

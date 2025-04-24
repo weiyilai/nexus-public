@@ -18,6 +18,8 @@ import javax.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FeatureFlags;
 
+import org.springframework.beans.factory.annotation.Value;
+
 @Named
 @Singleton
 public class BucketOwnershipCheckFeatureFlag
@@ -26,7 +28,7 @@ public class BucketOwnershipCheckFeatureFlag
 
   @Inject
   public BucketOwnershipCheckFeatureFlag(
-      @Named(FeatureFlags.BLOBSTORE_OWNERSHIP_CHECK_DISABLED_NAMED) final Boolean isDisabled)
+      @Named(FeatureFlags.BLOBSTORE_OWNERSHIP_CHECK_DISABLED_NAMED) @Value(FeatureFlags.BLOBSTORE_OWNERSHIP_CHECK_DISABLED_NAMED_VALUE) final Boolean isDisabled)
   {
     this.isDisabled = Boolean.TRUE.equals(isDisabled);
   }

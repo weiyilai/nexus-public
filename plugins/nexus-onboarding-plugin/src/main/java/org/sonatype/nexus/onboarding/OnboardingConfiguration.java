@@ -16,6 +16,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * @since 3.17
  */
@@ -25,7 +27,9 @@ public class OnboardingConfiguration
   private boolean enabled;
 
   @Inject
-  public OnboardingConfiguration(@Named("${nexus.onboarding.enabled:-true}") final boolean enabled) {
+  public OnboardingConfiguration(
+      @Named("${nexus.onboarding.enabled:-true}") @Value("${nexus.onboarding.enabled:true}") final boolean enabled)
+  {
     this.enabled = enabled;
   }
 

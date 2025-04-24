@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -49,6 +50,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.listeners.SchedulerListenerSupport;
 import org.quartz.spi.JobStore;
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.quartz.TriggerKey.triggerKey;
 import static org.quartz.impl.matchers.GroupMatcher.jobGroupEquals;
@@ -76,7 +78,7 @@ public class DatastoreQuartzSchedulerSPI
       final Provider<Scheduler> schedulerProvider,
       final LastShutdownTimeService lastShutdownTimeService,
       final DatabaseStatusDelayedExecutor delayedExecutor,
-      @Named("${nexus.quartz.recoverInterruptedJobs:-true}") final boolean recoverInterruptedJobs)
+      @Named("${nexus.quartz.recoverInterruptedJobs:-true}") @Value("${nexus.quartz.recoverInterruptedJobs:true}") final boolean recoverInterruptedJobs)
   {
     super(eventManager, nodeAccess, jobStoreProvider, schedulerProvider, lastShutdownTimeService, delayedExecutor,
         recoverInterruptedJobs);

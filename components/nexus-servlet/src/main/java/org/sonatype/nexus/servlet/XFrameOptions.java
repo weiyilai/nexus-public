@@ -21,6 +21,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * @since 3.11
  */
@@ -52,7 +54,9 @@ public class XFrameOptions
   private final Set<String> frameablePaths;
 
   @Inject
-  public XFrameOptions(@Named("${nexus.http.denyframe.enabled:-true}") final boolean defaultDeny) {
+  public XFrameOptions(
+      @Named("${nexus.http.denyframe.enabled:-true}") @Value("${nexus.http.denyframe.enabled:true}") final boolean defaultDeny)
+  {
     this.defaultDeny = defaultDeny;
     frameablePaths = new HashSet<>();
     frameablePaths.add(COPYRIGHT_PATH);

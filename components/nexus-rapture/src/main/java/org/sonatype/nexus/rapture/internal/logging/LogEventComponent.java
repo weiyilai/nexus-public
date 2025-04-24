@@ -28,6 +28,7 @@ import com.softwarementors.extjs.djn.config.annotations.DirectAction;
 import com.softwarementors.extjs.djn.config.annotations.DirectMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -46,7 +47,9 @@ public class LogEventComponent
   private final boolean enabled;
 
   @Inject
-  public LogEventComponent(@Named("${nexus.log.extdirect.recording.enabled:-false}") final boolean enabled) {
+  public LogEventComponent(
+      @Named("${nexus.log.extdirect.recording.enabled:-false}") @Value("${nexus.log.extdirect.recording.enabled:false}") final boolean enabled)
+  {
     this.enabled = enabled;
   }
 
@@ -55,8 +58,7 @@ public class LogEventComponent
       "debug", Level.DEBUG,
       "info", Level.INFO,
       "warn", Level.WARN,
-      "error", Level.ERROR
-  );
+      "error", Level.ERROR);
 
   @DirectMethod
   @Timed

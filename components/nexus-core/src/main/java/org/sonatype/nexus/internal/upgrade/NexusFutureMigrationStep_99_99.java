@@ -14,12 +14,15 @@ package org.sonatype.nexus.internal.upgrade;
 
 import java.sql.Connection;
 import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.ZERO_DOWNTIME_FUTURE_MIGRATION_ENABLED;
 
@@ -34,7 +37,10 @@ public class NexusFutureMigrationStep_99_99
   private final boolean shouldFail;
 
   @Inject
-  public NexusFutureMigrationStep_99_99(@Named("${" + FAIL_MIGRATION_FLAG + ":-false}") final boolean shouldFail) {
+  public NexusFutureMigrationStep_99_99(
+      @Named("${" + FAIL_MIGRATION_FLAG + ":-false}") @Value("${" + FAIL_MIGRATION_FLAG
+          + ":false}") final boolean shouldFail)
+  {
     this.shouldFail = shouldFail;
   }
 

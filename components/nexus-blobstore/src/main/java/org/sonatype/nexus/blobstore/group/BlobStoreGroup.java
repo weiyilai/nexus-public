@@ -65,6 +65,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.hash.HashCode;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.synchronizedList;
@@ -126,7 +127,7 @@ public class BlobStoreGroup
       final BlobStoreManager blobStoreManager,
       final Map<String, Provider<FillPolicy>> fillPolicyProviders,
       final Provider<CacheHelper> cacheHelperProvider,
-      @Named("${nexus.blobstore.group.blobId.cache.timeToLive:-2d}") final Time blobIdCacheTimeout)
+      @Named("${nexus.blobstore.group.blobId.cache.timeToLive:-2d}") @Value("${nexus.blobstore.group.blobId.cache.timeToLive:2d}") final Time blobIdCacheTimeout)
   {
     this.blobStoreManager = checkNotNull(blobStoreManager);
     this.fillPolicyProviders = checkNotNull(fillPolicyProviders);

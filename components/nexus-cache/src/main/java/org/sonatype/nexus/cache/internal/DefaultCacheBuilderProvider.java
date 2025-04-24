@@ -24,6 +24,8 @@ import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.cache.CacheBuilder;
 import org.sonatype.nexus.common.node.NodeAccess;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -51,7 +53,7 @@ public class DefaultCacheBuilderProvider
   public DefaultCacheBuilderProvider(
       final Map<String, Provider<CacheBuilder>> providers,
       @Nullable @Named("${nexus.cache.provider}") final String customName,
-      @Named("${nexus.orient.enabled:-false}") final boolean orient,
+      @Named("${nexus.orient.enabled:-false}") @Value("${nexus.orient.enabled:false}") final boolean orient,
       final NodeAccess nodeAccess)
   {
     this.providers = checkNotNull(providers);

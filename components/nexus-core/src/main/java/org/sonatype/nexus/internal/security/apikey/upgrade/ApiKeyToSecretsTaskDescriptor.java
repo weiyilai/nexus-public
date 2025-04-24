@@ -20,6 +20,8 @@ import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static org.sonatype.nexus.internal.security.apikey.upgrade.ApiKeyToSecretsTask.MESSAGE;
 import static org.sonatype.nexus.internal.security.apikey.upgrade.ApiKeyToSecretsTask.TYPE_ID;
 
@@ -35,7 +37,9 @@ public class ApiKeyToSecretsTaskDescriptor
     extends TaskDescriptorSupport
 {
   @Inject
-  public ApiKeyToSecretsTaskDescriptor(@Named("${nexus.upgrade.apikey.secrets:-false}") final boolean exposed) {
+  public ApiKeyToSecretsTaskDescriptor(
+      @Named("${nexus.upgrade.apikey.secrets:-false}") @Value("${nexus.upgrade.apikey.secrets:false}") final boolean exposed)
+  {
     super(TYPE_ID, ApiKeyToSecretsTask.class, MESSAGE, true, exposed);
   }
 }

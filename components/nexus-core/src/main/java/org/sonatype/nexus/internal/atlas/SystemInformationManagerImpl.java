@@ -29,11 +29,13 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.sonatype.nexus.common.atlas.SystemInformationManager;
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
 import org.sonatype.nexus.cache.CacheHelper;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.atlas.SystemInformationGenerator;
+import org.sonatype.nexus.common.atlas.SystemInformationManager;
+
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -65,7 +67,7 @@ public class SystemInformationManagerImpl
   public SystemInformationManagerImpl(
       final SystemInformationGenerator systemInformationGenerator,
       final CacheHelper cacheHelper,
-      @Named("${nexus.system.info.cache.duration:-3600}") int cacheDurationSec)
+      @Named("${nexus.system.info.cache.duration:-3600}") @Value("${nexus.system.info.cache.duration:3600}") final int cacheDurationSec)
   {
     this.systemInformationGenerator = checkNotNull(systemInformationGenerator);
     this.cacheHelper = checkNotNull(cacheHelper);

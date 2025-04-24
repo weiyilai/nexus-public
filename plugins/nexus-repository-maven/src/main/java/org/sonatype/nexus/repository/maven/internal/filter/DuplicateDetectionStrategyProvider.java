@@ -21,6 +21,7 @@ import org.sonatype.nexus.common.app.ApplicationDirectories;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import org.apache.maven.index.reader.Record;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -45,9 +46,9 @@ public class DuplicateDetectionStrategyProvider
   @Inject
   public DuplicateDetectionStrategyProvider(
       final ApplicationDirectories applicationDirectories,
-      @Named("${nexus.maven.duplicate.detection.strategy:-BLOOM}") final String strategy,
-      @Named("${nexus.maven.duplicate.detection.heap.max.gb:-1}") final int maxHeapGb,
-      @Named("${nexus.maven.duplicate.detection.disk.max.gb:-10}") final int maxDiskSizeGb)
+      @Named("${nexus.maven.duplicate.detection.strategy:-BLOOM}") @Value("${nexus.maven.duplicate.detection.strategy:BLOOM}") final String strategy,
+      @Named("${nexus.maven.duplicate.detection.heap.max.gb:-1}") @Value("${nexus.maven.duplicate.detection.heap.max.gb:1}") final int maxHeapGb,
+      @Named("${nexus.maven.duplicate.detection.disk.max.gb:-10}") @Value("${nexus.maven.duplicate.detection.disk.max.gb:10}") final int maxDiskSizeGb)
   {
     this.applicationDirectories = checkNotNull(applicationDirectories);
     this.strategy = checkNotNull(strategy);

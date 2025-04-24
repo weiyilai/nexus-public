@@ -26,6 +26,7 @@ import org.sonatype.nexus.wonderland.AuthTicketCache;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -47,7 +48,7 @@ public class LocalAuthTicketCache
   private final Duration expireAfter;
 
   @Inject
-  public LocalAuthTicketCache(@Named(EXPIRE) final Duration expireAfter) {
+  public LocalAuthTicketCache(@Named(EXPIRE) @Value(EXPIRE_VALUE) final Duration expireAfter) {
     this.expireAfter = checkNotNull(expireAfter);
     log.debug("Expire after: {}", expireAfter);
   }

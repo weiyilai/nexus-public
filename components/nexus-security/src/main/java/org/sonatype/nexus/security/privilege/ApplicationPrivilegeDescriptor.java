@@ -13,6 +13,7 @@
 package org.sonatype.nexus.security.privilege;
 
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -31,9 +32,11 @@ import org.sonatype.nexus.security.privilege.rest.PrivilegeAction;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import org.apache.shiro.authz.Permission;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_VALUE;
 
 /**
  * Application {@link PrivilegeDescriptor}.
@@ -83,31 +86,29 @@ public class ApplicationPrivilegeDescriptor
   private static final String P_OPTIONS = "options";
 
   @Inject
-  public ApplicationPrivilegeDescriptor(@Named(REACT_PRIVILEGES_NAMED) final boolean isReactPrivileges) {
+  public ApplicationPrivilegeDescriptor(
+      @Named(REACT_PRIVILEGES_NAMED) @Value(REACT_PRIVILEGES_NAMED_VALUE) final boolean isReactPrivileges)
+  {
     super(TYPE);
     this.formFields = ImmutableList.of(
         new StringTextFormField(
             P_DOMAIN,
             messages.domain(),
             messages.domainHelp(),
-            FormField.MANDATORY
-        ),
-        isReactPrivileges ?
-        new SetOfCheckboxesFormField(
-            P_ACTIONS,
-            messages.actions(),
-            messages.actionsCheckboxesHelp(),
-            FormField.MANDATORY
-        ).withAttribute(P_OPTIONS, PrivilegeAction.getCrudTaskActionStrings()) :
-        new StringTextFormField(
-            P_ACTIONS,
-            messages.actions(),
-            messages.actionsHelp(),
-            FormField.MANDATORY,
-            "(^(create|read|update|delete|start|stop|associate|disassociate)" + 
-              "(,(create|read|update|delete|start|stop|associate|disassociate)){0,3}$)|(^\\*$)"
-        )
-    );
+            FormField.MANDATORY),
+        isReactPrivileges
+            ? new SetOfCheckboxesFormField(
+                P_ACTIONS,
+                messages.actions(),
+                messages.actionsCheckboxesHelp(),
+                FormField.MANDATORY).withAttribute(P_OPTIONS, PrivilegeAction.getCrudTaskActionStrings())
+            : new StringTextFormField(
+                P_ACTIONS,
+                messages.actions(),
+                messages.actionsHelp(),
+                FormField.MANDATORY,
+                "(^(create|read|update|delete|start|stop|associate|disassociate)" +
+                    "(,(create|read|update|delete|start|stop|associate|disassociate)){0,3}$)|(^\\*$)"));
   }
 
   @Override

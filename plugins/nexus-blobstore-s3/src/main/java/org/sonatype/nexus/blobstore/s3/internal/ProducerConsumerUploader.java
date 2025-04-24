@@ -50,6 +50,7 @@ import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.annotation.Timed;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -97,8 +98,8 @@ public class ProducerConsumerUploader
 
   @Inject
   public ProducerConsumerUploader(
-      @Named("${nexus.s3.producerConsumerUploader.chunksize:-10485760}") final int chunkSize,
-      @Named("${nexus.s3.producerConsumerUploader.parallelism:-0}") final int numberOfThreads,
+      @Named("${nexus.s3.producerConsumerUploader.chunksize:-10485760}") @Value("${nexus.s3.producerConsumerUploader.chunksize:10485760}") final int chunkSize,
+      @Named("${nexus.s3.producerConsumerUploader.parallelism:-0}") @Value("${nexus.s3.producerConsumerUploader.parallelism:0}") final int numberOfThreads,
       final MetricRegistry registry)
   {
     checkArgument(numberOfThreads >= 0, "Must use a non-negative parallelism");
@@ -141,48 +142,48 @@ public class ProducerConsumerUploader
   @Timed
   public void upload(final AmazonS3 s3, final String bucket, final String key, final InputStream contents) {
 
-      try (InputStream input = new BufferedInputStream(contents, chunkSize)) {
-        log.debug("Starting upload to key {} in bucket {}", key, bucket);
-        input.mark(chunkSize);
-        ChunkReader firstReader = new ChunkReader(input, readChunk);
-        Chunk firstChunk = firstReader.readChunk(chunkSize).orElse(EMPTY_CHUNK);
-        input.reset();
+    try (InputStream input = new BufferedInputStream(contents, chunkSize)) {
+      log.debug("Starting upload to key {} in bucket {}", key, bucket);
+      input.mark(chunkSize);
+      ChunkReader firstReader = new ChunkReader(input, readChunk);
+      Chunk firstChunk = firstReader.readChunk(chunkSize).orElse(EMPTY_CHUNK);
+      input.reset();
 
-        if (firstChunk.dataLength < chunkSize) {
-          ObjectMetadata metadata = new ObjectMetadata();
-          metadata.setContentLength(firstChunk.dataLength);
-          s3.putObject(bucket, key, new ByteArrayInputStream(firstChunk.data, 0, firstChunk.dataLength), metadata);
-        }
-        else {
-          InitiateMultipartUploadRequest initiateRequest = new InitiateMultipartUploadRequest(bucket, key);
-          final String uploadId = s3.initiateMultipartUpload(initiateRequest).getUploadId();
-          try (Timer.Context uploadContext = multipartUpload.time()){
-            List<PartETag> partETags = submitPartUploads(input, bucket, key, uploadId, s3);
+      if (firstChunk.dataLength < chunkSize) {
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(firstChunk.dataLength);
+        s3.putObject(bucket, key, new ByteArrayInputStream(firstChunk.data, 0, firstChunk.dataLength), metadata);
+      }
+      else {
+        InitiateMultipartUploadRequest initiateRequest = new InitiateMultipartUploadRequest(bucket, key);
+        final String uploadId = s3.initiateMultipartUpload(initiateRequest).getUploadId();
+        try (Timer.Context uploadContext = multipartUpload.time()) {
+          List<PartETag> partETags = submitPartUploads(input, bucket, key, uploadId, s3);
 
-            s3.completeMultipartUpload(new CompleteMultipartUploadRequest()
-                .withBucketName(bucket)
-                .withKey(key)
-                .withUploadId(uploadId)
-                .withPartETags(partETags));
-          }
-          catch (InterruptedException interrupted) {
-            s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, key, uploadId));
-            Thread.currentThread().interrupt();
-          }
-          catch (CancellationException | SdkBaseException ex) {
-            s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, key, uploadId));
-            throw new BlobStoreException(
-                format("Error executing parallel requests for bucket:%s key:%s with uploadId:%s", bucket, key,
-                    uploadId),
-                ex,
-                null);
-          }
+          s3.completeMultipartUpload(new CompleteMultipartUploadRequest()
+              .withBucketName(bucket)
+              .withKey(key)
+              .withUploadId(uploadId)
+              .withPartETags(partETags));
         }
-        log.debug("Finished upload to key {} in bucket {}", key, bucket);
+        catch (InterruptedException interrupted) {
+          s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, key, uploadId));
+          Thread.currentThread().interrupt();
+        }
+        catch (CancellationException | SdkBaseException ex) {
+          s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, key, uploadId));
+          throw new BlobStoreException(
+              format("Error executing parallel requests for bucket:%s key:%s with uploadId:%s", bucket, key,
+                  uploadId),
+              ex,
+              null);
+        }
       }
-      catch (IOException | SdkClientException e) { // NOSONAR
-        throw new BlobStoreException(format("Error uploading blob to bucket:%s key:%s", bucket, key), e, null);
-      }
+      log.debug("Finished upload to key {} in bucket {}", key, bucket);
+    }
+    catch (IOException | SdkClientException e) { // NOSONAR
+      throw new BlobStoreException(format("Error uploading blob to bucket:%s key:%s", bucket, key), e, null);
+    }
   }
 
   private List<PartETag> submitPartUploads(
@@ -197,12 +198,12 @@ public class ProducerConsumerUploader
 
     Optional<Chunk> optionalChunk;
     int chunkCount = 0;
-      while ((optionalChunk = parallelReader.readChunk(chunkSize)).isPresent()) {
-        Chunk chunk = optionalChunk.get();
-        chunkCount++;
-        UploadPartRequest request = buildRequest(bucket, key, uploadId, chunk);
-        waitingRequests.put(new UploadBundle(s3, request, tags));
-      }
+    while ((optionalChunk = parallelReader.readChunk(chunkSize)).isPresent()) {
+      Chunk chunk = optionalChunk.get();
+      chunkCount++;
+      UploadPartRequest request = buildRequest(bucket, key, uploadId, chunk);
+      waitingRequests.put(new UploadBundle(s3, request, tags));
+    }
 
     List<PartETag> partETags = new ArrayList<>(chunkCount);
     for (int idx = 0; idx < chunkCount; idx++) {
@@ -269,8 +270,7 @@ public class ProducerConsumerUploader
       this.readChunk = checkNotNull(readTimer);
     }
 
-    synchronized Optional<Chunk> readChunk(final int size) throws IOException
-    {
+    synchronized Optional<Chunk> readChunk(final int size) throws IOException {
       try (Timer.Context readContext = readChunk.time()) {
         byte[] buf = new byte[size];
         int bytesRead = 0;
@@ -280,8 +280,10 @@ public class ProducerConsumerUploader
           bytesRead += readSize;
         }
 
-        return bytesRead > 0 ? of(
-            new Chunk(bytesRead, buf, counter.getAndIncrement())) : empty();
+        return bytesRead > 0
+            ? of(
+                new Chunk(bytesRead, buf, counter.getAndIncrement()))
+            : empty();
       }
     }
 
@@ -295,7 +297,7 @@ public class ProducerConsumerUploader
 
       Chunk(final int dataLength, final byte[] data, final int chunkNumber) {
         this.dataLength = dataLength;
-        this.data = data;  //NOSONAR
+        this.data = data; // NOSONAR
         this.chunkNumber = chunkNumber;
       }
     }
@@ -306,14 +308,13 @@ public class ProducerConsumerUploader
   {
     private final BlockingQueue<UploadBundle> bundles;
 
-    ChunkUploader(final BlockingQueue<UploadBundle> bundles)
-    {
+    ChunkUploader(final BlockingQueue<UploadBundle> bundles) {
       this.bundles = bundles;
     }
 
     @Override
     public void run() {
-      while (true) { //NOSONAR
+      while (true) { // NOSONAR
         try {
           UploadBundle bundle = bundles.take();
           AmazonS3 s3 = bundle.s3;

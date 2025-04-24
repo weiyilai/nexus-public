@@ -34,6 +34,7 @@ import org.sonatype.nexus.common.script.ScriptCleanupHandler;
 import org.sonatype.nexus.common.script.ScriptService;
 
 import org.eclipse.sisu.inject.BeanLocator;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -70,7 +71,7 @@ public class ScriptServiceImpl
       final GlobalComponentLookupHelper lookupHelper,
       final List<ScriptApi> scriptApis,
       final ScriptCleanupHandler scriptCleanupHandler,
-      @Named("${nexus.scripts.groovyOnly:-true}") final boolean allowOnlyGroovy)
+      @Named("${nexus.scripts.groovyOnly:-true}") @Value("${nexus.scripts.groovyOnly:true}") final boolean allowOnlyGroovy)
   {
     this.engineManager = checkNotNull(engineManager);
     this.beanLocator = checkNotNull(beanLocator);

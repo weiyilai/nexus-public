@@ -26,6 +26,7 @@ import org.apache.shiro.web.session.mgt.WebSessionManager;
 import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Custom {@link WebSessionManager}.
@@ -46,8 +47,8 @@ public class NexusWebSessionManager
   public void configureProperties(
       @Named("${shiro.globalSessionTimeout:-" + DEFAULT_GLOBAL_SESSION_TIMEOUT + "}") final long globalSessionTimeout,
       @Named("${nexus.sessionCookieName:-" + DEFAULT_NEXUS_SESSION_COOKIE_NAME + "}") final String sessionCookieName,
-      @Named("${nexus.session.enabled:-true}") final boolean sessionEnabled,
-      @Named(FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED) final boolean cookieSecure)
+      @Named("${nexus.session.enabled:-true}") @Value("${nexus.session.enabled:true}") final boolean sessionEnabled,
+      @Named(FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED) @Value(FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED_VALUE) final boolean cookieSecure)
   {
     setGlobalSessionTimeout(globalSessionTimeout);
     log.info("Global session timeout: {} ms", getGlobalSessionTimeout());
@@ -73,7 +74,8 @@ public class NexusWebSessionManager
     }
     try {
       super.onStart(session, context);
-    } finally {
+    }
+    finally {
       if (WebUtils.isHttp(context)) {
         requestIsHttps.remove();
       }
@@ -93,7 +95,8 @@ public class NexusWebSessionManager
     Cookie cookie = super.getSessionIdCookie();
     boolean templateValue = cookie.isSecure();
     boolean requestIsSecure = requestIsHttps.get();
-    log.trace("setting Secure flag on session cookie: systemValue={}, requestIsSecure={}",templateValue, requestIsSecure);
+    log.trace("setting Secure flag on session cookie: systemValue={}, requestIsSecure={}", templateValue,
+        requestIsSecure);
     cookie.setSecure(templateValue && requestIsSecure);
     return cookie;
   }

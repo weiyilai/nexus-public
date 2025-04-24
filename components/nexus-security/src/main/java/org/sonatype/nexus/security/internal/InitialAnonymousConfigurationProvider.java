@@ -19,6 +19,8 @@ import javax.inject.Singleton;
 
 import org.sonatype.nexus.security.anonymous.AnonymousConfiguration;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * Initial {@link AnonymousConfiguration} provider.
  *
@@ -29,13 +31,13 @@ import org.sonatype.nexus.security.anonymous.AnonymousConfiguration;
 @Named("initial")
 @Singleton
 public class InitialAnonymousConfigurationProvider
-  implements Provider<AnonymousConfiguration>
+    implements Provider<AnonymousConfiguration>
 {
   private final boolean enabled;
 
   @Inject
   public InitialAnonymousConfigurationProvider(
-      @Named("${nexus.security.default.anonymous:-true}") final boolean enabled)
+      @Named("${nexus.security.default.anonymous:-true}") @Value("${nexus.security.default.anonymous:true}") final boolean enabled)
   {
     this.enabled = enabled;
   }

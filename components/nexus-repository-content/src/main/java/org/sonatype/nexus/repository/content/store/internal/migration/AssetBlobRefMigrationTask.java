@@ -33,6 +33,7 @@ import org.sonatype.nexus.scheduling.CancelableHelper;
 import org.sonatype.nexus.scheduling.TaskSupport;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -54,7 +55,7 @@ public class AssetBlobRefMigrationTask
   @Inject
   public AssetBlobRefMigrationTask(
       final Map<String, FormatStoreManager> formatStoreManagers,
-      @Named("${nexus.assetBlobRef.migration.read.batchSize:-100}") final int readAssetsBatchSize)
+      @Named("${nexus.assetBlobRef.migration.read.batchSize:-100}") @Value("${nexus.assetBlobRef.migration.read.batchSize:100}") final int readAssetsBatchSize)
   {
     this.formatStoreManagers = checkNotNull(formatStoreManagers);
 
@@ -93,14 +94,17 @@ public class AssetBlobRefMigrationTask
     while (!isCanceled() && !assetBlobs.isEmpty()) {
       int migratedAssetsCount = migrateAssetBlobs(assetBlobStore, format, assetBlobs);
       updateCount += migratedAssetsCount;
-      assetBlobs = assetBlobStore.browseAssetsWithLegacyBlobRef(readAssetsBatchSize, assetBlobs.nextContinuationToken());
+      assetBlobs =
+          assetBlobStore.browseAssetsWithLegacyBlobRef(readAssetsBatchSize, assetBlobs.nextContinuationToken());
     }
     return updateCount;
   }
 
-  private int migrateAssetBlobs(final AssetBlobStore<?> assetBlobStore,
-                                final String format,
-                                final Collection<AssetBlob> assetBlobs) {
+  private int migrateAssetBlobs(
+      final AssetBlobStore<?> assetBlobStore,
+      final String format,
+      final Collection<AssetBlob> assetBlobs)
+  {
     int migratedAssetsCount = 0;
 
     updateDuplicatedBlobRef(assetBlobs);
@@ -144,9 +148,11 @@ public class AssetBlobRefMigrationTask
         });
   }
 
-  private int migrateRowByRow(final AssetBlobStore<?> assetBlobStore,
-                              final String format,
-                              final Collection<AssetBlob> assetBlobs) {
+  private int migrateRowByRow(
+      final AssetBlobStore<?> assetBlobStore,
+      final String format,
+      final Collection<AssetBlob> assetBlobs)
+  {
     AtomicInteger updated = new AtomicInteger();
 
     assetBlobs.forEach(assetBlob -> {

@@ -13,6 +13,7 @@
 package org.sonatype.nexus.internal.security.secrets;
 
 import java.util.Optional;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -23,17 +24,19 @@ import org.sonatype.nexus.common.cooperation2.Cooperation2;
 import org.sonatype.nexus.common.cooperation2.Cooperation2Factory;
 import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.common.event.EventManager;
+import org.sonatype.nexus.crypto.secrets.ActiveKeyChangeEvent;
 import org.sonatype.nexus.crypto.secrets.EncryptionKeyValidator;
 import org.sonatype.nexus.crypto.secrets.KeyAccessValidator;
 import org.sonatype.nexus.crypto.secrets.MissingKeyException;
 import org.sonatype.nexus.crypto.secrets.ReEncryptService;
 import org.sonatype.nexus.crypto.secrets.ReEncryptionNotSupportedException;
-import org.sonatype.nexus.crypto.secrets.ActiveKeyChangeEvent;
 import org.sonatype.nexus.internal.security.secrets.tasks.ReEncryptTaskDescriptor;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskInfo;
 import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.security.UserIdHelper;
+
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -71,7 +74,7 @@ public class ReEncryptServiceImpl
       final EventManager eventManager,
       final DatabaseCheck databaseCheck,
       final Cooperation2Factory cooperationFactory,
-      @Named("${nexus.secrets.cooperation.enabled:-true}") final boolean cooperationEnabled)
+      @Named("${nexus.secrets.cooperation.enabled:-true}") @Value("${nexus.secrets.cooperation.enabled:true}") final boolean cooperationEnabled)
   {
     this.keyAccessValidator = checkNotNull(keyAccessValidator);
     this.encryptionKeyValidator = checkNotNull(encryptionKeyValidator);

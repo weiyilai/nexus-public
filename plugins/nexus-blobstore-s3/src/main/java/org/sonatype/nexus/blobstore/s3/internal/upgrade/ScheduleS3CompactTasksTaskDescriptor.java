@@ -19,6 +19,8 @@ import javax.inject.Singleton;
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
+import org.springframework.beans.factory.annotation.Value;
+
 @AvailabilityVersion(from = "1.0")
 @Named
 @Singleton
@@ -29,7 +31,7 @@ public class ScheduleS3CompactTasksTaskDescriptor
 
   @Inject
   public ScheduleS3CompactTasksTaskDescriptor(
-      @Named("${s3.compact.task.scheduling.exposed:-true}") final boolean exposed)
+      @Named("${s3.compact.task.scheduling.exposed:-true}") @Value("${s3.compact.task.scheduling.exposed:true}") final boolean exposed)
   {
     super(TYPE_ID, ScheduleS3CompactTasksTask.class, "Schedule compact blobstore tasks based on expiration policy",
         exposed, exposed, true);

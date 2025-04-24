@@ -14,11 +14,14 @@ package org.sonatype.nexus.coreui.search;
 
 import java.util.Collections;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.sonatype.nexus.rapture.StateContributor;
+
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_TABLE_SEARCH;
 
@@ -33,7 +36,10 @@ public class SearchStateContributor
   private final boolean sqlSearch;
 
   @Inject
-  public SearchStateContributor(@Named("${" + DATASTORE_TABLE_SEARCH + ":-false}") final boolean sqlSearch) {
+  public SearchStateContributor(
+      @Named("${" + DATASTORE_TABLE_SEARCH + ":-false}") @Value("${" + DATASTORE_TABLE_SEARCH
+          + ":false}") final boolean sqlSearch)
+  {
     this.sqlSearch = sqlSearch;
   }
 

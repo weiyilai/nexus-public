@@ -19,6 +19,8 @@ import javax.inject.Singleton;
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * This availability version is only set to 1.0 because the task is launched during upgrade process, before the db
  * migration version has been updated
@@ -35,12 +37,16 @@ public class CreateComponentIndexTaskDescriptor
 
   public static final String EXPOSED_FLAG = "${nexus.component.index.task.exposed:-false}";
 
+  public static final String EXPOSED_FLAG_VALUE = "${nexus.component.index.task.exposed:false}";
+
   public static final String VISIBLE_FLAG = "${nexus.component.index.task.visible:-false}";
+
+  public static final String VISIBLE_FLAG_VALUE = "${nexus.component.index.task.visible:false}";
 
   @Inject
   public CreateComponentIndexTaskDescriptor(
-      @Named(EXPOSED_FLAG) final boolean exposed,
-      @Named(VISIBLE_FLAG) final boolean visible)
+      @Named(EXPOSED_FLAG) @Value(EXPOSED_FLAG_VALUE) final boolean exposed,
+      @Named(VISIBLE_FLAG) @Value(VISIBLE_FLAG_VALUE) final boolean visible)
   {
     super(TYPE_ID, CreateComponentIndexTask.class, NAME, visible, exposed);
   }

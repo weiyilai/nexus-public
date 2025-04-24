@@ -13,15 +13,18 @@
 package org.sonatype.nexus.coreui.internal.welcome;
 
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
-import org.sonatype.nexus.rapture.StateContributor;
 import org.sonatype.nexus.common.node.NodeAccess;
+import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Named
@@ -38,7 +41,7 @@ public class WelcomeStateContributor
 
   @Inject
   public WelcomeStateContributor(
-      @Named("${nexus.react.welcome:-true}") final Boolean featureFlag,
+      @Named("${nexus.react.welcome:-true}") @Value("${nexus.react.welcome:true}") final Boolean featureFlag,
       final NodeAccess nodeAccess)
   {
     this.nodeAccess = checkNotNull(nodeAccess);

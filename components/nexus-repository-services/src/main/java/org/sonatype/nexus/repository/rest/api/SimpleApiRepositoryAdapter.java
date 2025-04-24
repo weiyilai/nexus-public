@@ -14,16 +14,17 @@ package org.sonatype.nexus.repository.rest.api;
 
 import java.util.Collection;
 import java.util.Collections;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.sonatype.goodies.common.Time;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
+import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.config.ConfigurationConstants;
-import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.repository.rest.api.model.AbstractApiRepository;
 import org.sonatype.nexus.repository.rest.api.model.CleanupPolicyAttributes;
 import org.sonatype.nexus.repository.rest.api.model.ComponentAttributes;
@@ -47,6 +48,7 @@ import org.sonatype.nexus.repository.types.ProxyType;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.reflect.TypeToken;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.REPLICATION_HTTP_ENABLED;
@@ -73,6 +75,7 @@ public class SimpleApiRepositoryAdapter
 
   @Inject
   @Named("${" + REPLICATION_HTTP_ENABLED + ":-true}")
+  @Value("${" + REPLICATION_HTTP_ENABLED + ":true}")
   private boolean replicationFeatureEnabled;
 
   @Inject

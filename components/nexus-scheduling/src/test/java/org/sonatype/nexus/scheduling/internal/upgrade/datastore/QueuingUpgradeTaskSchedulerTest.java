@@ -54,6 +54,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
@@ -418,12 +419,14 @@ public class QueuingUpgradeTaskSchedulerTest
 
       @Provides
       @Named("${nexus.upgrade.tasks.checkOnStartup:-true}")
+      @Value("${nexus.upgrade.tasks.checkOnStartup:true}")
       Boolean getCheckRequiresMigration() {
         return true;
       }
 
       @Provides
       @Named("${nexus.upgrade.tasks.delay:-10s}")
+      @Value("${nexus.upgrade.tasks.delay:10s}")
       Duration getDelay() {
         return Duration.ofSeconds(0);
       }

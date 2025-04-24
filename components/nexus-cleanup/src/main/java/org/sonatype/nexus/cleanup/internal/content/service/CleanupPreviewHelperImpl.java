@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -45,6 +46,8 @@ import org.sonatype.nexus.repository.rest.api.AssetXO;
 import org.sonatype.nexus.repository.rest.api.ComponentXO;
 import org.sonatype.nexus.repository.rest.api.DefaultComponentXO;
 import org.sonatype.nexus.scheduling.CancelableHelper;
+
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
@@ -72,8 +75,8 @@ public class CleanupPreviewHelperImpl
   @Inject
   public CleanupPreviewHelperImpl(
       final CleanupPolicyStorage cleanupPolicyStorage,
-      @Named("${nexus.cleanup.preview.timeout:-60s}") final Duration previewTimeout,
-      CleanupBrowseServiceFactory browseServiceFactory)
+      @Named("${nexus.cleanup.preview.timeout:-60s}") @Value("${nexus.cleanup.preview.timeout:60s}") final Duration previewTimeout,
+      final CleanupBrowseServiceFactory browseServiceFactory)
   {
     this.cleanupPolicyStorage = checkNotNull(cleanupPolicyStorage);
     this.previewTimeout = checkNotNull(previewTimeout);
@@ -93,24 +96,28 @@ public class CleanupPreviewHelperImpl
 
   @Override
   public Stream<ComponentXO> getSearchResultsStream(
-      final CleanupPolicyPreviewXO previewXO, final Repository repository, final QueryOptions queryOptions)
+      final CleanupPolicyPreviewXO previewXO,
+      final Repository repository,
+      final QueryOptions queryOptions)
   {
     CleanupPolicy cleanupPolicy = toCleanupPolicy(previewXO);
 
     CleanupComponentBrowse browseService = browseServiceFactory.getPreviewService();
     Stream<FluentComponent> componentSteam =
-            browseService.browseIncludingAssets(cleanupPolicy, repository);
+        browseService.browseIncludingAssets(cleanupPolicy, repository);
 
     return componentSteam.map(component -> convert(component, repository));
   }
 
-  private PagedResponse<ComponentXO> searchForComponents(final Repository repository,
-                                                           final CleanupPolicy cleanupPolicy,
-                                                           final QueryOptions queryOptions)
+  private PagedResponse<ComponentXO> searchForComponents(
+      final Repository repository,
+      final CleanupPolicy cleanupPolicy,
+      final QueryOptions queryOptions)
   {
     PagedResponse<Component> components = browse(cleanupPolicy, repository, queryOptions);
 
-    List<ComponentXO> componentXOS = components.getData().stream()
+    List<ComponentXO> componentXOS = components.getData()
+        .stream()
         .map(item -> convert(item, repository))
         .collect(toList());
 
@@ -141,7 +148,8 @@ public class CleanupPreviewHelperImpl
     }
     catch (Exception e) {
       cancelled.set(true);
-      log.debug("Timeout computing preview for cleanup for policy {} in repository {}", policy, repository.getName(), e);
+      log.debug("Timeout computing preview for cleanup for policy {} in repository {}", policy, repository.getName(),
+          e);
       // indicate failure to UI
       throw new WebApplicationException(
           Response.serverError().entity("A timeout occurred while computing the preview results.").build());

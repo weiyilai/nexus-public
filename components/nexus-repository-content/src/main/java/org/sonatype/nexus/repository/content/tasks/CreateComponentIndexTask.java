@@ -23,6 +23,7 @@ import org.sonatype.nexus.scheduling.TaskSupport;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.DISABLE_CREATING_COMPONENT_INDEXES_TASK;
@@ -45,7 +46,8 @@ public class CreateComponentIndexTask
   @Inject
   public CreateComponentIndexTask(
       final CreateComponentIndexService createComponentIndexService,
-      @Named("${" + DISABLE_CREATING_COMPONENT_INDEXES_TASK + ":-false}") final boolean disableTask)
+      @Named("${" + DISABLE_CREATING_COMPONENT_INDEXES_TASK + ":-false}") @Value("${"
+          + DISABLE_CREATING_COMPONENT_INDEXES_TASK + ":false}") final boolean disableTask)
   {
     this.createComponentIndexService = checkNotNull(createComponentIndexService);
     this.disableTask = disableTask;

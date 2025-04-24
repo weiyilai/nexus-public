@@ -33,6 +33,7 @@ import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 import org.sonatype.nexus.logging.task.ProgressLogIntervalHelper;
 
 import com.squareup.tape.QueueFile;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -56,7 +57,7 @@ public class DatastoreFileBlobDeletionIndex
   public DatastoreFileBlobDeletionIndex(
       final SoftDeletedBlobsStore softDeletedBlobsStore,
       final PeriodicJobService periodicJobService,
-      @Named("${nexus.file.deletion.migrate.delay:-60s}") final Duration migrationDelay)
+      @Named("${nexus.file.deletion.migrate.delay:-60s}") @Value("${nexus.file.deletion.migrate.delay:60s}") final Duration migrationDelay)
   {
     super(softDeletedBlobsStore);
     this.periodicJobService = checkNotNull(periodicJobService);

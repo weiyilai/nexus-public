@@ -22,6 +22,7 @@ import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 @Named
 @Singleton
@@ -32,7 +33,9 @@ public class BrowseStateContributor
   private final Map<String, Object> state;
 
   @Inject
-  public BrowseStateContributor(@Named("${nexus.react.browse:-false}") final boolean featureFlag) {
+  public BrowseStateContributor(
+      @Named("${nexus.react.browse:-false}") @Value("${nexus.react.browse:false}") final boolean featureFlag)
+  {
     state = ImmutableMap.of("nexus.react.browse", featureFlag);
   }
 

@@ -35,6 +35,7 @@ import org.quartz.impl.jdbcjobstore.StdJDBCDelegate;
 import org.quartz.spi.JobStore;
 import org.quartz.utils.ConnectionProvider;
 import org.quartz.utils.DBConnectionManager;
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
 
@@ -66,7 +67,8 @@ public class JobStoreJdbcProvider
   public JobStoreJdbcProvider(
       final ConnectionProvider connectionProvider,
       final NodeAccess nodeAccess,
-      @Named(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED) final boolean datastoreClustered) {
+      @Named(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED) @Value(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean datastoreClustered)
+  {
     this.connectionProvider = connectionProvider;
     this.nodeAccess = nodeAccess;
     this.datastoreClustered = datastoreClustered;
@@ -130,7 +132,7 @@ public class JobStoreJdbcProvider
   }
 
   private String getDriverDelegateClass() throws SQLException {
-    switch(getDatabaseId()) {
+    switch (getDatabaseId()) {
       case "H2":
         return HSQLDBDelegate.class.getName();
       case "PostgreSQL":

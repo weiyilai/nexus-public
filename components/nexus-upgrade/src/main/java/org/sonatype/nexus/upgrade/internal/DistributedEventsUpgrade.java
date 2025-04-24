@@ -21,6 +21,8 @@ import javax.inject.Singleton;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.upgrade.datastore.RepeatableDatabaseMigrationStep;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * An upgrade that manages the events table
  *
@@ -35,7 +37,9 @@ public class DistributedEventsUpgrade
   private final boolean clusterEnabled;
 
   @Inject
-  public DistributedEventsUpgrade(@Named("${nexus.datastore.clustered.enabled:-false}") final boolean clusterEnabled) {
+  public DistributedEventsUpgrade(
+      @Named("${nexus.datastore.clustered.enabled:-false}") @Value("${nexus.datastore.clustered.enabled:false}") final boolean clusterEnabled)
+  {
     this.clusterEnabled = clusterEnabled;
   }
 

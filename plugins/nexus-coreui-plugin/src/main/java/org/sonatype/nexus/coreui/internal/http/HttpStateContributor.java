@@ -13,15 +13,17 @@
 package org.sonatype.nexus.coreui.internal.http;
 
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
-import org.sonatype.nexus.rapture.StateContributor;
 import org.sonatype.nexus.httpclient.HttpDefaultsCustomizer;
+import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 @Named
 @Singleton
@@ -35,8 +37,9 @@ public class HttpStateContributor
 
   @Inject
   public HttpStateContributor(
-    @Named("${nexus.react.httpSettings:-true}") final Boolean featureFlag,
-    final HttpDefaultsCustomizer customizer) {
+      @Named("${nexus.react.httpSettings:-true}") @Value("${nexus.react.httpSettings:true}") final Boolean featureFlag,
+      final HttpDefaultsCustomizer customizer)
+  {
     this.customizer = customizer;
     this.featureFlag = featureFlag;
   }
@@ -44,9 +47,8 @@ public class HttpStateContributor
   @Override
   public Map<String, Object> getState() {
     return ImmutableMap.of(
-      "nexus.react.httpSettings", featureFlag,
-      "requestTimeout", customizer.getRequestTimeout(),
-      "retryCount", customizer.getRetryCount()
-    );
+        "nexus.react.httpSettings", featureFlag,
+        "requestTimeout", customizer.getRequestTimeout(),
+        "retryCount", customizer.getRetryCount());
   }
 }

@@ -25,6 +25,7 @@ import org.sonatype.nexus.security.PasswordHelper;
 import com.google.common.annotations.VisibleForTesting;
 import org.eclipse.sisu.Hidden;
 import org.eclipse.sisu.Typed;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Database cipher shared between all MyBatis handlers that want to encrypt data at rest.
@@ -46,9 +47,9 @@ final class MyBatisCipher
   @Inject
   MyBatisCipher(
       final LegacyCipherFactory legacyCipherFactory,
-      @Named("${nexus.mybatis.cipher.password:-changeme}") final String password,
-      @Named("${nexus.mybatis.cipher.salt:-changeme}") final String salt,
-      @Named("${nexus.mybatis.cipher.iv:-0123456789ABCDEF}") final String iv) throws Exception
+      @Named("${nexus.mybatis.cipher.password:-changeme}") @Value("${nexus.mybatis.cipher.password:changeme}") final String password,
+      @Named("${nexus.mybatis.cipher.salt:-changeme}") @Value("${nexus.mybatis.cipher.salt:changeme}") final String salt,
+      @Named("${nexus.mybatis.cipher.iv:-0123456789ABCDEF}") @Value("${nexus.mybatis.cipher.iv:0123456789ABCDEF}") final String iv) throws Exception
   {
     this.pbeCipher = legacyCipherFactory.create(password, salt, iv);
   }

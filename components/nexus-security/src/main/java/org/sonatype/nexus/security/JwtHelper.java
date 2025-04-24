@@ -36,11 +36,13 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Provider;
 import org.apache.shiro.subject.Subject;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
 import static org.sonatype.nexus.common.app.FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED_VALUE;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SECURITY;
 
 /**
@@ -82,10 +84,10 @@ public class JwtHelper
 
   @Inject
   public JwtHelper(
-      @Named("${nexus.jwt.expiry:-1800}") final int expirySeconds,
+      @Named("${nexus.jwt.expiry:-1800}") @Value("${nexus.jwt.expiry:1800}") final int expirySeconds,
       @Named("${nexus-context-path}") final String contextPath,
       final Provider<SecretStore> secretStoreProvider,
-      @Named(NXSESSIONID_SECURE_COOKIE_NAMED) final boolean cookieSecure)
+      @Named(NXSESSIONID_SECURE_COOKIE_NAMED) @Value(NXSESSIONID_SECURE_COOKIE_NAMED_VALUE) final boolean cookieSecure)
   {
     checkState(expirySeconds >= 0, "JWT expiration period should be positive");
     this.expirySeconds = expirySeconds;
@@ -112,7 +114,7 @@ public class JwtHelper
    * 1. the value of the second argument, which indicates if this request originated from an HTTPS request
    * 2. the value of the nexus.session.secureCookie property.
    *
-   * nexus.session.secureCookie is true by default, however if a JWT cookie is being sent on an HTTP only 
+   * nexus.session.secureCookie is true by default, however if a JWT cookie is being sent on an HTTP only
    * request it cannot have true for {@link Cookie#getSecure()}.
    *
    * @param subject the target subject
@@ -130,7 +132,10 @@ public class JwtHelper
   /**
    * Verify jwt, refresh if it's valid and make new cookie
    */
-  public Cookie verifyAndRefreshJwtCookie(final String jwt, final boolean secureRequest) throws JwtVerificationException {
+  public Cookie verifyAndRefreshJwtCookie(
+      final String jwt,
+      final boolean secureRequest) throws JwtVerificationException
+  {
     checkNotNull(jwt);
 
     DecodedJWT decoded = verifyJwt(jwt);
@@ -171,8 +176,12 @@ public class JwtHelper
     return createJwtCookie(user, realm, userSessionId, secureRequest);
   }
 
-  private Cookie createJwtCookie(final String user, final String realm, final String userSessionId,
-                                 final boolean secureRequest) {
+  private Cookie createJwtCookie(
+      final String user,
+      final String realm,
+      final String userSessionId,
+      final boolean secureRequest)
+  {
     String jwt = createToken(user, realm, userSessionId);
     return createCookie(jwt, secureRequest);
   }

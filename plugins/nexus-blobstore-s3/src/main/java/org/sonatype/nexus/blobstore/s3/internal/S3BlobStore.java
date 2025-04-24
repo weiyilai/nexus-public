@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -87,6 +88,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -189,9 +191,9 @@ public class S3BlobStore
   public S3BlobStore(
       final AmazonS3Factory amazonS3Factory,
       final BlobIdLocationResolver blobIdLocationResolver,
-      @Named("${nexus.s3.uploaderName:-producerConsumerUploader}") final S3Uploader uploader,
-      @Named("${nexus.s3.copierName:-parallelCopier}") final S3Copier copier,
-      @Named("${nexus.s3.preferAsyncCleanup:-true}") final boolean preferAsyncCleanup,
+      @Named("${nexus.s3.uploaderName:-producerConsumerUploader}") @Value("${nexus.s3.uploaderName:producerConsumerUploader}") final S3Uploader uploader,
+      @Named("${nexus.s3.copierName:-parallelCopier}") @Value("${nexus.s3.copierName:parallelCopier}") final S3Copier copier,
+      @Named("${nexus.s3.preferAsyncCleanup:-true}") @Value("${nexus.s3.preferAsyncCleanup:true}") final boolean preferAsyncCleanup,
       @Named(S3BlobStore.TYPE) final BlobStoreMetricsService<S3BlobStore> metricsService,
       final SoftDeletedBlobIndex deletedBlobIndex,
       final DryRunPrefix dryRunPrefix,

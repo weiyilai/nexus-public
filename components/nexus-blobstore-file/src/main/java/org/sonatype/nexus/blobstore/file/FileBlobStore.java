@@ -97,6 +97,7 @@ import org.apache.commons.io.filefilter.AgeFileFilter;
 import org.apache.commons.lang.time.DateUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -202,7 +203,7 @@ public class FileBlobStore
       final NodeAccess nodeAccess,
       final DryRunPrefix dryRunPrefix,
       final BlobStoreReconciliationLogger reconciliationLogger,
-      @Named("${nexus.blobstore.prune.empty.directory.age.ms:-86400000}") final long pruneEmptyDirectoryAge,
+      @Named("${nexus.blobstore.prune.empty.directory.age.ms:-86400000}") @Value("${nexus.blobstore.prune.empty.directory.age.ms:86400000}") final long pruneEmptyDirectoryAge,
       final BlobStoreQuotaUsageChecker blobStoreQuotaUsageChecker,
       final FileBlobDeletionIndex blobDeletionIndex)
   {

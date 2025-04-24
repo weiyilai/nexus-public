@@ -71,6 +71,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.DateUtils;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -182,10 +183,10 @@ public abstract class ProxyFacetSupport
   @Inject
   protected void configureCooperation(
       @Named final Cooperation2Factory cooperationFactory,
-      @Named("${nexus.proxy.cooperation.enabled:-true}") final boolean cooperationEnabled,
-      @Named("${nexus.proxy.cooperation.majorTimeout:-0s}") final Duration majorTimeout,
-      @Named("${nexus.proxy.cooperation.minorTimeout:-30s}") final Duration minorTimeout,
-      @Named("${nexus.proxy.cooperation.threadsPerKey:-100}") final int threadsPerKey)
+      @Named("${nexus.proxy.cooperation.enabled:-true}") @Value("${nexus.proxy.cooperation.enabled:true}") final boolean cooperationEnabled,
+      @Named("${nexus.proxy.cooperation.majorTimeout:-0s}") @Value("${nexus.proxy.cooperation.majorTimeout:0s}") final Duration majorTimeout,
+      @Named("${nexus.proxy.cooperation.minorTimeout:-30s}") @Value("${nexus.proxy.cooperation.minorTimeout:30s}") final Duration minorTimeout,
+      @Named("${nexus.proxy.cooperation.threadsPerKey:-100}") @Value("${nexus.proxy.cooperation.threadsPerKey:100}") final int threadsPerKey)
   {
     this.cooperationBuilder = cooperationFactory.configure()
         .enabled(cooperationEnabled)

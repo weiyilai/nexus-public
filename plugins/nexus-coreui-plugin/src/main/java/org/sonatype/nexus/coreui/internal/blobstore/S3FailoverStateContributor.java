@@ -24,9 +24,11 @@ import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.blobstore.s3.internal.upgrade.S3FailoverMigrationStep_2_6.S3_FAILOVER_MIGRATION_VERSION;
 import static org.sonatype.nexus.common.app.FeatureFlags.CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED_VALUE;
 
 /**
  * State contributor to enable regional failover configuration for S3 blob stores.
@@ -45,7 +47,7 @@ public class S3FailoverStateContributor
   @Inject
   public S3FailoverStateContributor(
       final DatabaseCheck databaseCheck,
-      @Named(CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED) final boolean zduEnabled)
+      @Named(CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED) @Value(CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED_VALUE) final boolean zduEnabled)
   {
     this.databaseCheck = databaseCheck;
     this.zduEnabled = zduEnabled;

@@ -47,6 +47,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.softwarementors.extjs.djn.config.annotations.DirectAction;
 import com.softwarementors.extjs.djn.config.annotations.DirectMethod;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
@@ -75,7 +76,7 @@ public class SearchComponent
   @Inject
   public SearchComponent(
       final SearchService searchService,
-      @Named("${nexus.searchResultsLimit:-1000}") final int searchResultsLimit,
+      @Named("${nexus.searchResultsLimit:-1000}") @Value("${nexus.searchResultsLimit:1000}") final int searchResultsLimit,
       final SearchResultsGenerator searchResultsGenerator,
       final EventManager eventManager)
   {
@@ -100,8 +101,10 @@ public class SearchComponent
 
     boolean formatCriteriaOnly = searchFilters.size() == 1 && FORMAT.equals(searchFilters.get(0).getProperty());
     if (searchFilters.size() == 0 || parameters.isFormatSearch() && formatCriteriaOnly) {
-      /* Format specific and All format search UI should not perform a search query
-       * unless a user specifies a search criteria. */
+      /*
+       * Format specific and All format search UI should not perform a search query
+       * unless a user specifies a search criteria.
+       */
       return new LimitedPagedResponse<>(parameters.getLimit(), 0L, emptyList());
     }
     else if (formatCriteriaOnly) {
@@ -137,11 +140,11 @@ public class SearchComponent
     String sortField = sort.stream().findFirst().map(Sort::getProperty).orElse(null);
     String sortDirection = sort.stream().findFirst().map(Sort::getDirection).orElse(null);
 
-    int queryLimit =  Math.min(limit, searchResultsLimit);
+    int queryLimit = Math.min(limit, searchResultsLimit);
     int offset = Optional.ofNullable(page)
-                    .map(p -> p - 1) // the UI is 1 indexed, not 0 indexed
-                    .map(p -> p * queryLimit)
-                    .orElse(0);
+        .map(p -> p - 1) // the UI is 1 indexed, not 0 indexed
+        .map(p -> p * queryLimit)
+        .orElse(0);
 
     SearchRequest request = SearchRequest.builder()
         .searchFilters(filters)
@@ -158,7 +161,8 @@ public class SearchComponent
 
     SearchResponse response = searchService.search(request);
 
-    List<ComponentXO> componentXOs = searchResultsGenerator.getSearchResultList(response).stream()
+    List<ComponentXO> componentXOs = searchResultsGenerator.getSearchResultList(response)
+        .stream()
         .map(SearchComponent::toComponent)
         .collect(toList());
 
@@ -185,7 +189,7 @@ public class SearchComponent
     componentXO.setRepositoryName(componentHit.getRepositoryName());
     componentXO.setFormat(componentHit.getFormat());
 
-    if(componentHit.getLastModified() != null) {
+    if (componentHit.getLastModified() != null) {
       componentXO.setLastBlobUpdated(componentHit.getLastModified().toString());
     }
 
