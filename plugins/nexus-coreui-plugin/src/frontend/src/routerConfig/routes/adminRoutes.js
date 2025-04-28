@@ -67,8 +67,6 @@ export const adminRoutes = [
     abstract: true,
     data: {
       visibilityRequirements: {
-        requiresUser: true,
-        ignoreForMenuVisibilityCheck: true
       },
     },
   },
