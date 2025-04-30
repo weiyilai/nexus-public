@@ -14,7 +14,6 @@ package org.sonatype.nexus.internal.web;
 
 import javax.inject.Named;
 
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.internal.metrics.MetricsModule;
 
 import com.google.inject.AbstractModule;
@@ -24,15 +23,12 @@ import com.google.inject.servlet.GuiceFilter;
 import com.google.inject.servlet.ServletModule;
 import org.eclipse.sisu.inject.Sources;
 
-import static org.sonatype.nexus.common.app.FeatureFlags.SESSION_ENABLED;
-
 /**
  * Web module.
- * 
+ *
  * @since 3.0
  */
 @Named
-@FeatureFlag(name = SESSION_ENABLED)
 public class WebModule
     extends AbstractModule
 {

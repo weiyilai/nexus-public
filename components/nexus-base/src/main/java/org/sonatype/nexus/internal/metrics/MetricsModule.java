@@ -12,17 +12,13 @@
  */
 package org.sonatype.nexus.internal.metrics;
 
-import org.sonatype.nexus.security.FilterChainModule;
-import org.sonatype.nexus.security.SecurityFilter;
-import org.sonatype.nexus.security.anonymous.AnonymousFilter;
-import org.sonatype.nexus.security.authc.AntiCsrfFilter;
-import org.sonatype.nexus.security.authc.NexusAuthenticationFilter;
-import org.sonatype.nexus.security.authz.PermissionsFilter;
-
 import com.codahale.metrics.Clock;
+import com.codahale.metrics.servlet.InstrumentedFilter;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
+import com.google.inject.servlet.ServletModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,9 +27,9 @@ import org.slf4j.LoggerFactory;
  * WebModule.java
  *
  * <a href="http://metrics.dropwizard.io">Dropwizard Metrics</a> guice configuration.
- * 
+ *
  * Installs servlet endpoints:
- * 
+ *
  * <ul>
  * <li>/service/metrics/ping</li>
  * <li>/service/metrics/threads</li>
@@ -41,17 +37,15 @@ import org.slf4j.LoggerFactory;
  * <li>/service/metrics/healthcheck</li>
  * <li>/service/metrics/prometheus</li>
  * </ul>
- * 
+ *
  * Protected by {@code nexus:metrics:read} permission.
- * 
+ *
  * @since 2.5
  */
 public class MetricsModule
     extends AbstractModule
 {
   private static final Logger log = LoggerFactory.getLogger(MetricsModule.class);
-
-  protected static final String MOUNT_POINT = "/service/metrics";
 
   @Override
   protected void configure() {
@@ -63,24 +57,16 @@ public class MetricsModule
     final JsonFactory jsonFactory = new JsonFactory(new ObjectMapper());
     bind(JsonFactory.class).toInstance(jsonFactory);
 
-    install(new MetricsServletModule(MOUNT_POINT)
+    install(new ServletModule()
     {
       @Override
-      protected void bindSecurityFilter() {
-        filter(MOUNT_POINT + "/*").through(SecurityFilter.class);
-      }
-    });
+      protected void configureServlets() {
+        bind(MetricsForwardingServlet.class).in(Scopes.SINGLETON);
 
-    // require permission to use endpoints
-    install(new FilterChainModule()
-    {
-      @Override
-      protected void configure() {
-        addFilterChain(MOUNT_POINT + "/**",
-            NexusAuthenticationFilter.NAME,
-            AnonymousFilter.NAME,
-            AntiCsrfFilter.NAME,
-            PermissionsFilter.config("nexus:metrics:read"));
+        serve(MetricsForwardingServlet.PATH).with(MetricsForwardingServlet.class);
+
+        // record metrics for all webapp access
+        filter("/*").through(new InstrumentedFilter());
       }
     });
 

@@ -36,19 +36,9 @@
     <dependencies>
       <dependency>
         <groupId>io.dropwizard.metrics</groupId>
-        <artifactId>metrics-core</artifactId>
-        <version>${metrics.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard.metrics</groupId>
-        <artifactId>metrics-annotation</artifactId>
-        <version>${metrics.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard.metrics</groupId>
-        <artifactId>metrics-servlets</artifactId>
+        <artifactId>metrics-bom</artifactId>
+        <scope>import</scope>
+        <type>pom</type>
         <version>${metrics.version}</version>
       </dependency>
 
@@ -82,12 +72,6 @@
 
       <dependency>
         <groupId>io.dropwizard.metrics</groupId>
-        <artifactId>metrics-httpclient</artifactId>
-        <version>${metrics.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard.metrics</groupId>
         <artifactId>metrics-logback</artifactId>
         <version>${metrics.version}</version>
         <exclusions>
@@ -96,12 +80,6 @@
             <artifactId>logback-classic</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard.metrics</groupId>
-        <artifactId>metrics-servlet</artifactId>
-        <version>${metrics.version}</version>
       </dependency>
 
       <dependency>

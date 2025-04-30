@@ -15,29 +15,40 @@ package org.sonatype.nexus.internal.metrics;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.HttpHeaders;
 
-import static com.google.common.net.HttpHeaders.CONTENT_DISPOSITION;
+import static javax.servlet.http.HttpServletResponse.SC_MOVED_PERMANENTLY;
 
 /**
- * Customized {@link com.codahale.metrics.servlets.ThreadDumpServlet} to support download.
- *
- * @since 3.0
+ * Forwards requests to the moved metrics resources
  */
-public class ThreadDumpServlet
-    extends com.codahale.metrics.servlets.ThreadDumpServlet
+@WebServlet(MetricsForwardingServlet.PATH)
+public class MetricsForwardingServlet
+    extends HttpServlet
 {
+  private static final String PREFIX = "/service/metrics/";
+
+  private static final int PREFIX_LENGTH = PREFIX.length();
+
+  public static final String PATH = PREFIX + "*";
+
   @Override
   protected void doGet(
       final HttpServletRequest req,
       final HttpServletResponse resp) throws ServletException, IOException
   {
-    boolean download = Boolean.parseBoolean(req.getParameter("download"));
-    if (download) {
-      resp.addHeader(CONTENT_DISPOSITION, "attachment; filename='threads.txt'");
-    }
+    resp.setHeader(HttpHeaders.LOCATION, computePath(req));
+    resp.setStatus(SC_MOVED_PERMANENTLY);
+  }
 
-    super.doGet(req, resp);
+  private static String computePath(final HttpServletRequest req) {
+    return switch (req.getRequestURI().substring(PREFIX_LENGTH)) {
+      case "healthcheck" -> req.getContextPath() + "/service/rest/v1/status/check";
+      default -> req.getRequestURI().replace("/service/", "/service/rest/");
+    };
   }
 }

@@ -10,28 +10,21 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.web;
+package org.sonatype.nexus.internal.metrics;
 
-import javax.inject.Named;
+import javax.ws.rs.core.Response;
 
-import org.sonatype.nexus.common.app.FeatureFlag;
-import org.sonatype.nexus.internal.metrics.JwtMetricsModule;
-import com.google.inject.Binder;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
 
 /**
- * Web module to use JWT.
- *
- * @since 3.38
+ * API Description for the Nexus system status health checks
  */
-@Named
-@FeatureFlag(name = JWT_ENABLED)
-public class JwtWebModule
-    extends WebModule
+@Api(value = "System Status Checks")
+public interface HealthCheckResourceDoc
 {
-  @Override
-  protected void installMetricsModule(final Binder highPriorityBinder) {
-    highPriorityBinder.install(new JwtMetricsModule());
-  }
+  @ApiOperation("Provides current status for a number of status checks.")
+  @ApiResponse(code = 200, message = "Success")
+  Response check();
 }

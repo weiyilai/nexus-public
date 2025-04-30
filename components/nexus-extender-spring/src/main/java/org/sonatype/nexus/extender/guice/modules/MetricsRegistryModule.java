@@ -12,6 +12,7 @@
  */
 package org.sonatype.nexus.extender.guice.modules;
 
+import java.lang.management.ManagementFactory;
 import java.util.Map;
 
 import org.sonatype.nexus.extender.guice.listeners.CachedGaugeTypeListener;
@@ -19,6 +20,12 @@ import org.sonatype.nexus.extender.guice.listeners.CachedGaugeTypeListener;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SharedMetricRegistries;
 import com.codahale.metrics.health.HealthCheckRegistry;
+import com.codahale.metrics.jvm.BufferPoolMetricSet;
+import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
+import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
+import com.codahale.metrics.jvm.JvmAttributeGaugeSet;
+import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
+import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
@@ -27,6 +34,8 @@ import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 import com.palominolabs.metrics.guice.annotation.MethodAnnotationResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.codahale.metrics.MetricRegistry.name;
 
 /**
  * !!!! DEPRECATED in favor of spring @Configuration class. This class should be removed when the previous DI
@@ -48,9 +57,21 @@ public class MetricsRegistryModule
 
   private static final String USAGE_METRIC_REGISTRY_NAME = "usage";
 
+  static {
+    // Startup calls configure() multiple times, so we register these in a static method
+    // JVM metrics are no longer automatically added in dropwizard-metrics
+    MetricRegistry registry = SharedMetricRegistries.getOrCreate(METRIC_REGISTRY_NAME);
+    registry.register(name("jvm", "vm"), new JvmAttributeGaugeSet());
+    registry.register(name("jvm", "memory"), new MemoryUsageGaugeSet());
+    registry.register(name("jvm", "buffers"), new BufferPoolMetricSet(ManagementFactory.getPlatformMBeanServer()));
+    registry.register(name("jvm", "fd_usage"), new FileDescriptorRatioGauge());
+    registry.register(name("jvm", "thread-states"), new ThreadStatesGaugeSet());
+    registry.register(name("jvm", "garbage-collectors"), new GarbageCollectorMetricSet());
+  }
+
   private final Map<?, ?> nexusProperties;
 
-  public MetricsRegistryModule(Map<?, ?> nexusProperties) {
+  public MetricsRegistryModule(final Map<?, ?> nexusProperties) {
     this.nexusProperties = nexusProperties;
   }
 
