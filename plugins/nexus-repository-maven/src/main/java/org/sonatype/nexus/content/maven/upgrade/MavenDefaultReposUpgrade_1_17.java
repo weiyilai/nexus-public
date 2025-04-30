@@ -17,6 +17,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
+
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -54,7 +56,9 @@ public class MavenDefaultReposUpgrade_1_17
   private final ObjectMapper mapper;
 
   @Inject
-  public MavenDefaultReposUpgrade_1_17(final MavenDefaultRepositoriesContributor defaultRepositoriesContributor) {
+  public MavenDefaultReposUpgrade_1_17(
+      final @Nullable MavenDefaultRepositoriesContributor defaultRepositoriesContributor)
+  {
     this.defaultRepositoriesContributor = defaultRepositoriesContributor;
     this.mapper = new ObjectMapper();
   }
@@ -66,12 +70,14 @@ public class MavenDefaultReposUpgrade_1_17
 
   @Override
   public void migrate(final Connection connection) throws Exception {
-    this.defaultRepositoriesContributor
-        .getRepositoryConfigurations()
-        .stream()
-        .filter(configuration -> !Maven2GroupRecipe.NAME.equals(configuration.getRecipeName()))
-        .map(Configuration::getRepositoryName)
-        .forEach(name -> this.update(connection, name));
+    if (defaultRepositoriesContributor != null) {
+      this.defaultRepositoriesContributor
+          .getRepositoryConfigurations()
+          .stream()
+          .filter(configuration -> !Maven2GroupRecipe.NAME.equals(configuration.getRecipeName()))
+          .map(Configuration::getRepositoryName)
+          .forEach(name -> this.update(connection, name));
+    }
   }
 
   private void update(final Connection connection, final String repositoryName) {
@@ -101,8 +107,9 @@ public class MavenDefaultReposUpgrade_1_17
     }
   }
 
-  private ObjectNode getCurrentAttributes(Connection connection, String repositoryName)
-      throws SQLException, JsonProcessingException
+  private ObjectNode getCurrentAttributes(
+      Connection connection,
+      String repositoryName) throws SQLException, JsonProcessingException
   {
     try (PreparedStatement ps = connection.prepareStatement(FIND_ATTRIBUTES_BY_NAME)) {
       ps.setString(1, repositoryName);
@@ -117,9 +124,7 @@ public class MavenDefaultReposUpgrade_1_17
     }
   }
 
-  private void updateAttributes(Connection connection, String repositoryName, byte[] attributes)
-      throws SQLException
-  {
+  private void updateAttributes(Connection connection, String repositoryName, byte[] attributes) throws SQLException {
     try (PreparedStatement ps = connection.prepareStatement(UPDATE_ATTRIBUTES_BY_NAME)) {
       if (isH2(connection)) {
         ps.setBytes(1, attributes);

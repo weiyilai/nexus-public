@@ -43,7 +43,7 @@ import com.google.common.eventbus.Subscribe;
 @Singleton
 @Named
 public class GroupMemberMappingCache
-  extends ComponentSupport
+    extends ComponentSupport
     implements EventAware
 {
   private volatile Map<String, List<String>> memberInGroupsMap;
@@ -72,11 +72,11 @@ public class GroupMemberMappingCache
     memberInGroupsMap = null;
   }
 
-  List<String> getGroups(String member) {
+  public List<String> getGroups(String member) {
     return new ArrayList<>(getCache().getOrDefault(member, Collections.emptyList()));
   }
 
-  void init(RepositoryManager repositoryManager) {
+  public void init(RepositoryManager repositoryManager) {
     this.repositoryManager = repositoryManager;
   }
 
@@ -95,7 +95,7 @@ public class GroupMemberMappingCache
     return cache;
   }
 
-  private Map<String,List<String>> populateCache() {
+  private Map<String, List<String>> populateCache() {
     Map<String, List<String>> cache = new HashMap<>();
 
     repositoryManager.browse().forEach(repository -> {
@@ -105,7 +105,10 @@ public class GroupMemberMappingCache
         findContainingGroups(repository.getName(), groupNamesByLevel, 0);
 
         cache.put(repository.getName(),
-            groupNamesByLevel.values().stream().peek(groupNames -> groupNames.sort(null)).flatMap(Collection::stream)
+            groupNamesByLevel.values()
+                .stream()
+                .peek(groupNames -> groupNames.sort(null))
+                .flatMap(Collection::stream)
                 .collect(Collectors.toList()));
       }
     });
@@ -113,18 +116,20 @@ public class GroupMemberMappingCache
     return cache;
   }
 
-  private void findContainingGroups(final String name,
-                                    final SortedMap<Integer, List<String>> groupNamesByLevel,
-                                    final int level)
+  private void findContainingGroups(
+      final String name,
+      final SortedMap<Integer, List<String>> groupNamesByLevel,
+      final int level)
   {
     final List<String> newContainingGroups = new ArrayList<>();
 
-    //find any groups that directly contain the desired repository name (and make sure to only include each name
-    //once to save processing time)
+    // find any groups that directly contain the desired repository name (and make sure to only include each name
+    // once to save processing time)
     repositoryManager.browse()
         .forEach(repository -> repository.optionalFacet(GroupFacet.class).ifPresent(groupFacet -> {
           String groupName = repository.getName();
-          if (groupFacet.member(name) && groupNamesByLevel.values().stream()
+          if (groupFacet.member(name) && groupNamesByLevel.values()
+              .stream()
               .noneMatch(groupNames -> groupNames.contains(groupName))) {
             newContainingGroups.add(groupName);
           }
@@ -134,7 +139,7 @@ public class GroupMemberMappingCache
 
     groupNames.addAll(newContainingGroups);
 
-    //now process each group we found and check if any groups contain it
-    newContainingGroups.forEach( newName -> findContainingGroups(newName, groupNamesByLevel, level + 1));
+    // now process each group we found and check if any groups contain it
+    newContainingGroups.forEach(newName -> findContainingGroups(newName, groupNamesByLevel, level + 1));
   }
 }

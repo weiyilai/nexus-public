@@ -21,10 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.BlobStoreDescriptor;
 import org.sonatype.nexus.blobstore.api.Blob;
@@ -58,7 +55,6 @@ import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
 import org.sonatype.nexus.distributed.event.service.api.EventType;
 import org.sonatype.nexus.distributed.event.service.api.common.BlobStoreDistributedConfigurationEvent;
-import org.sonatype.nexus.jmx.reflect.ManagedObject;
 import org.sonatype.nexus.repository.blobstore.BlobStoreConfigurationStore;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.replication.ReplicationBlobStoreStatusManager;
@@ -83,10 +79,7 @@ import static org.sonatype.nexus.distributed.event.service.api.EventType.UPDATED
  *
  * @since 3.0
  */
-@Named
-@Singleton
-@ManagedObject
-public class BlobStoreManagerImpl
+public class BaseBlobStoreManager
     extends StateGuardLifecycleSupport
     implements BlobStoreManager, BlobSessionSupplier, EventAware
 {
@@ -96,7 +89,7 @@ public class BlobStoreManagerImpl
 
   private final Map<String, BlobStore> stores = Maps.newConcurrentMap();
 
-  private final BlobStoreConfigurationStore store;
+  protected final BlobStoreConfigurationStore store;
 
   private final Map<String, BlobStoreDescriptor> blobStoreDescriptors;
 
@@ -118,8 +111,7 @@ public class BlobStoreManagerImpl
 
   private final SecretsService secretService;
 
-  @Inject
-  public BlobStoreManagerImpl(
+  public BaseBlobStoreManager(
       final EventManager eventManager, // NOSONAR
       final BlobStoreConfigurationStore store,
       final Map<String, BlobStoreDescriptor> blobStoreDescriptors,
@@ -127,7 +119,7 @@ public class BlobStoreManagerImpl
       final FreezeService freezeService,
       final Provider<RepositoryManager> repositoryManagerProvider,
       final NodeAccess nodeAccess,
-      @Nullable @Named("${nexus.blobstore.provisionDefaults}") final Boolean provisionDefaults,
+      @Nullable final Boolean provisionDefaults,
       @Nullable final DefaultBlobStoreProvider blobstoreProvider,
       final BlobStoreTaskService blobStoreTaskService,
       final Provider<BlobStoreOverride> blobStoreOverrideProvider,

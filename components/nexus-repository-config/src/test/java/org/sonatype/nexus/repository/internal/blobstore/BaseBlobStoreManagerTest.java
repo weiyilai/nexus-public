@@ -63,7 +63,7 @@ import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.*;
 import static org.sonatype.nexus.blobstore.api.BlobStoreManager.DEFAULT_BLOBSTORE_NAME;
 
-public class BlobStoreManagerImplTest
+public class BaseBlobStoreManagerTest
     extends TestSupport
 {
   private static final String SECRET_FIELD_KEY = "secretAccessKey";
@@ -112,7 +112,7 @@ public class BlobStoreManagerImplTest
 
   private MockedStatic<UserIdHelper> userIdHelperMockedStatic;
 
-  BlobStoreManagerImpl underTest;
+  BaseBlobStoreManager underTest;
 
   @Before
   public void setup() {
@@ -127,7 +127,7 @@ public class BlobStoreManagerImplTest
     userIdHelperMockedStatic.close();
   }
 
-  private BlobStoreManagerImpl newBlobStoreManager(
+  private BaseBlobStoreManager newBlobStoreManager(
       final Boolean provisionDefaults,
       final DefaultBlobStoreProvider blobStoreConfigProvider)
   {
@@ -137,7 +137,7 @@ public class BlobStoreManagerImplTest
     Map<String, Provider<BlobStore>> providers = new HashMap<>();
     providers.put("test", provider);
     providers.put("File", provider);
-    return spy(new BlobStoreManagerImpl(eventManager, store,
+    return spy(new BaseBlobStoreManager(eventManager, store,
         descriptors,
         providers,
         freezeService, () -> repositoryManager,
@@ -259,7 +259,7 @@ public class BlobStoreManagerImplTest
     Secret secret = mock(Secret.class);
     when(secret.getId()).thenReturn(SECRET_ID);
     when(
-        secretsService.encryptMaven(BlobStoreManagerImpl.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(), TEST_USER))
+        secretsService.encryptMaven(BaseBlobStoreManager.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(), TEST_USER))
         .thenReturn(secret);
     Map<String, Map<String, Object>> blobStoreAttributes = new HashMap<>();
     Map<String, Object> blobConfigMap = new HashMap<>();
@@ -272,7 +272,7 @@ public class BlobStoreManagerImplTest
 
     assertThat(configuration.getAttributes().get("test").get(SECRET_FIELD_KEY), is(SECRET_ID));
     assertThat(createdBlobStore, is(createdBlobStore));
-    verify(secretsService).encryptMaven(BlobStoreManagerImpl.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
+    verify(secretsService).encryptMaven(BaseBlobStoreManager.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
         TEST_USER);
     verify(store).create(configuration);
     verify(blobStore).start();
@@ -387,7 +387,7 @@ public class BlobStoreManagerImplTest
     Map<String, Provider<BlobStore>> providers = new HashMap<>();
     providers.put("test", provider);
     providers.put("File", provider);
-    underTest = new BlobStoreManagerImpl(eventManager, store,
+    underTest = new BaseBlobStoreManager(eventManager, store,
         descriptors,
         providers,
         freezeService, () -> repositoryManager,
@@ -527,7 +527,7 @@ public class BlobStoreManagerImplTest
     updatedBlobStoreAttributes.put("test", newBlobConfigMap);
     updatedBlobStoreAttributes.put("file", Collections.singletonMap("path", "foo"));
     BlobStoreConfiguration newBlobStoreConfig = createConfig("test", updatedBlobStoreAttributes);
-    when(secretsService.encryptMaven(BlobStoreManagerImpl.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
+    when(secretsService.encryptMaven(BaseBlobStoreManager.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
         TEST_USER)).thenReturn(newSecret);
 
     underTest.track("test", blobStore);
@@ -535,7 +535,7 @@ public class BlobStoreManagerImplTest
     underTest.update(newBlobStoreConfig);
 
     verify(secretsService).remove(oldSecret);
-    verify(secretsService).encryptMaven(BlobStoreManagerImpl.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
+    verify(secretsService).encryptMaven(BaseBlobStoreManager.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
         TEST_USER);
     verify(store, times(1)).update(newBlobStoreConfig);
     verify(store, times(0)).update(oldBlobStoreConfig);
@@ -565,7 +565,7 @@ public class BlobStoreManagerImplTest
     oldBlobStoreAttributes.put("test", newBlobConfigMap);
     updatedBlobStoreAttributes.put("file", Collections.singletonMap("path", "foo"));
     BlobStoreConfiguration newBlobStoreConfig = createConfig("test", updatedBlobStoreAttributes);
-    when(secretsService.encryptMaven(BlobStoreManagerImpl.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
+    when(secretsService.encryptMaven(BaseBlobStoreManager.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
         TEST_USER)).thenReturn(newSecret);
 
     doThrow(new BlobStoreException("Cannot start blobstore with new config", blobId)).when(blobStore).start();
@@ -575,7 +575,7 @@ public class BlobStoreManagerImplTest
     underTest.update(newBlobStoreConfig);
 
     verify(store, times(1)).update(newBlobStoreConfig);
-    verify(secretsService).encryptMaven(BlobStoreManagerImpl.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
+    verify(secretsService).encryptMaven(BaseBlobStoreManager.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
         TEST_USER);
     // old blobstore config should be put back in the database and new secret should be deleted
     verify(secretsService).remove(oldSecret);

@@ -18,6 +18,7 @@ import java.util.StringJoiner;
 import java.util.function.Function;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -83,6 +84,8 @@ public abstract class AbstractRepositoriesApiResource<T extends AbstractReposito
 
   private Map<String, Recipe> recipesByFormat;
 
+  private boolean blobStoreValidation = true;
+
   @Inject
   public void setHighAvailabilitySupportChecker(final HighAvailabilitySupportChecker highAvailabilitySupportChecker) {
     this.highAvailabilitySupportChecker = highAvailabilitySupportChecker;
@@ -116,6 +119,11 @@ public abstract class AbstractRepositoriesApiResource<T extends AbstractReposito
   @Inject
   public void setRecipesByFormat(final Map<String, Recipe> recipesByFormat) {
     this.recipesByFormat = checkNotNull(recipesByFormat);
+  }
+
+  @Inject
+  public void setBlobStoreValidation(@Named("${nexus.api.validateBlobStore:-true}") final boolean blobStoreValidation) {
+    this.blobStoreValidation = blobStoreValidation;
   }
 
   /**
@@ -212,7 +220,9 @@ public abstract class AbstractRepositoriesApiResource<T extends AbstractReposito
   private void validateRequest(final Configuration newConfig, final String repositoryName) {
     validateFormatEnabled(newConfig.getRecipeName());
     ensureRepositoryNameMatches(newConfig, repositoryName);
-    validateBlobStoreName(newConfig, repositoryName);
+    if (blobStoreValidation) {
+      validateBlobStoreName(newConfig, repositoryName);
+    }
   }
 
   private void ensureRepositoryNameMatches(final Configuration newConfig, final String repositoryName) {

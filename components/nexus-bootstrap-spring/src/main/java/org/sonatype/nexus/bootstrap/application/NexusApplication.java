@@ -69,9 +69,7 @@ public abstract class NexusApplication
 
   @PreDestroy
   public void stop() throws Exception {
-    if (launcher != null) {
-      launcher.stop();
-    }
+
   }
 
   /**

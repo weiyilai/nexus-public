@@ -23,15 +23,11 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 import javax.validation.ConstraintViolation;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.common.app.FreezeService;
-import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.event.EventAware;
 import org.sonatype.nexus.common.event.EventHelper;
@@ -39,7 +35,6 @@ import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.distributed.event.service.api.common.RepositoryRemoteConnectionStatusEvent;
-import org.sonatype.nexus.jmx.reflect.ManagedObject;
 import org.sonatype.nexus.repository.Recipe;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.config.Configuration;
@@ -63,14 +58,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import org.joda.time.DateTime;
-import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.StreamSupport.stream;
 import static org.sonatype.nexus.blobstore.api.BlobStoreManager.DEFAULT_BLOBSTORE_NAME;
-import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.REPOSITORIES;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.BLOB_STORE_NAME;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.DATA_STORE_NAME;
@@ -83,14 +76,7 @@ import static org.sonatype.nexus.validation.ConstraintViolations.maybePropagate;
  *
  * @since 3.0
  */
-@Named
-@Singleton
-@ManagedLifecycle(phase = REPOSITORIES)
-@ManagedObject(
-    domain = "org.sonatype.nexus.repository.manager",
-    typeClass = RepositoryManager.class,
-    description = "Repository manager")
-public class RepositoryManagerImpl
+public class BaseRepositoryManager
     extends StateGuardLifecycleSupport
     implements RepositoryManager, EventAware
 {
@@ -98,36 +84,35 @@ public class RepositoryManagerImpl
 
   public static final String CLEANUP_NAME_KEY = "policyName";
 
-  private final FreezeService freezeService;
+  protected final FreezeService freezeService;
 
-  private final EventManager eventManager;
+  protected final EventManager eventManager;
 
-  private final ConfigurationStore store;
+  protected final ConfigurationStore store;
 
-  private final Map<String, Recipe> recipes;
+  protected final Map<String, Recipe> recipes;
 
-  private final RepositoryFactory factory;
+  protected final RepositoryFactory factory;
 
-  private final Provider<ConfigurationFacet> configFacet;
+  protected final Provider<ConfigurationFacet> configFacet;
 
-  private final RepositoryAdminSecurityContributor securityContributor;
+  protected final RepositoryAdminSecurityContributor securityContributor;
 
   private final List<DefaultRepositoriesContributor> defaultRepositoriesContributors;
 
-  private final Map<String, Repository> repositories = Maps.newConcurrentMap();
+  protected final Map<String, Repository> repositories = Maps.newConcurrentMap();
 
   private final boolean skipDefaultRepositories;
 
-  private final BlobStoreManager blobStoreManager;
+  protected final BlobStoreManager blobStoreManager;
 
-  private final GroupMemberMappingCache groupMemberMappingCache;
+  protected final GroupMemberMappingCache groupMemberMappingCache;
 
-  private final List<ConfigurationValidator> configurationValidators;
+  protected final List<ConfigurationValidator> configurationValidators;
 
-  private final HttpAuthenticationPasswordEncoder httpAuthenticationPasswordEncoder;
+  protected final HttpAuthenticationPasswordEncoder httpAuthenticationPasswordEncoder;
 
-  @Inject
-  public RepositoryManagerImpl(
+  public BaseRepositoryManager(
       final EventManager eventManager,
       final ConfigurationStore store,
       final RepositoryFactory factory,
@@ -136,7 +121,7 @@ public class RepositoryManagerImpl
       final RepositoryAdminSecurityContributor securityContributor,
       final List<DefaultRepositoriesContributor> defaultRepositoriesContributors,
       final FreezeService freezeService,
-      @Named("${nexus.skipDefaultRepositories:-false}") @Value("${nexus.skipDefaultRepositories:false}") final boolean skipDefaultRepositories,
+      final boolean skipDefaultRepositories,
       final BlobStoreManager blobStoreManager,
       final GroupMemberMappingCache groupMemberMappingCache,
       final List<ConfigurationValidator> configurationValidators,
@@ -178,7 +163,7 @@ public class RepositoryManagerImpl
   /**
    * Construct a new repository from configuration.
    */
-  private Repository newRepository(final Configuration configuration) throws Exception {
+  protected Repository newRepository(final Configuration configuration) throws Exception {
     String recipeName = configuration.getRecipeName();
     Recipe recipe = recipe(recipeName);
     log.debug("Using recipe: [{}] {}", recipeName, recipe);
@@ -206,7 +191,7 @@ public class RepositoryManagerImpl
   /**
    * Track repository.
    */
-  private void track(final Repository repository) {
+  protected void track(final Repository repository) {
     // configure security
     securityContributor.add(repository);
 
@@ -234,8 +219,6 @@ public class RepositoryManagerImpl
 
   @Override
   protected void doStart() throws Exception {
-    blobStoreManager.start();
-
     groupMemberMappingCache.init(this);
 
     List<Configuration> configurations = store.list();
@@ -310,8 +293,6 @@ public class RepositoryManagerImpl
     }
 
     repositories.clear();
-
-    blobStoreManager.stop();
   }
 
   @Override
@@ -466,7 +447,7 @@ public class RepositoryManagerImpl
     return repository;
   }
 
-  private void validateConfiguration(final Configuration configuration) {
+  protected void validateConfiguration(final Configuration configuration) {
     Set<ConstraintViolation<?>> violations = new HashSet<>();
     configurationValidators.forEach(
         validator -> maybeAdd(violations, validator.validate(configuration)));

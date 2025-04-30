@@ -75,10 +75,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.blobstore.api.BlobStoreManager.DEFAULT_BLOBSTORE_NAME;
-import static org.sonatype.nexus.repository.manager.internal.RepositoryManagerImpl.CLEANUP_ATTRIBUTES_KEY;
-import static org.sonatype.nexus.repository.manager.internal.RepositoryManagerImpl.CLEANUP_NAME_KEY;
+import static org.sonatype.nexus.repository.manager.internal.BaseRepositoryManager.CLEANUP_ATTRIBUTES_KEY;
+import static org.sonatype.nexus.repository.manager.internal.BaseRepositoryManager.CLEANUP_NAME_KEY;
 
-public class RepositoryManagerImplTest
+public class BaseRepositoryManagerTest
     extends TestSupport
 {
   private static final String GROUP_NAME = "group";
@@ -168,7 +168,7 @@ public class RepositoryManagerImplTest
   @Mock
   private Repository ungroupedRepository;
 
-  //Recipe for creating repositories
+  // Recipe for creating repositories
   @Mock
   private Recipe recipe;
 
@@ -198,8 +198,8 @@ public class RepositoryManagerImplTest
   @Mock
   private HttpAuthenticationPasswordEncoder httpAuthenticationPasswordEncoder;
 
-  //Subject of the test
-  private RepositoryManagerImpl repositoryManager;
+  // Subject of the test
+  private BaseRepositoryManager repositoryManager;
 
   @Before
   public void setup() {
@@ -286,13 +286,13 @@ public class RepositoryManagerImplTest
     when(repository.optionalFacet(any(Class.class))).thenReturn(Optional.empty());
   }
 
-  private RepositoryManagerImpl buildRepositoryManagerImpl(
+  private BaseRepositoryManager buildRepositoryManagerImpl(
       final boolean defaultsConfigured,
       final boolean skipDefaultRepositories) throws Exception
   {
     if (defaultsConfigured) {
-      when(configurationStore.list()).
-          thenReturn(asList(mavenCentralConfiguration, apacheSnapshotsConfiguration, thirdPartyConfiguration,
+      when(configurationStore.list())
+          .thenReturn(asList(mavenCentralConfiguration, apacheSnapshotsConfiguration, thirdPartyConfiguration,
               groupConfiguration, parentGroupConfiguration, cycleGroupAConfiguration, cycleGroupBConfiguration,
               ungroupedRepoConfiguration));
     }
@@ -300,10 +300,10 @@ public class RepositoryManagerImplTest
     return initializeAndStartRepositoryManager(skipDefaultRepositories);
   }
 
-  private RepositoryManagerImpl initializeAndStartRepositoryManager(
+  private BaseRepositoryManager initializeAndStartRepositoryManager(
       final boolean skipDefaultRepositories) throws Exception
   {
-    repositoryManager = new RepositoryManagerImpl(eventManager, configurationStore, repositoryFactory,
+    repositoryManager = new BaseRepositoryManager(eventManager, configurationStore, repositoryFactory,
         configurationFacetProvider, ImmutableMap.of(recipeName, recipe), securityContributor,
         defaultRepositoriesContributorList, freezeService, skipDefaultRepositories, blobStoreManager,
         groupMemberMappingCache, Collections.emptyList(), httpAuthenticationPasswordEncoder);
@@ -312,7 +312,7 @@ public class RepositoryManagerImplTest
     return repositoryManager;
   }
 
-  private RepositoryManagerImpl buildRepositoryManagerImpl(final boolean defaultsConfigured) throws Exception {
+  private BaseRepositoryManager buildRepositoryManagerImpl(final boolean defaultsConfigured) throws Exception {
     return buildRepositoryManagerImpl(defaultsConfigured, false);
   }
 
@@ -321,7 +321,7 @@ public class RepositoryManagerImplTest
   }
 
   private void setupConfigurationCopy(final Configuration... configurations) {
-    for(Configuration config : configurations) {
+    for (Configuration config : configurations) {
       when(config.copy()).thenReturn(config);
     }
   }
@@ -329,8 +329,8 @@ public class RepositoryManagerImplTest
   @Test
   public void testLoadsExistingConfigurationOnStartup() throws Exception {
     repositoryManager = buildRepositoryManagerImpl(true);
-    when(configurationStore.list()).
-        thenReturn(asList(mavenCentralConfiguration, apacheSnapshotsConfiguration, thirdPartyConfiguration));
+    when(configurationStore.list())
+        .thenReturn(asList(mavenCentralConfiguration, apacheSnapshotsConfiguration, thirdPartyConfiguration));
 
     assertThat(size(repositoryManager.browse()), equalTo(8));
 
@@ -433,7 +433,7 @@ public class RepositoryManagerImplTest
 
   @Test
   public void testCreate_concurrentCreatesShouldNotFail() throws Exception {
-    RepositoryManagerImpl repositoryManager = initializeAndStartRepositoryManager(true);
+    BaseRepositoryManager repositoryManager = initializeAndStartRepositoryManager(true);
     repositoryManager.create(makeRepo("r1"));
     repositoryManager.create(makeRepo("r2"));
 
@@ -447,7 +447,7 @@ public class RepositoryManagerImplTest
 
   private Map<String, Repository> reflectRepositories() {
     try {
-      Field field = RepositoryManagerImpl.class.getDeclaredField("repositories");
+      Field field = BaseRepositoryManager.class.getDeclaredField("repositories");
       field.setAccessible(true);
       return (Map<String, Repository>) field.get(repositoryManager);
     }
@@ -522,7 +522,7 @@ public class RepositoryManagerImplTest
   public void testMemberToGroupCacheFunctionsWithNoRepositories() throws Exception {
     repositoryManager = buildRepositoryManagerImpl(false, true);
 
-    //this would throw an NPE previously
+    // this would throw an NPE previously
     repositoryManager.findContainingGroups("test");
   }
 
@@ -575,19 +575,20 @@ public class RepositoryManagerImplTest
     repositoryConfigurationEvent.setRemoteNodeId("remote");
 
     // TODO should be uncomment after NEXUS-36640
-    //EventHelper.asReplicating(() -> repositoryManager.on(repositoryConfigurationEvent));
+    // EventHelper.asReplicating(() -> repositoryManager.on(repositoryConfigurationEvent));
 
     verify(configurationStore, times(2)).list();
     verify(configurationStore, never()).create(any());
   }
-
 
   @SuppressWarnings("unchecked")
   private void assertRepositoryByCleanupPolicy(final List<Repository> repositories, final String cleanupPolicy) {
     assertThat(repositories.size(), equalTo(1));
     assertThat(repositories.get(0).getConfiguration(), equalTo(mavenCentralConfiguration));
     assertThat((Collection<String>) repositories
-        .get(0).getConfiguration().getAttributes()
+        .get(0)
+        .getConfiguration()
+        .getAttributes()
         .get(CLEANUP_ATTRIBUTES_KEY)
         .get(CLEANUP_NAME_KEY),
         hasItems(cleanupPolicy));
