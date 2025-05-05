@@ -27,8 +27,7 @@ import {
   KnowledgeBaseUTMparams,
   SonatypeGuidesUTMparams,
   CommunityUTMparams,
-  IssueTrackerUTMparams,
-  SupportUTMparams,
+  IssueTrackerUTMparams
 } from "./HelpMenu";
 
 // This is used by the API view, it's not really something we need to

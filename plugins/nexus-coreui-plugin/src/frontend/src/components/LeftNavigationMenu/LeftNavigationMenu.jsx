@@ -20,8 +20,6 @@ import LeftNavigationMenuCollapsibleItem from './LeftNavigationMenuCollapsibleIt
 import LeftNavigationMenuCollapsibleChildItem from './LeftNavigationMenuCollapsibleChildItem';
 import UIStrings from '../../constants/UIStrings';
 import { ROUTE_NAMES } from '../../routerConfig/routeNames/routeNames';
-import { ExtJS } from '@sonatype/nexus-ui-plugin';
-import { ROUTE_NAMES } from '../../routerConfig/routeNames/routeNames';
 import { useDefaultAdminRouteName } from './useDefaultAdminRouteName';
 import { ExtJS } from '@sonatype/nexus-ui-plugin';
 import './LeftNavigationMenu.scss';
@@ -38,7 +36,7 @@ export default function LeftNavigationMenu() {
     const clm = ExtJS.state().getValue('clm') || {};
     return {
       showDashboard: !!(clm?.enabled && clm?.showLink && clm?.url),
-      url: clm?.url,
+      url: clm?.url
     };
   });
 
