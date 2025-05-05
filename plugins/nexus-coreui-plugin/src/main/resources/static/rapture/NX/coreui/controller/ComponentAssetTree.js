@@ -232,14 +232,35 @@ Ext.define('NX.coreui.controller.ComponentAssetTree', {
       modelId = decodeURIComponent(list_ids.shift());
       store = lists[0].getStore();
 
+      var ensureDetailPanelReady = function(retryCount) {
+        if (typeof retryCount === 'undefined') {
+          retryCount = 0;
+        }
+        var MAX_RETRIES = 50;
+        var componentInfo = me.getComponentInfo();
+        if (!componentInfo) {
+          if (retryCount >= MAX_RETRIES) {// Maximum number of retries: 50
+            me.logWarn('Maximum retry limit reached while waiting for component info.');
+            return;
+          }
+          Ext.defer(function() {
+            ensureDetailPanelReady(retryCount + 1);
+          }, 100, me);
+          return;
+        }
+
+        me.selectModelById(0, modelId);
+      };
+
       if (store.isLoading() || !store.isLoaded()) {
-        // The store hasn’t yet loaded, load it when ready
         me.mon(store, 'load', function() {
-          me.selectModelById(0, modelId);
+          me.showChild(0); // Ensure the panel is visible
+          ensureDetailPanelReady();
           me.mun(store, 'load');
         });
       } else {
-        me.selectModelById(0, modelId);
+        me.showChild(0); // Ensure the panel is visible
+        ensureDetailPanelReady();
       }
     } else {
       me.loadView(0);
@@ -368,7 +389,7 @@ Ext.define('NX.coreui.controller.ComponentAssetTree', {
   },
 
   bookmarkNode: function(node) {
-    const ROOT_LENGTH = '/Root/'.length;
+    var ROOT_LENGTH = '/Root/'.length;
     var baseUrl = '#browse/browse:' + encodeURIComponent(this.getCurrentRepository().get('name')),
         encodedId = node ? encodeURIComponent(node.getPath('text').substring(ROOT_LENGTH)) : null;
 
