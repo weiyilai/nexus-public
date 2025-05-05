@@ -12,9 +12,10 @@
  */
 
 import React from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import NxCollapsibleNavigationLink from './NavigationLinkWithCollapsibleList';
 import { faAirFreshener } from '@fortawesome/free-solid-svg-icons';
+import userEvent from '@testing-library/user-event';
 
 describe('NxCollapsibleNavigationLink', () => {
   let renderComponent;
@@ -37,22 +38,25 @@ describe('NxCollapsibleNavigationLink', () => {
     expect(expandableList).not.toBeInTheDocument();
   });
 
-  it('opens the list on chevron click and collapses it on second click', () => {
+  it('opens the list on chevron click and collapses it on second click',  () => {
     renderComponent();
-    const dropdownButton = screen.getByRole('button');
+    const dropdownButton = screen.getByRole('button', { name: /expand menu/i });
     let expandableList = screen.queryByRole('list');
+    // Initial collapsed state
     expect(expandableList).not.toBeInTheDocument();
-    fireEvent.click(dropdownButton);
+    // Click to expand
+    userEvent.click(dropdownButton);
     expandableList = screen.getByRole('list');
     expect(expandableList).toBeVisible();
-    fireEvent.click(dropdownButton);
+    // Click again to collapse
+    userEvent.click(dropdownButton);
     expandableList = screen.queryByRole('list');
     expect(expandableList).not.toBeInTheDocument();
   });
 
   it('renders the link with the list expanded by default', () => {
     renderComponent({ isOpen: true });
-    const expandableList = screen.queryByRole('list');
+    const expandableList = screen.getByRole('list');
     expect(expandableList).toBeVisible();
   });
 

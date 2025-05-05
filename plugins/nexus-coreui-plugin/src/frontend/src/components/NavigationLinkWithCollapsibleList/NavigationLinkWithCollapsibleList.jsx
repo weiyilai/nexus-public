@@ -30,12 +30,15 @@ const NavigationLinkWithCollapsibleList = ({ children, text, isSelected, href, i
     setIsExpanded(!isExpanded);
   };
 
+  const uniqueId = `collapsible-list-${text}`;
+
   const itemText = (
     <div className='nxrm-navigation-expandable-link__text'>
       {text}
       <button
         aria-label={isExpanded ? 'Collapse Menu' : 'Expand Menu'}
         aria-expanded={isExpanded}
+        aria-controls={uniqueId}
         className='nxrm-navigation-expandable-link__chevron'
         onClick={onChevronClick}
       >
@@ -44,10 +47,13 @@ const NavigationLinkWithCollapsibleList = ({ children, text, isSelected, href, i
     </div>
   );
 
-  const wrapperClassnames = classnames('nxrm-navigation-expandable-link', {
+  const linkClassnames = classnames('nxrm-navigation-expandable-link__navigation-link', {
+    hideIcon: !icon,
+  });
+
+  const wrapperClasses = classnames('nxrm-navigation-expandable-link', {
     open: isExpanded,
     collapsed: !isExpanded,
-    hideIcon: !icon,
   });
 
   useEffect(() => {
@@ -57,16 +63,24 @@ const NavigationLinkWithCollapsibleList = ({ children, text, isSelected, href, i
   }, [isOpen]);
 
   return (
-    <div className={wrapperClassnames}>
+    <div className={wrapperClasses}>
       <NxGlobalSidebar2NavigationLink
-        className='nxrm-navigation-expandable-link__navigation-link'
+        className={linkClassnames}
         text={itemText}
         isSelected={isSelected}
         href={href}
         icon={icon ?? faLink}
         {...props}
       />
-      <ul className='nxrm-navigation-expandable-link__expandable-list' aria-hidden={!isExpanded}>
+      <ul
+        className='nxrm-navigation-expandable-link__expandable-list'
+        aria-hidden={!isExpanded}
+        id={uniqueId}
+        // Inert is a fairly new standard attribute that prevents the browser from rendering the element and its children
+        // This is useful for accessibility, as it prevents screen readers from reading the content when the list is collapsed
+        // https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/inert
+        inert={!isExpanded ? '' : undefined}
+      >
         {children}
       </ul>
     </div>
