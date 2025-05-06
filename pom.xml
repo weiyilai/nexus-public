@@ -1425,7 +1425,7 @@
       </activation>
       <properties>
         <!-- override yarn build to ignore lockfile -->
-        <npm.install>install --no-lockfile</npm.install>
+        <npm.install>install</npm.install>
       </properties>
     </profile>
 
