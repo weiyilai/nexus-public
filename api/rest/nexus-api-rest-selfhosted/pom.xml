@@ -54,9 +54,19 @@
     </dependency>
 
     <dependency>
+      <groupId>org.sonatype.nexus.api.rest</groupId>
+      <artifactId>nexus-api-rest-common</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.sonatype.nexus</groupId>
       <artifactId>nexus-test-common</artifactId>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.sonatype.nexus.plugins</groupId>
+      <artifactId>nexus-blobstore-s3</artifactId>
     </dependency>
 
   </dependencies>
