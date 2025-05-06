@@ -87,7 +87,7 @@ export default function CleanupPoliciesList({onCreate, onEdit}) {
                 {LABELS.FORMAT_LABEL}
               </NxTableCell>
               <NxTableCell onClick={() => send({type: 'SORT_BY_NOTES'})} isSortable sortDir={notesSortDir}>
-                {LABELS.NOTES_LABEL}
+                {LABELS.DESCRIPTION_LABEL}
               </NxTableCell>
               <NxTableCell chevron/>
             </NxTableRow>
