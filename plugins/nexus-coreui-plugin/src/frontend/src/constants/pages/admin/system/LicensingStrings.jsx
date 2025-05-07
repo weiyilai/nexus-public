@@ -99,7 +99,8 @@ export default {
       REQUESTS_CHANGE: 'Requests % Change',
       REQUESTS_CHANGE_TOOLTIP: 'Change rate of the total monthly requests from the previous month.',
       PEAK_STORAGE: 'Peak Storage',
-      TOTAL_EGRESS: 'Total Egress'
+      TOTAL_EGRESS: 'Total Egress',
+      TOTAL_EGRESS_TOOLTIP: 'Egress is based on application-level tracking and may differ from actual network transfer measured by your cloud provider.'
     }
   }
 };

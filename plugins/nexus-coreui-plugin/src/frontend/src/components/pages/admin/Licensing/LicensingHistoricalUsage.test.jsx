@@ -107,4 +107,40 @@ describe('Licensing Historical Usage', () => {
 
     expect(screen.getAllByText('N/A')[0]).toBeInTheDocument();
   });
+
+  it('renders the components change tooltip correctly', async () => {
+    await renderView();
+
+    const componentsChangeTooltipTrigger = screen.getByText("Components % Change").closest('th').querySelector('[data-icon="info-circle"]');
+    expect(componentsChangeTooltipTrigger).toBeInTheDocument();
+
+    await TestUtils.expectToSeeTooltipOnHover(
+      componentsChangeTooltipTrigger,
+      'Change rate of the peak component count from the previous month.'
+    );
+  });
+
+  it('renders the requests change tooltip correctly', async () => {
+    await renderView();
+
+    const requestsChangeTooltipTrigger = screen.getByText("Requests % Change").closest('th').querySelector('[data-icon="info-circle"]');
+    expect(requestsChangeTooltipTrigger).toBeInTheDocument();
+
+    await TestUtils.expectToSeeTooltipOnHover(
+      requestsChangeTooltipTrigger,
+      'Change rate of the total monthly requests from the previous month.'
+    );
+  });
+
+  it('renders the egress tooltip correctly', async () => {
+    await renderView();
+
+    const egressTooltipTrigger = screen.getByText("Total Egress").closest('th').querySelector('[data-icon="info-circle"]');
+    expect(egressTooltipTrigger).toBeInTheDocument();
+
+    await TestUtils.expectToSeeTooltipOnHover(
+      egressTooltipTrigger,
+      'Egress is based on application-level tracking and may differ from actual network transfer measured by your cloud provider.'
+    );
+  });
 });

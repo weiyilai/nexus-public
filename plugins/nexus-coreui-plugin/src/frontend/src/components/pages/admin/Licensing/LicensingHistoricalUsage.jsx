@@ -57,7 +57,12 @@ export default function LicensingHistorcalUsage() {
                 <span><FontAwesomeIcon icon={faInfoCircle} /></span>
               </NxTooltip>
             </NxTableCell>
-            <NxTableCell>{LicensingStrings.LICENSING.HISTORICAL_USAGE.TOTAL_EGRESS}</NxTableCell>
+            <NxTableCell>
+              {LicensingStrings.LICENSING.HISTORICAL_USAGE.TOTAL_EGRESS}
+              <NxTooltip title={LicensingStrings.LICENSING.HISTORICAL_USAGE.TOTAL_EGRESS_TOOLTIP}>
+                <span><FontAwesomeIcon icon={faInfoCircle} /></span>
+              </NxTooltip>
+            </NxTableCell>
             <NxTableCell>{LicensingStrings.LICENSING.HISTORICAL_USAGE.PEAK_STORAGE}</NxTableCell>
           </NxTableRow>
         </NxTableHead>
