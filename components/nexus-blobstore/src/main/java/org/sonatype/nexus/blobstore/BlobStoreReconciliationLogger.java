@@ -19,12 +19,15 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -57,15 +60,21 @@ public class BlobStoreReconciliationLogger
 
   private final ApplicationDirectories applicationDirectories;
 
+  protected final BlobIdLocationResolver blobIdLocationResolver;
+
   @Inject
-  public BlobStoreReconciliationLogger(final ApplicationDirectories applicationDirectories) {
+  public BlobStoreReconciliationLogger(
+      final ApplicationDirectories applicationDirectories,
+      final BlobIdLocationResolver blobIdLocationResolver)
+  {
     this.applicationDirectories = checkNotNull(applicationDirectories);
     this.reconciliationLogger = LoggerFactory.getLogger(RECONCILIATION_LOGGER_NAME);
+    this.blobIdLocationResolver = checkNotNull(blobIdLocationResolver);
   }
 
   /**
    * Add new entry in rolling log later used in reconciliation task.
-   * 
+   *
    * @param reconciliationLogPath The path to the blob store's reconciliation log directory
    * @param blobId id of blob created
    */
@@ -89,7 +98,6 @@ public class BlobStoreReconciliationLogger
    * @param fromDate The date from which range starts
    * @param toDate The date from which range ends
    * @param dateBasedBlobIds date-based blob ids
-   *
    * @return stream of BlobId
    */
   public Stream<BlobId> getBlobsCreatedSince(
@@ -121,7 +129,20 @@ public class BlobStoreReconciliationLogger
           }
         })
         .filter(Objects::nonNull)
-        .map(id -> new BlobId(id, dateBasedBlobIds.get(id) != null ? dateBasedBlobIds.get(id) : null));
+        .map(id -> new BlobId(id, dateBasedBlobIds.get(id), getBlobStorePath(id, dateBasedBlobIds.get(id))));
+  }
+
+  private String getBlobStorePath(final String id, @Nullable OffsetDateTime blobCreatedRef) {
+    if (blobCreatedRef != null) {
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm");
+      String blobPath = blobCreatedRef.truncatedTo(ChronoUnit.MINUTES)
+          .withOffsetSameInstant(ZoneOffset.UTC)
+          .format(formatter);
+      return blobPath + "/" + id;
+    }
+
+    BlobId blobId = new BlobId(id, null);
+    return this.blobIdLocationResolver.getLocation(blobId);
   }
 
   private Stream<String> readLines(final File file) {

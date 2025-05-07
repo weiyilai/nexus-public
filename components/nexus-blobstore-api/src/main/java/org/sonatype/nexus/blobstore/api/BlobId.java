@@ -14,7 +14,6 @@ package org.sonatype.nexus.blobstore.api;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
-
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -31,6 +30,8 @@ public class BlobId
 
   private final OffsetDateTime blobCreatedRef;
 
+  private final String blobstorePath;
+
   /**
    * @deprecated Use {@link #BlobId(String, OffsetDateTime)} instead.
    */
@@ -42,6 +43,13 @@ public class BlobId
   public BlobId(final String id, @Nullable OffsetDateTime blobCreatedRef) {
     this.id = checkNotNull(id);
     this.blobCreatedRef = blobCreatedRef;
+    this.blobstorePath = null;
+  }
+
+  public BlobId(final String id, @Nullable OffsetDateTime blobCreatedRef, @Nullable String blobstorePath) {
+    this.id = checkNotNull(id);
+    this.blobCreatedRef = blobCreatedRef;
+    this.blobstorePath = blobstorePath;
   }
 
   public String asUniqueString() {
@@ -50,6 +58,10 @@ public class BlobId
 
   public OffsetDateTime getBlobCreatedRef() {
     return blobCreatedRef;
+  }
+
+  public String getBlobstorePath() {
+    return blobstorePath;
   }
 
   @Override

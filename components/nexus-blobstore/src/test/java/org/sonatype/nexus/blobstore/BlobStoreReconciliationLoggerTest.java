@@ -44,6 +44,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -59,6 +60,9 @@ public class BlobStoreReconciliationLoggerTest
 
   @Mock
   private ApplicationDirectories applicationDirectories;
+
+  @Mock
+  private BlobIdLocationResolver blobIdLocationResolver;
 
   @Mock
   private BlobStore blobStore;
@@ -86,7 +90,7 @@ public class BlobStoreReconciliationLoggerTest
     mockedStatic.when(() -> LoggerFactory.getLogger(BlobStoreReconciliationLogger.class))
         .thenReturn(mock(Logger.class));
 
-    underTest = new BlobStoreReconciliationLogger(applicationDirectories);
+    underTest = new BlobStoreReconciliationLogger(applicationDirectories, blobIdLocationResolver);
   }
 
   @After
@@ -130,17 +134,35 @@ public class BlobStoreReconciliationLoggerTest
         "2021-04-14 00:00:00,00000000-0000-0000-0000-000000000006".getBytes(StandardCharsets.UTF_8),
         StandardOpenOption.CREATE);
 
-    List<String> result = underTest.getBlobsCreatedSince(
+    BlobId blobId2 = new BlobId("00000000-0000-0000-0000-000000000002");
+    when(blobIdLocationResolver.getLocation(eq(blobId2)))
+        .thenReturn("path/to/blob/00000000-0000-0000-0000-000000000002");
+
+    BlobId blobId4 = new BlobId("00000000-0000-0000-0000-000000000004");
+    when(blobIdLocationResolver.getLocation(eq(blobId4)))
+        .thenReturn("path/to/blob/00000000-0000-0000-0000-000000000004");
+
+    BlobId blobId5 = new BlobId("00000000-0000-0000-0000-000000000005");
+    when(blobIdLocationResolver.getLocation(eq(blobId5)))
+        .thenReturn("path/to/blob/00000000-0000-0000-0000-000000000005");
+
+    List<BlobId> blobIds = underTest.getBlobsCreatedSince(
         Paths.get(RECONCILIATION_LOG_DIRECTORY), LocalDateTime.parse("2021-04-14T00:00:00"),
-            LocalDateTime.parse("2021-04-15T23:59:59.999999999") ,emptyMap())
-        .map(BlobId::asUniqueString)
-        .collect(toList());
+        LocalDateTime.parse("2021-04-15T23:59:59.999999999"), emptyMap()).toList();
+
+    List<String> result = blobIds.stream().map(BlobId::asUniqueString).collect(toList());
+    List<String> blobPaths = blobIds.stream().map(BlobId::getBlobstorePath).collect(toList());
 
     assertThat(result, hasSize(3));
     assertThat(result, containsInAnyOrder(
         "00000000-0000-0000-0000-000000000002",
         "00000000-0000-0000-0000-000000000004",
         "00000000-0000-0000-0000-000000000005"));
+
+    assertThat(blobPaths, containsInAnyOrder(
+        "path/to/blob/00000000-0000-0000-0000-000000000002",
+        "path/to/blob/00000000-0000-0000-0000-000000000004",
+        "path/to/blob/00000000-0000-0000-0000-000000000005"));
   }
 
   @Test
@@ -151,13 +173,13 @@ public class BlobStoreReconciliationLoggerTest
 
     Files.write(temporaryFolder.newFile("2024-05-01").toPath(),
         ("2024-05-01 01:00:00,00000000-0000-0000-0000-000000000001,true\n" +
-         "2024-05-01 02:00:00,00000000-0000-0000-0000-000000000002,false\n" +
-         "2024-05-01 03:00:00,00000000-0000-0000-0000-000000000003,true\n")
+            "2024-05-01 02:00:00,00000000-0000-0000-0000-000000000002,false\n" +
+            "2024-05-01 03:00:00,00000000-0000-0000-0000-000000000003,true\n")
             .getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
 
     List<String> result = underTest.getBlobsCreatedSince(
             Paths.get(RECONCILIATION_LOG_DIRECTORY), LocalDateTime.parse("2024-05-01T00:00:00"),
-            LocalDateTime.parse("2024-05-01T23:59:59.999999999") ,emptyMap())
+            LocalDateTime.parse("2024-05-01T23:59:59.999999999"), emptyMap())
         .map(BlobId::asUniqueString)
         .collect(toList());
 

@@ -307,21 +307,22 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
   protected BlobId getBlobIdFromAttributeFilePath(final T attributeFilePath) {
     Matcher matcher = UUID_PATTERN.matcher(attributeFilePath.getFullPath());
     if (matcher.find()) {
-      return new BlobId(matcher.group(1), null);
+      return new BlobId(matcher.group(1), null, replaceBytesName(attributeFilePath));
     }
 
     matcher = DATE_BASED_PATTERN.matcher(attributeFilePath.getFullPath());
     if (matcher.find()) {
       LocalDateTime localDateTime = LocalDateTime.parse(matcher.group(1), DATE_TIME_PATH_FORMATTER);
       OffsetDateTime blobCreatedRef = localDateTime.atOffset(ZoneOffset.UTC);
-      return new BlobId(matcher.group(3), blobCreatedRef);
+      String id = matcher.group(3);
+      return new BlobId(id, blobCreatedRef, replaceBytesName(attributeFilePath));
     }
 
     try {
       BlobAttributes fileBlobAttributes = getBlobAttributes(attributeFilePath);
       if (fileBlobAttributes != null && fileBlobAttributes.getHeaders() != null) {
         String id = blobIdLocationResolver.fromHeaders(fileBlobAttributes.getHeaders()).asUniqueString();
-        return new BlobId(id, null);
+        return new BlobId(id, null, getBlobstorePath(id));
       }
       else {
         log.error("Broken properties file by path: {}", attributeFilePath.getFullPath());
@@ -331,6 +332,10 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
     catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private String replaceBytesName(final T attributeFilePath) {
+    return attributeFilePath.getFullPath().replace(".bytes", "");
   }
 
   private void updateTimer(final String name, final long value) {
@@ -383,5 +388,10 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
     LocalDateTime localDateTime = LocalDateTime.parse(locationTimestamp, DATE_TIME_FORMATTER);
     OffsetDateTime softDeletedDateTime = localDateTime.atOffset(ZoneOffset.UTC);
     return new BlobId(blobId.asUniqueString(), softDeletedDateTime);
+  }
+
+  protected String getBlobstorePath(final String id) {
+    BlobId blobId = new BlobId(id, null);
+    return this.blobIdLocationResolver.getLocation(blobId);
   }
 }
