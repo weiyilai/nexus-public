@@ -18,6 +18,7 @@ import java.util.function.BooleanSupplier;
 import java.util.stream.Stream;
 
 import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.fluent.FluentComponent;
 import org.sonatype.nexus.repository.content.maintenance.ContentMaintenanceFacet;
@@ -48,11 +49,14 @@ class DeleteCleanupMethodTest
   @Mock
   private ContentMaintenanceFacet contentMaintenanceFacet;
 
+  @Mock
+  private DatabaseCheck databaseCheck;
+
   private DeleteCleanupMethod underTest;
 
   @BeforeEach
   void setUp() {
-    underTest = new DeleteCleanupMethod();
+    underTest = new DeleteCleanupMethod(databaseCheck);
     when(repository.facet(ContentMaintenanceFacet.class)).thenReturn(contentMaintenanceFacet);
   }
 

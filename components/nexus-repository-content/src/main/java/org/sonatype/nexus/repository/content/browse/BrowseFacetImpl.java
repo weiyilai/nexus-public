@@ -166,9 +166,7 @@ public class BrowseFacetImpl
       final Integer internalAssetId,
       final String path)
   {
-    log.debug("Deleting browse nodes for repository = {} and asset path = {}", getRepository().getName(), path);
-    Long parentNodeId = browseNodeManager.deleteByAssetIdAndPath(internalAssetId, path);
-    log.debug("Deleted browse node for path = '{}' - Returned parent node {}", path, parentNodeId);
+    Long parentNodeId = deleteBrowseNodeByAsset(internalAssetId, path);
 
     if (parentNodeId != null) {
       List<BrowseNode> parentNodes = browseNodeManager.getNodeParents(parentNodeId);
@@ -354,5 +352,16 @@ public class BrowseFacetImpl
         return size() > COMPONENT_ID_CACHE_SIZE;
       }
     };
+  }
+
+  private Long deleteBrowseNodeByAsset(final Integer internalAssetId, final String path) {
+    log.debug("Deleting browse nodes for repository = {} and asset path = {}", getRepository().getName(), path);
+    Long parentNodeId = browseNodeManager.deleteByAssetIdAndPath(internalAssetId, path);
+    if (parentNodeId == null) {
+      // Delete only by its internal id
+      parentNodeId = browseNodeManager.deleteByAssetId(internalAssetId);
+    }
+    log.debug("Deleted browse node for path = '{}' - Returned parent node {}", path, parentNodeId);
+    return parentNodeId;
   }
 }

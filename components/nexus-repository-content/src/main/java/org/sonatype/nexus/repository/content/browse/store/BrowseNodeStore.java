@@ -139,6 +139,17 @@ public class BrowseNodeStore<T extends BrowseNodeDAO>
   }
 
   /**
+   * Deletes a browse node based on its internal asset Id.
+   *
+   * @param internalAssetId the internal Id of the asset
+   * @return the parent node id of the deleted node
+   */
+  @Transactional
+  public Long deleteByAssetId(final Integer internalAssetId) {
+    return dao().deleteByAssetId(internalAssetId);
+  }
+
+  /**
    * Retrieves a list of parent nodes for the given node.
    *
    * @param internalNodeId the internal Id of current node

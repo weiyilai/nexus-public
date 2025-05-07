@@ -150,6 +150,15 @@ public class BrowseNodeManager
   }
 
   /**
+   * Deletes a browse node based on internal asset Id
+   */
+  public Long deleteByAssetId(final Integer internalAssetId) {
+    Long parentNode = browseNodeStore.deleteByAssetId(internalAssetId);
+    log.debug("Deleted browse node for asset id {} - Returned parent node {}", internalAssetId, parentNode);
+    return parentNode;
+  }
+
+  /**
    * Retrieves a list of browse node parents by its internal id.
    */
   public List<BrowseNode> getNodeParents(final Long internalNodeId) {

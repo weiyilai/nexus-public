@@ -99,6 +99,14 @@ public interface BrowseNodeDAO
   Long deleteByAssetIdAndPath(@Param("internalAssetId") Integer internalAssetId, @Param("path") String path);
 
   /**
+   * Deletes a browse node by its asset internal id
+   *
+   * @param internalAssetId the asset internal id
+   * @return the parent node id of the deleted node
+   */
+  Long deleteByAssetId(@Param("internalAssetId") Integer internalAssetId);
+
+  /**
    * Retrieves a list of parent browse nodes for the given node id.
    *
    * @param internalNodeId the node id

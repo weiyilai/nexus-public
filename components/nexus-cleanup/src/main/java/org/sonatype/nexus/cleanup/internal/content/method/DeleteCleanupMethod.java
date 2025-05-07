@@ -12,20 +12,27 @@
  */
 package org.sonatype.nexus.cleanup.internal.content.method;
 
+import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Stream;
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.cleanup.internal.method.CleanupMethod;
+import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.common.entity.Continuations;
 import org.sonatype.nexus.repository.Repository;
+import org.sonatype.nexus.repository.content.browse.BrowseFacet;
 import org.sonatype.nexus.repository.content.fluent.FluentComponent;
 import org.sonatype.nexus.repository.content.maintenance.ContentMaintenanceFacet;
+import org.sonatype.nexus.repository.content.store.InternalIds;
 import org.sonatype.nexus.repository.task.DeletionProgress;
 import org.sonatype.nexus.scheduling.TaskInterruptedException;
 
 import com.google.common.collect.Iterators;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Provides a delete mechanism for cleanup
@@ -37,6 +44,13 @@ public class DeleteCleanupMethod
     extends ComponentSupport
     implements CleanupMethod
 {
+  private final DatabaseCheck databaseCheck;
+
+  @Inject
+  public DeleteCleanupMethod(final DatabaseCheck databaseCheck) {
+    this.databaseCheck = checkNotNull(databaseCheck);
+  }
+
   @Override
   public DeletionProgress run(
       final Repository repository,
@@ -65,6 +79,26 @@ public class DeleteCleanupMethod
           true);
     }
 
-    progress.addComponentCount(maintenance.deleteComponents(batch));
+    // Collect the stream into a list to allow reuse
+    List<FluentComponent> components = batch.toList();
+
+    if (isPostgresql()) {
+      deleteBrowseNodes(components);
+    }
+
+    progress.addComponentCount(maintenance.deleteComponents(components.stream()));
+  }
+
+  private void deleteBrowseNodes(final List<FluentComponent> components) {
+    components.forEach(component -> component.assets().forEach(asset -> {
+      Integer internalAssetId = InternalIds.internalAssetId(asset);
+      asset.repository()
+          .optionalFacet(BrowseFacet.class)
+          .ifPresent(facet -> facet.deleteByAssetIdAndPath(internalAssetId, asset.path()));
+    }));
+  }
+
+  private boolean isPostgresql() {
+    return this.databaseCheck.isPostgresql();
   }
 }

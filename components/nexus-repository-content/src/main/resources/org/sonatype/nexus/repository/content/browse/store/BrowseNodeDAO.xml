@@ -169,6 +169,11 @@
         asset_id = #{internalAssetId} AND request_path = #{path}
     RETURNING parent_id;
   </select>
+  <select id="deleteByAssetId" resultType="Long" databaseId="PostgreSQL">
+    DELETE FROM ${format}_browse_node WHERE
+      asset_id = #{internalAssetId}
+      RETURNING parent_id;
+  </select>
   <select id="getNodeParents" resultMap="browseNodeResult" databaseId="PostgreSQL">
     WITH total as (
       WITH RECURSIVE parent_nodes AS (
