@@ -40,7 +40,7 @@ public class DatabaseStatusDelayedExecutorTest
 
   private static final int SLEEP_INTERVAL_MS = 25;
 
-  private static final int MAX_RETRIES = 5;
+  private static final int MAX_RETRIES = 8;
 
   @Mock
   FreezeService freezeService;
@@ -71,7 +71,7 @@ public class DatabaseStatusDelayedExecutorTest
   public void noWritableDelaysTask() {
     final AtomicInteger callCount = new AtomicInteger(0);
     doAnswer(invocation -> {
-      if (callCount.incrementAndGet() <= 4) {
+      if (callCount.incrementAndGet() <= 8) {
         throw new NotWritableException("");
       }
       return null;
@@ -89,8 +89,8 @@ public class DatabaseStatusDelayedExecutorTest
     await()
         .pollDelay(SLEEP_INTERVAL_MS / 2, MILLISECONDS)
         .atMost(10 * SLEEP_INTERVAL_MS, MILLISECONDS)
-        .until(() -> result.isDone());
+        .until(result::isDone);
 
-    assertThat(callCount.get(), is(5));
+    assertThat(callCount.get(), is(8));
   }
 }
