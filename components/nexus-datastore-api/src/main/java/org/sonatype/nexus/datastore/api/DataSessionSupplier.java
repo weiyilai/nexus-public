@@ -14,6 +14,9 @@ package org.sonatype.nexus.datastore.api;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
+
+import javax.sql.DataSource;
 
 /**
  * {@link DataSession} supplier; for use by clients who don't need the full store API.
@@ -44,4 +47,8 @@ public interface DataSessionSupplier
    * @throws UnsupportedOperationException if the store doesn't support JDBC
    */
   Connection openConnection(String storeName) throws SQLException;
+
+  default Optional<DataSource> getDataSource(final String storeName) {
+    throw new UnsupportedOperationException();
+  }
 }
