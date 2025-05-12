@@ -13,6 +13,7 @@
 package org.sonatype.nexus.logging.task;
 
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 
 /**
  * Each task is executed in its own thread and its {@link TaskLogger} is stored in it here.
@@ -63,5 +64,24 @@ public class TaskLoggerHelper
     if (taskLogger != null) {
       taskLogger.flush();
     }
+  }
+
+  /**
+   * Joins to the task logger without the overhead of creating a new task logger. This is used when a task creates
+   * a new thread and wants to log to the same task logger.
+   * 
+   * @param discriminator
+   */
+  public static void joinTaskLogger(String discriminator) {
+    MDC.put(TaskLogger.LOGBACK_TASK_DISCRIMINATOR_ID, discriminator);
+  }
+
+  /**
+   * Get the current task log discriminator.
+   * 
+   * @return
+   */
+  public static String getCurrentTaskDiscriminator() {
+    return MDC.get(TaskLogger.LOGBACK_TASK_DISCRIMINATOR_ID);
   }
 }

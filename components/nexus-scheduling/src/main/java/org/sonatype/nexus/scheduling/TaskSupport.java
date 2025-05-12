@@ -12,6 +12,8 @@
  */
 package org.sonatype.nexus.scheduling;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.sonatype.goodies.common.ComponentSupport;
@@ -171,5 +173,20 @@ public abstract class TaskSupport
   protected void updateProgress(final TaskResultStateStore taskResultStateStore, final String progress) {
     taskInfo.getConfiguration().setProgress(progress);
     taskResultStateStore.updateJobDataMap(taskInfo);
+  }
+
+  /**
+   * Run a task in the context of the current task logger.
+   * 
+   * @param runnable the task to run
+   * @param executor the executor to run the task in
+   * @return a CompletableFuture that will complete when the task is done
+   */
+  protected CompletableFuture<Void> runAsyncWithTaskLogger(final Runnable runnable, final Executor executor) {
+    return CompletableFuture.completedFuture(TaskLoggerHelper.getCurrentTaskDiscriminator())
+        .thenAcceptAsync(loggerDiscriminatorId -> {
+          TaskLoggerHelper.joinTaskLogger(loggerDiscriminatorId);
+          runnable.run();
+        }, executor);
   }
 }
