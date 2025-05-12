@@ -19,6 +19,7 @@ import TestUtils from '@sonatype/nexus-ui-plugin/src/frontend/src/interface/Test
 
 import UIStrings from '../../../../constants/UIStrings';
 import UserAccount from './UserAccount';
+import {ExtJS} from '@sonatype/nexus-ui-plugin';
 import {when} from "jest-when";
 
 const mockUserAccount = {
@@ -43,7 +44,8 @@ jest.mock('@sonatype/nexus-ui-plugin', () => {
     ExtJS: {
       showSuccessMessage: jest.fn(),
       showErrorMessage: jest.fn(),
-      setDirtyStatus: jest.requireActual('@sonatype/nexus-ui-plugin').ExtJS.setDirtyStatus
+      setDirtyStatus: jest.requireActual('@sonatype/nexus-ui-plugin').ExtJS.setDirtyStatus,
+      checkPermission: jest.fn()
     }
   }
 });
@@ -56,6 +58,10 @@ describe('UserAccount', () => {
       data: mockUserAccount
     });
     Axios.put.mockResolvedValue();
+
+    when(ExtJS.checkPermission)
+      .calledWith('nexus:userschangepw:create')
+      .mockReturnValue(true);
   });
 
   afterEach(() => {

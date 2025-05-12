@@ -56,7 +56,7 @@ export default function isVisible(visibilityRequirements) {
   const Security = NX?.Security;
 
   // hide this route on HA
-  if (visibilityRequirements.notClustered && isClustered()) {
+  if (notClustered && isClustered()) {
     console.debug("notClustered=true; isClustered=true", bundle);
     return false;
   }

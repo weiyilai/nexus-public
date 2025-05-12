@@ -21,6 +21,7 @@ import TestUtils from '@sonatype/nexus-ui-plugin/src/frontend/src/interface/Test
 
 import UIStrings from '../../../../constants/UIStrings';
 import PasswordChangeForm from './PasswordChangeForm';
+import { when } from 'jest-when';
 
 jest.mock('@sonatype/nexus-ui-plugin', () => {
   return {
@@ -29,6 +30,7 @@ jest.mock('@sonatype/nexus-ui-plugin', () => {
       showSuccessMessage: jest.fn(),
       showErrorMessage: jest.fn(),
       fetchAuthenticationToken: jest.fn(() => Promise.resolve({data: 'fakeToken'})),
+      checkPermission: jest.fn(),
     }
   };
 });
@@ -47,13 +49,19 @@ const selectors = {
 describe('PasswordChangeForm', () => {
   const CHANGE_PASSWORD_URL = '/service/rest/internal/ui/user/admin/password';
 
-  const render = () => TestUtils.render(<PasswordChangeForm userId="admin"/>, ({getByLabelText, getByText}) => ({
-    passwordCurrent: () => getByLabelText(UIStrings.USER_ACCOUNT.PASSWORD_CURRENT_FIELD_LABEL),
-    passwordNew: () => getByLabelText(UIStrings.USER_ACCOUNT.PASSWORD_NEW_FIELD_LABEL),
-    passwordNewConfirm: () => getByLabelText(UIStrings.USER_ACCOUNT.PASSWORD_NEW_CONFIRM_FIELD_LABEL),
-    changePasswordButton: () => getByText(UIStrings.USER_ACCOUNT.ACTIONS.changePassword),
-    discardButton: () => getByText(UIStrings.USER_ACCOUNT.ACTIONS.discardChangePassword),
+  const render = () => TestUtils.render(<PasswordChangeForm userId="admin"/>, ({queryByLabelText, queryByText}) => ({
+    passwordCurrent: () => queryByLabelText(UIStrings.USER_ACCOUNT.PASSWORD_CURRENT_FIELD_LABEL),
+    passwordNew: () => queryByLabelText(UIStrings.USER_ACCOUNT.PASSWORD_NEW_FIELD_LABEL),
+    passwordNewConfirm: () => queryByLabelText(UIStrings.USER_ACCOUNT.PASSWORD_NEW_CONFIRM_FIELD_LABEL),
+    changePasswordButton: () => queryByText(UIStrings.USER_ACCOUNT.ACTIONS.changePassword),
+    discardButton: () => queryByText(UIStrings.USER_ACCOUNT.ACTIONS.discardChangePassword),
   }));
+
+  beforeEach(() => {
+    when(ExtJS.checkPermission)
+    .calledWith('nexus:userschangepw:create')
+    .mockReturnValue(true);
+  });
 
   it('renders correctly', async () => {
     let {passwordCurrent, passwordNew, passwordNewConfirm, discardButton} = render();
@@ -62,6 +70,18 @@ describe('PasswordChangeForm', () => {
     expect(passwordNew()).toHaveValue('');
     expect(passwordNewConfirm()).toHaveValue('');
     expect(discardButton()).toHaveClass('disabled');
+  });
+
+  it('does not render if no password permission', async () => {
+    when(ExtJS.checkPermission)
+    .calledWith('nexus:userschangepw:create')
+    .mockReturnValue(false);
+    const {passwordCurrent, passwordNew, passwordNewConfirm, discardButton} = render();
+
+    expect(passwordCurrent()).not.toBeInTheDocument();
+    expect(passwordNew()).not.toBeInTheDocument();
+    expect(passwordNewConfirm()).not.toBeInTheDocument();
+    expect(discardButton()).not.toBeInTheDocument();
   });
 
   it('prevents password change when new matches current', async () => {
