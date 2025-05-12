@@ -11,14 +11,32 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-.nxrm-left-nav__link.nx-text-link {
-  &.nxrm-left-nav__link--no-icon .nx-icon {
-    display: none;
+ .nxrm-left-nav{
+  &__link.nx-text-link {
+    &.nxrm-left-nav__link--no-icon .nx-icon {
+      display: none;
+    }
+    &:hover {
+      background-color: var(--nx-swatch-indigo-90);
+    }
+    &.selected {
+      color: var(--nx-swatch-white);
+    }
   }
-  &:hover {
+  .nxrm-navigation-expandable-link__navigation-link {
+    &.nx-global-sidebar-2__navigation-link.nx-text-link:hover {
+      background-color: var(--nx-swatch-indigo-90);
+    }
+    &> .nx-icon {
+      padding: 0 2px;
+    }
+  }
+  &.closed {
+    .nxrm-navigation-expandable-link__navigation-link > .nx-icon {
+      padding: 0;
+    }
+  }
+  .nx-global-sidebar-2__toggle.nx-btn:hover {
     background-color: var(--nx-swatch-indigo-90);
-  }
-  &.selected {
-    color: var(--nx-swatch-white);
   }
 }
