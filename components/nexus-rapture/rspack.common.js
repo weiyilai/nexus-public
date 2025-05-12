@@ -23,7 +23,7 @@ const swcOptions = JSON.parse(fs.readFileSync(path.resolve(__dirname, '.swcrc'))
 
 module.exports = {
   entry: {
-    'nexus-coreui-bundle': './src/frontend/src/index.js'
+    'nexus-rapture-bundle': './src/frontend/src/index.js'
   },
   module: {
     rules: [
@@ -93,12 +93,5 @@ module.exports = {
   ],
   resolve: {
     extensions: ['.js', '.jsx']
-  },
-  externals: {
-    axios: 'axios',
-    luxon: 'luxon',
-    '@sonatype/react-shared-components': 'rsc',
-    react: 'react',
-    xstate: 'xstate'
   }
 };

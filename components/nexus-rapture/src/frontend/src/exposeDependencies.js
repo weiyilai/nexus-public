@@ -15,20 +15,17 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import axios from 'axios';
+import * as rsc from '@sonatype/react-shared-components';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import * as xstate from 'xstate';
+import * as luxon from 'luxon';
 
-export function configureAxios() {
-  // Configure axios
-  axios.defaults.xsrfCookieName = 'NX-ANTI-CSRF-TOKEN';
-  axios.defaults.xsrfHeaderName = 'NX-ANTI-CSRF-TOKEN';
-  axios.defaults.baseURL = NX.app.relativePath;
-  axios.defaults.headers.common['X-Nexus-UI'] = true;
-  axios.interceptors.request.use(config => {
-    return {
-      ...config,
-      params: {
-        _dc: new Date().getTime(),
-        ...config.params
-      }
-    }
-  });
+export default function exposeDependencies() {
+  window.axios = axios;
+  window.react = React;
+  window.ReactDOM = ReactDOM;
+  window.xstate = xstate;
+  window.luxon = luxon;
+  window.rsc = rsc;
 }

@@ -14,18 +14,26 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import Axios from 'axios';
-import configureAxios from '@sonatype/nexus-rapture/src/frontend/src/configureAxios';
+const {merge} = require('webpack-merge');
+const path = require('path');
+const {rspack} = require('@rspack/core');
 
-global.NX = {
-  app: {
-    relativePath: '.',
+const common = require('./rspack.common');
+
+module.exports = merge(common, {
+  mode: 'production',
+  devtool: 'source-map',
+
+  output: {
+    filename: '[name].js',
+    path: path.resolve(__dirname, 'target', 'classes', 'static')
   },
-};
 
-describe('Axios', () => {
-  it('sends X-Nexus-UI header', () => {
-    configureAxios();
-    expect(Axios.defaults.headers.common['X-Nexus-UI']).toBe(true);
-  });
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new rspack.SwcJsMinimizerRspackPlugin(),
+      new rspack.LightningCssMinimizerRspackPlugin()
+    ]
+  }
 });

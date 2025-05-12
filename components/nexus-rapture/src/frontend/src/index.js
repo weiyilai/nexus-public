@@ -14,18 +14,10 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import Axios from 'axios';
-import configureAxios from '@sonatype/nexus-rapture/src/frontend/src/configureAxios';
+import exposeDependencies from './exposeDependencies';
+import configureAxios from './configureAxios';
+import configureDebug from './configureDebug.js';
 
-global.NX = {
-  app: {
-    relativePath: '.',
-  },
-};
-
-describe('Axios', () => {
-  it('sends X-Nexus-UI header', () => {
-    configureAxios();
-    expect(Axios.defaults.headers.common['X-Nexus-UI']).toBe(true);
-  });
-});
+exposeDependencies();
+configureAxios();
+configureDebug();
