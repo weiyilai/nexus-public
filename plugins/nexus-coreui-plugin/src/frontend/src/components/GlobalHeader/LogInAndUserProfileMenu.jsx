@@ -27,6 +27,7 @@ import { faSignInAlt, faUser } from '@fortawesome/free-solid-svg-icons';
 import { useRouter, useSref } from '@uirouter/react';
 import useHasUser from '../../hooks/useHasUser';
 import { ROUTE_NAMES } from '../../routerConfig/routeNames/routeNames';
+import UIStrings from '../../constants/UIStrings';
 
 export default function LoginAndUserButton() {
   const signInTitle = "Log In"
@@ -73,7 +74,7 @@ function ProfileMenu() {
           isOpen={isOpen}
           onToggleCollapse={onToggleCollapse}
           icon={faUser}
-          title="Profile settings, tokens and keys"
+          title="Account settings, tokens and keys"
           data-analytics-id="nxrm-global-header-profile-menu"
       >
         <NxNavigationDropdown.MenuHeader>
@@ -88,7 +89,7 @@ function ProfileMenu() {
             className="nx-dropdown-link"
             data-analytics-id="nxrm-global-header-profile-menu-my-profile"
         >
-          My Profile
+          {UIStrings.USER_ACCOUNT.MENU.text}
         </NxTextLink>
 
         <NxTextLink

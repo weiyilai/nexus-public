@@ -326,7 +326,7 @@ describe("GlobalHeader", () => {
       await assertBannerAndOpenUserProfileMenu();
       await assertRendersUserProfileDropDownCorrectlyForUserWithUserTokenAccess();
 
-      const profileLink = screen.getByRole('link', { name: 'My Profile'});
+      const profileLink = screen.getByRole('link', { name: 'My Account'});
       await userEvent.click(profileLink);
 
       await screen.findByRole('heading', { name: 'User Account Mock' });
@@ -592,7 +592,7 @@ describe("GlobalHeader", () => {
     await assertButtonVisibleIn(parent, 'Refresh');
     await assertButtonVisibleIn(parent, 'Help');
 
-    return await assertButtonVisibleIn(parent, 'Profile settings, tokens and keys');
+    return await assertButtonVisibleIn(parent, 'Account settings, tokens and keys');
   }
 
   async function assertButtonVisibleIn(parent, name) {
@@ -706,7 +706,7 @@ describe("GlobalHeader", () => {
 
     await screen.findByRole('heading', { name: givenUserName });
 
-    expect(screen.getByRole('link', { name: 'My Profile'})).toBeVisible();
+    expect(screen.getByRole('link', { name: 'My Account'})).toBeVisible();
     expect(screen.getByRole('link', { name: 'NuGet API Key'})).toBeVisible();
     expect(screen.getByRole('button', { name: 'Log Out' })).toBeVisible();
     expect(screen.queryByRole('link', { name: 'User Token' })).not.toBeInTheDocument();
@@ -718,7 +718,7 @@ describe("GlobalHeader", () => {
 
     await screen.findByRole('heading', { name: givenUserName });
 
-    expect(screen.getByRole('link', { name: 'My Profile'})).toBeVisible();
+    expect(screen.getByRole('link', { name: 'My Account'})).toBeVisible();
     expect(screen.getByRole('link', { name: 'NuGet API Key'})).toBeVisible();
     expect(screen.getByRole('button', { name: 'Log Out' })).toBeVisible();
     expect(screen.getByRole('link', { name: 'User Token' })).toBeVisible();

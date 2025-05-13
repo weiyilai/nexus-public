@@ -19,7 +19,7 @@ import { faUser } from '@fortawesome/free-solid-svg-icons';
 export default {
   USER_ACCOUNT: {
     MENU: {
-      text: 'Account',
+      text: 'My Account',
       description: 'Manage your account',
       icon: faUser
     },
