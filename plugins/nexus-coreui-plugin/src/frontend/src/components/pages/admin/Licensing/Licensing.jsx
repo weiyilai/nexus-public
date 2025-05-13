@@ -17,6 +17,7 @@ import {faWallet} from '@fortawesome/free-solid-svg-icons';
 
 import {
   ContentBody,
+  ExtJS,
   Page,
   PageHeader,
   PageTitle
@@ -44,6 +45,7 @@ export default function Licensing() {
   const showDetails = !loadError && data.contactCompany;
   const showLicensedUsage = !loadError && data?.maxRepoRequests && data?.maxRepoComponents;
   const [activeTabId, setActiveTabId] = useState(0);
+  const canViewHistoricalUsage = ExtJS.checkPermission('nexus:metrics:read');
 
   return <Page>
     <PageHeader>
@@ -54,20 +56,23 @@ export default function Licensing() {
       />
     </PageHeader>
     <ContentBody className="nxrm-licensing">
-    <NxTabs activeTab={activeTabId} onTabSelect={setActiveTabId}>
-          <NxTabList aria-label="Tabs in a tile with no header">
-            <NxTab data-analytics-id="license-tab">License</NxTab>
-            <NxTab data-analytics-id="usage-tab">Usage</NxTab>
-          </NxTabList>
-          <NxTabPanel>
-            {showDetails && <LicenseDetails service={service}/>}
-            {showLicensedUsage && <LicensedUsage maxRepoRequests={data.maxRepoRequests.toLocaleString()} maxRepoComponents={data.maxRepoComponents.toLocaleString()}/>}
-            <InstallLicense service={service}/>
-          </NxTabPanel>
-          <NxTabPanel>
-            <LicensingHistorcalUsage/>
-          </NxTabPanel>
-        </NxTabs>
+      <NxTabs activeTab={activeTabId} onTabSelect={setActiveTabId}>
+        <NxTabList aria-label="Tabs in a tile with no header">
+          <NxTab data-analytics-id="license-tab">License</NxTab>
+          {canViewHistoricalUsage && <NxTab data-analytics-id="usage-tab">Usage</NxTab>}
+        </NxTabList>
+        <NxTabPanel>
+          {showDetails && <LicenseDetails service={service}/>}
+          {showLicensedUsage &&
+              <LicensedUsage maxRepoRequests={data.maxRepoRequests.toLocaleString()}
+                             maxRepoComponents={data.maxRepoComponents.toLocaleString()}/>}
+          <InstallLicense service={service}/>
+        </NxTabPanel>
+        {canViewHistoricalUsage &&
+            <NxTabPanel>
+              <LicensingHistorcalUsage/>
+            </NxTabPanel>}
+      </NxTabs>
     </ContentBody>
   </Page>;
 }

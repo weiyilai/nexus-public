@@ -33,22 +33,7 @@ const {LICENSING: {DETAILS, INSTALL, AGREEMENT}, LICENSING} = UIStrings;
 const {REST: {PUBLIC: {LICENSE: licenseUrl}}} = APIConstants;
 const XSS_STRING = TestUtils.XSS_STRING;
 
-jest.mock('axios', () => ({
-  ...jest.requireActual('axios'),
-  get: jest.fn(),
-  post: jest.fn(),
-}));
-
-jest.mock('@sonatype/nexus-ui-plugin', () => ({
-  ...jest.requireActual('@sonatype/nexus-ui-plugin'),
-  ExtJS: {
-    checkPermission: jest.fn(),
-    showErrorMessage: jest.fn(),
-    showSuccessMessage: jest.fn(),
-    proLicenseUrl: jest.fn().mockReturnValue('http://localhost:8081/PRO-LICENSE.html'),
-    useUser: jest.fn(() => ({ name: 'test-user' })),
-  },
-}));
+jest.mock('axios');
 
 const selectors = {
   ...TestUtils.selectors,
@@ -58,7 +43,6 @@ const selectors = {
   effectiveDate: () => screen.getByText(DETAILS.EFFECTIVE_DATE.LABEL).nextSibling,
   expirationDate: () => screen.getByText(DETAILS.EXPIRATION_DATE.LABEL).nextSibling,
   licenseType: () => screen.getByText(DETAILS.LICENSE_TYPES.LABEL),
-  licensedUsers: () => screen.getByText(DETAILS.NUMBER_OF_USERS.LABEL).nextSibling,
   fingerprint: () => screen.getByText(DETAILS.FINGERPRINT.LABEL).nextSibling,
   maxRepoRequests: () => screen.getByText(DETAILS.REQUESTS_PER_MONTH.LABEL).nextSibling,
   maxRepoComponents: () => screen.getByText(DETAILS.TOTAL_COMPONENTS.LABEL).nextSibling,
@@ -73,6 +57,14 @@ const selectors = {
     acceptButton: () => screen.getByText(AGREEMENT.BUTTONS.ACCEPT),
     declineButton: () => screen.getByText(AGREEMENT.BUTTONS.DECLINE),
   },
+  tabs: {
+    queryLicenseTab: () => screen.queryByText(LICENSING.TABS.LICENSE, {selector: '.nx-tab'}),
+    queryUsageTab: () => screen.queryByText(LICENSING.TABS.USAGE, {selector: '.nx-tab'})
+  },
+
+  historicalUsage: {
+    queryTitle: () => screen.queryByRole('heading', {name: LICENSING.HISTORICAL_USAGE.TITLE})
+  }
 };
 
 const DATA = {
@@ -97,8 +89,15 @@ describe('Licensing', () => {
   }
 
   const expectLicenseDetails = data => {
-    const {contactCompany, contactName, contactEmail, effectiveDate, expirationDate, licenseType,
-      licensedUsers, fingerprint} = selectors;
+    const {
+      contactCompany,
+      contactName,
+      contactEmail,
+      effectiveDate,
+      expirationDate,
+      licenseType,
+      fingerprint
+    } = selectors;
 
     expect(contactCompany()).toHaveTextContent(data.contactCompany);
     expect(contactName()).toHaveTextContent(data.contactName);
@@ -120,99 +119,151 @@ describe('Licensing', () => {
     when(Axios.post).calledWith(licenseUrl, expect.anything(), expect.anything()).mockResolvedValue({
       data: DATA
     });
-    ExtJS.checkPermission.mockReturnValue(true);
+    jest.spyOn(ExtJS, 'proLicenseUrl').mockImplementation(() => 'http://localhost:8081/PRO-LICENSE.html');
+    jest.spyOn(ExtJS, 'useUser').mockImplementation(() => ({name: 'test-user'}));
+    jest.spyOn(ExtJS, 'checkPermission').mockImplementation((permission) => {
+      console.debug('checkPermission => true', permission);
+      return true;
+    });
   });
 
-  it('renders the resolved data', async () => {
-    const {detailsSection, installSection} = selectors;
+  describe('licensing page', () => {
+    it('renders the resolved data', async () => {
+      const {detailsSection, installSection} = selectors;
 
-    await renderComponent();
+      await renderComponent();
 
-    expect(detailsSection()).toBeInTheDocument();
-    expect(detailsSection()).toBeInTheDocument();
-    expect(installSection()).toBeInTheDocument();
+      expect(detailsSection()).toBeInTheDocument();
+      expect(detailsSection()).toBeInTheDocument();
+      expect(installSection()).toBeInTheDocument();
 
-    expectLicenseDetails(DATA);
-  });
-
-  it('renders the resolved data with XSS', async () => {
-    const DATA_WITH_XSS = {
-      contactCompany: XSS_STRING,
-      contactName: XSS_STRING,
-      contactEmail: XSS_STRING,
-      effectiveDate: XSS_STRING,
-      expirationDate: XSS_STRING,
-      licenseType: XSS_STRING,
-      licensedUsers: [XSS_STRING, XSS_STRING, XSS_STRING].join(', '),
-      fingerprint: XSS_STRING,
-    }
-
-    when(Axios.get).calledWith(licenseUrl).mockResolvedValue({
-      data: DATA_WITH_XSS
+      expectLicenseDetails(DATA);
     });
 
-    await renderComponent();
+    it('renders the resolved data with XSS', async () => {
+      const DATA_WITH_XSS = {
+        contactCompany: XSS_STRING,
+        contactName: XSS_STRING,
+        contactEmail: XSS_STRING,
+        effectiveDate: XSS_STRING,
+        expirationDate: XSS_STRING,
+        licenseType: XSS_STRING,
+        licensedUsers: [XSS_STRING, XSS_STRING, XSS_STRING].join(', '),
+        fingerprint: XSS_STRING,
+      }
 
-    expectLicenseDetails(DATA_WITH_XSS);
+      when(Axios.get).calledWith(licenseUrl).mockResolvedValue({
+        data: DATA_WITH_XSS
+      });
+
+      await renderComponent();
+
+      expectLicenseDetails(DATA_WITH_XSS);
+    });
+
+    it('renders when error', async function() {
+      const {detailsSection, installSection} = selectors;
+
+      when(Axios.get).calledWith(licenseUrl).mockRejectedValue({message: 'Error'});
+
+      await renderComponent();
+
+      expect(detailsSection()).not.toBeInTheDocument();
+      expect(installSection()).toBeInTheDocument();
+    });
+
+    it('renders warning alert in the Read-Only mode', async function() {
+      const {installSection, readOnlyWarning, uploadButton, uploadInput} = selectors;
+
+      when(ExtJS.checkPermission).calledWith(Permissions.LICENSING.CREATE).mockReturnValue(false);
+
+      await renderComponent();
+
+      expectLicenseDetails(DATA);
+      expect(installSection()).toBeInTheDocument();
+      expect(readOnlyWarning()).toBeInTheDocument();
+      expect(uploadButton()).not.toBeInTheDocument();
+      expect(uploadInput()).not.toBeInTheDocument();
+    });
+
+    it('installs license', async function() {
+      const {detailsSection, licensedUsageSection, uploadButton, uploadInput, agreement: {modal, acceptButton, declineButton}} = selectors;
+
+      when(Axios.get).calledWith(licenseUrl).mockRejectedValue({message: 'Error'});
+
+      await renderComponent();
+
+      expect(detailsSection()).not.toBeInTheDocument();
+      expect(licensedUsageSection()).not.toBeInTheDocument();
+      expect(uploadInput()).not.toBeDisabled();
+      expect(uploadButton()).toBeDisabled();
+
+      const file = new File([new ArrayBuffer(1)], 'file.lic');
+      userEvent.upload(uploadInput(), file);
+      expect(uploadButton()).not.toHaveClass('disabled');
+
+      userEvent.click(uploadButton());
+      expect(modal()).toBeVisible();
+
+      userEvent.click(declineButton());
+      expect(modal()).not.toBeInTheDocument();
+
+      userEvent.click(uploadButton());
+      expect(modal()).toBeVisible();
+
+      when(Axios.get).calledWith(licenseUrl).mockResolvedValue({data: DATA});
+
+      userEvent.click(acceptButton());
+      expect(modal()).not.toBeInTheDocument();
+    });
+
+    it('uses proper url', function() {
+      expect(licenseUrl).toBe('service/rest/v1/system/license');
+    });
   });
 
-  it('renders when error', async function() {
-    const {detailsSection, installSection} = selectors;
+  describe('historical usage tab', () => {
+    it('shows the historical usage tab', async function() {
+      await renderComponent();
 
-    when(Axios.get).calledWith(licenseUrl).mockRejectedValue({message: 'Error'});
+      expect(selectors.tabs.queryLicenseTab()).toBeInTheDocument();
+      expect(selectors.tabs.queryUsageTab()).toBeInTheDocument();
+    });
 
-    await renderComponent();
+    it ('hides the historical usage tab', async function() {
+      when(ExtJS.checkPermission).calledWith(Permissions.METRICS.READ).mockReturnValue(false);
 
-    expect(detailsSection()).not.toBeInTheDocument();
-    expect(installSection()).toBeInTheDocument();
-  });
+      await renderComponent();
 
-  it('renders warning alert in the Read-Only mode', async function() {
-    const {installSection, readOnlyWarning, uploadButton, uploadInput} = selectors;
+      expect(selectors.tabs.queryLicenseTab()).toBeInTheDocument();
+      expect(selectors.tabs.queryUsageTab()).not.toBeInTheDocument();
+    });
 
-    when(ExtJS.checkPermission).calledWith(Permissions.LICENSING.CREATE).mockReturnValue(false);
+    it('shows the historical usage tab content when clicked', async function() {
+      givenMockHistoricalUsageData();
 
-    await renderComponent();
+      await renderComponent();
 
-    expectLicenseDetails(DATA);
-    expect(installSection()).toBeInTheDocument();
-    expect(readOnlyWarning()).toBeInTheDocument();
-    expect(uploadButton()).not.toBeInTheDocument();
-    expect(uploadInput()).not.toBeInTheDocument();
-  });
+      await userEvent.click(selectors.tabs.queryUsageTab());
+      await waitFor(() => expect(selectors.historicalUsage.queryTitle()).toBeInTheDocument());
 
-  it('installs license', async function() {
-    const {detailsSection, licensedUsageSection, uploadButton, uploadInput, agreement: {modal, acceptButton, declineButton}} = selectors;
+      await userEvent.click(selectors.tabs.queryLicenseTab());
+      await waitFor(() => expect(selectors.historicalUsage.queryTitle()).not.toBeInTheDocument());
+    });
 
-    when(Axios.get).calledWith(licenseUrl).mockRejectedValue({message: 'Error'});
-
-    await renderComponent();
-
-    expect(detailsSection()).not.toBeInTheDocument();
-    expect(licensedUsageSection()).not.toBeInTheDocument();
-    expect(uploadInput()).not.toBeDisabled();
-    expect(uploadButton()).toBeDisabled();
-
-    const file = new File([new ArrayBuffer(1)], 'file.lic');
-    userEvent.upload(uploadInput(), file);
-    expect(uploadButton()).not.toHaveClass('disabled');
-
-    userEvent.click(uploadButton());
-    expect(modal()).toBeVisible();
-
-    userEvent.click(declineButton());
-    expect(modal()).not.toBeInTheDocument();
-
-    userEvent.click(uploadButton());
-    expect(modal()).toBeVisible();
-
-    when(Axios.get).calledWith(licenseUrl).mockResolvedValue({data: DATA});
-
-    userEvent.click(acceptButton());
-    expect(modal()).not.toBeInTheDocument();
-  });
-
-  it('uses proper url', function() {
-    expect(licenseUrl).toBe('service/rest/v1/system/license');
+    function givenMockHistoricalUsageData() {
+      const mockData = [
+        {
+          metricDate: '2024-11-01T00:00:00.000',
+          componentCount: 1000,
+          percentageChangeComponent: 10,
+          requestCount: 2000,
+          percentageChangeRequest: -5,
+          peakStorage: 1073741824,
+          responseSize: 536870912,
+        }
+      ];
+      when(Axios.get).calledWith('service/rest/v1/monthly-metrics').mockResolvedValue({ data: mockData });
+    }
   });
 });

@@ -88,6 +88,10 @@ export default {
         DOWNLOAD: 'Download a copy of the agreement'
       }
     },
+    TABS: {
+      LICENSE: 'License',
+      USAGE: 'Usage'
+    },
     HISTORICAL_USAGE: {
       TITLE: 'Historical Usage',
       DESCRIPTION: <>Monitor your repository usage trends over time. <NxTextLink external href="http://links.sonatype.com/products/nxrm3/license/historical-usage">Learn how usage is calculated</NxTextLink></>,
