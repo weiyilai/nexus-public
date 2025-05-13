@@ -20,6 +20,16 @@ import java.util.Set;
 public interface SecurityConfigurationSource
 {
   /**
+   * The default user id for the admin user.
+   */
+  public static final String ADMIN = "admin";
+
+  /**
+   * The default user id for the anonymous user.
+   */
+  public static final String ANONYMOUS = "anonymous";
+
+  /**
    * Gets the current configuration.
    *
    * @return the configuration, null if not loaded

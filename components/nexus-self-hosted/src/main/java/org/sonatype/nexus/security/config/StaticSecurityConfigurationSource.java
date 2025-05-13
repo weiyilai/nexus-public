@@ -47,10 +47,6 @@ public class StaticSecurityConfigurationSource
 {
   private static final String NEXUS_SECURITY_INITIAL_PASSWORD = "NEXUS_SECURITY_INITIAL_PASSWORD";
 
-  public static final String ADMIN = "admin";
-
-  public static final String ANONYMOUS = "anonymous";
-
   private final PasswordService passwordService;
 
   private final AdminPasswordSource adminPasswordSource;

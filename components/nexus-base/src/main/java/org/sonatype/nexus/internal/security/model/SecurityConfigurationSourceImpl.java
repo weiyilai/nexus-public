@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -31,8 +32,6 @@ import org.sonatype.nexus.security.config.SecurityConfigurationSource;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
-import static org.sonatype.nexus.security.config.StaticSecurityConfigurationSource.ADMIN;
-import static org.sonatype.nexus.security.config.StaticSecurityConfigurationSource.ANONYMOUS;
 
 /**
  * Default implementation of {@link SecurityConfigurationSource}.
@@ -53,10 +52,10 @@ public class SecurityConfigurationSourceImpl
   @Inject
   public SecurityConfigurationSourceImpl(
       final SecurityConfigurationImpl securityConfiguration,
-      @Named("static") final SecurityConfigurationSource securityDefaults)
+      @Named("static") @Nullable final SecurityConfigurationSource securityDefaults)
   {
     this.securityConfiguration = checkNotNull(securityConfiguration);
-    this.securityDefaults = checkNotNull(securityDefaults);
+    this.securityDefaults = securityDefaults;
   }
 
   @Override
@@ -65,13 +64,15 @@ public class SecurityConfigurationSourceImpl
   }
 
   public void addDefaultConfigurations() {
-    final Set<String> defaultUserIds = getDefaultUserIds();
-    final SecurityConfiguration defaultConfigurations = securityDefaults.getConfiguration(defaultUserIds);
+    if (securityDefaults != null) {
+      final Set<String> defaultUserIds = getDefaultUserIds();
+      final SecurityConfiguration defaultConfigurations = securityDefaults.getConfiguration(defaultUserIds);
 
-    addDefaultUsers(defaultConfigurations);
-    addDefaultRoles(defaultConfigurations);
-    addDefaultPrivileges(defaultConfigurations);
-    addDefaultUserRoleMappings(defaultConfigurations);
+      addDefaultUsers(defaultConfigurations);
+      addDefaultRoles(defaultConfigurations);
+      addDefaultPrivileges(defaultConfigurations);
+      addDefaultUserRoleMappings(defaultConfigurations);
+    }
   }
 
   private void addDefaultUsers(final SecurityConfiguration defaultConfigurations) {
