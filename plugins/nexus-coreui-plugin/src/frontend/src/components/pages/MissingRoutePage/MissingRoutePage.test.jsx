@@ -40,8 +40,9 @@ describe('MissingRoutePage', () => {
     expect(dashboardLink).toBeVisible();
     expect(dashboardLink.href).toContain('browse/welcome')
 
-    const helpCenterLink = within(main).getByRole('link', { name: 'Visit Help Center'});
+    const helpCenterLink = within(main).getByRole('link', { name: 'Visit Documentation'});
     expect(helpCenterLink).toBeVisible()
-    expect(helpCenterLink.href).toEqual("https://links.sonatype.com/products/nexus/support")
+    expect(helpCenterLink.href)
+        .toEqual("https://links.sonatype.com/products/nexus/docs?utm_medium=product&utm_source=nexus_repo&utm_campaign=menu-docs")
   }
 });

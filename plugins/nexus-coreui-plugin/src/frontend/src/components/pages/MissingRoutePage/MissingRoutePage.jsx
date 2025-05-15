@@ -14,12 +14,10 @@
 import React from 'react';
 import { Page } from '@sonatype/nexus-ui-plugin';
 import {
-  NxButton,
   NxDivider,
   NxFontAwesomeIcon,
   NxH1,
   NxH2,
-  NxH3,
   NxP,
   NxTextLink
 } from '@sonatype/react-shared-components';
@@ -64,11 +62,10 @@ export function MissingRoutePage()  {
             <NxTextLink
                 data-analytics-id="nxrm-404-page-support-lnk"
                 className="nx-btn"
-                href="https://links.sonatype.com/products/nexus/support"
-                referrerPolicy='no-referrer'
-                target='_blank'
+                href="https://links.sonatype.com/products/nexus/docs?utm_medium=product&utm_source=nexus_repo&utm_campaign=menu-docs"
+                external
             >
-              Visit Help Center
+              Visit Documentation
             </NxTextLink>
           </div>
         </section>
