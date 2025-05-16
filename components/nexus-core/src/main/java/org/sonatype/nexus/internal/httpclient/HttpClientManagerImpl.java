@@ -288,7 +288,14 @@ public class HttpClientManagerImpl
               Stopwatch stopwatch = (Stopwatch) httpContext.getAttribute(CTX_REQ_STOPWATCH);
               outboundLog.debug("{} < {} @ {}", requestURI, httpResponse.getStatusLine(), stopwatch);
             }
-            printOutboundLog(httpResponse, httpContext);
+            printOutboundLogNonTwoHundredStatusCode(httpResponse, httpContext);
+          }
+          else {
+            if (requestURI != null) {
+              Stopwatch stopwatch = (Stopwatch) httpContext.getAttribute(CTX_REQ_STOPWATCH);
+              outboundLog.debug("{} < {}", requestURI, httpResponse.getStatusLine());
+            }
+            printOutboundLogTwoHundredStatusCode(httpResponse, httpContext);
           }
         });
     return builder;
@@ -299,7 +306,7 @@ public class HttpClientManagerImpl
     return statusCode < 200 || statusCode >= 300;
   }
 
-  private void printOutboundLog(final HttpResponse httpResponse, final HttpContext httpContext) {
+  private void printOutboundLogNonTwoHundredStatusCode(final HttpResponse httpResponse, final HttpContext httpContext) {
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MMM/yyyy:HH:mm:ss Z");
 
     HttpRequest request = ((HttpClientContext) httpContext).getRequest();
@@ -309,7 +316,6 @@ public class HttpClientManagerImpl
     if (null != httpResponse.getEntity())
       responseLength = httpResponse.getEntity().getContentLength();
     Stopwatch stopwatch = (Stopwatch) httpContext.getAttribute(CTX_REQ_STOPWATCH);
-
     String logMessage = String.format("[%s] %s \"%s %s %s\" %d %d %d [%s]",
         dateFormat.format(new Date()),
         getAuthUser(httpContext),
@@ -319,6 +325,29 @@ public class HttpClientManagerImpl
         statusCode,
         responseLength,
         stopwatch.elapsed(TimeUnit.MILLISECONDS),
+        Thread.currentThread().getName());
+    outboundReqLog.info(OUTBOUND_REQUESTS_LOG_ONLY, "{}", logMessage);
+  }
+
+  private void printOutboundLogTwoHundredStatusCode(final HttpResponse httpResponse, final HttpContext httpContext) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MMM/yyyy:HH:mm:ss Z");
+
+    HttpRequest request = ((HttpClientContext) httpContext).getRequest();
+    String userAgent = getRequestHeader(request, "User-Agent");
+    int statusCode = httpResponse.getStatusLine().getStatusCode();
+    long responseLength = 0;
+    if (null != httpResponse.getEntity())
+      responseLength = httpResponse.getEntity().getContentLength();
+    Stopwatch stopwatch = (Stopwatch) httpContext.getAttribute(CTX_REQ_STOPWATCH);
+    String logMessage = String.format("[%s] %s \"%s %s %s\" %d %d %s [%s]",
+        dateFormat.format(new Date()),
+        getAuthUser(httpContext),
+        request.getRequestLine().getMethod(),
+        getRequestURI(httpContext),
+        request.getRequestLine().getProtocolVersion(),
+        statusCode,
+        responseLength,
+        "-",
         Thread.currentThread().getName());
     outboundReqLog.info(OUTBOUND_REQUESTS_LOG_ONLY, "{}", logMessage);
   }

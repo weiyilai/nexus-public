@@ -54,7 +54,6 @@ import org.sonatype.nexus.repository.httpclient.RemoteBlockedIOException;
 import org.sonatype.nexus.repository.replication.PullReplicationSupport;
 import org.sonatype.nexus.repository.view.Content;
 import org.sonatype.nexus.repository.view.Context;
-import org.sonatype.nexus.repository.view.Request;
 import org.sonatype.nexus.repository.view.payloads.HttpEntityPayload;
 import org.sonatype.nexus.transaction.RetryDeniedException;
 import org.sonatype.nexus.validation.constraint.Url;
@@ -411,30 +410,17 @@ public abstract class ProxyFacetSupport
 
   private void printOutboundLogging(final Context context) {
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MMM/yyyy:HH:mm:ss Z");
-    Request request = context.getRequest();
     HttpResponse httpResponse = context.getAttribute(HTTP_RESPONSE, HttpResponse.class);
 
     if (httpResponse == null) {
       return;
     }
 
-    int statusCode = httpResponse.getStatusLine().getStatusCode();
-    long responseLength = 0;
-    if (null != httpResponse.getEntity())
-      responseLength = httpResponse.getEntity().getContentLength();
     Stopwatch stopwatch = context.getAttribute(CTX_REQ_STOPWATCH, Stopwatch.class);
-    String logMessage = String.format("[%s] \"%s %s %s\" %d %d %d [%s]",
-        dateFormat.format(new Date()),
-        request.getAction(),
-        getRemoteUrl().toString() + getUrl(context),
-        httpResponse.getProtocolVersion(),
-        statusCode,
-        responseLength,
-        stopwatch.elapsed(TimeUnit.MILLISECONDS),
-        Thread.currentThread().getName());
-    outboundReqLog.info(OUTBOUND_REQUESTS_LOG_ONLY, "{}", logMessage);
-    outboundLog.debug("{} < {} @ {}", getRemoteUrl().toString() + getUrl(context), httpResponse.getStatusLine(),
-        stopwatch);
+    outboundReqLog.info(OUTBOUND_REQUESTS_LOG_ONLY, "[{}] - \"Time for {}\" - - {} [{}]", dateFormat.format(new Date()),
+        context.getRequest().getPath(), stopwatch.elapsed(TimeUnit.MILLISECONDS), Thread.currentThread().getName());
+    outboundLog.debug("Request for {} took {} milliseconds", context.getRequest().getPath(),
+        stopwatch.elapsed(TimeUnit.MILLISECONDS));
   }
 
   /**
