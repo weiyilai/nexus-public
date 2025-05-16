@@ -59,7 +59,7 @@ export default function AdminRepositoriesDirectoryPage() {
               data-analytics-id="nxrm-admin-repository-directory-selectors-lnk"
               text={UIStrings.CONTENT_SELECTORS.MENU.text}
               description={UIStrings.CONTENT_SELECTORS.MENU.description}
-              routeName={ADMIN.REPOSITORY.SELECTORS}
+              routeName={ADMIN.REPOSITORY.SELECTORS.LIST}
               params={{ itemId: null }}
           />
 

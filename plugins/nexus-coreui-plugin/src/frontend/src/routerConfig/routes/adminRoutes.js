@@ -19,7 +19,6 @@ import IqServer from '../../components/pages/admin/IqServer/IqServer';
 import RepositoriesExt from '../../components/pages/admin/Repositories/RepositoriesExt';
 import DataStoreConfiguration from '../../components/pages/admin/DataStoreConfiguration/DataStoreConfiguration';
 import ProprietaryRepositories from '../../components/pages/admin/ProprietaryRepositories/ProprietaryRepositories';
-import ContentSelectors from '../../components/pages/admin/ContentSelectors/ContentSelectors';
 import CleanupPolicies from '../../components/pages/admin/CleanupPolicies/CleanupPolicies';
 import Privileges from '../../components/pages/admin/Privileges/Privileges';
 import EmailServer from '../../components/pages/admin/EmailServer/EmailServer';
@@ -52,13 +51,15 @@ import AdminSecurityDirectoryPage from '../../components/pages/AdminSecurity/Adm
 import { ROUTE_NAMES } from '../routeNames/routeNames';
 import AdminSystemDirectoryPage from '../../components/pages/AdminSystem/AdminSystemDirectoryPage';
 import AdminSupportDirectoryPage from '../../components/pages/AdminSupport/AdminSupportDirectoryPage';
-
-const ADMIN = ROUTE_NAMES.ADMIN;
 import SettingsPageLayout from '../../components/LeftNavigationMenu/SettingsPageLayout/SettingsPageLayout';
 import LoggingConfiguration from '../../components/pages/admin/LoggingConfiguration/LoggingConfiguration';
+import ContentSelectorsList from '../../components/pages/admin/ContentSelectors/ContentSelectorsList';
+import ContentSelectorsDetails  from '../../components/pages/admin/ContentSelectors/ContentSelectorsDetails';
 import RoutingRulesForm from '../../components/pages/admin/RoutingRules/RoutingRulesForm';
 import RoutingRulesList from '../../components/pages/admin/RoutingRules/RoutingRulesList';
 import RoutingRulesGlobalPreview from '../../components/pages/admin/RoutingRules/RoutingRulesGlobalPreview.jsx';
+
+const ADMIN = ROUTE_NAMES.ADMIN;
 
 // for more info on how to define routes see private/developer-documentation/frontend/client-side-routing.md
 export const adminRoutes = [
@@ -161,21 +162,38 @@ export const adminRoutes = [
     },
   },
 
+  // abstract parent selectors state
   {
-    name: ADMIN.REPOSITORY.SELECTORS,
-    url: '/selectors:itemId',
-    component: ContentSelectors,
+    name: ADMIN.REPOSITORY.SELECTORS.ROOT,
+    component: UIView,
     data: {
       visibilityRequirements: {
         bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.SELECTORS.READ],
       }
-    },
-    params: {
-      itemId: {
-        value: null,
-        raw: true,
-        dynamic: true
+    }
+  },
+
+  {
+    name: ADMIN.REPOSITORY.SELECTORS.LIST,
+    url: '/selectors',
+    component: ContentSelectorsList,
+  },
+
+  {
+    name: ADMIN.REPOSITORY.SELECTORS.EDIT,
+    url: '/selectors/edit/{itemId:.+}',
+    component: ContentSelectorsDetails,
+  },
+
+  {
+    name: ADMIN.REPOSITORY.SELECTORS.CREATE,
+    url: '/selectors/create',
+    component: ContentSelectorsDetails,
+    data: {
+      visibilityRequirements: {
+        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
+        permissions: [Permissions.SELECTORS.CREATE],
       }
     }
   },

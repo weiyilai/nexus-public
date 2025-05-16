@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import React from 'react';
+import React, {useCallback, useEffect} from 'react';
 import {useMachine} from '@xstate/react';
 
 import {ExtJS} from '@sonatype/nexus-ui-plugin';
@@ -18,7 +18,8 @@ import {ExtJS} from '@sonatype/nexus-ui-plugin';
 import {
   ContentBody,
   PageHeader,
-  PageTitle
+  PageTitle,
+  Page,
 } from '@sonatype/nexus-ui-plugin';
 
 import ContentSelectorsFormMachine from './ContentSelectorsFormMachine';
@@ -26,8 +27,17 @@ import ContentSelectorsForm from './ContentSelectorsForm';
 import ContentSelectorsReadOnly from './ContentSelectorsReadOnly';
 
 import UIStrings from '../../../../constants/UIStrings';
+import {useCurrentStateAndParams, useRouter} from "@uirouter/react";
+import {ROUTE_NAMES} from "../../../../routerConfig/routeNames/routeNames";
 
-export default function ContentSelectorDetails({itemId, onDone}) {
+const ADMIN = ROUTE_NAMES.ADMIN;
+
+export default function ContentSelectorDetails() {
+  const router = useRouter();
+  const {state: routerState, params} = useCurrentStateAndParams();
+  const onDone = useCallback(() => router.stateService.go(ADMIN.REPOSITORY.SELECTORS.LIST), [router]);
+  const itemId = params?.itemId;
+
   const [state, , service] = useMachine(ContentSelectorsFormMachine, {
     context: {
       pristineData: {
@@ -43,11 +53,19 @@ export default function ContentSelectorDetails({itemId, onDone}) {
     devTools: true
   });
 
+  useEffect(() => {
+    // we should not render edit form if itemId is not provided
+    if (routerState.name === ADMIN.REPOSITORY.SELECTORS.EDIT && !itemId) {
+      router.stateService.go(ROUTE_NAMES.MISSING_ROUTE)
+    }
+
+  }, [itemId]);
+
   const {pristineData} = state.context;
 
   const canUpdate = ExtJS.checkPermission('nexus:selectors:update');
 
-  return <div className="nxrm-content-selectors">
+  return <Page className="nxrm-content-selectors">
     <PageHeader>
       <PageTitle text={Boolean(pristineData.name) ?
           UIStrings.CONTENT_SELECTORS.EDIT_TITLE(pristineData.name) :
@@ -59,5 +77,5 @@ export default function ContentSelectorDetails({itemId, onDone}) {
           : <ContentSelectorsReadOnly service={service} onDone={onDone}/>
       }
     </ContentBody>
-  </div>;
+  </Page>;
 }

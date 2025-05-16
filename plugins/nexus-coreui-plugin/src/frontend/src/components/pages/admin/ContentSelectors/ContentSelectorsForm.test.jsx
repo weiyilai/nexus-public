@@ -22,6 +22,10 @@ import TestUtils from '@sonatype/nexus-ui-plugin/src/frontend/src/interface/Test
 import ContentSelectorsDetails from './ContentSelectorsDetails';
 
 import UIStrings from '../../../../constants/UIStrings';
+import {UIRouter, useCurrentStateAndParams, useRouter} from "@uirouter/react";
+import {getRouter} from "../../../../routerConfig/routerConfig";
+import {ROUTE_NAMES} from "../../../../routerConfig/routeNames/routeNames";
+const ADMIN = ROUTE_NAMES.ADMIN;
 
 jest.mock('axios', () => ({
   ...jest.requireActual('axios'), // Use most functions from actual axios
@@ -78,19 +82,49 @@ const selectors = {
   },
 };
 
+let stateServiceGoMock = jest.fn();
+
+jest.mock('@uirouter/react', () => ({
+  ...jest.requireActual('@uirouter/react'),
+  useCurrentStateAndParams: jest.fn(),
+  useRouter: () =>({
+    stateService: {
+      go: stateServiceGoMock,
+    }
+  })
+}));
+
 describe('ContentSelectorsForm', function() {
   const CONFIRM = Promise.resolve();
-  const onDone = jest.fn();
+  let router;
 
   function renderEditView(itemId) {
-    return render(<ContentSelectorsDetails itemId={itemId} onDone={onDone}/>);
+    useCurrentStateAndParams.mockReturnValue({
+      state: {name: ADMIN.REPOSITORY.SELECTORS.EDIT},
+      params: {itemId}
+    });
+    return render(
+        <UIRouter router={router}>
+          <ContentSelectorsDetails/>
+        </UIRouter>
+    );
   }
 
   const renderCreateView = async () => {
-    return render(<ContentSelectorsDetails onDone={onDone}/>);
+    useCurrentStateAndParams.mockReturnValue({
+      state: {name: ADMIN.REPOSITORY.SELECTORS.CREATE},
+      params: null
+    });
+    return render(
+        <UIRouter router={router}>
+          <ContentSelectorsDetails/>
+        </UIRouter>
+    );
   }
 
   beforeEach(() => {
+    router = getRouter();
+    useCurrentStateAndParams.mockReset();
     axios.post.mockReset();
 
     when(ExtJS.checkPermission)
@@ -186,7 +220,8 @@ describe('ContentSelectorsForm', function() {
 
     userEvent.click(cancelButton());
 
-    await waitFor(() => expect(onDone).toBeCalled());
+    // expect onDone is called
+    expect(stateServiceGoMock).toBeCalledWith(ADMIN.REPOSITORY.SELECTORS.LIST);
   });
 
   it('shows errors from the backend on the correct field', async function() {
@@ -263,7 +298,9 @@ describe('ContentSelectorsForm', function() {
 
     expect(selectors.queryFormError()).not.toBeInTheDocument();
     await waitFor(() => expect(axios.delete).toBeCalledWith(`service/rest/v1/security/content-selectors/${itemId}`));
-    expect(onDone).toBeCalled();
+
+    // expect onDone is called
+    expect(stateServiceGoMock).toBeCalledWith(ADMIN.REPOSITORY.SELECTORS.LIST);
   });
 
   it('loads xss and escapes the values', () => {
@@ -311,6 +348,11 @@ describe('ContentSelectorsForm', function() {
         {name: 'test', description: 'description', expression: 'format == "raw"'}
     );
     expect(window.dirty).toEqual([]);
+  });
+
+  it('redirects to 404 page if itemId is not provided for edit route', function() {
+    renderEditView(null);
+    expect(stateServiceGoMock).toBeCalledWith(ROUTE_NAMES.MISSING_ROUTE);
   });
 
   describe('ContentSelectorsPreview', function() {

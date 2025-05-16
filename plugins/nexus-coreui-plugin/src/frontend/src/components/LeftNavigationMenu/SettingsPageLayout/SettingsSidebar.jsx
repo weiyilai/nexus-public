@@ -62,7 +62,8 @@ export default function SettingsSidebar() {
           data-analytics-id='nxrm-global-secondary-navbar-repository-proprietary'
         />
         <LeftNavigationMenuCollapsibleChildItem
-          name={ADMIN.REPOSITORY.SELECTORS}
+          selectedState={ADMIN.REPOSITORY.SELECTORS.ROOT}
+          name={ADMIN.REPOSITORY.SELECTORS.LIST}
           text={UIStrings.CONTENT_SELECTORS.MENU.text}
           params={{ itemId: null }}
           data-analytics-id='nxrm-global-secondary-navbar-repository-selectors'

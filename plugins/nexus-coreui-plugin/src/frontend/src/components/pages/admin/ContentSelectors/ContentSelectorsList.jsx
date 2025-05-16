@@ -32,17 +32,25 @@ import {
   PageHeader,
   PageTitle,
   Section,
-  SectionToolbar
+  SectionToolbar,
+  Page,
 } from '@sonatype/nexus-ui-plugin';
 import {HelpTile} from '../../../widgets';
 
 import ContentSelectorsListMachine from './ContentSelectorsListMachine';
 
 import UIStrings from '../../../../constants/UIStrings';
+import {useRouter} from '@uirouter/react';
+import {ROUTE_NAMES} from '../../../../routerConfig/routeNames/routeNames';
 
+const ADMIN = ROUTE_NAMES.ADMIN;
 const {CONTENT_SELECTORS: LABELS} = UIStrings;
 
-export default function ContentSelectorsList({onCreate, onEdit}) {
+export default function ContentSelectorsList() {
+  const router = useRouter();
+  const onEdit = (itemId) => router.stateService.go(ADMIN.REPOSITORY.SELECTORS.EDIT, {itemId});
+  const onCreate = () => router.stateService.go(ADMIN.REPOSITORY.SELECTORS.CREATE);
+
   const [state, send] = useMachine(ContentSelectorsListMachine, {devTools: true});
   const isLoading = state.matches('loading');
   const data = state.context.data;
@@ -59,7 +67,7 @@ export default function ContentSelectorsList({onCreate, onEdit}) {
 
   const canCreate = ExtJS.checkPermission('nexus:selectors:create');
 
-  return <div className="nxrm-content-selectors">
+  return <Page className="nxrm-content-selectors">
     <PageHeader>
       <PageTitle icon={faScroll} {...LABELS.MENU}/>
       <PageActions>
@@ -108,5 +116,5 @@ export default function ContentSelectorsList({onCreate, onEdit}) {
 
       <HelpTile header={LABELS.HELP_TITLE} body={LABELS.HELP_TEXT}/>
     </ContentBody>
-  </div>;
+  </Page>;
 }

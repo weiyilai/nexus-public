@@ -27,7 +27,12 @@ export default {
     },
     DATASTORE: 'admin.repository.datastore',
     PROPRIETARY: 'admin.repository.proprietary',
-    SELECTORS: 'admin.repository.selectors',
+    SELECTORS: {
+      ROOT: 'admin.repository.selectors',
+      LIST: 'admin.repository.selectors.list',
+      EDIT: 'admin.repository.selectors.edit',
+      CREATE: 'admin.repository.selectors.create'
+    },
     CLEANUPPOLICIES: 'admin.repository.cleanuppolicies',
     ROUTINGRULES: {
       DIRECTORY: 'admin.repository.routingrules',

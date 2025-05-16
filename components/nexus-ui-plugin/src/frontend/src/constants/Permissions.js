@@ -47,7 +47,7 @@ export default {
   ADMIN: 'nexus:*',
   SSL_TRUSTSTORE: generatePermissions('ssl-truststore'),
   BLOB_STORES: generatePermissions('blobstores', [READ]),
-  SELECTORS: generatePermissions('selectors', [READ]),
+  SELECTORS: generatePermissions('selectors', [READ, CREATE]),
   PRIVILEGES: generatePermissions('privileges', [READ]),
   SETTINGS: generatePermissions('settings', [READ, UPDATE]),
   USERS: generatePermissions('users', [READ]),

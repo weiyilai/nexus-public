@@ -20,6 +20,8 @@ import {when} from 'jest-when';
 import ContentSelectorsList from './ContentSelectorsList';
 
 import UIStrings from '../../../../constants/UIStrings';
+import {UIRouter} from '@uirouter/react';
+import {getRouter} from '../../../../routerConfig/routerConfig';
 
 jest.mock('axios', () => ({
   get: jest.fn()
@@ -33,7 +35,13 @@ jest.mock('@sonatype/nexus-ui-plugin', () => ({
 }));
 
 describe('ContentSelectorsList', function() {
-  function renderView(view = <ContentSelectorsList/>) {
+  function renderView() {
+    const router = getRouter();
+    const view = (
+      <UIRouter router={router}>
+        <ContentSelectorsList />
+      </UIRouter>
+    )
     return TestUtils.render(view, ({queryByPlaceholderText}) => ({
       filter: () => queryByPlaceholderText(UIStrings.CONTENT_SELECTORS.FILTER_PLACEHOLDER)
     }));
