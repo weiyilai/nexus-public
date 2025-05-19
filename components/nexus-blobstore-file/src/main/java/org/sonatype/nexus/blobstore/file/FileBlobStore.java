@@ -501,6 +501,16 @@ public class FileBlobStore
     }, null);
   }
 
+  @Override
+  public boolean isInternalMoveSupported(final BlobStore destBlobStore) {
+    return false;
+  }
+
+  @Override
+  public Blob moveInternal(final BlobStore destBlobStore, final BlobId blobId, final Map<String, String> headers) {
+    throw new UnsupportedOperationException("Internal move operation is not supported.");
+  }
+
   @Nullable
   @Override
   @Guarded(by = STARTED)
