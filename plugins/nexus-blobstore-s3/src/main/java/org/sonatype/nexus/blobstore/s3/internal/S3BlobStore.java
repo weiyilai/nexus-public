@@ -400,6 +400,16 @@ public class S3BlobStore
   }
 
   @Override
+  public boolean isInternalMoveSupported(final BlobStore destBlobStore) {
+    return false;
+  }
+
+  @Override
+  public Blob moveInternal(final BlobStore destBlobStore, final BlobId blobId, final Map<String, String> headers) {
+    throw new UnsupportedOperationException("Internal move operation is not supported.");
+  }
+
+  @Override
   @Guarded(by = STARTED)
   @Timed
   public Blob writeBlobProperties(final BlobId blobId, final Map<String, String> headers) {
