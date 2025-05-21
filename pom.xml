@@ -130,12 +130,6 @@
 
     <!-- max heap memory for surefire-plugin -->
     <surefire.maxHeap>-Xmx300M</surefire.maxHeap>
-
-    <bouncycastle.version>1.78.1</bouncycastle.version>
-    <bcpkix.fips.version>2.1.9</bcpkix.fips.version>
-    <bcpg.fips.version>2.1.11</bcpg.fips.version>
-    <bcutil.fips.version>2.1.4</bcutil.fips.version>
-    <bc.fips.version>2.1.0</bc.fips.version>
     <mockito.version>5.15.2</mockito.version>
   </properties>
 
