@@ -104,7 +104,7 @@ import static org.sonatype.nexus.ssl.KeyStoreManagerImpl.PRIVATE_KEY_ALIAS;
 public class KeyStoreManagerImplTest
     extends TestSupport
 {
-  private final CryptoHelper crypto = new CryptoHelperImpl(false, null);
+  private final CryptoHelper crypto = new CryptoHelperImpl(false);
 
   private KeyStoreStorageManager storageManager;
 

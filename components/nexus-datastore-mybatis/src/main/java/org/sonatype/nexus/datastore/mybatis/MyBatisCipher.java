@@ -59,7 +59,7 @@ final class MyBatisCipher
    */
   @VisibleForTesting
   MyBatisCipher() throws Exception {
-    this(new LegacyCipherFactoryImpl(new CryptoHelperImpl(false, null)), "changeme", "changeme", "0123456789ABCDEF");
+    this(new LegacyCipherFactoryImpl(new CryptoHelperImpl(false)), "changeme", "changeme", "0123456789ABCDEF");
   }
 
   @Override

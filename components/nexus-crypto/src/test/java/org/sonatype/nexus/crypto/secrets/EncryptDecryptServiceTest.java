@@ -23,7 +23,7 @@ public class EncryptDecryptServiceTest
 {
 
   EncryptDecryptService encryptDecryptService =
-      new EncryptDecryptService(new PbeCipherFactoryImpl(new CryptoHelperImpl(false, null)));
+      new EncryptDecryptService(new PbeCipherFactoryImpl(new CryptoHelperImpl(false)));
 
   @Test
   public void testEncryptionDecryption() {

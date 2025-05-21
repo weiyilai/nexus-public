@@ -29,7 +29,7 @@ public class AuthTicketGeneratorTest
   @Test
   public void generateWithDefault() {
     AuthTicketGenerator generator =
-        new AuthTicketGenerator(new RandomBytesGeneratorImpl(new CryptoHelperImpl(false, null)), 16);
+        new AuthTicketGenerator(new RandomBytesGeneratorImpl(new CryptoHelperImpl(false)), 16);
     String token = generator.generate();
     log(token);
     assertNotNull(token);
@@ -37,7 +37,7 @@ public class AuthTicketGeneratorTest
 
   private void generateWithSize(final int size) {
     AuthTicketGenerator generator =
-        new AuthTicketGenerator(new RandomBytesGeneratorImpl(new CryptoHelperImpl(false, null)), 16);
+        new AuthTicketGenerator(new RandomBytesGeneratorImpl(new CryptoHelperImpl(false)), 16);
     String token = generator.generate(size);
     log(token);
     assertNotNull(token);

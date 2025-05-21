@@ -47,7 +47,7 @@ public class TrustedKeyStoreManagerTest
 
   @Before
   public void setUp() throws Exception {
-    crypto = new CryptoHelperImpl(false, null);
+    crypto = new CryptoHelperImpl(false);
     config = createMockConfiguration();
     underTest = new TrustedKeyStoreManager(crypto, config);
   }

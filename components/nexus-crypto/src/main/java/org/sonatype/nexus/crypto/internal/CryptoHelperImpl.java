@@ -12,6 +12,8 @@
  */
 package org.sonatype.nexus.crypto.internal;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -37,8 +39,6 @@ import org.sonatype.nexus.crypto.CryptoHelper;
 
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.eclipse.sisu.Nullable;
-import org.eclipse.sisu.space.ClassSpace;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED;
@@ -57,15 +57,11 @@ public class CryptoHelperImpl
   private final Provider provider;
 
   @Inject
-  public CryptoHelperImpl(
-      @Named(NEXUS_SECURITY_FIPS_ENABLED) boolean nexusSecurityFipsEnabled,
-      @Nullable @Named("bouncycastle-fips") ClassSpace fipsClassSpace)
-  {
-    this.provider = configureProvider(nexusSecurityFipsEnabled,
-        fipsClassSpace);
+  public CryptoHelperImpl(final @Named(NEXUS_SECURITY_FIPS_ENABLED) boolean nexusSecurityFipsEnabled) {
+    this.provider = configureProvider(nexusSecurityFipsEnabled);
   }
 
-  public Provider configureProvider(final boolean nexusSecurityFipsEnabled, ClassSpace fipsClassSpace) {
+  private static Provider configureProvider(final boolean nexusSecurityFipsEnabled) {
     String providerName = nexusSecurityFipsEnabled
         ? BouncyCastleFipsProvider.PROVIDER_NAME
         : BouncyCastleProvider.PROVIDER_NAME;
@@ -76,10 +72,7 @@ public class CryptoHelperImpl
     }
 
     if (nexusSecurityFipsEnabled) {
-      if (fipsClassSpace == null) {
-        throw new IllegalStateException("FIPS mode enabled but BouncyCastle FIPS ClassSpace not available");
-      }
-      loadFipsProvider(fipsClassSpace);
+      loadFipsProvider();
     }
     else {
       loadNonFipsProvider();
@@ -88,18 +81,21 @@ public class CryptoHelperImpl
     return Security.getProvider(providerName);
   }
 
-  private void loadNonFipsProvider() {
+  private static void loadNonFipsProvider() {
     Security.addProvider(new BouncyCastleProvider());
   }
 
-  private void loadFipsProvider(ClassSpace fipsClassSpace) {
-    Provider providerFips = createFipsProvider(fipsClassSpace);
+  private static void loadFipsProvider() {
+    Provider providerFips = createFipsProvider();
     Security.addProvider(providerFips);
   }
 
-  private Provider createFipsProvider(ClassSpace fipsClassSpace) {
+  private static Provider createFipsProvider() {
     try {
-      Class<?> providerClass = fipsClassSpace.loadClass(
+      URL fipsJarUrl = BouncyCastleFipsProvider.class.getProtectionDomain().getCodeSource().getLocation();
+      URLClassLoader fipsClassLoader = new URLClassLoader(new URL[]{fipsJarUrl}, null);
+
+      Class<?> providerClass = fipsClassLoader.loadClass(
           "org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider");
       return (Provider) providerClass.getConstructor().newInstance();
     }

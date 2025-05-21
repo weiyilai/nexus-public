@@ -71,11 +71,11 @@ public class SecretsServiceImplTest
   @Captor
   private ArgumentCaptor<String> encryptedValue;
 
-  private final LegacyCipherFactory cipherFactory = new LegacyCipherFactoryImpl(new CryptoHelperImpl(false, null));
+  private final LegacyCipherFactory cipherFactory = new LegacyCipherFactoryImpl(new CryptoHelperImpl(false));
 
-  private final PbeCipherFactory pbeCipherFactory = new PbeCipherFactoryImpl(new CryptoHelperImpl(false, null));
+  private final PbeCipherFactory pbeCipherFactory = new PbeCipherFactoryImpl(new CryptoHelperImpl(false));
 
-  private final MavenCipher mavenCipher = new MavenCipherImpl(new CryptoHelperImpl(false, null));
+  private final MavenCipher mavenCipher = new MavenCipherImpl(new CryptoHelperImpl(false));
 
   private SecretsServiceImpl underTest;
 

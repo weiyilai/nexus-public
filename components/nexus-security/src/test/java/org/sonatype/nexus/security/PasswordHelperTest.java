@@ -53,9 +53,9 @@ public class PasswordHelperTest
   @Before
   public void init() throws Exception {
     legacyPasswordHelper =
-        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false, null)), LEGACY_PHRASE_SERVICE);
+        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false)), LEGACY_PHRASE_SERVICE);
     customPasswordHelper =
-        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false, null)), new AbstractPhraseService(true)
+        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false)), new AbstractPhraseService(true)
         {
           @Override
           protected String getMasterPhrase() {
@@ -212,7 +212,7 @@ public class PasswordHelperTest
   public void testCustomPhraseFile() throws Exception {
     PhraseService phraseService = new FilePhraseService(util.resolveFile("target/test-classes/custom.enc"));
     PasswordHelper underTest =
-        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false, null)), phraseService);
+        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false)), phraseService);
 
     String password = "clear-text-password";
     String encodedPass = underTest.encrypt(password);
@@ -224,7 +224,7 @@ public class PasswordHelperTest
   public void testMissingPhraseFile() throws Exception {
     PhraseService phraseService = new FilePhraseService(util.resolveFile("target/test-classes/missing.enc"));
     PasswordHelper underTest =
-        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false, null)), phraseService);
+        new PasswordHelper(new MavenCipherImpl(new CryptoHelperImpl(false)), phraseService);
 
     String password = "clear-text-password";
     try {
