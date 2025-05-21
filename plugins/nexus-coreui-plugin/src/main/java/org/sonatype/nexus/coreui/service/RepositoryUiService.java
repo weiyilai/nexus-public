@@ -47,11 +47,7 @@ import org.sonatype.nexus.coreui.search.BrowseableFormatXO;
 import org.sonatype.nexus.extdirect.model.StoreLoadParameters;
 import org.sonatype.nexus.rapture.PasswordPlaceholder;
 import org.sonatype.nexus.rapture.StateContributor;
-import org.sonatype.nexus.repository.Facet;
-import org.sonatype.nexus.repository.Format;
-import org.sonatype.nexus.repository.MissingFacetException;
-import org.sonatype.nexus.repository.Recipe;
-import org.sonatype.nexus.repository.Repository;
+import org.sonatype.nexus.repository.*;
 import org.sonatype.nexus.repository.cache.RepositoryCacheInvalidationService;
 import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.config.ConfigurationStore;
@@ -71,6 +67,7 @@ import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.security.BreadActions;
 import org.sonatype.nexus.security.SecurityHelper;
 import org.sonatype.nexus.validation.Validate;
+import org.sonatype.nexus.validation.constraint.NamePatternConstants;
 import org.sonatype.nexus.validation.group.Create;
 import org.sonatype.nexus.validation.group.Update;
 
@@ -107,6 +104,9 @@ public class RepositoryUiService
   private final List<Format> formats;
 
   private final RepositoryPermissionChecker repositoryPermissionChecker;
+
+  public final static String INVALID_BLOBSTORENAME_EXCEPTION_MESSAGE =
+      "Only letters, digits, underscores(_), hyphens(-), and dots(.) are allowed and may not start with underscore or dot.";
 
   @Inject
   public RepositoryUiService(
@@ -268,9 +268,21 @@ public class RepositoryUiService
         .map(DetachedEntityId::new)
         .ifPresent(config::setRoutingRuleId);
 
+    String blobStoreName = repositoryXO.getAttributes().get("storage").get("blobStoreName").toString();
+    validateBlobStoreName(blobStoreName);
     config.setAttributes(repositoryXO.getAttributes());
 
     return asRepository(repositoryManager.create(config));
+  }
+
+  private boolean validateBlobStoreName(String name) throws BadRequestException {
+    if (name != null && name.matches(NamePatternConstants.REGEX)) {
+      return true;
+    }
+    else {
+      throw new BadRequestException(INVALID_BLOBSTORENAME_EXCEPTION_MESSAGE);
+    }
+
   }
 
   @RequiresAuthentication

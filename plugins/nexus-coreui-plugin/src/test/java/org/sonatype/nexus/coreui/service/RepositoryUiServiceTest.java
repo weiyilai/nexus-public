@@ -117,6 +117,14 @@ public class RepositoryUiServiceTest
 
   private RepositoryUiService underTest;
 
+  private String BLOB_STORE_NAME = "blobStoreName";
+
+  @Mock
+  private Map<String, Map<String, Object>> attributes;
+
+  @Mock
+  private Map<String, Object> storage;
+
   @Before
   public void setup() {
     mockRepository();
@@ -128,6 +136,9 @@ public class RepositoryUiServiceTest
     when(repositoryManager.get(anyString())).thenReturn(repository);
     when(repository.getConfiguration()).thenReturn(configuration);
     when(configuration.copy()).thenReturn(configuration);
+    when(repositoryXO.getAttributes()).thenReturn(attributes);
+    when(attributes.get("storage")).thenReturn(storage);
+    when(storage.get(BLOB_STORE_NAME)).thenReturn("ValidName");
 
     underTest = Mockito.spy(new RepositoryUiService(repositoryCacheInvalidationService, repositoryManager,
         repositoryMetricsService,
@@ -240,6 +251,20 @@ public class RepositoryUiServiceTest
           is(String.format("%s/repository/%s/", BaseUrlHolder.get(), repoConfiguration.getRepositoryName())));
       assertThat(reference.getStatus().getRepositoryName(), is(repoConfiguration.getRepositoryName()));
       assertThat(reference.getStatus().isOnline(), is(repoConfiguration.isOnline()));
+    }
+  }
+
+  @Test
+  public void testInvalidBLobStoreName() {
+    when(repositoryManager.newConfiguration()).thenReturn(new SimpleConfiguration());
+    when(repositoryXO.getName()).thenReturn("test");
+    when(repositoryXO.getFormat()).thenReturn("format");
+    when(storage.get(BLOB_STORE_NAME)).thenReturn("<b>InvalidName</b>");
+    try {
+        underTest.create(repositoryXO);
+        Assert.fail("This should error out");
+    } catch (Exception e) {
+        assert(underTest.INVALID_BLOBSTORENAME_EXCEPTION_MESSAGE.equals(e.getMessage()));
     }
   }
 
