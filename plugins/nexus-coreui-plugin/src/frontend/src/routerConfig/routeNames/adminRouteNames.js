@@ -62,7 +62,12 @@ export default {
     LDAP: 'admin.security.ldap',
     REALMS: 'admin.security.realms',
     SAML: 'admin.security.saml',
-    SSLCERTIFICATES: 'admin.security.sslcertificates',
+    SSLCERTIFICATES: {
+      ROOT: 'admin.security.sslcertificates',
+      LIST: 'admin.security.sslcertificates.list',
+      EDIT: 'admin.security.sslcertificates.edit',
+      CREATE: 'admin.security.sslcertificates.create',
+    },
     USERTOKEN: 'admin.security.usertoken'
   },
   SYSTEM: {

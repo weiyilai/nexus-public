@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {useMachine} from '@xstate/react';
 
 import {
@@ -28,7 +28,8 @@ import {faIdCardAlt} from '@fortawesome/free-solid-svg-icons';
 import {
   ContentBody,
   PageHeader,
-  PageTitle
+  PageTitle,
+  Page
 } from '@sonatype/nexus-ui-plugin';
 
 import UIStrings from '../../../../constants/UIStrings';
@@ -36,13 +37,20 @@ import UIStrings from '../../../../constants/UIStrings';
 import SslCertificatesDetails from './SslCertificatesDetails';
 import Machine from './SslCertificatesDetailsFormMachine';
 
+import { ROUTE_NAMES } from '../../../../routerConfig/routeNames/routeNames';
 import {canDeleteCertificate} from './SslCertificatesHelper';
+import { useCurrentStateAndParams, useRouter } from '@uirouter/react';
 
+const ADMIN = ROUTE_NAMES.ADMIN;
 const {
   SSL_CERTIFICATES: {FORM: LABELS},
 } = UIStrings;
 
-export default function SslCertificatesDetailsForm({itemId, onDone}) {
+export default function SslCertificatesDetailsForm() {
+  const router = useRouter();
+  const {state: routerState, params} = useCurrentStateAndParams();
+  const onDone = useCallback(() => router.stateService.go(ADMIN.SECURITY.SSLCERTIFICATES.LIST));
+  const itemId = params?.itemId;
   const canDelete = canDeleteCertificate();
 
   const [state, send] = useMachine(Machine, {
@@ -58,6 +66,13 @@ export default function SslCertificatesDetailsForm({itemId, onDone}) {
     devTools: true,
   });
 
+  useEffect(() => {
+    // we should not render edit form if itemId is not provided
+    if (routerState.name === ADMIN.SECURITY.SSLCERTIFICATES.EDIT && !itemId) {
+      router.stateService.go(ROUTE_NAMES.MISSING_ROUTE);
+    }
+  }, [itemId]);
+
   const {data = {}, loadError} = state.context;
   const isLoading = state.matches('loading');
 
@@ -70,7 +85,7 @@ export default function SslCertificatesDetailsForm({itemId, onDone}) {
   };
 
   return (
-    <div className="nxrm-ssl-certificate">
+    <Page className="nxrm-ssl-certificate">
       <PageHeader>
         <PageTitle
           icon={faIdCardAlt}
@@ -109,6 +124,6 @@ export default function SslCertificatesDetailsForm({itemId, onDone}) {
           </NxTile.Content>
         </NxTile>
       </ContentBody>
-    </div>
+    </Page>
   );
 }

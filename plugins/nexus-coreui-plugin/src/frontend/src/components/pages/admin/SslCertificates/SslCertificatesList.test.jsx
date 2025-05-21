@@ -24,6 +24,9 @@ import {URLS} from './SslCertificatesHelper';
 import UIStrings from '../../../../constants/UIStrings';
 import {SSL_CERTIFICATES} from './SslCertificates.testdata';
 
+import {UIRouter} from "@uirouter/react";
+import {getRouter} from "../../../../routerConfig/routerConfig";
+
 const {SORT_DIRECTIONS: {DESC, ASC}} = APIConstants;
 const {sslCertificatesUrl} = URLS;
 const {SSL_CERTIFICATES: {LIST: LABELS}} = UIStrings;
@@ -62,7 +65,8 @@ const sortSslCertificates = (field, order = ASC) => sort((order === ASC ? ascend
 describe('SslCertificatesList', function() {
 
   const renderAndWaitForLoad = async () => {
-    render(<SslCertificatesList/>);
+    const router = getRouter();
+    render(<UIRouter router={router}><SslCertificatesList/></UIRouter>);
     await waitForElementToBeRemoved(selectors.queryLoadingMask());
   }
 

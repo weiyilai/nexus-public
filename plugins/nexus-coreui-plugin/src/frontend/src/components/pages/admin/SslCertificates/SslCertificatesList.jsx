@@ -13,7 +13,7 @@
 import React from 'react';
 import {useMachine} from '@xstate/react';
 
-import {ListMachineUtils} from '@sonatype/nexus-ui-plugin';
+import {ListMachineUtils, Page} from '@sonatype/nexus-ui-plugin';
 import {
   NxButton,
   NxFilterInput,
@@ -41,12 +41,20 @@ import Machine from './SslCertificatesListMachine';
 import UIStrings from '../../../../constants/UIStrings';
 import {canCreateCertificate} from './SslCertificatesHelper';
 
+import { ROUTE_NAMES } from '../../../../routerConfig/routeNames/routeNames';
+import { useRouter } from '@uirouter/react';
+
+const ADMIN = ROUTE_NAMES.ADMIN;
+
 const {
   LIST: {COLUMNS},
   LIST: LABELS
 } = UIStrings.SSL_CERTIFICATES;
 
-export default function SslCertificatesList({onCreate, onEdit}) {
+export default function SslCertificatesList() {
+  const router = useRouter();
+  const onEdit = (itemId) => router.stateService.go(ADMIN.SECURITY.SSLCERTIFICATES.EDIT, {itemId});
+  const onCreate = () => router.stateService.go(ADMIN.SECURITY.SSLCERTIFICATES.CREATE);
   const [current, send] = useMachine(Machine, {devTools: true});
   const isLoading = current.matches('loading');
   const {data, error, filter: filterText} = current.context;
@@ -75,7 +83,7 @@ export default function SslCertificatesList({onCreate, onEdit}) {
   const canCreate = canCreateCertificate();
 
   return (
-    <div className="nxrm-ssl-certificates">
+    <Page className="nxrm-ssl-certificates">
       <PageHeader>
         <PageTitle
           icon={faIdCardAlt}
@@ -153,6 +161,6 @@ export default function SslCertificatesList({onCreate, onEdit}) {
         </Section>
         <HelpTile header={LABELS.HELP.TITLE} body={LABELS.HELP.TEXT} />
       </ContentBody>
-    </div>
+    </Page>
   );
 }

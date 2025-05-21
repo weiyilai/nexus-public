@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import React from 'react';
+import React, { useCallback } from 'react';
 import {useMachine} from '@xstate/react';
 
 import {
@@ -29,7 +29,8 @@ import {faIdCardAlt} from '@fortawesome/free-solid-svg-icons';
 import {
   ContentBody,
   PageHeader,
-  PageTitle
+  PageTitle,
+  Page
 } from '@sonatype/nexus-ui-plugin';
 
 import UIStrings from '../../../../constants/UIStrings';
@@ -37,11 +38,17 @@ import UIStrings from '../../../../constants/UIStrings';
 import SslCertificatesAlreadyExistsModal from './SslCertificatesAlreadyExistsModal';
 import SslCertificatesDetails from "./SslCertificatesDetails";
 
+import { ROUTE_NAMES } from '../../../../routerConfig/routeNames/routeNames';
+import { useRouter } from '@uirouter/react';
+
 import Machine, {SOURCES} from "./SslCertificatesAddFormMachine";
 
+const ADMIN = ROUTE_NAMES.ADMIN;
 const {ADD_FORM: {CAPTION, LOAD_BUTTON, PEM, SERVER}, MENU, FORM} = UIStrings.SSL_CERTIFICATES;
 
-export default function SslCertificatesAddForm({onDone}) {
+export default function SslCertificatesAddForm() {
+  const router = useRouter();
+  const onDone = useCallback(() => router.stateService.go(ADMIN.SECURITY.SSLCERTIFICATES.LIST));
   const [state, send] = useMachine(Machine, {
     actions: {
       onSaveSuccess: onDone,
@@ -61,7 +68,7 @@ export default function SslCertificatesAddForm({onDone}) {
   const onSubmit = () => showAddForm ? send({type: 'LOAD_DETAILS'}) : send({type: 'ADD_CERTIFICATE'});
 
   return (
-    <div className="nxrm-ssl-certificate">
+    <Page className="nxrm-ssl-certificate">
       <PageHeader>
         <PageTitle icon={faIdCardAlt} {...MENU} />
       </PageHeader>
@@ -127,6 +134,6 @@ export default function SslCertificatesAddForm({onDone}) {
       </ContentBody>
 
       {inTrustStore && <SslCertificatesAlreadyExistsModal certificateId={id} cancel={onDone} />}
-    </div>
+    </Page>
   );
 }

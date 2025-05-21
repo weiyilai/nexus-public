@@ -11,7 +11,7 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import React from 'react';
-import {render, screen, waitFor, within, waitForElementToBeRemoved, act} from '@testing-library/react';
+import {render, screen, waitFor, within, waitForElementToBeRemoved} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {when} from 'jest-when';
 import Axios from 'axios';
@@ -20,9 +20,14 @@ import {ExtJS, DateUtils, APIConstants} from '@sonatype/nexus-ui-plugin';
 import TestUtils from '@sonatype/nexus-ui-plugin/src/frontend/src/interface/TestUtils';
 
 import UIStrings from '../../../../constants/UIStrings';
-import SslCertificatesForm from './SslCertificatesForm';
+import SslCertificatesDetailsForm from './SslCertificatesDetailsForm';
 import {URLS} from './SslCertificatesHelper';
 import {SSL_CERTIFICATES, SSL_CERTIFICATES_MAP} from './SslCertificates.testdata';
+import { UIRouter, useCurrentStateAndParams } from '@uirouter/react';
+import {getRouter} from "../../../../routerConfig/routerConfig";
+import { ROUTE_NAMES } from '../../../../routerConfig/routeNames/routeNames';
+
+const ADMIN = ROUTE_NAMES.ADMIN;
 
 const {EXT} = APIConstants;
 
@@ -46,6 +51,8 @@ const {
   SETTINGS: {CANCEL_BUTTON_LABEL}
 } = UIStrings;
 
+const stateServiceGoMock = jest.fn();
+
 jest.mock('axios', () => ({
   ...jest.requireActual('axios'),
   get: jest.fn(),
@@ -62,6 +69,16 @@ jest.mock('@sonatype/nexus-ui-plugin', () => ({
     showErrorMessage: jest.fn(),
     showSuccessMessage: jest.fn(),
   },
+}));
+
+jest.mock('@uirouter/react', () => ({
+  ...jest.requireActual('@uirouter/react'),
+    useCurrentStateAndParams: jest.fn(),
+    useRouter: () =>({
+      stateService: {
+        go: stateServiceGoMock,
+      }
+    })
 }));
 
 const testId = SSL_CERTIFICATES[1].id;
@@ -95,12 +112,13 @@ const selectors = {
   alreadyExistsModalContent: () => within(selectors.alreadyExistsModal()).getByText(MODAL_CONTENT)
 };
 
-describe('SslCertificatesForm', function() {
-  const onDone = jest.fn();
+describe('SslCertificatesDetailsForm', function() {
   const CONFIRM = Promise.resolve();
 
   const renderAndWaitForLoad = async (itemId) => {
-    const {debug} = render(<SslCertificatesForm itemId={itemId || ''} onDone={onDone}/>);
+    const router = getRouter();
+    useCurrentStateAndParams.mockReturnValue({state: {name: ADMIN.SECURITY.SSLCERTIFICATES.EDIT}, params: {itemId}});
+    const {debug} = render(<UIRouter router={router}><SslCertificatesDetailsForm /></UIRouter>);
     await waitForElementToBeRemoved(selectors.queryLoadingMask());
 
     return debug;
@@ -111,6 +129,9 @@ describe('SslCertificatesForm', function() {
       data: SSL_CERTIFICATES,
     });
     ExtJS.checkPermission.mockReturnValue(true);
+
+    useCurrentStateAndParams.mockReset();
+    useCurrentStateAndParams.mockReturnValue({state: {name: undefined}, params: {}});
   });
 
   it('renders the resolved data', async function() {
@@ -192,9 +213,19 @@ describe('SslCertificatesForm', function() {
     userEvent.click(deleteButton());
 
     await waitFor(() => expect(Axios.delete).toBeCalledWith(singleSslCertificatesUrl(testId)));
-    expect(onDone).toBeCalled();
+    expect(stateServiceGoMock).toHaveBeenCalledWith(ADMIN.SECURITY.SSLCERTIFICATES.LIST);
     expect(ExtJS.showSuccessMessage)
         .toHaveBeenCalledWith(UIStrings.SSL_CERTIFICATES.MESSAGES.DELETE_SUCCESS(DATA.subjectCommonName));
+  });
+
+  it('fires onDone when cancelled', async function() {
+    const {cancelButton} = selectors;
+
+    await renderAndWaitForLoad(testId);
+
+    userEvent.click(cancelButton());
+
+    expect(stateServiceGoMock).toHaveBeenCalledWith(ADMIN.SECURITY.SSLCERTIFICATES.LIST);
   });
 
   it('disables the delete button when not enough permissions', async function() {
@@ -207,203 +238,16 @@ describe('SslCertificatesForm', function() {
     expect(deleteButton()).toHaveClass('disabled');
   });
 
-  it('fires onDone when cancelled', async function() {
-    const {cancelButton} = selectors;
-
-    await renderAndWaitForLoad(testId);
-
-    userEvent.click(cancelButton());
-
-    await waitFor(() => expect(onDone).toBeCalled());
-  });
-
   it('uses proper urls', function() {
     expect(sslCertificatesUrl).toBe('service/rest/v1/security/ssl/truststore');
     expect(singleSslCertificatesUrl(testId)).toBe('service/rest/v1/security/ssl/truststore/F6%3ADB%3A65%3AA4%3A0D%3A38%3A75%3A86%3A90%3A96%3A29%3A5F%3A36%3A44%3A7F%3A3D%3A98%3A4B%3A3A%3A5N');
     expect(singleSslCertificatesUrl('G33:$($%?)')).toBe('service/rest/v1/security/ssl/truststore/G33%3A%24(%24%25%3F)');
     expect(createSslCertificatesUrl).toBe('service/rest/v1/security/ssl/truststore');
   });
-});
 
-describe('SslCertificatesAddForm', function () {
-  const onDone = jest.fn();
+  it('renders 404 page on no itemId', async function () {
+    await renderAndWaitForLoad('');
 
-  const renderAddForm = async () => {
-    const result = render(<SslCertificatesForm itemId="" onDone={onDone} />);
-    await waitFor(() => expect(selectors.addFormTitle()).toBeInTheDocument());
-    return result;
-  };
-
-  const loadFromServerExtReqBody = (remoteHostUrl) => ({
-    action: EXT.SSL.ACTION,
-    method: EXT.SSL.METHODS.RETRIEVE_FROM_HOST,
-    data: [remoteHostUrl, null, null],
-    type: 'rpc',
-    tid: 1
-  });
-
-  const loadFromPemExtReqBody = (pem) => ({
-    action: EXT.SSL.ACTION,
-    method: EXT.SSL.METHODS.DETAILS,
-    data: [pem],
-    type: 'rpc',
-    tid: 1
-  });
-
-  const loadFromServerExtErrorRespBody = (errorMsg) => ({
-    action: EXT.SSL.ACTION,
-    method: EXT.SSL.METHODS.RETRIEVE_FROM_HOST,
-    result: {
-      message: errorMsg,
-      authenticationRequired: false,
-      success: false,
-      data: []
-    },
-    type: 'rpc',
-    tid: 1
-  });
-
-  const loadFromServerExtRespBody = (certificate) => ({
-    action: EXT.SSL.ACTION,
-    method: EXT.SSL.METHODS.RETRIEVE_FROM_HOST,
-    result: {
-      success: true,
-      data: certificate
-    },
-    type: 'rpc',
-    tid: 1,
-  });
-
-  const mockResponse = (response = {}, remoteHost = '') =>{
-    when(Axios.post).calledWith(EXT.URL, loadFromServerExtReqBody(remoteHost)).mockResolvedValue(response);
-  }
-
-  beforeEach(() => {
-    ExtJS.checkPermission.mockReturnValue(true);
-  });
-
-  it('renders correct initial state', async function () {
-    await renderAddForm();
-
-    const {
-      loadFromServerRadioButton,
-      loadFromPemRadioButton,
-      remoteHostUrlInput,
-      pemInput
-    } = selectors;
-
-    expect(loadFromServerRadioButton()).toBeChecked();
-    expect(loadFromPemRadioButton()).not.toBeChecked();
-    expect(remoteHostUrlInput()).toBeEnabled();
-    expect(pemInput()).toBeDisabled();
-  });
-
-  it('loads certificate from server', async function () {
-    await renderAddForm();
-
-    const {remoteHostUrlInput, loadCertificateButton} = selectors;
-
-    const remoteHost = 'foo.bar';
-
-    await TestUtils.changeField(remoteHostUrlInput, remoteHost);
-
-    await act(async () => userEvent.click(loadCertificateButton()));
-
-    expect(Axios.post).toBeCalledWith(EXT.URL, loadFromServerExtReqBody(remoteHost));
-  });
-
-  it('loads certificate from pem', async function () {
-    await renderAddForm();
-
-    const {
-      pemInput,
-      remoteHostUrlInput,
-      loadFromPemRadioButton,
-      loadCertificateButton
-    } = selectors;
-
-    const pemContent = 'CORRECTPEMCONTENT';
-
-    await waitFor(() => expect(pemInput()).toBeDisabled());
-
-    userEvent.click(loadFromPemRadioButton());
-
-    expect(remoteHostUrlInput()).toBeDisabled();
-    expect(pemInput()).toBeEnabled();
-
-    await TestUtils.changeField(pemInput, pemContent);
-
-    mockResponse();
-
-    userEvent.click(loadCertificateButton());
-
-    await waitFor(() => {
-      expect(Axios.post).toBeCalledWith(EXT.URL, loadFromPemExtReqBody(pemContent));
-    });
-  });
-
-  it('shows add form with error toast on load from server error', async function () {
-    const remoteHost = 'bad.host';
-    const errorMessage = 'Could not retrieve an SSL certificate';
-
-    const response = {
-      data: loadFromServerExtErrorRespBody(errorMessage)
-    }
-
-    mockResponse(response, remoteHost);
-
-    await renderAddForm();
-
-    const {remoteHostUrlInput, loadCertificateButton} = selectors;
-
-    await TestUtils.changeField(remoteHostUrlInput, remoteHost);
-
-    await act(async () => userEvent.click(loadCertificateButton()));
-
-    expect(Axios.post).toBeCalledWith(EXT.URL, loadFromServerExtReqBody(remoteHost));
-    expect(remoteHostUrlInput()).toBeVisible();
-    expect(screen.getByRole('alert')).toHaveTextContent(errorMessage);
-  });
-
-  it('fires onDone when cancelled', async function() {
-    const {cancelButton} = selectors;
-
-    await renderAddForm();
-
-    userEvent.click(cancelButton());
-
-    await waitFor(() => expect(onDone).toBeCalled());
-  });
-
-  it('shows modal when trying to add existing certificate', async function () {
-    const remoteHost = 'foo.bar';
-
-    const certificate = SSL_CERTIFICATES[3];
-
-    const response = {data: loadFromServerExtRespBody(certificate)};
-
-    when(Axios.post).calledWith(EXT.URL, loadFromServerExtReqBody(remoteHost)).mockResolvedValue(response);
-
-    await renderAddForm();
-
-    const {
-      remoteHostUrlInput,
-      loadCertificateButton,
-      alreadyExistsModal,
-      alreadyExistsModalContent,
-      viewExistingCertificateButton
-    } = selectors;
-
-    await TestUtils.changeField(remoteHostUrlInput, remoteHost);
-
-    userEvent.click(loadCertificateButton());
-
-    await waitFor(() => expect(Axios.post).toBeCalledWith(EXT.URL, loadFromServerExtReqBody(remoteHost)));
-
-    expect(alreadyExistsModal()).toBeVisible();
-
-    expect(alreadyExistsModalContent()).toBeVisible();
-
-    expect(viewExistingCertificateButton()).toBeVisible();
+    expect(stateServiceGoMock).toHaveBeenCalledWith(ROUTE_NAMES.MISSING_ROUTE);
   });
 });

@@ -87,7 +87,7 @@ export default function AdminSecurityDirectoryPage() {
               data-analytics-id="nxrm-admin-security-directory-ssl-certs-lnk"
               text={UIStrings.SSL_CERTIFICATES.MENU.text}
               description={UIStrings.SSL_CERTIFICATES.MENU.description}
-              routeName={ADMIN.SECURITY.SSLCERTIFICATES}
+              routeName={ADMIN.SECURITY.SSLCERTIFICATES.LIST}
               params={{ itemId: null }}
           />
 

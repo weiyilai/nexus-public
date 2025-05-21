@@ -137,9 +137,10 @@ export default function SettingsSidebar() {
           data-analytics-id='nxrm-global-secondary-navbar-security-saml'
         />
         <LeftNavigationMenuCollapsibleChildItem
-          name={ADMIN.SECURITY.SSLCERTIFICATES}
+          name={ADMIN.SECURITY.SSLCERTIFICATES.LIST}
           text={UIStrings.SSL_CERTIFICATES.MENU.text}
           params={{ itemId: null }}
+          selectedState={ADMIN.SECURITY.SSLCERTIFICATES.ROOT}
           data-analytics-id='nxrm-global-secondary-navbar-security-sslcertificates'
         />
         <LeftNavigationMenuCollapsibleChildItem

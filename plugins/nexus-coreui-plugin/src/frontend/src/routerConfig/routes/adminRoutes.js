@@ -23,7 +23,9 @@ import CleanupPoliciesList from '../../components/pages/admin/CleanupPolicies/Cl
 import CleanupPoliciesForm from '../../components/pages/admin/CleanupPolicies/CleanupPoliciesForm';
 import Privileges from '../../components/pages/admin/Privileges/Privileges';
 import EmailServer from '../../components/pages/admin/EmailServer/EmailServer';
-import SslCertificates from '../../components/pages/admin/SslCertificates/SslCertificates';
+import SslCertificatesList from '../../components/pages/admin/SslCertificates/SslCertificatesList';
+import SslCertificatesAddForm from '../../components/pages/admin/SslCertificates/SslCertificatesAddForm';
+import SslCertificatesDetailsForm from '../../components/pages/admin/SslCertificates/SslCertificatesDetailsForm';
 import UsersExt from '../../components/pages/admin/Users/UsersExt';
 import AnonymousSettings from '../../components/pages/admin/AnonymousSettings/AnonymousSettings';
 import Realms from '../../components/pages/admin/Realms/Realms';
@@ -335,22 +337,38 @@ export const adminRoutes = [
   },
 
   {
-    name: ADMIN.SECURITY.SSLCERTIFICATES,
-    url: '/sslcertificates:itemId',
-    component: SslCertificates,
+    name: ADMIN.SECURITY.SSLCERTIFICATES.ROOT,
+    component: UIView,
     data: {
       visibilityRequirements: {
         bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.SSL_TRUSTSTORE.READ]
       }
-    },
-    params: {
-      itemId: {
-        value: null,
-        raw: true,
-        dynamic: true
+    }
+  },
+
+  {
+    name: ADMIN.SECURITY.SSLCERTIFICATES.LIST,
+    url: '/sslcertificates',
+    component: SslCertificatesList
+  },
+
+  {
+    name: ADMIN.SECURITY.SSLCERTIFICATES.CREATE,
+    url: '/sslcertificates/create',
+    component: SslCertificatesAddForm,
+    data: {
+      visibilityRequirements: {
+        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
+        permissions: [Permissions.SSL_TRUSTSTORE.CREATE]
       }
     }
+  },
+
+  {
+    name: ADMIN.SECURITY.SSLCERTIFICATES.EDIT,
+    url: '/sslcertificates/edit/{itemId:.+}',
+    component: SslCertificatesDetailsForm
   },
 
   {
