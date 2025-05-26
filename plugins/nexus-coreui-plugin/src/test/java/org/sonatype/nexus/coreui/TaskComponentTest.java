@@ -63,7 +63,7 @@ public class TaskComponentTest
   @Before
   public void setUp() {
     scheduler = mock(TaskScheduler.class, Mockito.RETURNS_DEEP_STUBS);
-    component = new TaskComponent(scheduler, validatorProvider, false);
+    component = new TaskComponent(scheduler, validatorProvider, false, false);
   }
 
   @Test
@@ -121,7 +121,7 @@ public class TaskComponentTest
     TaskXO taskXO = new TaskXO();
     taskXO.setProperties(ImmutableMap.of("source", "println 'hello world'"));
 
-    component = new TaskComponent(scheduler, validatorProvider, true);
+    component = new TaskComponent(scheduler, validatorProvider, true, false);
     component.validateScriptUpdate(taskInfo, taskXO);
   }
 
