@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import javax.annotation.Nullable;
 
@@ -107,6 +108,22 @@ public class SearchRequest
 
   public static Builder builder() {
     return new Builder();
+  }
+
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this)
+        .append("checkAuthorization", checkAuthorization)
+        .append("searchFilters", searchFilters)
+        .append("repositories", repositories)
+        .append("sortField", sortField)
+        .append("continuationToken", continuationToken)
+        .append("sortDirection", sortDirection)
+        .append("limit", limit)
+        .append("offset", offset)
+        .append("conjunction", conjunction)
+        .append("includeAssets", includeAssets)
+        .toString();
   }
 
   public static class Builder
