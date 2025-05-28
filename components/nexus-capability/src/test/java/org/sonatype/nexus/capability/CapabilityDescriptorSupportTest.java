@@ -14,6 +14,7 @@ package org.sonatype.nexus.capability;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
@@ -181,6 +182,11 @@ public class CapabilityDescriptorSupportTest
     @Override
     protected Set<String> uniqueProperties() {
       return uniqueProperties;
+    }
+
+    @Override
+    protected Object createConfig(final Map properties) {
+      return null;
     }
   }
 }

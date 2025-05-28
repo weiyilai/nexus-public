@@ -10,35 +10,27 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.plugins.defaultrole.internal;
+package org.sonatype.nexus.security.role;
 
-import java.util.Map;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import javax.validation.Constraint;
+import javax.validation.Payload;
 
-import org.sonatype.nexus.capability.CapabilityConfigurationSupport;
-import org.sonatype.nexus.security.role.RoleExistsString;
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/**
- * Simple configuration for {@link DefaultRoleCapability} containing a single roleId.
- *
- * @since 3.22
- */
-public class DefaultRoleCapabilityConfiguration
-    extends CapabilityConfigurationSupport
+@Target({FIELD, METHOD, PARAMETER, ANNOTATION_TYPE})
+@Retention(RUNTIME)
+@Constraint(validatedBy = RoleExistsStringValidator.class)
+public @interface RoleExistsString
 {
-  public static final String P_ROLE = "role";
+  String message() default "Missing role";
 
-  @RoleExistsString
-  private String role;
+  Class<?>[] groups() default {};
 
-  public DefaultRoleCapabilityConfiguration(final Map<String, String> properties) {
-    role = properties.get(P_ROLE);
-  }
-
-  public String getRole() {
-    return role;
-  }
-
-  public void setRole(final String role) {
-    this.role = role;
-  }
+  Class<? extends Payload>[] payload() default {};
 }

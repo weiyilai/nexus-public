@@ -37,6 +37,7 @@ import org.sonatype.nexus.formfields.FormField;
 import org.sonatype.nexus.formfields.ItemselectFormField;
 import org.sonatype.nexus.formfields.PasswordFormField;
 import org.sonatype.nexus.formfields.UrlFormField;
+import org.sonatype.nexus.validation.constraint.Url;
 import org.sonatype.nexus.webhooks.GlobalWebhook;
 import org.sonatype.nexus.webhooks.WebhookConfiguration;
 import org.sonatype.nexus.webhooks.WebhookService;
@@ -133,8 +134,10 @@ public class GlobalWebhookCapability
 
     private static final Splitter LIST_SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
+    @GlobalWebhookType
     public List<String> names;
 
+    @Url
     public URI url;
 
     @Nullable

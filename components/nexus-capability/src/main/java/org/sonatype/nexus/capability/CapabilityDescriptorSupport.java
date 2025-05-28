@@ -192,8 +192,7 @@ public abstract class CapabilityDescriptorSupport<ConfigT>
     return filter;
   }
 
-  protected void validateUnique(@Nullable final CapabilityIdentity id, final Map<String, String> properties)
-  {
+  protected void validateUnique(@Nullable final CapabilityIdentity id, final Map<String, String> properties) {
     CapabilityReferenceFilter filter = duplicatesFilter(id, properties);
 
     log.trace("Validating that unique capability of type {} and properties {}", type(), filter.getProperties());
@@ -202,15 +201,18 @@ public abstract class CapabilityDescriptorSupport<ConfigT>
     if (!references.isEmpty()) {
       StringBuilder message = new StringBuilder().append("Only one capability of type '").append(name()).append("'");
       for (Entry<String, String> entry : filter.getProperties().entrySet()) {
-        message.append(", ").append(propertyName(entry.getKey()).toLowerCase()).append(" '").append(entry.getValue())
-               .append("'");
+        message.append(", ")
+            .append(propertyName(entry.getKey()).toLowerCase())
+            .append(" '")
+            .append(entry.getValue())
+            .append("'");
       }
       message.append(" can be created");
       throw new ValidationException(message.toString());
     }
   }
 
-  protected ConfigT createConfig(final Map<String, String> properties) { return null; }
+  protected abstract ConfigT createConfig(final Map<String, String> properties);
 
   private String propertyName(final String key) {
     List<FormField> formFields = formFields();

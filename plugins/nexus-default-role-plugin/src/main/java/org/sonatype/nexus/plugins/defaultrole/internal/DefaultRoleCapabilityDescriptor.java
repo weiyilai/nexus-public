@@ -13,7 +13,7 @@
 package org.sonatype.nexus.plugins.defaultrole.internal;
 
 import java.util.List;
-
+import java.util.Map;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -90,5 +90,10 @@ public class DefaultRoleCapabilityDescriptor
   @Override
   protected String renderAbout() {
     return render(TYPE_ID + "-about.vm");
+  }
+
+  @Override
+  protected DefaultRoleCapabilityConfiguration createConfig(final Map<String, String> properties) {
+    return new DefaultRoleCapabilityConfiguration(properties);
   }
 }

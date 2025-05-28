@@ -15,6 +15,7 @@ package org.sonatype.nexus.onboarding.capability;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -62,6 +63,11 @@ public class OnboardingCapabilityDescriptor
   @Override
   public Set<Tag> getTags() {
     return new HashSet<>(singletonList(Tag.categoryTag(messages.category())));
+  }
+
+  @Override
+  protected OnboardingCapabilityConfiguration createConfig(final Map<String, String> properties) {
+    return new OnboardingCapabilityConfiguration(properties);
   }
 
   interface Messages

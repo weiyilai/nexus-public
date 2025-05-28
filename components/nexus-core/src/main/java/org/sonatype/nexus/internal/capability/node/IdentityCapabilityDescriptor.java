@@ -14,6 +14,7 @@ package org.sonatype.nexus.internal.capability.node;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Named;
@@ -80,5 +81,10 @@ public class IdentityCapabilityDescriptor
   @Override
   protected String renderAbout() throws Exception {
     return render(TYPE_ID + "-about.vm");
+  }
+
+  @Override
+  protected IdentityCapabilityConfiguration createConfig(final Map<String, String> properties) {
+    return new IdentityCapabilityConfiguration(properties);
   }
 }
