@@ -383,6 +383,12 @@ describe("GlobalHeader", () => {
 
   describe("Help Menu", () => {
     it('renders correctly when opened', async () => {
+      givenExtJSState(
+          {},
+          "COMMUNITY",
+          'short-version',
+          givenSomeVersion)
+
       renderComponent();
 
       await assertBannerAndOpenHelpMenu();
@@ -428,6 +434,12 @@ describe("GlobalHeader", () => {
     });
 
     it('about shows about modal', async () => {
+      givenExtJSState(
+          {},
+          "COMMUNITY",
+          'short-version',
+          givenSomeVersion)
+
       renderComponent();
 
       await assertBannerAndOpenHelpMenu();
@@ -653,7 +665,8 @@ describe("GlobalHeader", () => {
     return {
       ["COMMUNITY"]: "COMMUNITY",
       [versionKey]: givenSomeVersion,
-      [hasUserKey]: false
+      [hasUserKey]: false,
+      [givenSomeVersion]: givenSomeVersion
     }
   }
 

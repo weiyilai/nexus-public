@@ -299,6 +299,7 @@ describe('App', () => {
     jest.spyOn(ExtJS, 'state').mockReturnValue({
       getEdition: jest.fn().mockReturnValue(edition),
       getVersionMajorMinor: jest.fn().mockReturnValue('1.2.3-some-version'),
+      getVersion: jest.fn().mockReturnValue('1.2.3-some-full-version'),
       getValue: getValueMock,
       getUser: jest.fn()
     });

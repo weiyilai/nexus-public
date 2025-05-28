@@ -57,7 +57,7 @@ export const SupportUTMparams = {
 export default function HelpMenu() {
   const [isOpen, onToggleCollapse] = useToggle(false);
 
-  const version = ExtJS.useState(() => ExtJS.state().getVersionMajorMinor());
+  const version = ExtJS.useState(() => ExtJS.state().getVersion());
 
   return (
       <NxStatefulNavigationDropdown

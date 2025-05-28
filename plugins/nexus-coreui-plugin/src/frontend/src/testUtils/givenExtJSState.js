@@ -20,7 +20,8 @@ import { ExtJS } from '@sonatype/nexus-ui-plugin';
 export default   function givenExtJSState(
     values = {},
     edition = "COMMUNITY",
-    majorMinorVersion = '1.x.x'
+    majorMinorVersion = '1.x.x',
+    fullVersion = '1.x.x-snapshot'
 ) {
   const getValueMock = jest.fn().mockImplementation((key) => {
     return values[key];
@@ -29,6 +30,7 @@ export default   function givenExtJSState(
   const stateMock = {
     getEdition: jest.fn().mockReturnValue(edition),
     getVersionMajorMinor:jest.fn().mockReturnValue(majorMinorVersion),
+    getVersion: jest.fn().mockReturnValue(fullVersion),
     getValue: getValueMock,
     getUser: jest.fn()
   };
