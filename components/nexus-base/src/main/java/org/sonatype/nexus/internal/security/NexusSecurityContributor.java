@@ -12,12 +12,15 @@
  */
 package org.sonatype.nexus.internal.security;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityContributor;
 import org.sonatype.nexus.security.config.SecurityContributorSupport;
+
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.sonatype.nexus.security.Roles.ADMIN_ROLE_ID;
@@ -98,6 +101,15 @@ public class NexusSecurityContributor
 
   public static final String NX_REPO_VIEW_ALL_READ_PRIV_ID = "nx-repository-view-*-*-read";
 
+  private final boolean anonymousRoleEnabled;
+
+  @Inject
+  public NexusSecurityContributor(
+      @Named("${nexus.security.default.anonymous:-true}") @Value("${nexus.security.default.anonymous:true}") final boolean anonymousRoleEnabled)
+  {
+    this.anonymousRoleEnabled = anonymousRoleEnabled;
+  }
+
   @Override
   public MemorySecurityConfiguration getContribution() {
     MemorySecurityConfiguration configuration = new MemorySecurityConfiguration();
@@ -143,10 +155,11 @@ public class NexusSecurityContributor
             ACTION_CREATE_ONLY));
 
     configuration.addRole(createRole(ADMIN_ROLE_ID, ADMIN_ROLE_ID, NX_ADMIN_ROLE_DESCRIPTION, NX_ALL_PRIV_ID));
-    configuration.addRole(
-        createRole(ANONYMOUS_ROLE_ID, ANONYMOUS_ROLE_ID, NX_ANON_ROLE_DESCRIPTION, NX_SEARCH_READ_PRIV_ID,
-            NX_HEALTHCHECK_READ_PRIV_ID, NX_REPO_VIEW_ALL_BROWSE_PRIV_ID, NX_REPO_VIEW_ALL_READ_PRIV_ID));
-
+    if (anonymousRoleEnabled) {
+      configuration.addRole(
+          createRole(ANONYMOUS_ROLE_ID, ANONYMOUS_ROLE_ID, NX_ANON_ROLE_DESCRIPTION, NX_SEARCH_READ_PRIV_ID,
+              NX_HEALTHCHECK_READ_PRIV_ID, NX_REPO_VIEW_ALL_BROWSE_PRIV_ID, NX_REPO_VIEW_ALL_READ_PRIV_ID));
+    }
     return configuration;
   }
 }

@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
 public class NexusSecurityContributorTest
     extends TestSupport
@@ -31,7 +32,7 @@ public class NexusSecurityContributorTest
 
   @Before
   public void setup() {
-    underTest = new NexusSecurityContributor();
+    underTest = new NexusSecurityContributor(true);
   }
 
   @Test
@@ -44,6 +45,28 @@ public class NexusSecurityContributorTest
     assertThat(config.getRole("nx-anonymous").getPrivileges(),
         containsInAnyOrder("nx-search-read", "nx-healthcheck-read", "nx-repository-view-*-*-browse",
             "nx-repository-view-*-*-read"));
+    assertThat(config.getPrivileges().stream().map(CPrivilege::getId).collect(toList()),
+        containsInAnyOrder("nx-all",
+            "nx-component-upload",
+            "nx-search-read",
+            "nx-bundles-all", "nx-bundles-read",
+            "nx-settings-all", "nx-settings-read", "nx-settings-update",
+            "nx-apikey-all",
+            "nx-userschangepw",
+            "nx-users-all", "nx-users-create", "nx-users-read", "nx-users-update", "nx-users-delete",
+            "nx-roles-all", "nx-roles-create", "nx-roles-read", "nx-roles-update", "nx-roles-delete",
+            "nx-privileges-all", "nx-privileges-create", "nx-privileges-read", "nx-privileges-update",
+            "nx-privileges-delete"));
+  }
+
+  @Test
+  public void testGetContributionAnonymousDisabled() {
+    MemorySecurityConfiguration config = new NexusSecurityContributor(false).getContribution();
+    assertThat(config.getUsers().size(), is(0));
+    assertThat(config.getUserRoleMappings().size(), is(0));
+    assertThat(config.getRoles().size(), is(1));
+    assertThat(config.getRole("nx-admin").getPrivileges(), containsInAnyOrder("nx-all"));
+    assertThat(config.getRole("nx-anonymous"), is(nullValue()));
     assertThat(config.getPrivileges().stream().map(CPrivilege::getId).collect(toList()),
         containsInAnyOrder("nx-all",
             "nx-component-upload",
