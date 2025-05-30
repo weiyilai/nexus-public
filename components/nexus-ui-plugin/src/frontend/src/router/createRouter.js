@@ -14,9 +14,10 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import {UIRouterReact, hashLocationPlugin, servicesPlugin} from '@uirouter/react';
+import { UIRouterReact, hashLocationPlugin, servicesPlugin } from '@uirouter/react';
 import ExtJS from '../interface/ExtJS';
 import isVisible from '../router/isVisible';
+import { showUnsavedChangesModal } from './unsavedChangesDialog';
 
 const success = 'success';
 const failure = 'failure';
@@ -27,16 +28,11 @@ const failure = 'failure';
 
   See also private/developer-documentation/frontend/client-side-routing.md
  */
-export function createRouter({
-                            initialRoute,
-                            menuRoutes,
-                            missingRoute
-                          })
-{
+export function createRouter({ initialRoute, menuRoutes, missingRoute }) {
   const router = new UIRouterReact();
   router.plugin(servicesPlugin);
   router.plugin(hashLocationPlugin);
-  router.urlService.rules.initial({state: initialRoute});
+  router.urlService.rules.initial({ state: initialRoute });
 
   // validate permissions and configuration on each route request
   router.transitionService.onBefore({}, async (transition) => {
@@ -45,36 +41,52 @@ export function createRouter({
     const redirectTo404 = () => {
       transition.abort();
       router.stateService.go(missingRoute.name);
-    }
+    };
 
     const state = transition.to();
 
     console.debug(`transition from ${transition.from().name} to ${transition.to().name}`);
     if (!isVisible(state.data?.visibilityRequirements)) {
       if (!ExtJS.hasUser()) {
-        const result =
-            await offerUserTheChanceToLoginAndRevalidate(transition, state.data?.visibilityRequirements);
+        const result = await offerUserTheChanceToLoginAndRevalidate(transition, state.data?.visibilityRequirements);
 
         if (result !== success) {
           console.warn('state is not visible for navigation after authentication prompt, aborting transition');
           redirectTo404();
         }
-      }
-      else {
+      } else {
         console.warn('state is not visible for navigation, aborting transition', state.name);
         redirectTo404();
       }
     }
   });
 
-  menuRoutes.forEach(route => router.stateRegistry.register(route));
-  
+  // show the unsaved changes dialog when navigating away from a page with unsaved changes
+  router.transitionService.onBefore(
+    {},
+    async () => {
+      const hasUnsavedChanges = window.dirty && window.dirty.length > 0;
+      if (hasUnsavedChanges) {
+        const confirm = await showUnsavedChangesModal();
+        if (!confirm) {
+          return false;
+        }
+        window.dirty = [];
+      }
+
+      return true;
+    },
+    { priority: 1000 }
+  ); // this hook given a high priority to ensure it runs first
+
+  menuRoutes.forEach((route) => router.stateRegistry.register(route));
+
   // explicitely register the missing route
   router.stateRegistry.register(missingRoute);
   // send any unrecognized routes to the 404 page
   router.urlService.rules.otherwise((matchValue, urlParts, router) => {
     console.warn('url not recognized', matchValue, urlParts);
-    router.stateService.go(missingRoute.name, {}, {location: false});
+    router.stateService.go(missingRoute.name, {}, { location: false });
   });
 
   console.info('States added to router:', router.stateRegistry.get());
@@ -97,11 +109,10 @@ async function offerUserTheChanceToLoginAndRevalidate(_transition, visibilityReq
 
     console.debug('rechecking visiblity requirements after authentication');
     if (!isVisible(visibilityRequirements)) {
-      console.debug('user still does not have permissions after logging in')
+      console.debug('user still does not have permissions after logging in');
       return failure;
     }
-  }
-  catch (ex) {
+  } catch (ex) {
     console.warn('login unsuccessful: ', ex);
     return failure;
   }
@@ -121,7 +132,7 @@ function promptUserToLogin() {
       failure: (err) => {
         reject(err);
       }
-    })
+    });
   });
 }
 
@@ -131,11 +142,11 @@ function waitForNextPermissionChange() {
       console.debug('received permission changes');
       clearInterval(timeout);
       resolve();
-    }
+    };
 
     console.debug('setting up event handler to wait for permission changes');
     const permissionsController = Ext.getApplication().getController('Permissions');
-    const eventHandler = permissionsController.on({changed: handleChange, single: true});
+    const eventHandler = permissionsController.on({ changed: handleChange, single: true });
 
     const timeout = setTimeout(() => {
       console.debug('removing event handler, permission changes have timed out');

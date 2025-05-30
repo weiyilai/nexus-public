@@ -17,53 +17,46 @@
 import './styles/_nx-overrides.scss';
 import './styles/_global.scss';
 
-export {default as UIStrings} from './constants/UIStrings';
-export {default as APIConstants} from './constants/APIConstants';
-export {default as Permissions} from './constants/Permissions';
+export { default as UIStrings } from './constants/UIStrings';
+export { default as APIConstants } from './constants/APIConstants';
+export { default as Permissions } from './constants/Permissions';
 
-export {default as ExtJS} from './interface/ExtJS';
-export {default as ExtAPIUtils} from './interface/ExtAPIUtils';
+export { default as ExtJS } from './interface/ExtJS';
+export { default as ExtAPIUtils } from './interface/ExtAPIUtils';
 
-export {default as Utils} from './interface/Utils';
-export {default as UnitUtil} from './interface/UnitUtil';
-export {default as FormUtils} from './interface/FormUtils';
-export {default as HumanReadableUtils} from './interface/HumanReadableUtils';
-export {default as ListMachineUtils} from './interface/ListMachineUtils';
-export {default as ValidationUtils} from './interface/ValidationUtils';
-export {default as useSimpleMachine} from './interface/SimpleMachineUtils';
-export {default as DateUtils} from './interface/DateUtils';
+export { default as Utils } from './interface/Utils';
+export { default as UnitUtil } from './interface/UnitUtil';
+export { default as FormUtils } from './interface/FormUtils';
+export { default as HumanReadableUtils } from './interface/HumanReadableUtils';
+export { default as ListMachineUtils } from './interface/ListMachineUtils';
+export { default as ValidationUtils } from './interface/ValidationUtils';
+export { default as useSimpleMachine } from './interface/SimpleMachineUtils';
+export { default as DateUtils } from './interface/DateUtils';
 
-export {
-  default as HistoricalUsage
-} from './components/pages/admin/Usage/HistoricalUsage';
-export {
-  default as CheckboxControlledWrapper
-} from './components/widgets/CheckboxControlledWrapper/CheckboxControlledWrapper';
-export {default as DynamicFormField} from './components/widgets/DynamicFormField/DynamicFormField';
-export {default as FormFieldsFactory} from './components/widgets/FormFieldsFactory/FormFieldsFactory';
-export {default as FieldWrapper} from './components/widgets/FieldWrapper/FieldWrapper';
-export {default as Information} from './components/widgets/Information/Information';
-export {default as ReadOnlyField} from './components/widgets/ReadOnlyField/ReadOnlyField';
-export {
-  default as SslCertificateDetailsModal
-} from './components/widgets/SslCertificateDetailsModal/SslCertificateDetailsModal';
-export {default as Textfield} from './components/widgets/Textfield/Textfield';
-export {
-  default as UseNexusTruststore
-} from './components/widgets/UseTruststoreCheckbox/UseNexusTruststore';
+export { default as HistoricalUsage } from './components/pages/admin/Usage/HistoricalUsage';
+export { default as CheckboxControlledWrapper } from './components/widgets/CheckboxControlledWrapper/CheckboxControlledWrapper';
+export { default as DynamicFormField } from './components/widgets/DynamicFormField/DynamicFormField';
+export { default as FormFieldsFactory } from './components/widgets/FormFieldsFactory/FormFieldsFactory';
+export { default as FieldWrapper } from './components/widgets/FieldWrapper/FieldWrapper';
+export { default as Information } from './components/widgets/Information/Information';
+export { default as ReadOnlyField } from './components/widgets/ReadOnlyField/ReadOnlyField';
+export { default as SslCertificateDetailsModal } from './components/widgets/SslCertificateDetailsModal/SslCertificateDetailsModal';
+export { default as Textfield } from './components/widgets/Textfield/Textfield';
+export { default as UseNexusTruststore } from './components/widgets/UseTruststoreCheckbox/UseNexusTruststore';
 
 export * from './interface/urlUtil';
 export * from './interface/versionUtil';
 
 export * from './interface/LocationUtils';
-export {default as TokenMachine} from './interface/TokenMachine';
+export { default as TokenMachine } from './interface/TokenMachine';
 
-export {default as isVisible} from './router/isVisible';
-export {default as useIsVisible} from './router/useIsVisible';
-export {createRouter} from './router/createRouter';
+export { default as isVisible } from './router/isVisible';
+export { default as useIsVisible } from './router/useIsVisible';
+export { createRouter } from './router/createRouter';
 
-export {ThemeSelector} from './components/widgets/ThemeSelector/ThemeSelector';
+export { ThemeSelector } from './components/widgets/ThemeSelector/ThemeSelector';
 
 export * from './components/layout';
 
 export * from './components/pages/admin/Usage/HistoricalUsageColumns';
+export { default as UnsavedChangesModal } from './components/widgets/UnsavedChangesModal/UnsavedChangesModal';

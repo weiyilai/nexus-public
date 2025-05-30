@@ -12,12 +12,15 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { UIRouter } from '@uirouter/react';
 import { App } from './App';
 import { getRouter } from './routerConfig/routerConfig';
 import { ExtJS } from '@sonatype/nexus-ui-plugin';
 import { helperFunctions } from './components/widgets/SystemStatusAlerts/CELimits/UsageHelper';
+import { ROUTE_NAMES } from './routerConfig/routeNames/routeNames';
+
+const { ADMIN, BROWSE } = ROUTE_NAMES;
 
 // mocking out the Welcome page to avoid having to mock all the various ExtJs functions/state required to render it
 jest.mock('./components/pages/user/Welcome/Welcome', () => {
@@ -41,6 +44,7 @@ describe('App', () => {
     historySpy = jest.spyOn(History.prototype, 'pushState');
 
     window.location.hash = '';
+    window.dirty = [];
   });
 
   it('should render', async () => {
@@ -248,6 +252,82 @@ describe('App', () => {
 
     history.pushState({}, '', '');
     expect(historySpy).toHaveBeenCalledWith({}, '', '');
+  });
+
+  describe('Unsaved Changes Dialog', () => {
+    const selectors = {
+      cancelButton: () => screen.queryByRole('button', { name: 'Cancel' }),
+      continueButton: () => screen.queryByRole('button', { name: 'Continue' }),
+      modalTitle: () => screen.queryByRole('heading', { name: 'Unsaved Changes' }),
+      modalContent: () => screen.queryByText('The page may contain unsaved changes; continuing will discard them.')
+    }
+
+    it('should render the unsaved changes modal when navigating away from a page with unsaved changes', async () => {
+      const { router } = await renderComponent();
+      await assertBasicPageLayoutRenders();
+
+      act(() => {
+        window.dirty = ['some unsaved changes'];
+        router.stateService.go(BROWSE.BROWSE);
+      });
+
+      expect(selectors.modalTitle()).toBeVisible();
+    });
+
+    it('should not render the unsaved changes modal when navigating away from a page without unsaved changes', async () => {
+      const { router } = await renderComponent();
+      await assertBasicPageLayoutRenders();
+
+      act(() => {
+        router.stateService.go(BROWSE.BROWSE);
+      });
+
+      expect(selectors.modalTitle()).not.toBeInTheDocument();
+    });
+
+    it('should hide the unsaved changes modal when the cancel button is clicked', async () => {
+      const { router } = await renderComponent();
+      await assertBasicPageLayoutRenders();
+
+      act(() => {
+        window.dirty = ['some unsaved changes'];
+        router.stateService.go(BROWSE.BROWSE);
+      });
+
+      expect(selectors.modalTitle()).toBeVisible();
+      expect(selectors.modalContent()).toBeVisible();
+      expect(selectors.cancelButton()).toBeVisible();
+
+      act(() => {
+        selectors.cancelButton().click();
+      });
+
+      expect(selectors.modalTitle()).not.toBeInTheDocument();
+      expect(selectors.modalContent()).not.toBeInTheDocument();
+      expect(selectors.cancelButton()).not.toBeInTheDocument();
+    });
+
+    it('should hide the unsaved changes modal when the continue button is clicked', async () => {
+      const { router } = await renderComponent();
+      await assertBasicPageLayoutRenders();
+
+      act(() => {
+        window.dirty = ['some unsaved changes'];
+        router.stateService.go(BROWSE.BROWSE);
+      });
+
+      expect(selectors.modalTitle()).toBeVisible();
+      expect(selectors.modalContent()).toBeVisible();
+      expect(selectors.continueButton()).toBeVisible();
+
+      act(() => {
+        selectors.continueButton().click();
+      });
+
+      expect(selectors.modalTitle()).not.toBeInTheDocument();
+      expect(selectors.modalContent()).not.toBeInTheDocument();
+      expect(selectors.continueButton()).not.toBeInTheDocument();
+    });
   });
 
   async function renderComponent() {

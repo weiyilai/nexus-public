@@ -13,7 +13,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { UIRouter, UIView } from '@uirouter/react';
-import { ExtJS } from '@sonatype/nexus-ui-plugin';
+import { ExtJS, UnsavedChangesModal } from '@sonatype/nexus-ui-plugin';
 
 import { getRouter } from './routerConfig/routerConfig';
 import LeftNavigationMenu from './components/LeftNavigationMenu/LeftNavigationMenu';
@@ -53,6 +53,8 @@ export function App() {
       <LeftNavigationMenu />
 
       <UpgradeModal />
+
+      <UnsavedChangesModal/>
 
       <UIView />
 
