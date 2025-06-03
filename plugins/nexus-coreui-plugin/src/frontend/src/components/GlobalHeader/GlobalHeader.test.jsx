@@ -11,24 +11,25 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-import React from "react";
-import GlobalHeader from "./GlobalHeader";
-import { render, screen, within } from "@testing-library/react";
+import React from 'react';
+import GlobalHeader from './GlobalHeader';
+import { render, screen, within } from '@testing-library/react';
 
-import { ExtJS } from '@sonatype/nexus-ui-plugin'
+import { ExtJS } from '@sonatype/nexus-ui-plugin';
 import { UIRouter, UIView, useCurrentStateAndParams } from '@uirouter/react';
 import userEvent from '@testing-library/user-event';
 import { UpgradeAlertFunctions } from '../widgets/SystemStatusAlerts/UpgradeAlert/UpgradeAlertHelper';
 import { getRouter } from '../../routerConfig/routerConfig';
 import givenBundleActiveStates from '../../testUtils/givenBundleActiveStates';
 import givenExtJSState from '../../testUtils/givenExtJSState';
+
 import {
   DocumentationUTMparams,
   KnowledgeBaseUTMparams,
   SonatypeGuidesUTMparams,
   CommunityUTMparams,
   IssueTrackerUTMparams
-} from "./HelpMenu";
+} from './HelpMenu';
 
 // This is used by the API view, it's not really something we need to
 // test here, but importing it trips up jest, it's simplest to just bypass it
@@ -42,23 +43,43 @@ jest.mock('swagger-ui-react', () => {
 let welcomeWrapperClassName;
 jest.mock('../pages/user/Welcome/Welcome', () => {
   return () => {
-    return (<main className={welcomeWrapperClassName}><h1>Welcome Mock</h1></main>);
-  }
+    return (
+      <main className={welcomeWrapperClassName}>
+        <h1>Welcome Mock</h1>
+      </main>
+    );
+  };
 });
 
 // mocking the pages we navigate to so we can test navigation without having to
 // mock enough state to fully render them
 jest.mock('../pages/admin/UserAccount/UserAccount', () => {
-  return () => (<main><h1>User Account Mock</h1></main>);
+  return () => (
+    <main>
+      <h1>User Account Mock</h1>
+    </main>
+  );
 });
 jest.mock('../pages/user/NuGetApiToken/NuGetApiToken', () => {
-  return () => (<main><h1>NuGet API Token Mock</h1></main>);
+  return () => (
+    <main>
+      <h1>NuGet API Token Mock</h1>
+    </main>
+  );
 });
 jest.mock('../pages/user/UserToken/UserToken', () => {
-  return () => (<main><h1>User Token Mock</h1></main>);
+  return () => (
+    <main>
+      <h1>User Token Mock</h1>
+    </main>
+  );
 });
 jest.mock('../pages/admin/MetricHealth/MetricHealth', () => {
-  return () => (<main><h1>Metric Health Mock</h1></main>);
+  return () => (
+    <main>
+      <h1>Metric Health Mock</h1>
+    </main>
+  );
 });
 
 // this allows us to test navigation to the search page with correct keywords
@@ -67,11 +88,15 @@ jest.mock('../pages/browse/Search/SearchGenericExt', () => {
   return () => {
     const { params } = useCurrentStateAndParams();
 
-    return <main><h1>Search Mock -- {params?.keyword}</h1></main>;
+    return (
+      <main>
+        <h1>Search Mock -- {params?.keyword}</h1>
+      </main>
+    );
   };
 });
 
-describe("GlobalHeader", () => {
+describe('GlobalHeader', () => {
   const versionKey = '1.x.x';
   const hasUserKey = 'HAS_UER_KEY';
   const userKey = 'USER_KEY';
@@ -81,9 +106,9 @@ describe("GlobalHeader", () => {
   const givenUserName = 'test-user';
 
   beforeEach(() => {
-    welcomeWrapperClassName = "";
+    let welcomeWrapperClassName = '';
 
-    givenExtJSState()
+    givenExtJSState();
     jest.spyOn(UpgradeAlertFunctions, 'hasUser').mockReturnValue(hasUserKey);
     givenState();
 
@@ -93,10 +118,10 @@ describe("GlobalHeader", () => {
 
     // make sure this gets reset between tests, it was not happening automatically which can result
     // in an unexpected initial state for some tests
-    window.location.hash = "";
-  })
+    window.location.hash = '';
+  });
 
-  it("correctly renders the global page header for the community edition", async () => {
+  it('correctly renders the global page header for the community edition', async () => {
     renderComponent();
 
     const banner = screen.getByRole('banner');
@@ -104,14 +129,14 @@ describe("GlobalHeader", () => {
 
     assertCommunityEditionCompanyLogoShown(banner);
     await assertAllButtonsShownForLoggedOutUser(banner);
-  })
+  });
 
-  it("correctly renders the global page header for the professional edition", async () => {
+  it('correctly renders the global page header for the professional edition', async () => {
     givenState({
       ...defaultState(),
-      ["PRO"]: "PRO"
-    })
-    givenExtJSState({}, "PRO");
+      ['PRO']: 'PRO'
+    });
+    givenExtJSState({}, 'PRO');
 
     renderComponent();
 
@@ -121,14 +146,14 @@ describe("GlobalHeader", () => {
     assertProdEditionCompanyLogoShown(banner);
 
     await assertAllButtonsShownForLoggedOutUser(banner);
-  })
+  });
 
-  it("correctly renders the global page header for the core edition", async () => {
+  it('correctly renders the global page header for the core edition', async () => {
     givenState({
       ...defaultState(),
-      ["CORE"]: "CORE"
-    })
-    givenExtJSState({}, "CORE");
+      ['CORE']: 'CORE'
+    });
+    givenExtJSState({}, 'CORE');
 
     renderComponent();
 
@@ -138,13 +163,13 @@ describe("GlobalHeader", () => {
     assertCoreEditionCompanyLogoShown(banner);
 
     await assertAllButtonsShownForLoggedOutUser(banner);
-  })
+  });
 
-  describe("System Status", () => {
-    it("should show alert when health check fails and user has permission to see it", async () => {
+  describe('System Status', () => {
+    it('should show alert when health check fails and user has permission to see it', async () => {
       givenExtJSState({
         usertoken: { licenseValide: true },
-        'health_checks_failed': 'health_checks_failed'
+        health_checks_failed: 'health_checks_failed'
       });
 
       givenState({
@@ -154,11 +179,11 @@ describe("GlobalHeader", () => {
 
       givenBundleActiveStates({
         'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
-      })
+      });
 
       givenPermissions({
         'nexus:metrics:read': true
-      })
+      });
 
       renderComponent();
 
@@ -172,25 +197,24 @@ describe("GlobalHeader", () => {
       await assertClickSystemStatusNavigatesToMetricsHealthPage(systemStatus);
     });
 
-    it("should show normal status indicator when health check passes and user has permission to see it", async () => {
+    it('should show normal status indicator when health check passes and user has permission to see it', async () => {
       givenExtJSState({
         usertoken: { licenseValide: true },
-        'health_checks_failed': 'health_checks_failed'
-      })
+        health_checks_failed: 'health_checks_failed'
+      });
 
       givenState({
         ...defaultState(),
         health_checks_failed: false
-      })
-
+      });
 
       givenBundleActiveStates({
         'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
-      })
+      });
 
       givenPermissions({
         'nexus:metrics:read': true
-      })
+      });
 
       renderComponent();
 
@@ -204,23 +228,23 @@ describe("GlobalHeader", () => {
       await assertClickSystemStatusNavigatesToMetricsHealthPage(systemStatus);
     });
 
-    it("should not show status indicator when user not have permission to see it", async () => {
+    it('should not show status indicator when user not have permission to see it', async () => {
       givenExtJSState({
-        'health_checks_failed': 'health_checks_failed'
-      })
+        health_checks_failed: 'health_checks_failed'
+      });
 
       givenState({
         ...defaultState(),
         health_checks_failed: false
-      })
+      });
 
       givenBundleActiveStates({
         'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
-      })
+      });
 
       givenPermissions({
         'nexus:metrics:read': false
-      })
+      });
 
       renderComponent();
 
@@ -236,7 +260,7 @@ describe("GlobalHeader", () => {
     }
   });
 
-  describe("Profile Menu", () => {
+  describe('Profile Menu', () => {
     // To show:
     //   1. user must be logged in
     //   2. the user must have nexus:usertoken-current:read permissions
@@ -260,14 +284,17 @@ describe("GlobalHeader", () => {
         [hasUserKey]: true,
         [userKey]: givenUserName,
         // given is not on pro edition
-        ["COMMUNITY"]: "COMMUNITY"
+        ['COMMUNITY']: 'COMMUNITY'
       });
 
-      givenExtJSState({
-        [extStateUserKey]: { id: userKey },
-        ['usertoken']: true
-        // given is not on pro edition
-      }, "COMMUNITY");
+      givenExtJSState(
+        {
+          [extStateUserKey]: { id: userKey },
+          ['usertoken']: true
+          // given is not on pro edition
+        },
+        'COMMUNITY'
+      );
 
       renderComponent();
 
@@ -279,7 +306,7 @@ describe("GlobalHeader", () => {
     it('does not render user tokens when user does not have enough permissions', async () => {
       givenAllRequirementsMetForUserTokenPageAccess();
       // given user does not have permissions
-      givenPermissions({ 'nexus:usertoken-current:read': false })
+      givenPermissions({ 'nexus:usertoken-current:read': false });
 
       renderComponent();
 
@@ -294,7 +321,7 @@ describe("GlobalHeader", () => {
       // given the bundle is not active
       givenBundleActiveStates({
         'com.sonatype.nexus.plugins.nexus-usertoken-plugin': false
-      })
+      });
 
       renderComponent();
 
@@ -306,11 +333,14 @@ describe("GlobalHeader", () => {
     it('does not render user tokens when usertoken user state is not enabled', async () => {
       givenAllRequirementsMetForUserTokenPageAccess();
 
-      givenExtJSState({
-        [extStateUserKey]: { id: userKey },
-        // given usertoken is not enabled
-        ['usertoken']: false
-      }, "PRO");
+      givenExtJSState(
+        {
+          [extStateUserKey]: { id: userKey },
+          // given usertoken is not enabled
+          ['usertoken']: false
+        },
+        'PRO'
+      );
 
       renderComponent();
 
@@ -326,7 +356,7 @@ describe("GlobalHeader", () => {
       await assertBannerAndOpenUserProfileMenu();
       await assertRendersUserProfileDropDownCorrectlyForUserWithUserTokenAccess();
 
-      const profileLink = screen.getByRole('link', { name: 'My Account'});
+      const profileLink = screen.getByRole('link', { name: 'My Account' });
       await userEvent.click(profileLink);
 
       await screen.findByRole('heading', { name: 'User Account Mock' });
@@ -339,7 +369,7 @@ describe("GlobalHeader", () => {
       await assertBannerAndOpenUserProfileMenu();
       await assertRendersUserProfileDropDownCorrectlyForUserWithUserTokenAccess();
 
-      const nuggetApiLink = screen.getByRole('link', { name: 'NuGet API Key'});
+      const nuggetApiLink = screen.getByRole('link', { name: 'NuGet API Key' });
       await userEvent.click(nuggetApiLink);
 
       await screen.findByRole('heading', { name: 'NuGet API Token Mock' });
@@ -352,7 +382,7 @@ describe("GlobalHeader", () => {
       await assertBannerAndOpenUserProfileMenu();
       await assertRendersUserProfileDropDownCorrectlyForUserWithUserTokenAccess();
 
-      const userTokenLink = screen.getByRole('link', { name: 'User Token'});
+      const userTokenLink = screen.getByRole('link', { name: 'User Token' });
       await userEvent.click(userTokenLink);
 
       await screen.findByRole('heading', { name: 'User Token Mock' });
@@ -363,31 +393,25 @@ describe("GlobalHeader", () => {
       const { router } = renderComponent();
 
       // navigate away from welcome so we can test redirect on logout
-      router.stateService.go('user.user-token')
+      router.stateService.go('user.user-token');
       expect(await screen.findByRole('heading', { name: 'User Token Mock' })).toBeVisible();
 
       await assertBannerAndOpenUserProfileMenu();
       await assertRendersUserProfileDropDownCorrectlyForUserWithUserTokenAccess();
 
-      const logOutButton = screen.getByRole('button', { name: 'Log Out'});
+      const logOutButton = screen.getByRole('button', { name: 'Log Out' });
 
       expect(global.NX.Security.signOut).not.toHaveBeenCalled();
-
 
       await userEvent.click(logOutButton);
 
       expect(global.NX.Security.signOut).toHaveBeenCalled();
-
     });
   });
 
-  describe("Help Menu", () => {
+  describe('Help Menu', () => {
     it('renders correctly when opened', async () => {
-      givenExtJSState(
-          {},
-          "COMMUNITY",
-          'short-version',
-          givenSomeVersion)
+      givenExtJSState({}, 'COMMUNITY', 'short-version', givenSomeVersion);
 
       renderComponent();
 
@@ -398,47 +422,33 @@ describe("GlobalHeader", () => {
       expect(await screen.findByRole('button', { name: 'About' })).toBeVisible();
 
       assertHelpMenuLinkShownCorrectly(
-        "Documentation",
-        `https://links.sonatype.com/products/nexus/docs/3.2.4?${new URLSearchParams(
-          DocumentationUTMparams
-        ).toString()}`
+        'Documentation',
+        `https://links.sonatype.com/products/nexus/docs/3.2.4?${new URLSearchParams(DocumentationUTMparams).toString()}`
       );
 
       assertHelpMenuLinkShownCorrectly(
-        "Knowledge Base",
-        `https://links.sonatype.com/products/nexus/kb?${new URLSearchParams(
-          KnowledgeBaseUTMparams
-        ).toString()}`
+        'Knowledge Base',
+        `https://links.sonatype.com/products/nexus/kb?${new URLSearchParams(KnowledgeBaseUTMparams).toString()}`
       );
 
       assertHelpMenuLinkShownCorrectly(
-        "Sonatype Guides",
-        `https://links.sonatype.com/products/nxrm3/guides?${new URLSearchParams(
-          SonatypeGuidesUTMparams
-        ).toString()}`
+        'Sonatype Guides',
+        `https://links.sonatype.com/products/nxrm3/guides?${new URLSearchParams(SonatypeGuidesUTMparams).toString()}`
       );
 
       assertHelpMenuLinkShownCorrectly(
-        "Community",
-        `https://links.sonatype.com/products/nexus/community?${new URLSearchParams(
-          CommunityUTMparams
-        ).toString()}`
+        'Community',
+        `https://links.sonatype.com/products/nexus/community?${new URLSearchParams(CommunityUTMparams).toString()}`
       );
 
       assertHelpMenuLinkShownCorrectly(
-        "Issue Tracker",
-        `https://links.sonatype.com/products/nexus/issues?${new URLSearchParams(
-          IssueTrackerUTMparams
-        ).toString()}`
+        'Issue Tracker',
+        `https://links.sonatype.com/products/nexus/issues?${new URLSearchParams(IssueTrackerUTMparams).toString()}`
       );
     });
 
     it('about shows about modal', async () => {
-      givenExtJSState(
-          {},
-          "COMMUNITY",
-          'short-version',
-          givenSomeVersion)
+      givenExtJSState({}, 'COMMUNITY', 'short-version', givenSomeVersion);
 
       renderComponent();
 
@@ -446,7 +456,7 @@ describe("GlobalHeader", () => {
       expect(screen.getByRole('heading', { name: 'Nexus Repository Manager' })).toBeVisible();
       expect(screen.getByText(givenSomeVersion)).toBeVisible();
 
-      const aboutButton = await screen.findByRole('button', { name: 'About' })
+      const aboutButton = await screen.findByRole('button', { name: 'About' });
       expect(aboutButton).toBeVisible();
 
       expect(global.Ext.widget).not.toHaveBeenCalled();
@@ -466,22 +476,21 @@ describe("GlobalHeader", () => {
     }
 
     function assertHelpMenuLinkShownCorrectly(name, href) {
-      const lnk = screen.getByRole('link', {name});
+      const lnk = screen.getByRole('link', { name });
       expect(lnk).toBeVisible();
       expect(lnk.href).toEqual(href);
 
       // opens in new tab and protects against reverse tabnabbing
       expect(lnk.target).toEqual('_blank');
-      expect(lnk.rel).toEqual("noreferrer");
+      expect(lnk.rel).toEqual('noreferrer');
     }
   });
 
-  describe("Search", () => {
-    it("renders and takes user to the search page when invoked", async () => {
+  describe('Search', () => {
+    it('renders and takes user to the search page when invoked', async () => {
       // provide a mock return to make sure we don't call into real method which will cause errors that
       // may occur asynchronously during the next test
-      const extSearch = jest.spyOn(ExtJS, 'search')
-          .mockReturnValue(null);
+      const extSearch = jest.spyOn(ExtJS, 'search').mockReturnValue(null);
 
       givenPermissions({
         'nexus:search:read': true
@@ -489,7 +498,7 @@ describe("GlobalHeader", () => {
 
       givenBundleActiveStates({
         'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
-      })
+      });
 
       renderComponent();
 
@@ -499,15 +508,16 @@ describe("GlobalHeader", () => {
       const banner = screen.getByRole('banner');
       expect(banner).toBeVisible();
 
-      const searchInput = within(banner).getByRole('textbox', {name: 'Search components'});
+      const searchInput = within(banner).getByRole('textbox', { name: 'Search components' });
       expect(searchInput).toBeVisible();
 
       await userEvent.type(searchInput, 'my-search-input');
       await userEvent.type(searchInput, '{enter}');
 
       // navigates to search when not on search page
-      expect(await screen.findByRole('heading', { name: 'Search Mock -- =keyword%3Dmy-search-input' }))
-          .toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: 'Search Mock -- =keyword=my-search-input' })
+      ).toBeInTheDocument();
 
       // if already on the search page simply updates the existing ExtJs Search Component
       await userEvent.type(searchInput, 'more-text');
@@ -516,11 +526,10 @@ describe("GlobalHeader", () => {
       expect(extSearch).toHaveBeenCalled();
     });
 
-    it("does not render when the user to does not have permissions", async () => {
+    it('does not render when the user to does not have permissions', async () => {
       // provide a mock return to make sure we don't call into real method which will cause errors that
       // may occur asynchronously during the next test
-      const extSearch = jest.spyOn(ExtJS, 'search')
-          .mockReturnValue(null);
+      const extSearch = jest.spyOn(ExtJS, 'search').mockReturnValue(null);
 
       givenPermissions({
         'nexus:search:read': false
@@ -528,33 +537,33 @@ describe("GlobalHeader", () => {
 
       givenBundleActiveStates({
         'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
-      })
+      });
 
       renderComponent();
 
       // make sure we are starting from the welcome page and not the search page
-      expect(await screen.findByRole('heading', {name: 'Welcome Mock'})).toBeVisible();
+      expect(await screen.findByRole('heading', { name: 'Welcome Mock' })).toBeVisible();
 
       const banner = screen.getByRole('banner');
       expect(banner).toBeVisible();
 
-      expect(within(banner).queryByRole('textbox', {name: 'Search components'})).not.toBeInTheDocument();
+      expect(within(banner).queryByRole('textbox', { name: 'Search components' })).not.toBeInTheDocument();
     });
   });
 
-  describe("Refresh", () => {
+  describe('Refresh', () => {
     it('performs an appropriate refresh operation for a react rendered component', async () => {
       const { router } = renderComponent();
       jest.spyOn(router.stateService, 'reload');
       jest.spyOn(ExtJS, 'refresh').mockReturnValue(null);
 
-       const banner = screen.getByRole('banner');
-       expect(banner).toBeVisible();
-       const refreshButton = await assertButtonVisibleIn(banner, 'Refresh');
+      const banner = screen.getByRole('banner');
+      expect(banner).toBeVisible();
+      const refreshButton = await assertButtonVisibleIn(banner, 'Refresh');
 
-       await userEvent.click(refreshButton);
-       expect(ExtJS.refresh).not.toHaveBeenCalled();
-       expect(router.stateService.reload).toHaveBeenCalled();
+      await userEvent.click(refreshButton);
+      expect(ExtJS.refresh).not.toHaveBeenCalled();
+      expect(router.stateService.reload).toHaveBeenCalled();
     });
 
     it('performs an appropriate refresh operation for an extjs rendered component', async () => {
@@ -567,7 +576,7 @@ describe("GlobalHeader", () => {
       jest.spyOn(ExtJS, 'refresh').mockReturnValue(null);
 
       // make sure we are on the welcome page, other tests may have changed this
-      expect(await screen.findByRole('heading', { name: 'Welcome Mock'})).toBeVisible();
+      expect(await screen.findByRole('heading', { name: 'Welcome Mock' })).toBeVisible();
 
       const banner = screen.getByRole('banner');
       expect(banner).toBeVisible();
@@ -580,18 +589,19 @@ describe("GlobalHeader", () => {
   });
 
   function renderComponent() {
-    const router = getRouter()
+    const router = getRouter();
     const renderResults = render(
-        <UIRouter router={router}>
-          <GlobalHeader />
+      <UIRouter router={router}>
+        <GlobalHeader />
 
-          <UIView />
-        </UIRouter>);
+        <UIView />
+      </UIRouter>
+    );
 
     return {
       renderResults,
       router
-    }
+    };
   }
 
   async function assertAllButtonsShownForLoggedOutUser(parent) {
@@ -608,8 +618,7 @@ describe("GlobalHeader", () => {
   }
 
   async function assertButtonVisibleIn(parent, name) {
-    const button = await within(parent)
-        .findByRole('button', { name });
+    const button = await within(parent).findByRole('button', { name });
     expect(button).toBeVisible();
 
     return button;
@@ -621,10 +630,9 @@ describe("GlobalHeader", () => {
 
     // For some reason this returns multiple matches even though clearly only one is shown, I think this is a
     // quirk of how RSC renders the dom, to work around this for tesing we have to use getAllByRole
-    const logoImg = within(homeLink)
-        .getAllByRole('img', { name: 'Sonatype Nexus Repository Community' })
+    const logoImg = within(homeLink).getAllByRole('img', { name: 'Sonatype Nexus Repository Community' });
     expect(logoImg.length).toBeGreaterThan(0);
-    expect(logoImg[0]).toBeVisible()
+    expect(logoImg[0]).toBeVisible();
   }
 
   function assertProdEditionCompanyLogoShown(parent) {
@@ -633,10 +641,9 @@ describe("GlobalHeader", () => {
 
     // For some reason this returns multiple matches even though clearly only one is shown, I think this is a
     // quirk of how RSC renders the dom, to work around this for tesing we have to use getAllByRole
-    const logoImg = within(homeLink)
-        .getAllByRole('img', { name: 'Sonatype Nexus Repository Professional' })
+    const logoImg = within(homeLink).getAllByRole('img', { name: 'Sonatype Nexus Repository Professional' });
     expect(logoImg.length).toBeGreaterThan(0);
-    expect(logoImg[0]).toBeVisible()
+    expect(logoImg[0]).toBeVisible();
   }
 
   function assertCoreEditionCompanyLogoShown(parent) {
@@ -645,34 +652,33 @@ describe("GlobalHeader", () => {
 
     // For some reason this returns multiple matches even though clearly only one is shown, I think this is a
     // quirk of how RSC renders the dom, to work around this for tesing we have to use getAllByRole
-    const logoImg = within(homeLink)
-        .getAllByRole('img', { name: 'Sonatype Nexus Repository Core' })
+    const logoImg = within(homeLink).getAllByRole('img', { name: 'Sonatype Nexus Repository Core' });
     expect(logoImg.length).toBeGreaterThan(0);
-    expect(logoImg[0]).toBeVisible()
+    expect(logoImg[0]).toBeVisible();
   }
 
   function givenState(state = defaultState()) {
     jest.spyOn(ExtJS, 'useState').mockImplementation((keyFn) => {
       if (typeof keyFn === 'function') {
-        return state[keyFn()]
+        return state[keyFn()];
       } else {
-        return state[keyFn]
+        return state[keyFn];
       }
     });
   }
 
   function defaultState() {
     return {
-      ["COMMUNITY"]: "COMMUNITY",
+      ['COMMUNITY']: 'COMMUNITY',
       [versionKey]: givenSomeVersion,
       [hasUserKey]: false,
       [givenSomeVersion]: givenSomeVersion
-    }
+    };
   }
 
   function givenPermissions(permissionLookup) {
     global.NX.Permissions.check.mockImplementation((key) => {
-      return permissionLookup[key] ?? false
+      return permissionLookup[key] ?? false;
     });
   }
 
@@ -683,23 +689,26 @@ describe("GlobalHeader", () => {
       [hasUserKey]: true,
       [userKey]: givenUserName, // given a userName can be returned from ExtJS.useState
       // given pro edition
-      ["PRO"]: "PRO"
+      ['PRO']: 'PRO'
     });
 
-    givenPermissions({ 'nexus:usertoken-current:read': true })
+    givenPermissions({ 'nexus:usertoken-current:read': true });
 
     // given the userkey can be return from ExtState
-    givenExtJSState({
-      [extStateUserKey]: { id: userKey },
-      // given usertoken satesEnabled
-      ['usertoken']: true
-    }, "PRO");
+    givenExtJSState(
+      {
+        [extStateUserKey]: { id: userKey },
+        // given usertoken satesEnabled
+        ['usertoken']: true
+      },
+      'PRO'
+    );
 
     // given the bundle is active
     givenBundleActiveStates({
       'com.sonatype.nexus.plugins.nexus-usertoken-plugin': true,
       'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
-    })
+    });
 
     jest.spyOn(ExtJS, 'useUser').mockReturnValue(true);
 
@@ -719,8 +728,8 @@ describe("GlobalHeader", () => {
 
     await screen.findByRole('heading', { name: givenUserName });
 
-    expect(screen.getByRole('link', { name: 'My Account'})).toBeVisible();
-    expect(screen.getByRole('link', { name: 'NuGet API Key'})).toBeVisible();
+    expect(screen.getByRole('link', { name: 'My Account' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'NuGet API Key' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Log Out' })).toBeVisible();
     expect(screen.queryByRole('link', { name: 'User Token' })).not.toBeInTheDocument();
   }
@@ -731,8 +740,8 @@ describe("GlobalHeader", () => {
 
     await screen.findByRole('heading', { name: givenUserName });
 
-    expect(screen.getByRole('link', { name: 'My Account'})).toBeVisible();
-    expect(screen.getByRole('link', { name: 'NuGet API Key'})).toBeVisible();
+    expect(screen.getByRole('link', { name: 'My Account' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'NuGet API Key' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Log Out' })).toBeVisible();
     expect(screen.getByRole('link', { name: 'User Token' })).toBeVisible();
   }

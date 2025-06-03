@@ -28,6 +28,8 @@ Ext.define('NX.view.SecondaryContainer', {
 
   reactViewProps: null,
 
+  root: null,
+
   scrollable: true,
 
   cls: 'nxrm-secondary-container',
@@ -39,12 +41,13 @@ Ext.define('NX.view.SecondaryContainer', {
 
   initReactView: function() {
     const reactElement = react.createElement(this.reactView, this.reactViewProps, null);
-    ReactDOM.render(reactElement, this.getEl().dom);
+    this.root = window.createRoot(this.getEl().dom);
+    this.root.render(reactElement);
   },
 
   destroyReactView: function() {
-    if (this.reactView) {
-      ReactDOM.unmountComponentAtNode(this.getEl().dom);
+    if (this.reactView && this.root) {
+      this.root.unmount();
     }
   },
 

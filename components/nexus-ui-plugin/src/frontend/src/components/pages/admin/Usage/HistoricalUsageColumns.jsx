@@ -36,14 +36,20 @@ export const historicalUsageColumns = {
   peakComponents: {
     key: 'peakComponents',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.PEAK_COMPONENTS}</>,
-    Cell: (item) => <>{item.componentCount.toLocaleString()}</>
+    Cell: (item) =>
+      item.componentCount === 'N/A'
+        ? 'N/A'
+        : item.componentCount.toLocaleString()
   },
   percentageChangeComponent: {
     key: 'percentageChangeComponent',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.COMPONENTS_CHANGE}</>,
     Cell: (item) => (
       <>
-        <ChangeIcon value={item.percentageChangeComponent} /> {formatPercentage(item.percentageChangeComponent)}
+        <ChangeIcon value={item.percentageChangeComponent} />
+        {item.percentageChangeComponent === 'N/A'
+          ? 'N/A'
+          : formatPercentage(item.percentageChangeComponent)}
       </>
     ),
     tooltip: UIStrings.HISTORICAL_USAGE.COMPONENTS_CHANGE_TOOLTIP
@@ -51,14 +57,20 @@ export const historicalUsageColumns = {
   totalRequests: {
     key: 'totalRequests',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.TOTAL_REQUESTS}</>,
-    Cell: (item) => <>{item.requestCount.toLocaleString()}</>
+    Cell: (item) =>
+      item.requestCount === 'N/A'
+        ? 'N/A'
+        : item.requestCount.toLocaleString()
   },
   percentageChangeRequests: {
     key: 'percentageChangeRequests',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.REQUESTS_CHANGE}</>,
     Cell: (item) => (
       <>
-        <ChangeIcon value={item.percentageChangeRequest} /> {formatPercentage(item.percentageChangeRequest)}
+        <ChangeIcon value={item.percentageChangeRequest} />
+        {item.percentageChangeRequest === 'N/A'
+          ? 'N/A'
+          : formatPercentage(item.percentageChangeRequest)}
       </>
     ),
     tooltip: UIStrings.HISTORICAL_USAGE.REQUESTS_CHANGE_TOOLTIP
@@ -66,7 +78,10 @@ export const historicalUsageColumns = {
   totalEgress: {
     key: 'responseSize',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.TOTAL_EGRESS}</>,
-    Cell: (item) => <>{HumanReadableUtils.bytesToString(item.responseSize)}</>,
+    Cell: (item) =>
+      item.responseSize === 'N/A'
+        ? 'N/A'
+        : HumanReadableUtils.bytesToString(item.responseSize),
     tooltip: UIStrings.HISTORICAL_USAGE.TOTAL_EGRESS_TOOLTIP
   },
   percentageChangeEgress: {
@@ -74,7 +89,10 @@ export const historicalUsageColumns = {
     Header: () => <>{UIStrings.HISTORICAL_USAGE.EGRESS_CHANGE}</>,
     Cell: (item) => (
       <>
-        <ChangeIcon value={item.percentageChangeEgress} /> {formatPercentage(item.percentageChangeEgress)}
+        <ChangeIcon value={item.percentageChangeEgress} />
+        {item.percentageChangeEgress === 'N/A'
+          ? 'N/A'
+          : formatPercentage(item.percentageChangeEgress)}
       </>
     ),
     tooltip: UIStrings.HISTORICAL_USAGE.EGRESS_CHANGE_TOOLTIP
@@ -82,14 +100,20 @@ export const historicalUsageColumns = {
   peakStorage: {
     key: 'peakStorage',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.PEAK_STORAGE}</>,
-    Cell: (item) => <>{HumanReadableUtils.bytesToString(item.peakStorage)}</>
+    Cell: (item) =>
+      item.peakStorage === 'N/A'
+        ? 'N/A'
+        : HumanReadableUtils.bytesToString(item.peakStorage)
   },
   percentageChangeStorage: {
     key: 'percentageChangeStorage',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.STORAGE_CHANGE}</>,
     Cell: (item) => (
       <>
-        <ChangeIcon value={item.percentageChangeStorage} /> {formatPercentage(item.percentageChangeStorage)}
+        <ChangeIcon value={item.percentageChangeStorage} />
+        {item.percentageChangeStorage === 'N/A'
+          ? 'N/A'
+          : formatPercentage(item.percentageChangeStorage)}
       </>
     ),
     tooltip: UIStrings.HISTORICAL_USAGE.STORAGE_CHANGE_TOOLTIP

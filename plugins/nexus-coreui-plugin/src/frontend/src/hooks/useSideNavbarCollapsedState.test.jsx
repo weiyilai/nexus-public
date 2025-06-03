@@ -11,7 +11,7 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import useSideNavbarCollapsedState from './useSideNavbarCollapsedState';
-import { act, renderHook } from '@testing-library/react-hooks';
+import { act, renderHook } from '@testing-library/react';
 
 // Setup transition capture
 let transitionSuccessCallback = null;
@@ -21,13 +21,13 @@ jest.mock('@uirouter/react', () => ({
     if (hookName === 'onSuccess') {
       transitionSuccessCallback = callback;
     }
-  },
+  }
 }));
 
 // Create fake transition objects
 const createMockTransition = (from, to) => ({
   from: () => ({ name: from }),
-  to: () => ({ name: to }),
+  to: () => ({ name: to })
 });
 
 describe('useSideNavbarCollapsedState', () => {

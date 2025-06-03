@@ -14,8 +14,8 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import '@testing-library/jest-dom/extend-expect';
-import {ExtJS} from '@sonatype/nexus-ui-plugin';
+import '@testing-library/jest-dom';
+import { ExtJS } from '@sonatype/nexus-ui-plugin';
 
 jest.mock('axios', () => ({
   ...jest.requireActual('axios'), // Use most functions from actual axios
@@ -26,13 +26,12 @@ jest.mock('axios', () => ({
   all: jest.fn().mockImplementation((requests) => Promise.all(requests))
 }));
 
-
 let lastValue = 0;
 
 window.crypto = {
   getRandomValues: function (buffer) {
     buffer.fill(lastValue++);
-  },
+  }
 };
 
 window.plugins = [];
@@ -42,7 +41,6 @@ window.ResizeObserver = jest.fn().mockReturnValue({
   observe: jest.fn(),
   unobserve: jest.fn()
 });
-
 
 global.Ext = {
   getApplication: jest.fn().mockReturnValue({
@@ -67,12 +65,12 @@ global.Ext = {
     }
   }),
   widget: jest.fn()
-}
+};
 
 global.NX = {
   Messages: {
     success: jest.fn(),
-    error: jest.fn(),
+    error: jest.fn()
   },
   Permissions: {
     check: jest.fn()
@@ -107,18 +105,16 @@ Range.prototype.getBoundingClientRect = jest.fn(() => {
 
 const getHeight = (el) => {
   const isContainer = el.classList.contains('nx-transfer-list__item-list'),
-      isItem = el.classList.contains('nx-transfer-list__item'),
-      height = isContainer ? 520 :
-          isItem ? 40 :
-              0;
+    isItem = el.classList.contains('nx-transfer-list__item'),
+    height = isContainer ? 520 : isItem ? 40 : 0;
   return height;
 };
 
-Element.prototype.getBoundingClientRect = jest.fn().mockImplementation(function() {
+Element.prototype.getBoundingClientRect = jest.fn().mockImplementation(function () {
   const height = getHeight(this),
-      siblingItems = this.parentElement?.children ?? [],
-      idx = Array.prototype.indexOf.call(siblingItems, this),
-      top = 40 * idx;
+    siblingItems = this.parentElement?.children ?? [],
+    idx = Array.prototype.indexOf.call(siblingItems, this),
+    top = 40 * idx;
 
   return {
     bottom: 0,
@@ -130,7 +126,7 @@ Element.prototype.getBoundingClientRect = jest.fn().mockImplementation(function(
   };
 });
 
-jest.spyOn(Element.prototype, 'clientHeight', 'get').mockImplementation(function() {
+jest.spyOn(Element.prototype, 'clientHeight', 'get').mockImplementation(function () {
   return getHeight(this);
 });
 

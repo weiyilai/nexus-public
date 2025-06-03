@@ -12,13 +12,13 @@
  */
 import React from 'react';
 import axios from 'axios';
-import {render, screen} from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import LogViewer from './LogViewer';
 import UIStrings from '../../../../constants/UIStrings';
 import TestUtils from '@sonatype/nexus-ui-plugin/src/frontend/src/interface/TestUtils';
 
-const {VIEW} = UIStrings.LOGS;
+const { VIEW } = UIStrings.LOGS;
 
 jest.mock('axios', () => ({
   ...jest.requireActual('axios'),
@@ -29,21 +29,23 @@ jest.mock('axios', () => ({
 jest.mock('@sonatype/nexus-ui-plugin', () => ({
   ...jest.requireActual('@sonatype/nexus-ui-plugin'),
   ExtJS: {
-    urlOf: jest.fn().mockImplementation(() => 'service/rest/internal/logging/logs/test'),
-  },
+    urlOf: jest.fn().mockImplementation(() => 'service/rest/internal/logging/logs/test')
+  }
 }));
 
 describe('LogViewer', () => {
   const renderView = async (itemId, logs) => {
-    axios.get.mockReturnValue(Promise.resolve({data: logs}));
-    return render(<LogViewer itemId={itemId}/>);
+    axios.get.mockReturnValue(Promise.resolve({ data: logs }));
+    return render(<LogViewer itemId={itemId} />);
   };
 
   it('has the correct logs', async () => {
-    const {container} = await renderView('test', 'This is a test log');
+    const { container } = await renderView('test', 'This is a test log');
 
     const logs = container.querySelector('.log-viewer-textarea');
-    expect(logs).toHaveTextContent('This is a test log');
+    await waitFor(() => {
+      expect(logs).toHaveTextContent('This is a test log');
+    });
   });
 
   it('has the download button available', async () => {
@@ -82,15 +84,15 @@ describe('LogViewer', () => {
   });
 
   it('updates the marker after inserting', async () => {
-    const {container} = await renderView('nexus.log', 'This is a test log');
-    const marker = () => screen.getByRole('textbox', {name: 'Marker to insert into log'});
+    const { container } = await renderView('nexus.log', 'This is a test log');
+    const marker = () => screen.getByRole('textbox', { name: 'Marker to insert into log' });
     const insertButton = container.querySelector('.nx-btn#insertMark');
 
     await TestUtils.changeField(marker, 'testing the mark');
     userEvent.click(insertButton);
 
-    expect(axios.post).toHaveBeenCalledWith(
-      'service/rest/internal/logging/log/mark',
-      'testing the mark', {headers: {'Content-Type': 'text/plain'}});
+    expect(axios.post).toHaveBeenCalledWith('service/rest/internal/logging/log/mark', 'testing the mark', {
+      headers: { 'Content-Type': 'text/plain' }
+    });
   });
 });

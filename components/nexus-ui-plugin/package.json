@@ -3,9 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "main": "target/dist/index.js",
-  "files": [
-    "target/dist"
-  ],
+  "files": ["target/dist"],
   "scripts": {
     "build": "npm-run-all build-all",
     "build-all": "npm-run-all lint format compile-js copy-scss copy-package-json",
@@ -29,14 +27,13 @@
     "@fortawesome/fontawesome-svg-core": "1.2.25",
     "@fortawesome/free-solid-svg-icons": "5.11.2",
     "@fortawesome/react-fontawesome": "0.1.4",
-    "@sonatype/react-shared-components": "13.5.2",
-    "@uirouter/react": "1.0.7",
+    "@sonatype/react-shared-components": "14.0.3",
     "classnames": "2.3.1",
     "file-size": "1.0.0",
     "node-gyp": "8.1.0",
     "ramda": "0.28.0",
-    "react": "17.0.2",
-    "react-dom": "17.0.2"
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
     "@babel/cli": "7.17.6",
@@ -45,8 +42,9 @@
     "@babel/preset-env": "7.16.11",
     "@babel/preset-react": "7.16.7",
     "@biomejs/biome": "1.9.4",
-    "@testing-library/jest-dom": "5.17.0",
-    "@testing-library/react": "12.1.2",
+    "@testing-library/dom": "10.4.0",
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "16.3.0",
     "@testing-library/user-event": "12.8.3",
     "cpx": "1.5.0",
     "eslint": "9.26.0",
@@ -54,14 +52,13 @@
     "jest-junit": "15.0.0",
     "npm-run-all": "4.1.5",
     "prop-types": "15.7.2",
-    "react-test-renderer": "16.14.0",
+    "react-test-renderer": "19.1.0",
     "xstate": "4.38.3"
   },
   "peerDependencies": {
-    "@sonatype/react-shared-components": "13.5.2",
-    "@uirouter/react": "1.0.7",
-    "react": "16.14.0",
-    "react-dom": "16.14.0",
+    "@sonatype/react-shared-components": "14.0.3",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
     "xstate": "4.38.3"
   },
   "jest-junit": {

@@ -11,7 +11,7 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { UIRouter, UIView } from '@uirouter/react';
 import { ExtJS, UnsavedChangesModal } from '@sonatype/nexus-ui-plugin';
 
@@ -42,8 +42,8 @@ export function App() {
 
       {headerEnabled && (
         <div
-          className='nxrm-branding-header'
-          data-testid='nxrm-branding-header'
+          className="nxrm-branding-header"
+          data-testid="nxrm-branding-header"
           dangerouslySetInnerHTML={{ __html: headerHtml }}
         />
       )}
@@ -60,8 +60,8 @@ export function App() {
 
       {footerEnabled && (
         <div
-          className='nxrm-branding-footer'
-          data-testid='nxrm-branding-footer'
+          className="nxrm-branding-footer"
+          data-testid="nxrm-branding-footer"
           dangerouslySetInnerHTML={{ __html: footerHtml }}
         />
       )}
@@ -74,10 +74,10 @@ ExtJS.waitForExtJs(() => {
   const el = document.createElement('div');
   el.className = 'nx-page nxrm-page';
   document.body.appendChild(el);
-  ReactDOM.render(
+  const root = createRoot(el);
+  root.render(
     <UIRouter router={router}>
       <App />
-    </UIRouter>,
-    el
+    </UIRouter>
   );
 });

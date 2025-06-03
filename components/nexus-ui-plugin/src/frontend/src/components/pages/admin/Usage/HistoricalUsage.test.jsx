@@ -11,14 +11,13 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import Axios from 'axios';
 import HistoricalUsage from './HistoricalUsage';
 import TestUtils from '@sonatype/nexus-ui-plugin/src/frontend/src/interface/TestUtils';
-import {historicalUsageColumns} from "./HistoricalUsageColumns";
+import { historicalUsageColumns } from './HistoricalUsageColumns';
 
 describe('Licensing Historical Usage', () => {
-
   const requiredColumns = [
     historicalUsageColumns.metricDateMonth,
     historicalUsageColumns.peakComponents,
@@ -30,26 +29,26 @@ describe('Licensing Historical Usage', () => {
   ];
 
   async function renderView() {
-    return render(<HistoricalUsage columns={requiredColumns}/>);
+    return render(<HistoricalUsage columns={requiredColumns} />);
   }
 
   it('renders the title and description', async () => {
     await renderView();
 
-    expect(screen.getByRole('heading', { name: "Historical Usage" })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Historical Usage' })).toBeInTheDocument();
     expect(screen.getByText('Monitor your repository usage trends over time.')).toBeInTheDocument();
   });
 
   it('renders the table headers correctly', async () => {
     await renderView();
 
-    expect(screen.getByText("Month")).toBeInTheDocument();
-    expect(screen.getByText("Peak Components")).toBeInTheDocument();
-    expect(screen.getByText("Components % Change")).toBeInTheDocument();
-    expect(screen.getByText("Total Requests")).toBeInTheDocument();
-    expect(screen.getByText("Requests % Change")).toBeInTheDocument();
-    expect(screen.getByText("Peak Storage")).toBeInTheDocument();
-    expect(screen.getByText("Total Egress")).toBeInTheDocument();
+    expect(screen.getByText('Month')).toBeInTheDocument();
+    expect(screen.getByText('Peak Components')).toBeInTheDocument();
+    expect(screen.getByText('Components % Change')).toBeInTheDocument();
+    expect(screen.getByText('Total Requests')).toBeInTheDocument();
+    expect(screen.getByText('Requests % Change')).toBeInTheDocument();
+    expect(screen.getByText('Peak Storage')).toBeInTheDocument();
+    expect(screen.getByText('Total Egress')).toBeInTheDocument();
   });
 
   it('renders data rows correctly', async () => {
@@ -61,7 +60,7 @@ describe('Licensing Historical Usage', () => {
         requestCount: 2000,
         percentageChangeRequest: -5,
         peakStorage: 1073741824,
-        responseSize: 536870912,
+        responseSize: 536870912
       }
     ];
 
@@ -69,13 +68,15 @@ describe('Licensing Historical Usage', () => {
 
     await renderView();
 
-    expect(screen.getByText("Nov 2024")).toBeInTheDocument();
-    expect(screen.getByText("1,000")).toBeInTheDocument();
-    expect(screen.getByText("10%")).toBeInTheDocument();
-    expect(screen.getByText("2,000")).toBeInTheDocument();
-    expect(screen.getByText("5%")).toBeInTheDocument();
-    expect(screen.getByText("1.00 GB")).toBeInTheDocument();
-    expect(screen.getByText("512.00 MB")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Nov 2024')).toBeInTheDocument();
+      expect(screen.getByText('1,000')).toBeInTheDocument();
+      expect(screen.getByText('10%')).toBeInTheDocument();
+      expect(screen.getByText('2,000')).toBeInTheDocument();
+      expect(screen.getByText('5%')).toBeInTheDocument();
+      expect(screen.getByText('1.00 GB')).toBeInTheDocument();
+      expect(screen.getByText('512.00 MB')).toBeInTheDocument();
+    });
   });
 
   it('renders change icons correctly', async () => {
@@ -87,14 +88,14 @@ describe('Licensing Historical Usage', () => {
         requestCount: 2000,
         percentageChangeRequest: -5,
         peakStorage: 1073741824,
-        responseSize: 536870912,
+        responseSize: 536870912
       }
     ];
 
     jest.spyOn(Axios, 'get').mockResolvedValue({ data: mockData });
 
-    const {container} = await renderView();
-    
+    const { container } = await renderView();
+
     const icon = container.querySelector('[data-icon="info-circle"]');
 
     await TestUtils.expectToSeeTooltipOnHover(icon, 'Change rate of the peak component count from the previous month.');
@@ -109,21 +110,25 @@ describe('Licensing Historical Usage', () => {
         requestCount: 'N/A',
         percentageChangeRequest: 'N/A',
         peakStorage: 'N/A',
-        responseSize: 'N/A',
+        responseSize: 'N/A'
       }
     ];
 
     jest.spyOn(Axios, 'get').mockResolvedValue({ data: mockData });
 
     await renderView();
-
-    expect(screen.getAllByText('N/A')[0]).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByText('N/A')[0]).toBeInTheDocument();
+    });
   });
 
   it('renders the components change tooltip correctly', async () => {
     await renderView();
 
-    const componentsChangeTooltipTrigger = screen.getByText("Components % Change").closest('th').querySelector('[data-icon="info-circle"]');
+    const componentsChangeTooltipTrigger = screen
+      .getByText('Components % Change')
+      .closest('th')
+      .querySelector('[data-icon="info-circle"]');
     expect(componentsChangeTooltipTrigger).toBeInTheDocument();
 
     await TestUtils.expectToSeeTooltipOnHover(
@@ -135,7 +140,10 @@ describe('Licensing Historical Usage', () => {
   it('renders the requests change tooltip correctly', async () => {
     await renderView();
 
-    const requestsChangeTooltipTrigger = screen.getByText("Requests % Change").closest('th').querySelector('[data-icon="info-circle"]');
+    const requestsChangeTooltipTrigger = screen
+      .getByText('Requests % Change')
+      .closest('th')
+      .querySelector('[data-icon="info-circle"]');
     expect(requestsChangeTooltipTrigger).toBeInTheDocument();
 
     await TestUtils.expectToSeeTooltipOnHover(
@@ -147,7 +155,10 @@ describe('Licensing Historical Usage', () => {
   it('renders the egress tooltip correctly', async () => {
     await renderView();
 
-    const egressTooltipTrigger = screen.getByText("Total Egress").closest('th').querySelector('[data-icon="info-circle"]');
+    const egressTooltipTrigger = screen
+      .getByText('Total Egress')
+      .closest('th')
+      .querySelector('[data-icon="info-circle"]');
     expect(egressTooltipTrigger).toBeInTheDocument();
 
     await TestUtils.expectToSeeTooltipOnHover(

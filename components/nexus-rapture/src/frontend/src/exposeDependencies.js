@@ -17,14 +17,14 @@
 import axios from 'axios';
 import * as rsc from '@sonatype/react-shared-components';
 import React from 'react';
-import ReactDOM from 'react-dom';
+import {createRoot} from 'react-dom/client';
 import * as xstate from 'xstate';
 import * as luxon from 'luxon';
 
 export default function exposeDependencies() {
   window.axios = axios;
   window.react = React;
-  window.ReactDOM = ReactDOM;
+  window.createRoot = createRoot;
   window.xstate = xstate;
   window.luxon = luxon;
   window.rsc = rsc;
