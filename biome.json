@@ -8,12 +8,11 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["target/**", "node_modules/**"]
+    "ignore": ["target/**", "node_modules/**", "src/main/**"]
   },
   "formatter": {
-    "enabled": true,
+    "enabled": false,
     "indentStyle": "space",
-
     "lineWidth": 120
   },
   "organizeImports": {
@@ -27,6 +26,11 @@
     "formatter": {
       "quoteStyle": "single",
       "trailingCommas": "none"
+    }
+  },
+  "json": {
+    "formatter": {
+      "enabled": false
     }
   }
 }
