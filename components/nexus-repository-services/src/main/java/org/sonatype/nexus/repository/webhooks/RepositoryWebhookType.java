@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.webhooks;
+package org.sonatype.nexus.repository.webhooks;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -25,10 +25,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Target({FIELD, METHOD, PARAMETER, ANNOTATION_TYPE})
 @Retention(RUNTIME)
-@Constraint(validatedBy = GlobalWebhookTypeValidator.class)
-public @interface GlobalWebhookType
+@Constraint(validatedBy = RepositoryWebhookTypeValidator.class)
+public @interface RepositoryWebhookType
 {
-  String message() default "Incorrect global webhook type";
+  String message() default "Incorrect repository webhook type";
 
   Class<?>[] groups() default {};
 

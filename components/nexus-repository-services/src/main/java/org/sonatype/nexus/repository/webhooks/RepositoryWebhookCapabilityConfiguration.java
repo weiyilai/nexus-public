@@ -18,6 +18,8 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import org.sonatype.nexus.capability.CapabilityConfigurationSupport;
+import org.sonatype.nexus.repository.config.RepositoryName;
+import org.sonatype.nexus.validation.constraint.Url;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -34,10 +36,13 @@ public class RepositoryWebhookCapabilityConfiguration
 
   static final String P_SECRET = "secret";
 
+  @RepositoryName
   String repository;
 
+  @RepositoryWebhookType
   List<String> names;
 
+  @Url
   URI url;
 
   @Nullable

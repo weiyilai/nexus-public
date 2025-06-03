@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.webhooks;
+package org.sonatype.nexus.repository.webhooks;
 
 import java.util.List;
 import java.util.Set;
@@ -20,17 +20,16 @@ import javax.inject.Named;
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
-import org.sonatype.nexus.webhooks.GlobalWebhook;
 
 @Named
-public class GlobalWebhookTypeValidator
-    extends ConstraintValidatorSupport<GlobalWebhookType, List<String>>
+public class RepositoryWebhookTypeValidator
+    extends ConstraintValidatorSupport<RepositoryWebhookType, List<String>>
 {
-  private final List<GlobalWebhook> globalWebhooks;
+  private final List<RepositoryWebhook> repositoryWebhooks;
 
   @Inject
-  public GlobalWebhookTypeValidator(final List<GlobalWebhook> globalWebhooks) {
-    this.globalWebhooks = globalWebhooks;
+  public RepositoryWebhookTypeValidator(final List<RepositoryWebhook> repositoryWebhooks) {
+    this.repositoryWebhooks = repositoryWebhooks;
   }
 
   @Override
@@ -40,7 +39,7 @@ public class GlobalWebhookTypeValidator
     }
 
     Set<String> webhookNames =
-        globalWebhooks.stream().map(GlobalWebhook::getName).collect(Collectors.toUnmodifiableSet());
+        repositoryWebhooks.stream().map(RepositoryWebhook::getName).collect(Collectors.toUnmodifiableSet());
     // Check if all names in the provided list are valid webhook names
     return webhookNames.containsAll(names);
   }
