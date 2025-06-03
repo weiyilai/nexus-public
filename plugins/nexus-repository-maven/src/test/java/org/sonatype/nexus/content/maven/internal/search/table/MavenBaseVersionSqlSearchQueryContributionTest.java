@@ -52,6 +52,6 @@ public class MavenBaseVersionSqlSearchQueryContributionTest
 
     assertTrue(result.isPresent());
 
-    assertThat(result.get(), is(new SqlPredicate(Operand.EQ, SearchField.FORMAT_FIELD_1, new ExactTerm("/" + baseVersion))));
+    assertThat(result.get(), is(new SqlPredicate(Operand.EQ, SearchField.FORMAT_FIELD_1, new ExactTerm(baseVersion))));
   }
 }

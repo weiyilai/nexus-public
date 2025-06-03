@@ -54,6 +54,6 @@ public class MavenBaseVersionSqlSearchQueryContribution
 
   @Override
   protected StringTerm createMatchTerm(final boolean exact, final String match) {
-    return new ExactTerm("/" + match);
+    return new ExactTerm(match);
   }
 }
