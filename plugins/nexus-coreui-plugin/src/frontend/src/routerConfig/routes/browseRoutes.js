@@ -94,7 +94,6 @@ export const browseRoutes = [
     },
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
       },
     },
@@ -112,7 +111,6 @@ export const browseRoutes = [
     },
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
       },
     },
@@ -123,7 +121,6 @@ export const browseRoutes = [
     component: SearchAptExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'apt',
       },
@@ -142,7 +139,6 @@ export const browseRoutes = [
     component: SearchCargoExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'cargo',
       },
@@ -161,7 +157,6 @@ export const browseRoutes = [
     component: SearchCocoapodsExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'cocoapods',
       },
@@ -180,7 +175,6 @@ export const browseRoutes = [
     component: SearchComposerExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'composer',
       },
@@ -199,7 +193,6 @@ export const browseRoutes = [
     component: SearchConanExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'conan',
       },
@@ -218,7 +211,6 @@ export const browseRoutes = [
     component: SearchCondaExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'conda',
       },
@@ -237,7 +229,6 @@ export const browseRoutes = [
     component: SearchDockerExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'docker',
       },
@@ -256,7 +247,6 @@ export const browseRoutes = [
     component: SearchGitLfsExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'gitlfs',
       },
@@ -275,7 +265,6 @@ export const browseRoutes = [
     component: SearchGolangExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'go',
       },
@@ -294,7 +283,6 @@ export const browseRoutes = [
     component: SearchHelmExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'helm',
       },
@@ -313,7 +301,6 @@ export const browseRoutes = [
     component: SearchHuggingFaceExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'huggingface',
       },
@@ -332,7 +319,6 @@ export const browseRoutes = [
     component: SearchMavenExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'maven2',
       },
@@ -351,7 +337,6 @@ export const browseRoutes = [
     component: SearchNpmExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'npm',
       },
@@ -370,7 +355,6 @@ export const browseRoutes = [
     component: SearchNugetExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'nuget',
       },
@@ -389,7 +373,6 @@ export const browseRoutes = [
     component: SearchP2Ext,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'p2',
       },
@@ -408,7 +391,6 @@ export const browseRoutes = [
     component: SearchPypiExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'pypi',
       },
@@ -427,7 +409,6 @@ export const browseRoutes = [
     component: SearchRExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'r',
       },
@@ -446,7 +427,6 @@ export const browseRoutes = [
     component: SearchRawExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'raw',
       },
@@ -465,7 +445,6 @@ export const browseRoutes = [
     component: SearchRubygemsExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'rubygems',
       },
@@ -484,7 +463,6 @@ export const browseRoutes = [
     component: SearchYumExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: ['nexus:search:read'],
         browseableFormat: 'yum',
       },
@@ -503,7 +481,6 @@ export const browseRoutes = [
     component: BrowseReactExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         statesEnabled: [
           {
             key: 'browseableformats',
@@ -525,7 +502,6 @@ export const browseRoutes = [
     component: UIView,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.COMPONENT.CREATE],
       },
     },
@@ -546,7 +522,6 @@ export const browseRoutes = [
     component: Tags,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.TAGS.READ],
         editions: ['PRO'],
       },
@@ -565,7 +540,6 @@ export const browseRoutes = [
     component: MalwareRemediation,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.ADMIN],
         statesEnabled: [
           {

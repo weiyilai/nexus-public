@@ -41,7 +41,6 @@ export const userRoutes = [
     component: UserAccount,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         requiresUser: true,
       }
     },
@@ -53,7 +52,6 @@ export const userRoutes = [
     component: NuGetApiToken,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         requiresUser: true,
       }
     },

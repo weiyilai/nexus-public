@@ -175,7 +175,6 @@ export const adminRoutes = [
     component: UIView,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.SELECTORS.READ],
       }
     }
@@ -199,7 +198,6 @@ export const adminRoutes = [
     component: ContentSelectorsDetails,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.SELECTORS.CREATE],
       }
     }
@@ -210,7 +208,6 @@ export const adminRoutes = [
     component: UIView,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.ADMIN]
       }
     }
@@ -240,7 +237,6 @@ export const adminRoutes = [
     component: UIView,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.ADMIN]
       }
     }
@@ -289,7 +285,6 @@ export const adminRoutes = [
     component: UIView,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.PRIVILEGES.READ]
       }
     },
@@ -313,7 +308,6 @@ export const adminRoutes = [
     component: PrivilegesDetails,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.PRIVILEGES.CREATE]
       }
     },
@@ -325,7 +319,6 @@ export const adminRoutes = [
     component: UIView,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.ROLES.READ, Permissions.PRIVILEGES.READ]
       }
     },
@@ -349,7 +342,6 @@ export const adminRoutes = [
     component: RolesDetails,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.ROLES.READ, Permissions.PRIVILEGES.READ]
       }
     },
@@ -360,7 +352,6 @@ export const adminRoutes = [
     component: UIView,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.SSL_TRUSTSTORE.READ]
       }
     }
@@ -378,7 +369,6 @@ export const adminRoutes = [
     component: SslCertificatesAddForm,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.SSL_TRUSTSTORE.CREATE]
       }
     }
@@ -396,7 +386,6 @@ export const adminRoutes = [
     component: LdapServersExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.LDAP.READ]
       }
     },
@@ -415,7 +404,6 @@ export const adminRoutes = [
     component: UsersExt,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.USERS.READ, Permissions.ROLES.READ]
       }
     },
@@ -434,7 +422,6 @@ export const adminRoutes = [
     component: AnonymousSettings,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.SETTINGS.READ]
       }
     }
@@ -446,7 +433,6 @@ export const adminRoutes = [
     component: Realms,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.SETTINGS.READ]
       }
     }
@@ -520,7 +506,6 @@ export const adminRoutes = [
     component: SupportRequest,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.ATLAS.CREATE],
         editions: ['PRO']
       }
@@ -533,7 +518,6 @@ export const adminRoutes = [
     component: SystemInformation,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.ATLAS.READ]
       }
     }
@@ -545,7 +529,6 @@ export const adminRoutes = [
     component: MetricHealth,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.METRICS.READ]
       }
     },
@@ -564,7 +547,6 @@ export const adminRoutes = [
     component: SupportZip,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.ATLAS.READ]
       }
     }
@@ -576,7 +558,6 @@ export const adminRoutes = [
     component: Logs,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.LOGGING.READ],
         notClustered: true
       }
@@ -596,7 +577,6 @@ export const adminRoutes = [
     component: UIView,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.LOGGING.READ],
       }
     },
@@ -620,7 +600,6 @@ export const adminRoutes = [
     component: LoggingConfigurationForm,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.LOGGING.UPDATE],
       }
     },
@@ -652,7 +631,6 @@ export const adminRoutes = [
     },
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.TASKS.READ]
       }
     }
@@ -693,7 +671,6 @@ export const adminRoutes = [
     component: EmailServer,
     data: {
       visibilityRequirements: {
-        bundle: 'org.sonatype.nexus.plugins.nexus-coreui-plugin',
         permissions: [Permissions.SETTINGS.READ]
       }
     }

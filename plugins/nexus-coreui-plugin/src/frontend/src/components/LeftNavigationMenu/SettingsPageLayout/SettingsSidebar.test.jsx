@@ -124,14 +124,6 @@ describe('SettingsSidebar', () => {
           renderComponent();
           await assertLinkNotVisible('Data Store', 'Repository');
         });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:*': true });
-          givenActiveBundles({});
-          renderComponent();
-          await assertLinkNotVisible('Data Store', 'Repository');
-        });
       });
 
       describe('proprietary repositories link', () => {
@@ -162,14 +154,6 @@ describe('SettingsSidebar', () => {
           renderComponent();
           await assertLinkNotVisible('Content Selectors', 'Repository');
         });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:selectors:read': true });
-          givenActiveBundles({});
-          renderComponent();
-          await assertLinkNotVisible('Content Selectors', 'Repository');
-        });
       });
 
       describe('cleanup policies link', () => {
@@ -185,14 +169,6 @@ describe('SettingsSidebar', () => {
           renderComponent();
           await assertLinkNotVisible('Cleanup Policies', 'Repository');
         });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:*': true });
-          givenActiveBundles({});
-          renderComponent();
-          await assertLinkNotVisible('Cleanup Policies', 'Repository');
-        });
       });
 
       describe('routing rules link', () => {
@@ -205,14 +181,6 @@ describe('SettingsSidebar', () => {
 
         it('should not render if user has no permission', async () => {
           givenUserLoggedIn();
-          renderComponent();
-          await assertLinkNotVisible('Routing Rules', 'Repository');
-        });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:*': true });
-          givenActiveBundles({});
           renderComponent();
           await assertLinkNotVisible('Routing Rules', 'Repository');
         });
@@ -249,14 +217,6 @@ describe('SettingsSidebar', () => {
           renderComponent();
           await assertLinkNotVisible('Privileges', 'Security');
         });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:privileges:read': true });
-          givenActiveBundles({});
-          renderComponent();
-          await assertLinkNotVisible('Privileges', 'Security');
-        });
       });
 
       describe('roles link', () => {
@@ -280,14 +240,6 @@ describe('SettingsSidebar', () => {
           renderComponent();
           await assertLinkNotVisible('Roles', 'Security');
         });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:privileges:read': true, 'nexus:roles:read': true });
-          givenActiveBundles({});
-          renderComponent();
-          await assertLinkNotVisible('Roles', 'Security');
-        });
       });
 
       describe('SslCertificates link', () => {
@@ -303,14 +255,6 @@ describe('SettingsSidebar', () => {
           renderComponent();
           await assertLinkNotVisible('SSL Certificates', 'Security');
         });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:ssl-truststore:read': true });
-          givenActiveBundles({});
-          renderComponent();
-          await assertLinkNotVisible('SSL Certificates', 'Security');
-        });
       });
 
       describe('ldap link', () => {
@@ -323,14 +267,6 @@ describe('SettingsSidebar', () => {
 
         it('should not render if user has no roles permission', async () => {
           givenUserLoggedIn();
-          renderComponent();
-          await assertLinkNotVisible('LDAP', 'Security');
-        });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:ldap:read': true });
-          givenActiveBundles({});
           renderComponent();
           await assertLinkNotVisible('LDAP', 'Security');
         });
@@ -357,14 +293,6 @@ describe('SettingsSidebar', () => {
           renderComponent();
           await assertLinkNotVisible('Users', 'Security');
         });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:users:read': true, 'nexus:roles:read': true });
-          givenActiveBundles({});
-          renderComponent();
-          await assertLinkNotVisible('Users', 'Security');
-        });
       });
 
       describe('anonymous link', () => {
@@ -380,14 +308,6 @@ describe('SettingsSidebar', () => {
           renderComponent();
           await assertLinkNotVisible('Anonymous Settings', 'Security');
         });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:settings:read': true });
-          givenActiveBundles({});
-          renderComponent();
-          await assertLinkNotVisible('Anonymous Settings', 'Security');
-        });
       });
 
       describe('realms link', () => {
@@ -400,14 +320,6 @@ describe('SettingsSidebar', () => {
 
         it('should not render if user has no roles permission', async () => {
           givenUserLoggedIn();
-          renderComponent();
-          await assertLinkNotVisible('Realms', 'Security');
-        });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:settings:read': true });
-          givenActiveBundles({});
           renderComponent();
           await assertLinkNotVisible('Realms', 'Security');
         });
@@ -584,15 +496,6 @@ describe('SettingsSidebar', () => {
           await assertLinkNotVisible('Support Request', 'Support');
         });
 
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:atlas:create': true });
-          givenActiveBundles({});
-          givenProEdition();
-          renderComponent();
-          await assertLinkNotVisible('Support Request', 'Support');
-        });
-
         it('should not render if user has Community version', async () => {
           givenUserLoggedIn();
           givenPermissions({ 'nexus:atlas:create': true });
@@ -615,14 +518,6 @@ describe('SettingsSidebar', () => {
           renderComponent();
           await assertLinkNotVisible('System Information', 'Support');
         });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:atlas:read': true });
-          givenActiveBundles({});
-          renderComponent();
-          await assertLinkNotVisible('System Information', 'Support');
-        });
       });
 
       describe('System Status link', () => {
@@ -635,14 +530,6 @@ describe('SettingsSidebar', () => {
 
         it('should not render if user has no metrics read permission', async () => {
           givenUserLoggedIn();
-          renderComponent();
-          await assertLinkNotVisible('Status', 'Support');
-        });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:metrics:read': true });
-          givenActiveBundles({});
           renderComponent();
           await assertLinkNotVisible('Status', 'Support');
         });
@@ -661,14 +548,6 @@ describe('SettingsSidebar', () => {
           renderComponent();
           await assertLinkNotVisible('Support ZIP', 'Support');
         });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:atlas:read': true });
-          givenActiveBundles({});
-          renderComponent();
-          await assertLinkNotVisible('Support ZIP', 'Support');
-        });
       });
 
       describe('Logs link', () => {
@@ -681,14 +560,6 @@ describe('SettingsSidebar', () => {
 
         it('should not render if user has no logging read permission', async () => {
           givenUserLoggedIn();
-          renderComponent();
-          await assertLinkNotVisible('Logs', 'Support');
-        });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:logging:read': true });
-          givenActiveBundles({});
           renderComponent();
           await assertLinkNotVisible('Logs', 'Support');
         });
@@ -719,14 +590,6 @@ describe('SettingsSidebar', () => {
           givenUserLoggedIn();
           renderComponent();
           await assertLinkNotVisible('Logging', 'Support');
-        });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:logging:read': true });
-          givenActiveBundles({});
-          renderComponent();
-          await assertLinkNotVisible('Logs', 'Support');
         });
       });
     });
@@ -764,15 +627,6 @@ describe('SettingsSidebar', () => {
 
           await assertLinkNotVisible('Email Server', 'System');
         });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:settings:read': true });
-          givenActiveBundles({});
-          renderComponent();
-
-          await assertLinkNotVisible('Email Server', 'System');
-        });
       });
 
       describe('Tasks link', () => {
@@ -785,14 +639,6 @@ describe('SettingsSidebar', () => {
 
         it('should not render if user has no tasks read permission', async () => {
           givenUserLoggedIn();
-          renderComponent();
-          await assertLinkNotVisible('Tasks', 'System');
-        });
-
-        it('should not render if user has no active bundle', async () => {
-          givenUserLoggedIn();
-          givenPermissions({ 'nexus:tasks:read': true });
-          givenActiveBundles({});
           renderComponent();
           await assertLinkNotVisible('Tasks', 'System');
         });
@@ -938,14 +784,12 @@ describe('SettingsSidebar', () => {
     };
   }
 
-  function givenActiveBundles(activeBundleState = getDefaultActiveBundleState()) {
+  function givenActiveBundles(activeBundleState = {}) {
     Application.bundleActive.mockImplementation(key => activeBundleState[key] ?? false);
   }
 
   function getDefaultActiveBundleState() {
-    return {
-      'org.sonatype.nexus.plugins.nexus-coreui-plugin': true,
-    };
+    return {};
   }
 
   function givenStateValues(stateValues = getDefaultStateValues()) {
