@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "main": "target/dist/index.js",
-  "files": ["target/dist"],
+  "files": [
+    "target/dist"
+  ],
   "scripts": {
     "build": "npm-run-all build-all",
     "build-all": "npm-run-all lint format compile-js copy-scss copy-package-json",

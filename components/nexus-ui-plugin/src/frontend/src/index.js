@@ -32,6 +32,7 @@ export { default as ListMachineUtils } from './interface/ListMachineUtils';
 export { default as ValidationUtils } from './interface/ValidationUtils';
 export { default as useSimpleMachine } from './interface/SimpleMachineUtils';
 export { default as DateUtils } from './interface/DateUtils';
+export { ApiUtils } from './interface/ApiUtils';
 
 export { default as HistoricalUsage } from './components/pages/admin/Usage/HistoricalUsage';
 export { default as CheckboxControlledWrapper } from './components/widgets/CheckboxControlledWrapper/CheckboxControlledWrapper';
