@@ -18,6 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.security.internal.AuthenticatingRealmImpl;
 import org.sonatype.nexus.security.realm.RealmManager;
 
@@ -28,12 +29,16 @@ import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.realm.Realm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.sonatype.nexus.common.app.FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED;
 
 /**
  * Check if the default user can be used to authenticate.
  */
+@FeatureFlag(name = NEXUS_SECURITY_FIPS_ENABLED, inverse = true)
+@ConditionalOnProperty(name = NEXUS_SECURITY_FIPS_ENABLED, havingValue = "false", matchIfMissing = true)
 @Named("Default Admin Credentials")
 @Singleton
 public class DefaultUserHealthCheck
@@ -41,15 +46,15 @@ public class DefaultUserHealthCheck
 {
   private static final Logger log = LoggerFactory.getLogger(DefaultUserHealthCheck.class);
 
-  static final String ERROR_MESSAGE = "The default admin credentials have not been changed. It is strongly recommended that the default admin password be changed.";
+  static final String ERROR_MESSAGE =
+      "The default admin credentials have not been changed. It is strongly recommended that the default admin password be changed.";
 
   private final RealmManager realmManager;
 
   private final RealmSecurityManager realmSecurityManager;
 
   @Inject
-  public DefaultUserHealthCheck(final RealmManager realmManager, final RealmSecurityManager realmSecurityManager)
-  {
+  public DefaultUserHealthCheck(final RealmManager realmManager, final RealmSecurityManager realmSecurityManager) {
     this.realmManager = checkNotNull(realmManager);
     this.realmSecurityManager = checkNotNull(realmSecurityManager);
   }
@@ -60,8 +65,10 @@ public class DefaultUserHealthCheck
       return Result.healthy();
     }
 
-    Optional<Realm> realm = realmSecurityManager.getRealms().stream()
-        .filter(r -> r.getName().equals(AuthenticatingRealmImpl.NAME)).findFirst();
+    Optional<Realm> realm = realmSecurityManager.getRealms()
+        .stream()
+        .filter(r -> r.getName().equals(AuthenticatingRealmImpl.NAME))
+        .findFirst();
 
     try {
       if (realm.map(r -> r.getAuthenticationInfo(new UsernamePasswordToken("admin", "admin123"))).isPresent()) {

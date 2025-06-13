@@ -20,6 +20,8 @@ import org.sonatype.goodies.common.Time;
 import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.ssl.KeyStoreManagerConfigurationSupport;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * SSL plugin specific key-store manager configuration.
  *
@@ -55,7 +57,7 @@ public class KeyStoreManagerConfigurationImpl
       @Named(CPREFIX + ".signatureAlgorithm:-SHA1WITHRSA}") final String signatureAlgorithm,
       @Named(CPREFIX + ".keyManagerAlgorithm:-DEFAULT}") final String keyManagerAlgorithm,
       @Named(CPREFIX + ".trustManagerAlgorithm:-DEFAULT}") final String trustManagerAlgorithm,
-      @Named(FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED) final boolean isFipsEnabled)
+      @Named(FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED_NAMED) @Value(FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED_NAMED_VALUE) final boolean nexusSecurityFipsEnabled)
   {
     setPrivateKeyStorePassword(PKSP);
     setTrustedKeyStorePassword(TKSP);
@@ -67,6 +69,6 @@ public class KeyStoreManagerConfigurationImpl
     setSignatureAlgorithm(signatureAlgorithm);
     setKeyManagerAlgorithm(keyManagerAlgorithm);
     setTrustManagerAlgorithm(trustManagerAlgorithm);
-    setFipsEnabled(isFipsEnabled);
+    setFipsEnabled(nexusSecurityFipsEnabled);
   }
 }

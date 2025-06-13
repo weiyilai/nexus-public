@@ -41,9 +41,11 @@ import org.sonatype.nexus.crypto.CryptoHelper;
 
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.sonatype.nexus.common.app.FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED;
+import static org.sonatype.nexus.common.app.FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED_NAMED_VALUE;
 
 /**
  * Default {@link CryptoHelper} using provider from BouncyCastleProvider or BouncyCastleFipsProvider.
@@ -59,7 +61,9 @@ public class CryptoHelperImpl
   private final Provider provider;
 
   @Inject
-  public CryptoHelperImpl(final @Named(NEXUS_SECURITY_FIPS_ENABLED) boolean nexusSecurityFipsEnabled) {
+  public CryptoHelperImpl(
+      @Named(NEXUS_SECURITY_FIPS_ENABLED_NAMED) @Value(NEXUS_SECURITY_FIPS_ENABLED_NAMED_VALUE) final boolean nexusSecurityFipsEnabled)
+  {
     this.provider = configureProvider(nexusSecurityFipsEnabled);
   }
 
