@@ -10,21 +10,25 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.metrics;
+package org.sonatype.nexus.api.rest.selfhosted.status;
 
-import javax.ws.rs.core.Response;
+import javax.ws.rs.GET;
 
+import com.codahale.metrics.health.HealthCheck.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import java.util.SortedMap;
 
-/**
- * API Description for the Nexus system status health checks
- */
-@Api(value = "System Status Checks")
-public interface HealthCheckResourceDoc
+@Api("Status")
+public interface StatusCheckResourceDoc
 {
-  @ApiOperation("Provides current status for a number of status checks.")
-  @ApiResponse(code = 200, message = "Success")
-  Response check();
+  @GET
+  @ApiOperation("Health check endpoint that returns the results of the system status checks")
+  @ApiResponses({
+      @ApiResponse(code = 200, message = "The system status check results", response = Result.class,
+          responseContainer = "Map")
+  })
+  SortedMap<String, Result> getSystemStatusChecks();
 }

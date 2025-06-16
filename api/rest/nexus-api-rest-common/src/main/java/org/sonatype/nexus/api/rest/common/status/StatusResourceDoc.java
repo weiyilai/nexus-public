@@ -10,14 +10,11 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.status;
-
-import java.util.SortedMap;
+package org.sonatype.nexus.api.rest.common.status;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.core.Response;
 
-import com.codahale.metrics.health.HealthCheck.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -54,16 +51,4 @@ public interface StatusResourceDoc
       @ApiResponse(code = 503, message = "Unavailable to service requests")
   })
   Response isWritable();
-
-  /**
-   * @since 3.20
-   */
-  @GET
-  @ApiOperation("Health check endpoint that returns the results of the system status checks")
-  @ApiResponses({
-      @ApiResponse(code = 200, message = "The system status check results", response = Result.class,
-          responseContainer = "Map")
-  })
-  SortedMap<String, Result> getSystemStatusChecks();
-
 }

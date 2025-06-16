@@ -10,9 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.status;
-
-import java.util.SortedMap;
+package org.sonatype.nexus.api.rest.common.status;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -29,10 +27,6 @@ import org.sonatype.nexus.common.log.ExceptionSummarizer;
 import org.sonatype.nexus.rest.Resource;
 
 import com.codahale.metrics.annotation.Timed;
-import com.codahale.metrics.health.HealthCheck.Result;
-import com.codahale.metrics.health.HealthCheckRegistry;
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -60,14 +54,11 @@ public class StatusResource
 
   private final FreezeService freezeService;
 
-  private HealthCheckRegistry registry;
-
   private final ExceptionSummarizer exceptionSummarizer = summarize(sameType(), warn(log));
 
   @Inject
-  public StatusResource(final FreezeService freezeService, final HealthCheckRegistry registry) {
+  public StatusResource(final FreezeService freezeService) {
     this.freezeService = checkNotNull(freezeService);
-    this.registry = checkNotNull(registry);
   }
 
   @GET
@@ -103,18 +94,5 @@ public class StatusResource
       exceptionSummarizer.log("Status health check failed, responding server is unavailable", e);
       return status(SERVICE_UNAVAILABLE).build();
     }
-  }
-
-  /**
-   * @since 3.20
-   */
-  @GET
-  @Path("/check")
-  @Timed
-  @RequiresAuthentication
-  @RequiresPermissions("nexus:metrics:read")
-  @Override
-  public SortedMap<String, Result> getSystemStatusChecks() {
-    return registry.runHealthChecks();
   }
 }

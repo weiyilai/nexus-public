@@ -10,51 +10,52 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.rest;
-
-import java.util.SortedMap;
+package org.sonatype.nexus.api.rest.selfhosted.status;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rest.Resource;
 
+import com.codahale.metrics.annotation.Timed;
 import com.codahale.metrics.health.HealthCheck.Result;
 import com.codahale.metrics.health.HealthCheckRegistry;
+import java.util.SortedMap;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.sonatype.nexus.api.rest.selfhosted.status.StatusCheckResource.RESOURCE_PATH;
+import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 
-/**
- * @since 3.20
- */
 @Named
 @Singleton
-@Path(HealthCheckResource.RESOURCE_URI)
 @Produces(APPLICATION_JSON)
-public class HealthCheckResource
-    extends ComponentSupport
-    implements Resource
+@Consumes(APPLICATION_JSON)
+@Path(RESOURCE_PATH)
+public class StatusCheckResource
+    implements Resource, StatusCheckResourceDoc
 {
-  public static final String RESOURCE_URI = "/internal/ui/status-check";
+  static final String RESOURCE_PATH = V1_API_PREFIX + "/status/check";
 
-  private HealthCheckRegistry registry;
+  private final HealthCheckRegistry registry;
 
   @Inject
-  public HealthCheckResource(HealthCheckRegistry registry) {
+  public StatusCheckResource(final HealthCheckRegistry registry) {
     this.registry = checkNotNull(registry);
   }
 
   @GET
+  @Timed
   @RequiresAuthentication
   @RequiresPermissions("nexus:metrics:read")
+  @Override
   public SortedMap<String, Result> getSystemStatusChecks() {
     return registry.runHealthChecks();
   }
