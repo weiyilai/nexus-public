@@ -24,7 +24,7 @@
     }
   }
   .nxrm-navigation-expandable-link__navigation-link {
-    &.nx-global-sidebar-2__navigation-link.nx-text-link:hover {
+    &.nx-global-sidebar-2__navigation-link.nx-text-link:not(.selected):hover {
       background-color: var(--nx-swatch-indigo-90);
     }
     &> .nx-icon {
