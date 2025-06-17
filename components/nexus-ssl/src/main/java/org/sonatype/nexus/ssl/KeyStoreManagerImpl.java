@@ -407,6 +407,11 @@ public class KeyStoreManagerImpl
 
   @Override
   public boolean isKeyPairInitialized() {
+    // in FIPS mode there is not private key store, so KeyPair is never initialized
+    if (config.isFipsEnabled()) {
+      return false;
+    }
+
     privateKeyStoreLock.readLock().lock();
     try {
       return isKeyPairInstalled(privateKeyStore, PRIVATE_KEY_ALIAS);

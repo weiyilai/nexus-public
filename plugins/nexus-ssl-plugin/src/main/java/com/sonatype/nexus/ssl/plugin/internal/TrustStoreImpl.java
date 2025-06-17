@@ -473,7 +473,7 @@ public class TrustStoreImpl
         }
 
         trustManagerFactory = cryptoHelper.createTrustManagerFactory(TrustManagerFactory.getDefaultAlgorithm());
-        trustStore = cryptoHelper.createKeyStore(KeyStore.getDefaultType());
+        trustStore = cryptoHelper.createKeyStore(trustStoreType);
       }
       final String password = System.getProperty("javax.net.ssl.trustStorePassword");
       try (FileInputStream in = new FileInputStream(trustStoreFile)) {
