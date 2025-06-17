@@ -66,7 +66,6 @@ Ext.define('NX.coreui.controller.Tasks', {
     'task.TaskSummary',
     'task.TaskSettings',
     'task.TaskSettingsForm',
-    'task.TaskReconcilePlan',
     'formfield.SettingsFieldSet'
   ],
   refs: [

@@ -1281,8 +1281,6 @@ Ext.define('NX.coreui.app.PluginStrings', {
     Task_TaskSettingsForm_Name_HelpText: 'A name for the scheduled task',
     Task_TaskSettingsForm_Email_FieldLabel: 'Notification email',
     Task_TaskSettingsForm_Email_HelpText: 'The email address where an email will be sent if the condition below is met',
-    Task_TaskSettingsForm_PreviousPlan_FieldLabel: "Use previously created plan:",
-    Task_TaskSettingsForm_PreviousPlan_Enable_HelpText: "Selecting this flag will run previously created plan if one is found",
     Task_TaskSettingsForm_PlanInformation_FieldLabel: "Plan Information",
     Task_TaskSettingsForm_PlanInformation_PlanId_Info: "Plan ID",
     Task_TaskSettingsForm_PlanInformation_PlanId_Multiple: "Multiple",

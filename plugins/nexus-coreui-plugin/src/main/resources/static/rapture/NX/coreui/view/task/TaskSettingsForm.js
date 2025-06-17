@@ -80,12 +80,6 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
         value: 'FAILURE'
       },
       {
-        xtype: 'nx-coreui-task-reconcile-plan',
-        hidden: true,
-        disabled: true,
-        name: 'reconcile-plan-component'
-      },
-      {
         xtype: 'nx-coreui-formfield-settingsfieldset',
         name: 'taskRepositories'
       },
@@ -126,12 +120,6 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
 
     task.properties = me.down('nx-coreui-formfield-settingsfieldset').exportProperties(values);
     if (this.isPlanReconcileTask()) {
-      task.runPreviousPlan = values.runPreviousPlan ? true : false;
-      task.properties.runPreviousPlan = task.runPreviousPlan;
-      var data = me.down('nx-coreui-task-reconcile-plan').data;
-      if (data) {
-        task.planIds = data.planIds.toString();
-      }
       const scopeFieldsSet = me.down('nx-coreui-task-scopefieldset');
       if (scopeFieldsSet) {
         Object.assign(task.properties, scopeFieldsSet.exportProperties());
@@ -152,16 +140,6 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
     return task;
   },
 
-  startPreviousPlanComponent: function(model) {
-    var me = this;
-    me.data = {
-      model: model
-    };
-    Ext.defer(function() {
-      me.down('[name=reconcile-plan-component]').startComponent(model);
-    }, 100);
-  },
-
   /**
    * @override
    * Additionally, sets properties values.
@@ -171,7 +149,6 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
         taskTypeModel = NX.getApplication().getStore('TaskType').getById(model.get('typeId')),
         settingsFieldSet = me.down('nx-coreui-formfield-settingsfieldset'),
         scheduleFieldSet = me.down('nx-coreui-task-schedulefieldset'),
-        previousPlan = me.down('nx-coreui-task-reconcile-plan'),
         formFields;
 
     this.callParent(arguments);
@@ -179,7 +156,6 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
     this.resetTaskForm();
 
     if (taskTypeModel) {
-      this.startPreviousPlanComponent(model);
       formFields = taskTypeModel.get('formFields');
       if (!taskTypeModel.get('concurrentRun')) {
         var scheduleFieldSetCombo = this.down('combo[name="schedule"]');
@@ -189,7 +165,7 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
         ]);
       }
 
-      this.initScheduleFieldSet(taskTypeModel, scheduleFieldSet, previousPlan);
+      this.initScheduleFieldSet(taskTypeModel, scheduleFieldSet);
 
       Ext.each(formFields, function(field) {
         var properties = model.get('properties');
@@ -216,10 +192,9 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
       this.maybeMakeReadOnly(model);
     }
   },
-  initScheduleFieldSet: function(taskTypeModel, scheduleFieldSet, previousPlan) {
+  initScheduleFieldSet: function(taskTypeModel, scheduleFieldSet) {
     if (taskTypeModel.get('id') === 'blobstore.planReconciliation') {
       scheduleFieldSet.setHidden(true);
-      previousPlan.setVisible(true);
       var scheduleCombo = this.down('[name="schedule"]');
       if (scheduleCombo) {
         scheduleCombo.setValue('manual');
@@ -227,7 +202,6 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
     }
     else {
       scheduleFieldSet.setHidden(false);
-      previousPlan.setVisible(false);
     }
   },
 
