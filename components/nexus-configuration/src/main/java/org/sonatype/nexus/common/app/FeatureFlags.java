@@ -214,10 +214,6 @@ public class FeatureFlags
 
   public static final String ORIENT_WARNING_NAMED_VALUE = "${nexus.orient.warning:true}";
 
-  public static final String RECONCILE_PLAN_ENABLED = "nexus.reconcile.plan.enabled";
-
-  public static final String RECONCILE_PLAN_ENABLED_NAMED = "${nexus.reconcile.plan.enabled:-false}";
-
   /**
    * When true (default), the Secure attribute will be set on the NXSESSIONID Cookie when delivered over https.
    * In deployments with HTTP-only listeners, this setting will typically have no effect.
@@ -300,17 +296,6 @@ public class FeatureFlags
   public static final String NEXUS_SECURITY_FIPS_ENABLED_NAMED = "${nexus.security.fips.enabled:-false}";
 
   public static final String NEXUS_SECURITY_FIPS_ENABLED_NAMED_VALUE = "${nexus.security.fips.enabled:false}";
-
-  public static final String NEXUS_SECURITY_PASSWORD_ALGORITHM_NAMED = "${nexus.security.password.algorithm:-shiro1}";
-
-  public static final String NEXUS_SECURITY_PASSWORD_ALGORITHM_NAMED_VALUE =
-      "${nexus.security.password.algorithm:shiro1}";
-
-  public static final String CONTAINER_IMAGES_EVAL_ENABLED = "nexus.container.images.eval.enabled";
-
-  public static final String CONTAINER_IMAGES_EVAL_ENABLED_NAMED = "${nexus.container.images.eval.enabled:-false}";
-
-  public static final String CONTAINER_IMAGES_EVAL_ENABLED_NAMED_VALUE = "${nexus.container.images.eval.enabled:false}";
 
   public static final String NEXUS_SECURITY_AUTH0_USER_MANAGEMENT_ENABLED =
       "nexus.security.auth0.userManagement.enabled";

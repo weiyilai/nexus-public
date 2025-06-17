@@ -16,9 +16,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.repository.http.HttpMethods;
@@ -31,12 +31,10 @@ import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.repository.view.Status;
 import org.sonatype.nexus.repository.view.payloads.StringPayload;
 
-import org.apache.shiro.web.servlet.ShiroHttpServletResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -55,6 +53,7 @@ import static org.sonatype.nexus.repository.http.HttpStatus.FORBIDDEN;
 public class DefaultHttpResponseSenderTest
     extends TestSupport
 {
+
   private static final byte[] TEST_CONTENT = "TEST CONTENT".getBytes(StandardCharsets.UTF_8);
 
   private final HttpResponseSender underTest = new DefaultHttpResponseSender();
@@ -163,23 +162,17 @@ public class DefaultHttpResponseSenderTest
 
   @Test
   public void customStatusMessageIsMaintainedWithPayload() throws Exception {
-    org.eclipse.jetty.ee8.nested.Response nestedResponse = Mockito.mock(org.eclipse.jetty.ee8.nested.Response.class);
-    HttpServletResponseWrapper httpServletResponseWrapper = new HttpServletResponseWrapper(nestedResponse);
-    ShiroHttpServletResponse shiroHttpServletResponse = Mockito.mock(ShiroHttpServletResponse.class);
-    when(shiroHttpServletResponse.getResponse()).thenReturn(httpServletResponseWrapper);
-    when(shiroHttpServletResponse.getOutputStream()).thenReturn(output);
-
     when(request.getAction()).thenReturn(HttpMethods.GET);
 
     Payload detailedReason = new StringPayload("Please authenticate and try again", "text/plain");
 
     Response response = new Response.Builder()
         .status(Status.failure(FORBIDDEN, "You can't see this"))
-        .payload(detailedReason)
-        .build();
+        .payload(detailedReason).build();
 
-    underTest.send(request, response, shiroHttpServletResponse);
+    underTest.send(request, response, httpServletResponse);
 
-    verify(nestedResponse).setStatusWithReason(403, "You can't see this");
+    verify(httpServletResponse).setStatus(403, "You can't see this");
   }
+
 }

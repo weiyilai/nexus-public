@@ -32,8 +32,7 @@ public class DefaultSecurityPasswordServiceTest
 
   @Before
   public void setUp() throws Exception {
-    underTest =
-        new DefaultSecurityPasswordService(new LegacyNexusPasswordService(), "shiro1", new CryptoHelperImpl(false));
+    underTest = new DefaultSecurityPasswordService(new LegacyNexusPasswordService(), new CryptoHelperImpl(false));
   }
 
   @Test

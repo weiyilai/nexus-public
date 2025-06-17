@@ -39,10 +39,6 @@ public class AuthenticatingRealmImplTest
 
   private static final String LEGACY_PASSWORD_HASH = "f865b53623b121fd34ee5426c792e5c33af8c227";
 
-  private static final String SHIRO_PASSWORD_ALGORITHM = "shiro1";
-
-  private static final String SHA256_PASSWORD_ALGORITHM = "pbkdf2-sha256";
-
   @Mock
   private SecurityConfigurationManager configuration;
 
@@ -67,45 +63,19 @@ public class AuthenticatingRealmImplTest
   }
 
   @Test
-  public void testLegacyPasswordIsReHashedUsingShiroOnOrient() {
+  public void testLegacyPasswordIsReHashedOnOrient() {
     assertThat(testUser.getPassword(), is(LEGACY_PASSWORD_HASH));
     AuthenticatingRealmImpl underTestOrient = new AuthenticatingRealmImpl(configuration,
-        new DefaultSecurityPasswordService(new LegacyNexusPasswordService(), SHIRO_PASSWORD_ALGORITHM,
-            new CryptoHelperImpl(false)),
-        true, SHIRO_PASSWORD_ALGORITHM);
-    underTestOrient.getAuthenticationInfo(new UsernamePasswordToken(TEST_USERNAME, TEST_PASSWORD));
-    assertThat(testUser.getPassword(), startsWith("$shiro1$SHA-512$"));
-  }
-
-  @Test
-  public void testLegacyPasswordIsReHashedUsingShiroOnNewDB() {
-    assertThat(testUser.getPassword(), is(LEGACY_PASSWORD_HASH));
-    AuthenticatingRealmImpl underTestOrient = new AuthenticatingRealmImpl(configuration,
-        new DefaultSecurityPasswordService(new LegacyNexusPasswordService(), SHIRO_PASSWORD_ALGORITHM,
-            new CryptoHelperImpl(false)),
-        false, SHIRO_PASSWORD_ALGORITHM);
-    underTestOrient.getAuthenticationInfo(new UsernamePasswordToken(TEST_USERNAME, TEST_PASSWORD));
-    assertThat(testUser.getPassword(), startsWith("$shiro1$SHA-512$"));
-  }
-
-  @Test
-  public void testLegacyPasswordIsReHashedToSha256OnOrient() {
-    assertThat(testUser.getPassword(), is(LEGACY_PASSWORD_HASH));
-    AuthenticatingRealmImpl underTestOrient = new AuthenticatingRealmImpl(configuration,
-        new DefaultSecurityPasswordService(new LegacyNexusPasswordService(), SHA256_PASSWORD_ALGORITHM,
-            new CryptoHelperImpl(false)),
-        true, SHA256_PASSWORD_ALGORITHM);
+        new DefaultSecurityPasswordService(new LegacyNexusPasswordService(), new CryptoHelperImpl(false)), true);
     underTestOrient.getAuthenticationInfo(new UsernamePasswordToken(TEST_USERNAME, TEST_PASSWORD));
     assertThat(testUser.getPassword(), startsWith("$pbkdf2-sha256$i"));
   }
 
   @Test
-  public void testLegacyPasswordIsReHashedToSha256OnNewDB() {
+  public void testLegacyPasswordIsReHashedOnNewDB() {
     assertThat(testUser.getPassword(), is(LEGACY_PASSWORD_HASH));
     AuthenticatingRealmImpl underTestOrient = new AuthenticatingRealmImpl(configuration,
-        new DefaultSecurityPasswordService(new LegacyNexusPasswordService(), SHA256_PASSWORD_ALGORITHM,
-            new CryptoHelperImpl(false)),
-        false, SHA256_PASSWORD_ALGORITHM);
+        new DefaultSecurityPasswordService(new LegacyNexusPasswordService(), new CryptoHelperImpl(false)), false);
     underTestOrient.getAuthenticationInfo(new UsernamePasswordToken(TEST_USERNAME, TEST_PASSWORD));
     assertThat(testUser.getPassword(), startsWith("$pbkdf2-sha256$i"));
   }
