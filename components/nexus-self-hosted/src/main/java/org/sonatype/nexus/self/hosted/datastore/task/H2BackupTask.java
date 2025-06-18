@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.datastore.task;
+package org.sonatype.nexus.self.hosted.datastore.task;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,10 +60,11 @@ public class H2BackupTask
       throw new RuntimeException("Unable to locate datastore with name " + DEFAULT_DATASTORE_NAME);
     }
 
-    File backupFolder = applicationDirectories.getWorkDirectory(checkNotNull(getConfiguration().getString(H2BackupTaskDescriptor.LOCATION), "Backup location not configured"));
+    File backupFolder = applicationDirectories.getWorkDirectory(
+        checkNotNull(getConfiguration().getString(H2BackupTaskDescriptor.LOCATION), "Backup location not configured"));
     File backupFile = new File(backupFolder, getBackupFileName());
 
-    if(backupFile.isFile()){
+    if (backupFile.isFile()) {
       throw new IOException("File already exists at backup file location: " + backupFile.getAbsolutePath());
     }
 

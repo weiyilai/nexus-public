@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.datastore.task;
+package org.sonatype.nexus.self.hosted.datastore.task;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -37,8 +37,7 @@ public class H2BackupTaskDescriptor
 
   static final String LOCATION = "location";
 
-  public H2BackupTaskDescriptor()
-  {
+  public H2BackupTaskDescriptor() {
     super(TYPE_ID, H2BackupTask.class, "Admin - Backup H2 Database", VISIBLE, EXPOSED,
         new StringTextFormField(LOCATION, "Location",
             "Specify a directory for the database backup",

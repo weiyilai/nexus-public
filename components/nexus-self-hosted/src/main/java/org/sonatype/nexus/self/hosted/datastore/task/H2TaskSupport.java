@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.datastore.task;
+package org.sonatype.nexus.self.hosted.datastore.task;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -26,22 +26,26 @@ import org.sonatype.nexus.scheduling.CancelableHelper;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public class H2TaskSupport extends ComponentSupport
+public class H2TaskSupport
+    extends ComponentSupport
 {
-  private static final String EXPORT_INITIALISE_SQL
-      = "ALTER TABLE \"PUBLIC\".\"NUGET_COMPONENT\" ALTER COLUMN CI_NAME VARCHAR NOT NULL SELECTIVITY 100;";
+  private static final String EXPORT_INITIALISE_SQL =
+      "ALTER TABLE \"PUBLIC\".\"NUGET_COMPONENT\" ALTER COLUMN CI_NAME VARCHAR NOT NULL SELECTIVITY 100;";
 
   private static final String EXPORT_SQL = "SCRIPT";
 
-  private static final String EXPORT_RECOVERY_SQL
-      = "ALTER TABLE \"PUBLIC\".\"NUGET_COMPONENT\" ALTER COLUMN CI_NAME VARCHAR AS LOWER(\"NAME\") SELECTIVITY 100;";
+  private static final String EXPORT_RECOVERY_SQL =
+      "ALTER TABLE \"PUBLIC\".\"NUGET_COMPONENT\" ALTER COLUMN CI_NAME VARCHAR AS LOWER(\"NAME\") SELECTIVITY 100;";
 
   static final int PROGRESS_UPDATE_THRESHOLD = 10_000;
 
   static final int PROGRESS_LOG_THRESHOLD = 500_000;
 
-  public long exportDatabase(final Connection connection, final String location, final Consumer<String> progressConsumer)
-      throws SqlScriptGenerationException {
+  public long exportDatabase(
+      final Connection connection,
+      final String location,
+      final Consumer<String> progressConsumer) throws SqlScriptGenerationException
+  {
 
     boolean autoCommit = false;
     try {
@@ -65,11 +69,15 @@ public class H2TaskSupport extends ComponentSupport
   }
 
   @VisibleForTesting
-  long processResults(final ResultSet resultSet, final String location, final Consumer<String> progressConsumer)
-      throws SQLException {
+  long processResults(
+      final ResultSet resultSet,
+      final String location,
+      final Consumer<String> progressConsumer) throws SQLException
+  {
     if (resultSet != null && location != null && !location.isEmpty()) {
       try (FileWriter writer = new FileWriter(location); BufferedWriter buffer = new BufferedWriter(writer)) {
-        long linesWritten = writeLines(resultSet, progressConsumer, PROGRESS_UPDATE_THRESHOLD, PROGRESS_LOG_THRESHOLD, buffer);
+        long linesWritten =
+            writeLines(resultSet, progressConsumer, PROGRESS_UPDATE_THRESHOLD, PROGRESS_LOG_THRESHOLD, buffer);
         return linesWritten + 1;
       }
       catch (Exception ex) {
@@ -116,7 +124,8 @@ public class H2TaskSupport extends ComponentSupport
   void rollback(final Connection connection) {
     try {
       connection.rollback();
-    } catch (SQLException ex) {
+    }
+    catch (SQLException ex) {
       try (PreparedStatement scriptStmt = connection.prepareStatement(H2TaskSupport.EXPORT_RECOVERY_SQL)) {
         scriptStmt.execute();
       }
@@ -145,7 +154,8 @@ public class H2TaskSupport extends ComponentSupport
   void resetAutoCommit(final Connection connection, boolean autoCommit) {
     try {
       connection.setAutoCommit(autoCommit);
-    } catch (SQLException ex) {
+    }
+    catch (SQLException ex) {
       // If we hit this, there is no recovery
       log.error("Unable to reset auto commit.", ex);
     }

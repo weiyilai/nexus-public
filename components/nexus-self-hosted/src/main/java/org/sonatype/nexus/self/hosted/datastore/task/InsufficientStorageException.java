@@ -10,12 +10,16 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.datastore.task;
+package org.sonatype.nexus.self.hosted.datastore.task;
 
-public class SqlScriptGenerationException
+public class InsufficientStorageException
     extends RuntimeException
 {
-  public SqlScriptGenerationException(final String message) { super(message); }
+  public InsufficientStorageException(final String message) {
+    super(message);
+  }
 
-  public SqlScriptGenerationException(final String message, final Throwable cause) { super(message, cause); }
+  public InsufficientStorageException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }
