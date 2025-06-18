@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.blobstore.s3.internal.upgrade;
+package org.sonatype.nexus.self.hosted.blobstore.s3.upgrade;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,10 +20,10 @@ import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper;
-import org.sonatype.nexus.blobstore.s3.internal.S3BlobStore;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskScheduler;
+import org.sonatype.nexus.blobstore.s3.internal.S3BlobStore;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
