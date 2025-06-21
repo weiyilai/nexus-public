@@ -52,4 +52,10 @@ public class BaseUrlCapability
   protected void onPassivate(final BaseUrlCapabilityConfiguration config) throws Exception {
     baseUrlManager.setUrl(null);
   }
+
+  @Override
+  protected void onUpdate(BaseUrlCapabilityConfiguration config) throws Exception {
+    super.onUpdate(config);
+    baseUrlManager.setUrl(config.getUrl());
+  }
 }
