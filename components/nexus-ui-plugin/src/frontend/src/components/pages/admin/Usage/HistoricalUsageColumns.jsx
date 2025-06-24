@@ -16,7 +16,7 @@ import ChangeIcon from './ChangeIcon';
 import HumanReadableUtils from '../../../../interface/HumanReadableUtils';
 
 const formatPercentage = (value) => {
-  if (value === 'N/A') return value;
+  if (value === 'N/A' || value === null) return "N/A";
   return `${Math.abs(Number(value))}%`;
 };
 
