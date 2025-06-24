@@ -55,6 +55,7 @@ export const userRoutes = [
     data: {
       visibilityRequirements: {
         requiresUser: true,
+        permissions: ['nexus:apikey:*'],
       },
       title: USER.TITLE,
     },

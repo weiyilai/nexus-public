@@ -55,6 +55,7 @@ function ProfileMenu() {
   const { USER } = ROUTE_NAMES;
 
   const userTokenRouteName = USER.USER_TOKEN;
+  const userNugetApiTokenName = USER.NUGETAPITOKEN;
 
   const userId = ExtJS.useState(() => ExtJS.state().getValue('user')?.id);
 
@@ -65,7 +66,10 @@ function ProfileMenu() {
   const userTokenRouteState = router.stateRegistry.get(userTokenRouteName);
   const isUserTokenEnabled = useIsVisible(userTokenRouteState.data.visibilityRequirements);
 
-  const { href: userAccountHref} = useSref(USER.ACCOUNT);
+  const userNugetApiTokenState = router.stateRegistry.get(userNugetApiTokenName);
+  const isUserNugetApiTokenEnabled = useIsVisible(userNugetApiTokenState.data.visibilityRequirements);
+
+  const { href: userAccountHref } = useSref(USER.ACCOUNT);
   const { href: userNugetApiTokenHref } = useSref(USER.NUGETAPITOKEN);
   const { href: userTokenHref } = useSref(userTokenRouteName);
 
@@ -92,13 +96,15 @@ function ProfileMenu() {
           {UIStrings.USER_ACCOUNT.MENU.text}
         </NxTextLink>
 
+        {isUserNugetApiTokenEnabled && (
         <NxTextLink
-            href={userNugetApiTokenHref}
-            className="nx-dropdown-link"
-            data-analytics-id="nxrm-global-header-profile-menu-nuget-api-key"
+          href={userNugetApiTokenHref}
+          className='nx-dropdown-link'
+          data-analytics-id='nxrm-global-header-profile-menu-nuget-api-key'
         >
           NuGet API Key
         </NxTextLink>
+      )}
 
         { isUserTokenEnabled
             ? (<NxTextLink

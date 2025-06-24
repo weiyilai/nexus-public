@@ -306,13 +306,25 @@ describe('GlobalHeader', () => {
     it('does not render user tokens when user does not have enough permissions', async () => {
       givenAllRequirementsMetForUserTokenPageAccess();
       // given user does not have permissions
-      givenPermissions({ 'nexus:usertoken-current:read': false });
+      givenPermissions({ 'nexus:usertoken-current:read': false, 'nexus:apikey:*': true });
 
       renderComponent();
 
       await assertBannerAndOpenUserProfileMenu();
 
       await assertRendersUserProfileDropDownCorrectlyForUserWithoutUserTokenAccess();
+    });
+
+    it('does not render nuget apikey when user does not have enough permissions', async () => {
+      givenAllRequirementsMetForUserTokenPageAccess();
+      // given user does not have permissions
+      givenPermissions({ 'nexus:usertoken-current:read': false, 'nexus:apikey:*': false });
+
+      renderComponent();
+
+      await assertBannerAndOpenUserProfileMenu();
+
+      await assertRendersUserProfileDropDownCorrectlyForUserWithoutUserTokenAccessOrNugetApiKey();
     });
 
     it('does not render user tokens when bundle is not active', async () => {
@@ -692,7 +704,7 @@ describe('GlobalHeader', () => {
       ['PRO']: 'PRO'
     });
 
-    givenPermissions({ 'nexus:usertoken-current:read': true });
+    givenPermissions({ 'nexus:usertoken-current:read': true, 'nexus:apikey:*': true });
 
     // given the userkey can be return from ExtState
     givenExtJSState(
@@ -730,6 +742,18 @@ describe('GlobalHeader', () => {
 
     expect(screen.getByRole('link', { name: 'My Account' })).toBeVisible();
     expect(screen.getByRole('link', { name: 'NuGet API Key' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Log Out' })).toBeVisible();
+    expect(screen.queryByRole('link', { name: 'User Token' })).not.toBeInTheDocument();
+  }
+
+  async function assertRendersUserProfileDropDownCorrectlyForUserWithoutUserTokenAccessOrNugetApiKey() {
+    const banner = screen.getByRole('banner');
+    expect(banner).toBeVisible();
+
+    await screen.findByRole('heading', { name: givenUserName });
+
+    expect(screen.getByRole('link', { name: 'My Account' })).toBeVisible();
+    expect(screen.queryByRole('link', { name: 'NuGet API Key' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Log Out' })).toBeVisible();
     expect(screen.queryByRole('link', { name: 'User Token' })).not.toBeInTheDocument();
   }
