@@ -23,14 +23,8 @@
  */
 Ext.define('NX.coreui.view.formfield.factory.FormfieldItemselectFactory', {
   singleton: true,
-  alias: [
-    'nx.formfield.factory.itemselect'
-  ],
-  requires: [
-    'Ext.data.Store',
-    'Ext.data.SortTypes',
-    'NX.ext.form.field.ItemSelector'
-  ],
+  alias: ['nx.formfield.factory.itemselect'],
+  requires: ['Ext.data.Store', 'Ext.data.SortTypes', 'NX.ext.form.field.ItemSelector'],
   mixins: {
     logAware: 'NX.LogAware'
   },
@@ -41,35 +35,35 @@ Ext.define('NX.coreui.view.formfield.factory.FormfieldItemselectFactory', {
   create: function (formField, disableSort) {
     const me = this;
     var filters,
-        attributes = formField['attributes'] || {},
-        idMapping = formField['idMapping'] || 'id',
-        nameMapping = formField['nameMapping'] || 'name',
-        itemConfig = {
-          xtype: 'nx-itemselector',
-          fieldLabel: formField.label,
-          helpText: formField.helpText,
-          name: formField.id,
-          valueField: idMapping,
-          displayField: nameMapping,
-          width:600,
+      attributes = formField['attributes'] || {},
+      idMapping = formField['idMapping'] || 'id',
+      nameMapping = formField['nameMapping'] || 'name',
+      itemConfig = {
+        xtype: 'nx-itemselector',
+        fieldLabel: formField.label,
+        helpText: formField.helpText,
+        name: formField.id,
+        valueField: idMapping,
+        displayField: nameMapping,
+        width: 600,
 
-          itemCls: formField.required ? 'required-field' : '',
-          allowBlank: !formField.required,
-          delimiter: ',',
+        itemCls: formField.required ? 'required-field' : '',
+        allowBlank: !formField.required,
+        delimiter: ',',
 
-          // initialValue is null, but expected to be undefined for not set
-          value: formField.initialValue ? formField.initialValue : undefined,
+        // initialValue is null, but expected to be undefined for not set
+        value: formField.initialValue ? formField.initialValue : undefined,
 
-          listeners: {
-            afterrender: function() {
-              var value = this.getValue();
-              if (formField.required && value === undefined || (Ext.isArray(value) && value.length === 0)) {
-                // HACK: default blank behavior is not properly rendering required field error, forcing error to display
-                this.markInvalid(this.blankText);
-              }
+        listeners: {
+          afterrender: function () {
+            var value = this.getValue();
+            if ((formField.required && value === undefined) || (Ext.isArray(value) && value.length === 0)) {
+              // HACK: default blank behavior is not properly rendering required field error, forcing error to display
+              this.markInvalid(this.blankText);
             }
           }
-        };
+        }
+      };
 
     if (attributes['buttons']) {
       itemConfig.buttons = attributes['buttons'];
@@ -92,15 +86,15 @@ Ext.define('NX.coreui.view.formfield.factory.FormfieldItemselectFactory', {
       itemConfig.listeners = {
         afterrender: function (itemSelector) {
           const settings = itemSelector.up('nx-coreui-formfield-settingsfieldset');
-          itemSelector.on('change', function() {
+          itemSelector.on('change', function () {
             me.selectionPlaceholderUpdater(itemSelector);
           });
-          if(settings) {
-            settings.on('propertiesimported', function() {
+          if (settings) {
+            settings.on('propertiesimported', function () {
               me.selectionPlaceholderUpdater(itemSelector);
             });
           }
-          setTimeout(function() {
+          setTimeout(function () {
             me.selectionPlaceholderUpdater(itemSelector);
           }, 100);
           settings.updateLayout();
@@ -155,25 +149,27 @@ Ext.define('NX.coreui.view.formfield.factory.FormfieldItemselectFactory', {
   selectionPlaceholderUpdater: function (itemSelector) {
     const placeholderRecord = itemSelector.selectionPlaceholder;
 
-    if(placeholderRecord) {
-      const toField = itemSelector.toField, store = toField.getStore(), valueField = itemSelector.valueField;
-      const selectedValues = Ext.Array.filter(itemSelector.getValue().split(','), function(selection) {
-        return selection !== "" && selection !== placeholderRecord[valueField];
+    if (placeholderRecord) {
+      const toField = itemSelector.toField,
+        store = toField.getStore(),
+        valueField = itemSelector.valueField;
+      const selectedValues = Ext.Array.filter(itemSelector.getValue().split(','), function (selection) {
+        return selection !== '' && selection !== placeholderRecord[valueField];
       });
       if (selectedValues.length === 0) {
         if (store !== null && !store.findRecord(valueField, placeholderRecord[valueField])) {
           store.add(placeholderRecord);
           toField.setStore(store);
         }
-      }
-      else {
-        const placeholder = store.findRecord(valueField, placeholderRecord[valueField]);
-        if (placeholder) {
-          store.remove(placeholder);
-          toField.setStore(store);
+      } else {
+        if (store) {
+          const placeholder = store.findRecord(valueField, placeholderRecord[valueField]);
+          if (placeholder) {
+            store.remove(placeholder);
+            toField.setStore(store);
+          }
         }
       }
     }
   }
-
 });

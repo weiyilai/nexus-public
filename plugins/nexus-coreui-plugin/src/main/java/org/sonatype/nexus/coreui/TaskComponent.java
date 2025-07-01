@@ -13,11 +13,14 @@
 package org.sonatype.nexus.coreui;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -36,6 +39,7 @@ import javax.validation.groups.Default;
 import javax.ws.rs.NotFoundException;
 
 import org.sonatype.nexus.blobstore.api.tasks.ReconcileTaskConstants;
+import org.sonatype.nexus.common.time.UTC;
 import org.sonatype.nexus.coreui.TaskXO.AdvancedSchedule;
 import org.sonatype.nexus.coreui.TaskXO.OnceSchedule;
 import org.sonatype.nexus.coreui.TaskXO.OnceToMonthlySchedule;
@@ -75,6 +79,15 @@ import org.springframework.beans.factory.annotation.Value;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.stream.Collectors.toList;
+import static org.sonatype.nexus.blobstore.api.tasks.ReconcileTaskConstants.BLOB_STORE_NAME_FIELD_ID;
+import static org.sonatype.nexus.blobstore.api.tasks.ReconcileTaskConstants.END_DATE;
+import static org.sonatype.nexus.blobstore.api.tasks.ReconcileTaskConstants.REPOSITORY_NAME_FIELD_ID;
+import static org.sonatype.nexus.blobstore.api.tasks.ReconcileTaskConstants.SINCE_DAYS;
+import static org.sonatype.nexus.blobstore.api.tasks.ReconcileTaskConstants.SINCE_HOURS;
+import static org.sonatype.nexus.blobstore.api.tasks.ReconcileTaskConstants.SINCE_MINUTES;
+import static org.sonatype.nexus.blobstore.api.tasks.ReconcileTaskConstants.START_DATE;
+import static org.sonatype.nexus.blobstore.api.tasks.ReconcileTaskConstants.TASK_SCOPE;
+import static org.sonatype.nexus.blobstore.api.tasks.ReconcileTaskConstants.TASK_SCOPE_DATES;
 import static org.sonatype.nexus.repository.date.TimeZoneUtils.shiftMonthDay;
 import static org.sonatype.nexus.repository.date.TimeZoneUtils.shiftWeekDay;
 import static org.sonatype.nexus.scheduling.TaskState.CANCELED;
@@ -98,6 +111,8 @@ public class TaskComponent
   private static final String TASK_RESULT_INTERRUPTED = "Interrupted";
 
   public static final String PLAN_RECONCILIATION_TASK_ID = "blobstore.planReconciliation";
+
+  public static final String EXECUTE_PLAN_RECONCILIATION_TASK_ID = "blobstore.executeReconciliationPlan";
 
   public static final String PLAN_RECONCILIATION_TASK_OK_TEXT = " - Plan(s) is ready to run";
 
@@ -132,11 +147,13 @@ public class TaskComponent
   @ExceptionMetered
   @RequiresPermissions("nexus:tasks:read")
   public List<TaskXO> read() {
-    return taskScheduler.listsTasks()
+    List<TaskXO> tasks = taskScheduler.listsTasks()
         .stream()
         .filter(taskInfo -> taskInfo.getConfiguration().isVisible())
         .map(this::asTaskXO)
         .collect(toList());
+
+    return replaceDataRepairProperties(tasks);
   }
 
   /**
@@ -375,6 +392,92 @@ public class TaskComponent
       }
     }
     return taskScheduler.getScheduleFactory().manual();
+  }
+
+  private List<TaskXO> replaceDataRepairProperties(final List<TaskXO> tasks) {
+    TaskXO planTask = tasks.stream()
+        .filter(taskXO -> PLAN_RECONCILIATION_TASK_ID.equals(taskXO.getTypeId()))
+        .findFirst()
+        .orElse(null);
+
+    if (planTask != null) {
+      Map<String, String> properties = planTask.getProperties();
+
+      if (properties == null) {
+        return tasks;
+      }
+
+      TaskXO executePlanTaskXO = tasks.stream()
+          .filter(taskXO -> EXECUTE_PLAN_RECONCILIATION_TASK_ID.equals(taskXO.getTypeId()))
+          .findFirst()
+          .orElse(null);
+
+      if (executePlanTaskXO == null) {
+        return tasks;
+      }
+
+      Map<String, String> planProperties = new HashMap<>();
+
+      planProperties.put(REPOSITORY_NAME_FIELD_ID, properties.get(REPOSITORY_NAME_FIELD_ID));
+      planProperties.put(BLOB_STORE_NAME_FIELD_ID, properties.get(BLOB_STORE_NAME_FIELD_ID));
+      planProperties.put(TASK_SCOPE, TASK_SCOPE_DATES);
+
+      String startDateValue = properties.get(START_DATE);
+      String endDateValue = properties.get(END_DATE);
+
+      if (startDateValue == null || startDateValue.isEmpty()) {
+        planProperties.putAll(calculateDateRange(properties, startDateValue));
+      }
+      else {
+        planProperties.put(START_DATE, startDateValue);
+        planProperties.put(END_DATE, endDateValue);
+      }
+
+      Map<String, String> executePlanProperties = new HashMap<>(executePlanTaskXO.getProperties());
+
+      executePlanProperties.putAll(planProperties);
+      ImmutableMap<String, String> combinedMap = ImmutableMap.copyOf(executePlanProperties);
+
+      executePlanTaskXO.setProperties(combinedMap);
+
+      try {
+        update(executePlanTaskXO);
+      }
+      catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    return tasks;
+  }
+
+  private Map<String, String> calculateDateRange(
+      final Map<String, String> properties,
+      final String startDateValue)
+  {
+    Map<String, String> dateRangeMap = new HashMap<>();
+    try {
+      OffsetDateTime endDate = UTC.now();
+
+      int sinceDays = Integer.parseInt(!properties.get(SINCE_DAYS).matches("\\d+") ? "0" : properties.get(SINCE_DAYS));
+      int sinceHours =
+          Integer.parseInt(!properties.get(SINCE_HOURS).matches("\\d+") ? "0" : properties.get(SINCE_HOURS));
+      int sinceMinutes =
+          Integer.parseInt(!properties.get(SINCE_MINUTES).matches("\\d+") ? "0" : properties.get(SINCE_MINUTES));
+
+      OffsetDateTime startDate = endDate.minusDays(sinceDays)
+          .minusHours(sinceHours)
+          .minusMinutes(sinceMinutes);
+
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+      dateRangeMap.put(START_DATE, startDate.format(formatter));
+      dateRangeMap.put(END_DATE, endDate.format(formatter));
+    }
+    catch (Exception e) {
+      log.warn("Invalid start date format: {}", startDateValue, e);
+    }
+
+    return dateRangeMap;
   }
 
   @VisibleForTesting

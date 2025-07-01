@@ -25,15 +25,12 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
   extend: 'NX.view.SettingsForm',
   xtype: 'settingForm',
   alias: 'widget.nx-coreui-task-settings-form',
-  requires: [
-    'NX.Conditions',
-    'NX.I18n'
-  ],
+  requires: ['NX.Conditions', 'NX.I18n'],
 
   /**
    * @override
    */
-  initComponent: function() {
+  initComponent: function () {
     var me = this;
 
     me.items = [
@@ -91,12 +88,14 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
 
     me.editableMarker = NX.I18n.get('Task_TaskSettingsForm_Update_Error');
 
-    me.editableCondition = me.editableCondition || NX.Conditions.and(
+    me.editableCondition =
+      me.editableCondition ||
+      NX.Conditions.and(
         NX.Conditions.isPermitted('nexus:tasks:update'),
-        NX.Conditions.formHasRecord('nx-coreui-task-settings-form', function(model) {
+        NX.Conditions.formHasRecord('nx-coreui-task-settings-form', function (model) {
           return model.get('schedule') !== 'internal';
         })
-    );
+      );
 
     me.callParent();
   },
@@ -105,18 +104,18 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
    * @override
    * Additionally, gets value of properties.
    */
-  getValues: function() {
+  getValues: function () {
     var me = this,
-        values = me.getForm().getFieldValues(),
-        task = {
-          id: values.id,
-          typeId: values.typeId,
-          enabled: values.enabled ? true : false,
-          name: values.name,
-          alertEmail: values.alertEmail,
-          notificationCondition: values.notificationCondition,
-          schedule: values.schedule
-        };
+      values = me.getForm().getFieldValues(),
+      task = {
+        id: values.id,
+        typeId: values.typeId,
+        enabled: values.enabled ? true : false,
+        name: values.name,
+        alertEmail: values.alertEmail,
+        notificationCondition: values.notificationCondition,
+        schedule: values.schedule
+      };
 
     task.properties = me.down('nx-coreui-formfield-settingsfieldset').exportProperties(values);
     if (this.isPlanReconcileTask()) {
@@ -140,16 +139,27 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
     return task;
   },
 
+  startPreviousPlanComponent: function (model) {
+    var me = this;
+    me.data = {
+      model: model
+    };
+    Ext.defer(function () {
+      me.down('[name=reconcile-plan-component]').startComponent(model);
+    }, 100);
+  },
+
   /**
    * @override
    * Additionally, sets properties values.
    */
-  loadRecord: function(model) {
+  loadRecord: function (model) {
     var me = this,
-        taskTypeModel = NX.getApplication().getStore('TaskType').getById(model.get('typeId')),
-        settingsFieldSet = me.down('nx-coreui-formfield-settingsfieldset'),
-        scheduleFieldSet = me.down('nx-coreui-task-schedulefieldset'),
-        formFields;
+      taskTypeModel = NX.getApplication().getStore('TaskType').getById(model.get('typeId')),
+      settingsFieldSet = me.down('nx-coreui-formfield-settingsfieldset'),
+      scheduleFieldSet = me.down('nx-coreui-task-schedulefieldset'),
+
+      formFields;
 
     this.callParent(arguments);
 
@@ -167,11 +177,11 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
 
       this.initScheduleFieldSet(taskTypeModel, scheduleFieldSet);
 
-      Ext.each(formFields, function(field) {
+      Ext.each(formFields, function (field) {
         var properties = model.get('properties');
         if (properties && !properties.hasOwnProperty(field.id)) {
           properties[field.id] = null;
-          model.set('properties', properties, {dirty: false});
+          model.set('properties', properties, { dirty: false });
         }
       });
 
@@ -179,28 +189,23 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
       scheduleFieldSet.setRecurringDays(model.get('recurringDays'));
       scheduleFieldSet.setStartDate(model.get('startDate'));
 
-      if (this.isPlanReconcileTask()) {
-        const scopeFieldsSet = me.down('nx-coreui-task-scopefieldset');
-        if (scopeFieldsSet) {
-          if (model.get("properties") == null) {
-            model.set("properties", { "taskScope": "duration", "sinceMinutes": "30" })
-          }
-          scopeFieldsSet.importProperties(model.get('properties'));
-        }
-      }
-
       this.maybeMakeReadOnly(model);
+
+      if (this.isPlanReconcileTask()) {
+        this.handlePlanReconcileTask(model, me);
+      } else if (this.isExecutePlanReconcileTask()) {
+        this.renderExecutePlanFields(model, me, settingsFieldSet);
+      }
     }
   },
-  initScheduleFieldSet: function(taskTypeModel, scheduleFieldSet) {
+  initScheduleFieldSet: function (taskTypeModel, scheduleFieldSet) {
     if (taskTypeModel.get('id') === 'blobstore.planReconciliation') {
       scheduleFieldSet.setHidden(true);
       var scheduleCombo = this.down('[name="schedule"]');
       if (scheduleCombo) {
         scheduleCombo.setValue('manual');
       }
-    }
-    else {
+    } else {
       scheduleFieldSet.setHidden(false);
     }
   },
@@ -208,11 +213,11 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
   /**
    * To Reset Task Form including Days to run checkboxes.
    */
-  resetTaskForm: function() {
+  resetTaskForm: function () {
     var me = this,
-        checkboxes = me.query('checkbox[recurringDayValue]');
+      checkboxes = me.query('checkbox[recurringDayValue]');
 
-    Ext.Array.each(checkboxes, function(checkbox) {
+    Ext.Array.each(checkboxes, function (checkbox) {
       checkbox.originalValue = false;
     });
     me.form.reset();
@@ -222,11 +227,11 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
    * @override
    * Additionally, marks invalid properties.
    */
-  markInvalid: function(errors) {
+  markInvalid: function (errors) {
     this.down('nx-coreui-formfield-settingsfieldset').markInvalid(errors);
   },
 
-  disableComponents: function(disabled) {
+  disableComponents: function (disabled) {
     this.disableComponent(this.down('[name="sinceDays"]'), disabled);
     this.disableComponent(this.down('[name="sinceHours"]'), disabled);
     this.disableComponent(this.down('[name="sinceMinutes"]'), disabled);
@@ -236,7 +241,7 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
     this.disableComponent(this.down('[name="property_dryRun"]'), disabled);
     this.disableComponent(this.down('[name="taskScope"]'), disabled);
   },
-  disableComponent: function(component, disabled) {
+  disableComponent: function (component, disabled) {
     if (component != null) {
       component.setDisabled(disabled);
     }
@@ -245,21 +250,20 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
   /**
    * Make task setting UI read-only based on the task settings.
    */
-  maybeMakeReadOnly: function(model) {
+  maybeMakeReadOnly: function (model) {
     const readOnly = this.shouldMakeUiReadOnly(model);
     const me = this,
-        taskComponent = me.up('nx-coreui-task-feature');
+      taskComponent = me.up('nx-coreui-task-feature');
 
     if (taskComponent) {
       const deleteButton = taskComponent.down('button[action=delete]'),
-          runButton = taskComponent.down('button[action=run]');
+        runButton = taskComponent.down('button[action=run]');
       if (deleteButton && runButton) {
-        Ext.defer(function() {
+        Ext.defer(function () {
           if (readOnly) {
             deleteButton.disable();
             runButton.disable();
-          }
-          else {
+          } else {
             deleteButton.enable();
             // check current task state before enabling run button
             const taskReadyToRun = model.get('runnable');
@@ -271,21 +275,19 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
       }
 
       const editables = me.query('field'),
-          itemSelectors = me.query('nx-itemselector');
+        itemSelectors = me.query('nx-itemselector');
 
-      Ext.each(editables, function(editable) {
+      Ext.each(editables, function (editable) {
         if (readOnly) {
           editable.disable();
-        }
-        else {
+        } else {
           editable.enable();
         }
       });
-      Ext.each(itemSelectors, function(itemSelector) {
+      Ext.each(itemSelectors, function (itemSelector) {
         if (readOnly) {
           itemSelector.disable();
-        }
-        else {
+        } else {
           itemSelector.enable();
         }
       });
@@ -295,16 +297,76 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
   /**
    * Decide make UI read-only for given task
    */
-  shouldMakeUiReadOnly: function(model) {
+  shouldMakeUiReadOnly: function (model) {
     return model.get('isReadOnlyUi') === true;
   },
 
-  isPlanReconcileTask: function() {
+  isPlanReconcileTask: function () {
     const hiddenTypeId = this.down('hiddenfield[name=typeId]');
     if (hiddenTypeId) {
       const typeId = hiddenTypeId.value;
-      return typeId === 'blobstore.planReconciliation'
+      return typeId === 'blobstore.planReconciliation';
     }
     return false;
+  },
+
+  isExecutePlanReconcileTask: function () {
+    const hiddenTypeId = this.down('hiddenfield[name=typeId]');
+    if (hiddenTypeId) {
+      const typeId = hiddenTypeId.value;
+      return typeId === 'blobstore.executeReconciliationPlan';
+    }
+    return false;
+  },
+  handlePlanReconcileTask: function (model, me) {
+    const scopeFieldsSet = me.down('nx-coreui-task-scopefieldset');
+    if (scopeFieldsSet) {
+      if (model.get('properties') == null) {
+        model.set('properties', {taskScope: 'duration', sinceMinutes: '30'});
+      }
+      scopeFieldsSet.importProperties(model.get('properties'));
+    }
+  },
+  renderExecutePlanFields: function (model, me, settingsFieldSet) {
+    const scopeFieldsSet = me.down('nx-coreui-task-scopefieldset');
+
+    if (!scopeFieldsSet) {
+      return;
+    }
+
+    scopeFieldsSet.importProperties(model.get('properties'));
+    this.disableComponent(scopeFieldsSet.down('[name="taskScope"]'), true);
+    const scopeDates = me.down('nx-coreui-task-scope-dates');
+
+    if (scopeDates) {
+      scopeDates.importProperties(model.get('properties'));
+      const startDateComponent = scopeDates.down('[name="reconcileStartDate"]');
+      const endDateComponent = scopeDates.down('[name="reconcileEndDate"]');
+
+      this.disableComponent(startDateComponent, true);
+      this.disableComponent(endDateComponent, true);
+    }
+
+    const blobStoreFiledSet = settingsFieldSet.down('[name="property_blobstoreName"]');
+    const repositoryFieldSet = settingsFieldSet.down('[name="property_repositoryName"]');
+
+    this.disableComponent(blobStoreFiledSet, true);
+    this.disableComponent(repositoryFieldSet, true);
+
+    if (blobStoreFiledSet.items) {
+      blobStoreFiledSet.items.each(function (childComponent) {
+        if (childComponent.title === 'Available' || childComponent.xtype === 'toolbar') {
+          childComponent.setHidden(true); // Disable the multiselect field
+        }
+      });
+    }
+
+    if (repositoryFieldSet.items) {
+      repositoryFieldSet.items.each(function (childComponent) {
+        if (childComponent.title === 'Available' || childComponent.xtype === 'toolbar') {
+          childComponent.setHidden(true); // Disable the multiselect field
+        }
+      });
+    }
   }
 });

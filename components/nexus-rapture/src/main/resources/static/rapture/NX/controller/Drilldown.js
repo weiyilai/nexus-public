@@ -192,18 +192,7 @@ Ext.define('NX.controller.Drilldown', {
         me.logDebug('Loading Drilldown store: ', storeName);
         //</if>
         var storeInstance = me.getStore(storeName);
-        if (storeName === 'Task') {
-          me.getStore(storeName).load().addFilter([
-            {
-              filterFn: function(record) {
-                return record.get('typeId') !== 'blobstore.executeReconciliationPlan';
-              }
-            }
-          ], false);
-        }
-        else {
-          storeInstance.load();
-        }
+        storeInstance.load();
       });
     }
   },
