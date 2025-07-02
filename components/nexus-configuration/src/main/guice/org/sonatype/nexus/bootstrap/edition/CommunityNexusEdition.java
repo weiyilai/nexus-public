@@ -1,4 +1,3 @@
-
 /*
  * Sonatype Nexus (TM) Open Source Version
  * Copyright (c) 2008-present Sonatype, Inc.
@@ -18,6 +17,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.bootstrap.entrypoint.configuration.PropertyMap;
+import org.sonatype.nexus.common.app.FeatureFlags;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +71,7 @@ public class CommunityNexusEdition
 
   @Override
   protected void doApply(final PropertyMap properties, final Path workDirPath) {
+    enforceFipsNotEnabled(properties);
     log.info("Loading Community Edition");
     properties.put(NEXUS_EDITION, NexusEditionType.COMMUNITY.editionString);
     String updatedNexusFeaturesProps = properties.get(NEXUS_FEATURES)
@@ -78,5 +79,20 @@ public class CommunityNexusEdition
             NexusEditionFeature.PRO_FEATURE.featureString,
             getEditionFeature().featureString);
     properties.put(NEXUS_FEATURES, updatedNexusFeaturesProps);
+  }
+
+  /**
+   * Verifies that FIPS mode is not enabled. Throws an exception if either BouncyCastle FIPS or Nexus FIPS mode is
+   * active.
+   * Community Edition does not support running in FIPS mode.
+   */
+  private void enforceFipsNotEnabled(final PropertyMap properties) {
+    boolean bcFipsEnabled = Boolean.parseBoolean(System.getProperty("org.bouncycastle.fips.approved_only", "false"));
+    boolean nexusFipsEnabled = Boolean.parseBoolean(properties.get(FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED));
+
+    if (bcFipsEnabled || nexusFipsEnabled) {
+      throw new UnsupportedOperationException(
+          "You cannot use the Community Edition in FIPS mode. Please use the Nexus Professional Edition instead.");
+    }
   }
 }
