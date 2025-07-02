@@ -15,8 +15,7 @@ package org.sonatype.nexus.repository;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.MultipleFailures;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
@@ -35,6 +34,10 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Support for tasks that applies to repositories.
@@ -45,7 +48,8 @@ import static java.util.stream.Collectors.toList;
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public abstract class RepositoryTaskSupport
     extends TaskSupport
 {
@@ -68,7 +72,7 @@ public abstract class RepositoryTaskSupport
   }
 
   @Inject
-  public void install(final RepositoryManager repositoryManager, @Named(GroupType.NAME) final Type groupType) {
+  public void install(final RepositoryManager repositoryManager, @Qualifier(GroupType.NAME) final Type groupType) {
     this.repositoryManager = checkNotNull(repositoryManager);
     this.groupType = checkNotNull(groupType, "repository group type required");
   }

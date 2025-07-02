@@ -25,8 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Time;
@@ -47,13 +46,14 @@ import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.supportzip.PasswordSanitizing.REPLACEMENT;
 import static org.sonatype.nexus.supportzip.PasswordSanitizing.SENSITIVE_FIELD_NAMES;
+import org.springframework.stereotype.Component;
 
 /**
  * Export/Import data to/from the JSON by replacing sensitive data.
  *
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 public class JsonExporter
     extends ComponentSupport
@@ -77,7 +77,7 @@ public class JsonExporter
    * Export data to the JSON file and hide sensitive fields.
    *
    * @param objects to be exported.
-   * @param file    where to export.
+   * @param file where to export.
    * @throws IOException for any issue during writing a file.
    */
   public <T> void exportToJson(final List<T> objects, final File file) throws IOException {
@@ -87,8 +87,8 @@ public class JsonExporter
     }
     else {
       try (ByteArrayInputStream is = new ByteArrayInputStream(OBJECT_MAPPER.writeValueAsBytes(objects));
-           OutputStream os = new BufferedOutputStream(new FileOutputStream(file));
-           SanitizingJsonOutputStream stream = new SanitizingJsonOutputStream(os, SENSITIVE_FIELD_NAMES, REPLACEMENT)) {
+          OutputStream os = new BufferedOutputStream(new FileOutputStream(file));
+          SanitizingJsonOutputStream stream = new SanitizingJsonOutputStream(os, SENSITIVE_FIELD_NAMES, REPLACEMENT)) {
         ByteStreams.copy(is, stream);
       }
     }
@@ -98,7 +98,7 @@ public class JsonExporter
    * Export data to the JSON file and hide sensitive fields.
    *
    * @param object to be exported.
-   * @param file   where to export.
+   * @param file where to export.
    * @throws IOException for any issue during writing a file.
    */
   public <T> void exportObjectToJson(final T object, final File file) throws IOException {
@@ -108,8 +108,8 @@ public class JsonExporter
     }
     else {
       try (ByteArrayInputStream is = new ByteArrayInputStream(OBJECT_MAPPER.writeValueAsBytes(object));
-           OutputStream os = new BufferedOutputStream(new FileOutputStream(file));
-           SanitizingJsonOutputStream stream = new SanitizingJsonOutputStream(os, SENSITIVE_FIELD_NAMES, REPLACEMENT)) {
+          OutputStream os = new BufferedOutputStream(new FileOutputStream(file));
+          SanitizingJsonOutputStream stream = new SanitizingJsonOutputStream(os, SENSITIVE_FIELD_NAMES, REPLACEMENT)) {
         ByteStreams.copy(is, stream);
       }
     }
@@ -118,7 +118,7 @@ public class JsonExporter
   /**
    * Read JSON data.
    *
-   * @param file  file where data will be read.
+   * @param file file where data will be read.
    * @param clazz the type of imported data.
    * @return the list of {@link T} objects.
    * @throws IOException for any issue during reading a file.
@@ -140,7 +140,7 @@ public class JsonExporter
   /**
    * Read JSON data.
    *
-   * @param file  file where data will be read.
+   * @param file file where data will be read.
    * @param clazz the type of imported data.
    * @return {@link T} object or {@link Optional#empty} is case of an empty JSON file.
    * @throws IOException for any issue during reading a file.

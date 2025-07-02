@@ -22,9 +22,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Recipe;
 import org.sonatype.nexus.repository.internal.search.index.task.SearchUpdateTask;
 import org.sonatype.nexus.repository.types.GroupType;
@@ -63,8 +64,8 @@ public abstract class SearchIndexUpgrade
   private Map<String, Recipe> recipes;
 
   @Inject
-  public final void inject(final Map<String, Recipe> recipes) {
-    this.recipes = checkNotNull(recipes);
+  public final void inject(final List<Recipe> recipesList) {
+    this.recipes = QualifierUtil.buildQualifierBeanMap(checkNotNull(recipesList));
   }
 
   public boolean test(final String format) {
@@ -133,8 +134,10 @@ public abstract class SearchIndexUpgrade
     }
   }
 
-  private void setRepositoryAttributes(final Connection connection, final Repo repo, final byte[] attributes)
-      throws SQLException
+  private void setRepositoryAttributes(
+      final Connection connection,
+      final Repo repo,
+      final byte[] attributes) throws SQLException
   {
     log.info("Marking {} repository for search index update", repo.name);
     String update = String.format(UPDATE_REPOSITORY_ATTRIBUTES, repo.format);

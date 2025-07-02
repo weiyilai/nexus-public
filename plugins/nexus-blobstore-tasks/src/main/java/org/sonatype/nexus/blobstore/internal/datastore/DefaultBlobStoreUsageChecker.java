@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.blobstore.internal.datastore;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.blobstore.api.BlobId;
@@ -26,6 +25,8 @@ import org.sonatype.nexus.repository.content.facet.ContentFacetSupport;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 
 import com.codahale.metrics.annotation.Timed;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Optional.of;
@@ -36,7 +37,8 @@ import static org.sonatype.nexus.blobstore.api.BlobStore.REPO_NAME_HEADER;
  *
  * @since 3.29
  */
-@Named
+@Primary
+@Component
 @Singleton
 public class DefaultBlobStoreUsageChecker
     implements BlobStoreUsageChecker

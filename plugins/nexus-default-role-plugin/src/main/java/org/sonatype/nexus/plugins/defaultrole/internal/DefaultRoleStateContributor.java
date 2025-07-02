@@ -16,9 +16,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.plugins.defaultrole.DefaultRoleRealm;
@@ -29,10 +28,13 @@ import org.sonatype.nexus.security.role.Role;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.security.user.UserManager.DEFAULT_SOURCE;
 
-@Named
+@Primary
+@Component
 @Singleton
 public class DefaultRoleStateContributor
     extends ComponentSupport

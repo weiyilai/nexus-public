@@ -30,7 +30,7 @@ public class VelocityEngineProviderTest
     final int velocityParserPoolSize = 30;
     VelocityEngineProvider underTest = new VelocityEngineProvider(velocityParserPoolSize);
 
-    final VelocityEngine velocityEngine = underTest.get();
+    final VelocityEngine velocityEngine = underTest.getObject();
 
     assertThat(parseInt(velocityEngine.getProperty(PARSER_POOL_SIZE).toString()), is(velocityParserPoolSize));
   }

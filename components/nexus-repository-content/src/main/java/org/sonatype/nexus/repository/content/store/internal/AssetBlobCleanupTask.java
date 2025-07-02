@@ -18,13 +18,13 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.blobstore.api.BlobRef;
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.logging.task.TaskLogging;
 import org.sonatype.nexus.repository.content.AssetBlob;
@@ -43,14 +43,18 @@ import static org.sonatype.nexus.common.property.SystemPropertiesHelper.getStrin
 import static org.sonatype.nexus.logging.task.TaskLogType.NEXUS_LOG_ONLY;
 import static org.sonatype.nexus.repository.content.store.internal.AssetBlobCleanupTaskDescriptor.CONTENT_STORE_FIELD_ID;
 import static org.sonatype.nexus.repository.content.store.internal.AssetBlobCleanupTaskDescriptor.FORMAT_FIELD_ID;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Background task that cleans up unused {@link AssetBlob}s.
  *
  * @since 3.24
  */
-@Named
+@Component
 @TaskLogging(NEXUS_LOG_ONLY)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AssetBlobCleanupTask
     extends TaskSupport
     implements Cancelable
@@ -79,10 +83,10 @@ public class AssetBlobCleanupTask
 
   @Inject
   public AssetBlobCleanupTask(
-      final Map<String, FormatStoreManager> formatStoreManagers,
+      final List<FormatStoreManager> formatStoreManagersList,
       final BlobStoreManager blobStoreManager)
   {
-    this.formatStoreManagers = checkNotNull(formatStoreManagers);
+    this.formatStoreManagers = QualifierUtil.buildQualifierBeanMap(checkNotNull(formatStoreManagersList));
     this.blobStoreManager = checkNotNull(blobStoreManager);
   }
 
@@ -93,11 +97,11 @@ public class AssetBlobCleanupTask
     if (batchDeleteIgnoreFormats != null && format != null
         && batchDeleteIgnoreFormats.contains(format)) {
       batchDeleteEnabled = false;
-    } else {
+    }
+    else {
       batchDeleteExecutorService = newFixedThreadPool(
           BATCH_DELETE_POOL_SIZE,
-          new NexusThreadFactory("blobstore", "async-ops")
-      );
+          new NexusThreadFactory("blobstore", "async-ops"));
     }
   }
 
@@ -115,7 +119,8 @@ public class AssetBlobCleanupTask
       if (batchDeleteEnabled) {
         try {
           deleteCount = deleteUnusedAssetBlobsBatch(assetBlobStore, format, contentStore);
-        } finally {
+        }
+        finally {
           if (!batchDeleteExecutorService.isShutdown()) {
             batchDeleteExecutorService.shutdown();
           }

@@ -17,9 +17,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -33,18 +32,18 @@ import org.sonatype.nexus.common.script.ScriptApi;
 import org.sonatype.nexus.common.script.ScriptCleanupHandler;
 import org.sonatype.nexus.common.script.ScriptService;
 
-import org.eclipse.sisu.inject.BeanLocator;
 import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link ScriptService} implementation.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class ScriptServiceImpl
     extends ComponentSupport
@@ -53,8 +52,6 @@ public class ScriptServiceImpl
   public static final String SCRIPT_CLEANUP_HANDLER = "scriptCleanupHandler";
 
   private final ScriptEngineManager engineManager;
-
-  private final BeanLocator beanLocator;
 
   private final GlobalComponentLookupHelper lookupHelper;
 
@@ -67,14 +64,12 @@ public class ScriptServiceImpl
   @Inject
   public ScriptServiceImpl(
       final ScriptEngineManager engineManager,
-      final BeanLocator beanLocator,
       final GlobalComponentLookupHelper lookupHelper,
       final List<ScriptApi> scriptApis,
       final ScriptCleanupHandler scriptCleanupHandler,
-      @Named("${nexus.scripts.groovyOnly:-true}") @Value("${nexus.scripts.groovyOnly:true}") final boolean allowOnlyGroovy)
+      @Value("${nexus.scripts.groovyOnly:true}") final boolean allowOnlyGroovy)
   {
     this.engineManager = checkNotNull(engineManager);
-    this.beanLocator = checkNotNull(beanLocator);
     this.lookupHelper = checkNotNull(lookupHelper);
     this.scriptApis = checkNotNull(scriptApis);
     this.scriptCleanupHandler = checkNotNull(scriptCleanupHandler);
@@ -100,7 +95,6 @@ public class ScriptServiceImpl
     // TODO: Could potentially expose these in GLOBAL_SCOPE bindings?
     // TODO: Consider options to allow scripts more easily become injected aware?
 
-    bindings.put("beanLocator", beanLocator);
     bindings.put("container", lookupHelper);
     bindings.put(SCRIPT_CLEANUP_HANDLER, scriptCleanupHandler);
     for (ScriptApi scriptApi : scriptApis) {

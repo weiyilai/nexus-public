@@ -22,16 +22,12 @@ import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsFactory;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
-import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.datastore.api.DuplicateKeyException;
 import org.sonatype.nexus.datastore.mybatis.handlers.SecretTypeHandler;
 import org.sonatype.nexus.internal.security.apikey.ApiKeyInternal;
 import org.sonatype.nexus.testdb.DataSessionRule;
-import org.sonatype.nexus.transaction.TransactionModule;
 
-import com.google.inject.Guice;
-import com.google.inject.Provides;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.assertj.db.type.Table;
@@ -93,7 +89,8 @@ public class ApiKeyStoreV2ImplTest
 
   @Before
   public void setup() {
-    underTest = create(ApiKeyStoreV2Impl.class);
+    underTest = new ApiKeyStoreV2Impl(sessionRule, secretsService);
+    underTest.setDependencies(eventManager);
 
     when(secretsService.encrypt(any(), any(), any()))
         .thenAnswer(invocation -> {
@@ -302,27 +299,6 @@ public class ApiKeyStoreV2ImplTest
     assertThat(ApiKeyStoreV2Impl.secret("abcdef".toCharArray()), is("def".toCharArray()));
     // odd number
     assertThat(ApiKeyStoreV2Impl.secret("abcdefg".toCharArray()), is("defg".toCharArray()));
-  }
-
-  private <T> T create(final Class<T> clazz) {
-    return Guice.createInjector(new TransactionModule()
-    {
-      @Provides
-      DataSessionSupplier getDataSessionSupplier() {
-        return sessionRule;
-      }
-
-      @Provides
-      EventManager getEventManager() {
-        return eventManager;
-      }
-
-      @Provides
-      SecretsService getSecretsService() {
-        return secretsService;
-      }
-    }).getInstance(clazz);
-
   }
 
   private Table table() {

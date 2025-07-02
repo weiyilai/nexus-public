@@ -21,9 +21,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 import org.sonatype.nexus.blobstore.s3.internal.ParallelUploader.ChunkReader.Chunk;
@@ -34,11 +33,14 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Uploads an InputStream, using multipart upload in parallel if the file is larger or equal to the chunk size.
@@ -46,8 +48,10 @@ import static java.util.Optional.of;
  *
  * @since 3.19
  */
+@ConditionalOnProperty(name = "nexus.s3.uploaderName", havingValue = "parallelUploader")
 @Singleton
-@Named("parallelUploader")
+@Component
+@Qualifier("parallelUploader")
 public class ParallelUploader
     extends ParallelRequester
     implements S3Uploader
@@ -56,8 +60,8 @@ public class ParallelUploader
 
   @Inject
   public ParallelUploader(
-      @Named("${nexus.s3.parallelRequests.chunksize:-5242880}") @Value("${nexus.s3.parallelRequests.chunksize:5242880}") final int chunkSize,
-      @Named("${nexus.s3.parallelRequests.parallelism:-0}") @Value("${nexus.s3.parallelRequests.parallelism:0}") final int nThreads)
+      @Value("${nexus.s3.parallelRequests.chunksize:5242880}") final int chunkSize,
+      @Value("${nexus.s3.parallelRequests.parallelism:0}") final int nThreads)
   {
     super(chunkSize, nThreads, "uploadThreads");
   }

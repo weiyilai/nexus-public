@@ -12,16 +12,18 @@
  */
 package org.sonatype.nexus.internal.template;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import org.apache.velocity.app.VelocityEngine;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static org.apache.velocity.runtime.RuntimeConstants.PARSER_POOL_SIZE;
 import static org.apache.velocity.runtime.RuntimeConstants.RESOURCE_LOADERS;
@@ -37,11 +39,12 @@ import static org.apache.velocity.runtime.RuntimeConstants.VM_PERM_INLINE_LOCAL;
  *
  * @since 2.8
  */
-@Named
+@Primary
+@Component
 @Singleton
 public class VelocityEngineProvider
     extends ComponentSupport
-    implements Provider<VelocityEngine>
+    implements FactoryBean<VelocityEngine>
 {
   private final VelocityEngine engine;
 
@@ -49,15 +52,20 @@ public class VelocityEngineProvider
 
   @Inject
   public VelocityEngineProvider(
-      @Named("${nexus.velocity." + PARSER_POOL_SIZE + ":-20}") final int velocityParserPoolSize)
+      @Value("${nexus.velocity." + PARSER_POOL_SIZE + ":20}") final int velocityParserPoolSize)
   {
     this.velocityParserPoolSize = velocityParserPoolSize;
     this.engine = create();
   }
 
   @Override
-  public VelocityEngine get() {
+  public VelocityEngine getObject() {
     return engine;
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return VelocityEngine.class;
   }
 
   private VelocityEngine create() {

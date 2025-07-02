@@ -14,9 +14,8 @@ package org.sonatype.nexus.coreui;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -34,6 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.sonatype.nexus.security.anonymous.AnonymousHelper.getAuthenticationRealms;
+import org.springframework.stereotype.Component;
 
 /**
  * THIS CLASS IS NOT WHAT IT SEEMS! This REST resource is ONLY utilized by the anonymous settings page in UI for
@@ -45,7 +45,7 @@ import static org.sonatype.nexus.security.anonymous.AnonymousHelper.getAuthentic
  *
  * @since 3.19
  */
-@Named
+@Component
 @Singleton
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
@@ -63,7 +63,8 @@ public class RealmSettingsResource
   @Inject
   public RealmSettingsResource(
       final RealmManager realmManager,
-      List<UserManager> userManagers) {
+      List<UserManager> userManagers)
+  {
     this.realmManager = checkNotNull(realmManager);
     checkNotNull(userManagers);
     authenticationRealms = getAuthenticationRealms(userManagers);
@@ -73,7 +74,8 @@ public class RealmSettingsResource
   @Path("/types")
   @RequiresPermissions("nexus:settings:read")
   public List<SecurityRealm> readRealmTypes() {
-    return realmManager.getAvailableRealms(true).stream()
+    return realmManager.getAvailableRealms(true)
+        .stream()
         .filter(securityRealm -> authenticationRealms.contains(securityRealm.getId()))
         .collect(toList());
   }

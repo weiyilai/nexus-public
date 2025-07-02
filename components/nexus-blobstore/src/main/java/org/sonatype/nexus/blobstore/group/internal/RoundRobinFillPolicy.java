@@ -18,8 +18,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.BlobStore;
@@ -33,13 +32,19 @@ import org.springframework.beans.factory.annotation.Value;
 
 import static java.util.Collections.rotate;
 import static org.sonatype.nexus.common.app.FeatureFlags.BLOBSTORE_SKIP_ON_SOFTQUOTA_VIOLATION;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * {@link FillPolicy} that divides writes to member blob stores evenly based upon a round robin selection.
  *
  * @since 3.14
  */
-@Named(RoundRobinFillPolicy.TYPE)
+@Component
+@Qualifier(RoundRobinFillPolicy.TYPE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RoundRobinFillPolicy
     extends ComponentSupport
     implements FillPolicy
@@ -55,7 +60,6 @@ public class RoundRobinFillPolicy
   private BlobStoreQuotaService quotaService;
 
   @Inject
-  @Named("${" + BLOBSTORE_SKIP_ON_SOFTQUOTA_VIOLATION + ":-false}")
   @Value("${" + BLOBSTORE_SKIP_ON_SOFTQUOTA_VIOLATION + ":false}")
   boolean skipOnSoftQuotaViolation;
 

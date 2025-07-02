@@ -12,20 +12,15 @@
  */
 package org.sonatype.nexus.bootstrap.entrypoint.configuration;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionSelector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionSelector;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.Boolean.parseBoolean;
 import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirectoryConfiguration.BASEDIR_SYS_PROP;
 import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirectoryConfiguration.DATADIR_SYS_PROP;
-import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusPropertiesVerifier.TRUE;
 import static org.sonatype.nexus.common.app.FeatureFlags.*;
 
 /**
@@ -34,9 +29,6 @@ import static org.sonatype.nexus.common.app.FeatureFlags.*;
  *
  * A reworking of the NexusEditionPropertiesConfigurer to be used in the new spring-only world
  */
-@Named
-@Singleton
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = TRUE)
 public class NexusPropertiesVerifier
 {
   public static final String FALSE = "false";
@@ -54,7 +46,7 @@ public class NexusPropertiesVerifier
     requireProperty(nexusProperties, BASEDIR_SYS_PROP);
     requireProperty(nexusProperties, DATADIR_SYS_PROP);
 
-    if (nexusProperties.get(NexusEditionSelector.PROPERTY_KEY) == null) {
+    if (nexusProperties.getProperty(NexusEditionSelector.PROPERTY_KEY) == null) {
       // Default to CORE
       nexusProperties.put(NexusEditionSelector.PROPERTY_KEY, "CORE");
     }
@@ -69,7 +61,7 @@ public class NexusPropertiesVerifier
     selectDefaults(nexusProperties);
   }
 
-  private void applyEnvironmentVariables(final NexusProperties nexusProperties) {
+  private static void applyEnvironmentVariables(final NexusProperties nexusProperties) {
     maybeApplyEnvironmentVariable(
         nexusProperties,
         CHANGE_REPO_BLOBSTORE_TASK_ENABLED,
@@ -89,8 +81,8 @@ public class NexusPropertiesVerifier
     maybeApplyEnvironmentVariable(nexusProperties, "nexus.clustered", "NEXUS_CLUSTERED");
   }
 
-  private void selectDatastoreFeature(final NexusProperties nexusProperties) {
-    if (parseBoolean(nexusProperties.get(DATASTORE_CLUSTERED_ENABLED))) {
+  private static void selectDatastoreFeature(final NexusProperties nexusProperties) {
+    if (parseBoolean(nexusProperties.getProperty(DATASTORE_CLUSTERED_ENABLED))) {
       nexusProperties.put(DATASTORE_TABLE_SEARCH, TRUE);
       nexusProperties.put(SQL_DISTRIBUTED_CACHE, TRUE);
       nexusProperties.put(DATASTORE_BLOBSTORE_METRICS, TRUE);
@@ -100,16 +92,16 @@ public class NexusPropertiesVerifier
       nexusProperties.put(CLUSTERED_ZERO_DOWNTIME_ENABLED, FALSE);
     }
 
-    if (parseBoolean(nexusProperties.get(DATASTORE_TABLE_SEARCH))) {
+    if (parseBoolean(nexusProperties.getProperty(DATASTORE_TABLE_SEARCH))) {
       nexusProperties.put(ELASTIC_SEARCH_ENABLED, FALSE);
     }
-    else if (parseBoolean(nexusProperties.get(ELASTIC_SEARCH_ENABLED))) {
+    else if (parseBoolean(nexusProperties.getProperty(ELASTIC_SEARCH_ENABLED))) {
       nexusProperties.put(DATASTORE_TABLE_SEARCH, FALSE);
     }
 
     // If edition is CE, ensure analytics is always enabled
-    if (COMMUNITY.equals(nexusProperties.get(NexusEditionSelector.PROPERTY_KEY))) {
-      if (FALSE.equals(nexusProperties.get("nexus.analytics.enabled"))) {
+    if (COMMUNITY.equals(nexusProperties.getProperty(NexusEditionSelector.PROPERTY_KEY))) {
+      if (FALSE.equals(nexusProperties.getProperty("nexus.analytics.enabled"))) {
         log.warn(
             "Attempt to disable analytics in Community Edition detected. Analytics will remain enabled as this is required for CE.");
       }
@@ -123,49 +115,52 @@ public class NexusPropertiesVerifier
     nexusProperties.put("nexus.quartz.jobstore.jdbc", TRUE);
   }
 
-  private void selectAuthenticationFeature(final NexusProperties nexusProperties) {
-    if (parseBoolean(nexusProperties.get(DATASTORE_CLUSTERED_ENABLED))) {
+  private static void selectAuthenticationFeature(final NexusProperties nexusProperties) {
+    if (parseBoolean(nexusProperties.getProperty(DATASTORE_CLUSTERED_ENABLED))) {
       // if datastore is clustered, JWT must be enabled
       nexusProperties.put(JWT_ENABLED, TRUE);
       nexusProperties.put(SESSION_ENABLED, FALSE);
     }
-    else if (nexusProperties.get(SESSION_ENABLED) == null && nexusProperties.get(JWT_ENABLED) == null) {
+    else if (isNullOrEmpty(nexusProperties.getProperty(SESSION_ENABLED))
+        && isNullOrEmpty(nexusProperties.getProperty(JWT_ENABLED))) {
       nexusProperties.put(SESSION_ENABLED, TRUE);
       nexusProperties.put(JWT_ENABLED, FALSE);
     }
-    else if (nexusProperties.get(SESSION_ENABLED) != null && nexusProperties.get(JWT_ENABLED) == null) {
-      nexusProperties.put(JWT_ENABLED, parseBoolean(nexusProperties.get(SESSION_ENABLED)) ? FALSE : TRUE);
+    else if (!isNullOrEmpty(nexusProperties.getProperty(SESSION_ENABLED))
+        && isNullOrEmpty(nexusProperties.getProperty(JWT_ENABLED))) {
+      nexusProperties.put(JWT_ENABLED, parseBoolean(nexusProperties.getProperty(SESSION_ENABLED)) ? FALSE : TRUE);
     }
-    else if (nexusProperties.get(JWT_ENABLED) != null && nexusProperties.get(SESSION_ENABLED) == null) {
-      nexusProperties.put(SESSION_ENABLED, parseBoolean(nexusProperties.get(JWT_ENABLED)) ? FALSE : TRUE);
+    else if (!isNullOrEmpty(nexusProperties.getProperty(JWT_ENABLED))
+        && isNullOrEmpty(nexusProperties.getProperty(SESSION_ENABLED))) {
+      nexusProperties.put(SESSION_ENABLED, parseBoolean(nexusProperties.getProperty(JWT_ENABLED)) ? FALSE : TRUE);
     }
 
-    if (!parseBoolean(nexusProperties.get(JWT_ENABLED))) {
+    if (!parseBoolean(nexusProperties.getProperty(JWT_ENABLED))) {
       // If JWT is not enabled, then disable OAuth2 as well
       nexusProperties.put(NEXUS_SECURITY_OAUTH2_ENABLED, FALSE);
     }
   }
 
-  private void ensureHACIsDisabled(final NexusProperties nexusProperties) {
-    if (nexusProperties.get("nexus.clustered") != null) {
+  private static void ensureHACIsDisabled(final NexusProperties nexusProperties) {
+    if (!isNullOrEmpty(nexusProperties.getProperty("nexus.clustered"))) {
       throw new IllegalStateException(
           "High Availability Clustering (HA-C) is a legacy feature and is no longer supported");
     }
   }
 
-  private void selectDefaults(final NexusProperties nexusProperties) {
-    if (nexusProperties.get("nexus.onboarding.enabled") == null) {
+  private static void selectDefaults(final NexusProperties nexusProperties) {
+    if (nexusProperties.getProperty("nexus.onboarding.enabled") == null) {
       nexusProperties.put("nexus.onboarding.enabled", TRUE);
     }
-    if (nexusProperties.get("nexus.scripts.allowCreation") == null) {
+    if (nexusProperties.getProperty("nexus.scripts.allowCreation") == null) {
       nexusProperties.put("nexus.scripts.allowCreation", FALSE);
     }
-    if (nexusProperties.get("nexus.http.denyframe.enabled") == null) {
+    if (nexusProperties.getProperty("nexus.http.denyframe.enabled") == null) {
       nexusProperties.put("nexus.http.denyframe.enabled", TRUE);
     }
   }
 
-  private void maybeApplyEnvironmentVariable(
+  private static void maybeApplyEnvironmentVariable(
       final NexusProperties nexusProperties,
       final String propertyKey,
       final String environmentKey)
@@ -177,8 +172,8 @@ public class NexusPropertiesVerifier
     }
   }
 
-  private void requireProperty(final NexusProperties nexusProperties, final String name) {
-    if (nexusProperties.get(name) == null) {
+  private static void requireProperty(final NexusProperties nexusProperties, final String name) {
+    if (nexusProperties.getProperty(name) == null) {
       throw new IllegalStateException("Missing required property: " + name);
     }
   }

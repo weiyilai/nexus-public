@@ -13,27 +13,27 @@
 package org.sonatype.nexus.bootstrap.entrypoint;
 
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEdition;
 import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionSelector;
-import org.sonatype.nexus.bootstrap.entrypoint.jetty.JettyServer;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.stereotype.Component;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 public class ApplicationLauncher
@@ -46,32 +46,21 @@ public class ApplicationLauncher
 
   private final ConfigurableApplicationContext context;
 
-  private final JettyServer jettyServer;
+  private final SpringComponentScan springComponentScan;
 
   @Inject
   public ApplicationLauncher(
       final NexusEditionSelector nexusEditionSelector,
-      final JettyServer jettyServer,
-      final ConfigurableApplicationContext context)
+      final ConfigurableApplicationContext context,
+      final SpringComponentScan springComponentScan)
+
   {
-    this.nexusEditionSelector = nexusEditionSelector;
-    this.jettyServer = jettyServer;
-    this.context = context;
-
-    initialize();
+    this.nexusEditionSelector = checkNotNull(nexusEditionSelector);
+    this.context = checkNotNull(context);
+    this.springComponentScan = checkNotNull(springComponentScan);
   }
 
-  public void start() throws Exception {
-    MDC.put("userId", SYSTEM_USERID);
-    jettyServer.start(false, () -> {
-    });
-  }
-
-  public void stop() throws Exception {
-    MDC.remove("userId");
-    jettyServer.stop();
-  }
-
+  @PostConstruct
   private void initialize() {
     SLF4JBridgeHandler.removeHandlersForRootLogger();
     SLF4JBridgeHandler.install();
@@ -87,11 +76,20 @@ public class ApplicationLauncher
             Map.of("nexus.edition", nexusEdition)));
   }
 
-  // don't start jetty until spring context is fully initialized
-  @EventListener(ContextRefreshedEvent.class)
+  /**
+   * This method is called when the application context is refreshed. It will trigger the 2nd level component scanning
+   * and start the jetty server.
+   */
+  @EventListener
   public void onContextRefreshed(final ContextRefreshedEvent event) {
+    // we only want this event from the parent context to start jetty
+    if (event.getApplicationContext().getParent() != null) {
+      LOG.debug("Application already started, skipping event");
+      return;
+    }
+
     try {
-      start();
+      springComponentScan.finishBootstrapComponentScanning();
     }
     catch (Exception e) {
       throw new RuntimeException("Failed to configure application", e);

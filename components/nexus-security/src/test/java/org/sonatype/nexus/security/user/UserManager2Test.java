@@ -17,40 +17,52 @@ import java.util.Map;
 import java.util.Set;
 
 import org.sonatype.nexus.security.AbstractSecurityTest;
-import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
+import org.sonatype.nexus.security.config.PreconfiguredSecurityConfigurationSource;
+import org.sonatype.nexus.security.config.SecurityConfigurationSource;
 import org.sonatype.nexus.security.role.RoleIdentifier;
+import org.sonatype.nexus.security.user.UserManager2Test.UserManager2TestConfiguration;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 // FIXME: resolve with other UserManagerTest
 
 /**
  * Tests for {@link UserManager}.
  */
-public class UserManager2Test
+@Import(UserManager2TestConfiguration.class)
+class UserManager2Test
     extends AbstractSecurityTest
 {
+  static class UserManager2TestConfiguration
+  {
+    @Bean
+    @Primary
+    SecurityConfigurationSource securityConfigurationSource() {
+      return new PreconfiguredSecurityConfigurationSource(UserManager2TestSecurity.securityModel());
+    }
+  }
+
   private UserManager underTest;
 
+  @BeforeEach
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     underTest = getUserManager();
   }
 
-  @Override
-  protected MemorySecurityConfiguration initialSecurityConfiguration() {
-    return UserManager2TestSecurity.securityModel();
-  }
-
   @Test
-  public void testListUserIds() throws Exception {
+  void testListUserIds() throws Exception {
     Set<String> userIds = underTest.listUserIds();
     assertThat(userIds, hasItem("test-user"));
     assertThat(userIds, hasItem("anonymous"));
@@ -60,7 +72,7 @@ public class UserManager2Test
   }
 
   @Test
-  public void testListUsers() throws Exception {
+  void testListUsers() throws Exception {
     Set<User> users = underTest.listUsers();
     Map<String, User> userMap = toUserMap(users);
 
@@ -68,32 +80,32 @@ public class UserManager2Test
     assertThat(userMap, hasKey("anonymous"));
     assertThat(userMap, hasKey("admin"));
 
-    Assert.assertEquals(4, users.size());
+    assertEquals(4, users.size());
   }
 
   @Test
-  public void testGetUser() throws Exception {
+  void testGetUser() throws Exception {
     User testUser = underTest.getUser("test-user");
 
-    Assert.assertEquals("Test User", testUser.getName());
-    Assert.assertEquals("test-user", testUser.getUserId());
-    Assert.assertEquals("test-user@example.org", testUser.getEmailAddress());
+    assertEquals("Test User", testUser.getName());
+    assertEquals("test-user", testUser.getUserId());
+    assertEquals("test-user@example.org", testUser.getEmailAddress());
 
     // test roles
     Map<String, RoleIdentifier> roleMap = this.toRoleMap(testUser.getRoles());
 
     assertThat(roleMap, hasKey("role1"));
     assertThat(roleMap, hasKey("role2"));
-    Assert.assertEquals(2, roleMap.size());
+    assertEquals(2, roleMap.size());
   }
 
   @Test
-  public void testGetUserWithEmptyRole() throws Exception {
+  void testGetUserWithEmptyRole() throws Exception {
     User testUser = underTest.getUser("test-user-with-empty-role");
 
-    Assert.assertEquals("Test User With Empty Role", testUser.getName());
-    Assert.assertEquals("test-user-with-empty-role", testUser.getUserId());
-    Assert.assertEquals("test-user-with-empty-role@example.org", testUser.getEmailAddress());
+    assertEquals("Test User With Empty Role", testUser.getName());
+    assertEquals("test-user-with-empty-role", testUser.getUserId());
+    assertEquals("test-user-with-empty-role@example.org", testUser.getEmailAddress());
 
     // test roles
     Map<String, RoleIdentifier> roleMap = this.toRoleMap(testUser.getRoles());
@@ -101,18 +113,18 @@ public class UserManager2Test
     assertThat(roleMap, hasKey("empty-role"));
     assertThat(roleMap, hasKey("role1"));
     assertThat(roleMap, hasKey("role2"));
-    Assert.assertEquals(3, roleMap.size());
+    assertEquals(3, roleMap.size());
   }
 
   @Test
-  public void testSearchUser() throws Exception {
+  void testSearchUser() throws Exception {
     Set<User> users = underTest.searchUsers(new UserSearchCriteria("test"));
     Map<String, User> userMap = toUserMap(users);
 
     assertThat(userMap, hasKey("test-user"));
     assertThat(userMap, hasKey("test-user-with-empty-role"));
 
-    Assert.assertEquals(2, users.size());
+    assertEquals(2, users.size());
   }
 
   private Map<String, RoleIdentifier> toRoleMap(final Set<RoleIdentifier> roles) {

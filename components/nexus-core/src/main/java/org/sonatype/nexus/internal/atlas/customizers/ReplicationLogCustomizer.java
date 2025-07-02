@@ -20,8 +20,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.logging.task.TaskLogHome;
@@ -34,11 +33,12 @@ import com.google.common.annotations.VisibleForTesting;
 import static java.time.Instant.ofEpochMilli;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Priority.DEFAULT;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.REPLICATIONLOG;
+import org.springframework.stereotype.Component;
 
 /**
  * Class to add replication v2 logs to support bundle
  */
-@Named
+@Component
 @Singleton
 public class ReplicationLogCustomizer
     extends ComponentSupport

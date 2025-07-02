@@ -18,8 +18,7 @@ import javax.cache.Cache;
 import javax.cache.Cache.Entry;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
@@ -38,13 +37,17 @@ import com.google.common.annotations.VisibleForTesting;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.FacetSupport.State.STARTED;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link NegativeCacheFacet} implementation.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class NegativeCacheFacetImpl
     extends FacetSupport
     implements NegativeCacheFacet

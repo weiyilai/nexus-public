@@ -16,21 +16,25 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.inject.Named;
-
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.cleanup.datastore.search.criteria.AssetCleanupEvaluator;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.Asset;
 
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.REGEX_KEY;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Creates an predicate which determines whether an asset's path matches the specified regular expression
  *
  * @since 3.38
  */
-@Named(REGEX_KEY)
+@Component
+@Qualifier(REGEX_KEY)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RegexCleanupEvaluator
     extends ComponentSupport
     implements AssetCleanupEvaluator

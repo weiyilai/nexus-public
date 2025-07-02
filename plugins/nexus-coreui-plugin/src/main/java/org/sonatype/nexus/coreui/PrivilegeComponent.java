@@ -35,9 +35,8 @@ import org.sonatype.nexus.validation.Validate;
 import org.sonatype.nexus.validation.group.Create;
 import org.sonatype.nexus.validation.group.Update;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -50,11 +49,12 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.security.user.UserManager.DEFAULT_SOURCE;
+import org.springframework.stereotype.Component;
 
 /**
  * Privilege {@link DirectComponent}
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Privilege")
 public class PrivilegeComponent

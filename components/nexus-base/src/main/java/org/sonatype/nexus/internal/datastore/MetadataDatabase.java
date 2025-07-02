@@ -22,9 +22,8 @@ import java.sql.SQLException;
 import java.util.Optional;
 import java.util.Properties;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.datastore.api.DataStore;
@@ -35,13 +34,14 @@ import org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type;
 import org.sonatype.nexus.supportzip.SupportBundleCustomizer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Add {@link SupportBundle} to export information about database.
  *
  * @since 3.30
  */
-@Named
+@Component
 @Singleton
 public class MetadataDatabase
     extends ComponentSupport

@@ -14,8 +14,7 @@ package org.sonatype.nexus.plugins.defaultrole.internal;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -24,6 +23,10 @@ import org.sonatype.nexus.capability.Condition;
 import org.sonatype.nexus.plugins.defaultrole.DefaultRoleRealm;
 import org.sonatype.nexus.security.realm.RealmManager;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -31,7 +34,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.22
  */
-@Named(DefaultRoleCapabilityDescriptor.TYPE_ID)
+@Component(DefaultRoleCapabilityDescriptor.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DefaultRoleCapability
     extends CapabilitySupport<DefaultRoleCapabilityConfiguration>
 {

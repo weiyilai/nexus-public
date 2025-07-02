@@ -13,14 +13,14 @@
 package org.sonatype.nexus.repository.raw.internal;
 
 import javax.annotation.Nonnull;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.http.HttpResponses;
 import org.sonatype.nexus.repository.http.HttpStatus;
 import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.repository.view.handlers.IndexHtmlForwardHandler;
+import org.springframework.stereotype.Component;
 
 /**
  * Handler which will forward current request to {@code {request.path}/index.html} or {@code {request.path}/index.htm}.
@@ -28,7 +28,7 @@ import org.sonatype.nexus.repository.view.handlers.IndexHtmlForwardHandler;
  *
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 public class RawIndexHtmlForwardHandler
     extends IndexHtmlForwardHandler

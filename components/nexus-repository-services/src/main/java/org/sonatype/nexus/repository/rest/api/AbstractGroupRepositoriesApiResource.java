@@ -15,7 +15,7 @@ package org.sonatype.nexus.repository.rest.api;
 import java.util.Collection;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintViolation;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;

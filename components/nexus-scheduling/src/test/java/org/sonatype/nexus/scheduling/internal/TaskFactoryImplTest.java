@@ -12,8 +12,6 @@
  */
 package org.sonatype.nexus.scheduling.internal;
 
-import java.lang.annotation.Annotation;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -25,13 +23,11 @@ import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskDescriptor;
 import org.sonatype.nexus.scheduling.TaskInfo;
 
-import com.google.inject.Key;
-import com.google.inject.util.Providers;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.inject.BeanLocator;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.ApplicationContext;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -41,7 +37,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -51,7 +46,7 @@ public class TaskFactoryImplTest
     extends TestSupport
 {
   @Mock
-  private BeanLocator beanLocator;
+  private ApplicationContext applicationContext;
 
   @Mock
   private TaskInfo taskInfo;
@@ -59,16 +54,18 @@ public class TaskFactoryImplTest
   @Mock
   private DatabaseCheck databaseCheck;
 
+  @Mock
+  private ObjectProvider<SimpleTask> taskProvider;
+
   private TaskFactoryImpl underTest;
 
   @Before
   public void setUp() {
-    BeanEntry<Annotation, SimpleTask> simpleTaskBeanEntry = mock(BeanEntry.class);
-    when(simpleTaskBeanEntry.getImplementationClass()).thenReturn(SimpleTask.class);
-    when(simpleTaskBeanEntry.getProvider()).thenReturn(Providers.of(new SimpleTask()));
-    when(beanLocator.locate(any(Key.class))).thenReturn(Collections.singletonList(simpleTaskBeanEntry));
+    when(taskProvider.getIfUnique()).thenReturn(new SimpleTask());
+    when(applicationContext.getBeanProvider(SimpleTask.class)).thenReturn(taskProvider);
+
     when(databaseCheck.isAllowedByVersion(any())).thenReturn(true);
-    underTest = new TaskFactoryImpl(beanLocator, databaseCheck);
+    underTest = new TaskFactoryImpl(databaseCheck, List.of(), applicationContext);
   }
 
   /*

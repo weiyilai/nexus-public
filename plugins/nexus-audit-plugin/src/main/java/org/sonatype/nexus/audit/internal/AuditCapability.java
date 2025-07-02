@@ -15,10 +15,10 @@ package org.sonatype.nexus.audit.internal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -34,12 +34,18 @@ import org.sonatype.nexus.capability.Taggable;
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.FormField;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static org.sonatype.nexus.capability.CapabilityType.capabilityType;
 
-@Named(AuditCapability.TYPE_ID)
+@Component(AuditCapability.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AuditCapability
     extends CapabilitySupport<Configuration>
 {
@@ -114,7 +120,8 @@ public class AuditCapability
   }
 
   @AvailabilityVersion(from = "1.0")
-  @Named(AuditCapability.TYPE_ID)
+  @Component
+  @Qualifier(AuditCapability.TYPE_ID)
   @Singleton
   public static class Descriptor
       extends CapabilityDescriptorSupport<Configuration>

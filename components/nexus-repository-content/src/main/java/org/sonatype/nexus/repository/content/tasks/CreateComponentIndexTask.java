@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.content.tasks;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.logging.task.TaskLogType;
 import org.sonatype.nexus.logging.task.TaskLogging;
@@ -27,12 +26,16 @@ import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.DISABLE_CREATING_COMPONENT_INDEXES_TASK;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * System task to populate the {format}_component tables
  */
-@Named
+@Component
 @TaskLogging(TaskLogType.TASK_LOG_ONLY_WITH_PROGRESS)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class CreateComponentIndexTask
     extends TaskSupport
     implements Cancelable
@@ -46,8 +49,7 @@ public class CreateComponentIndexTask
   @Inject
   public CreateComponentIndexTask(
       final CreateComponentIndexService createComponentIndexService,
-      @Named("${" + DISABLE_CREATING_COMPONENT_INDEXES_TASK + ":-false}") @Value("${"
-          + DISABLE_CREATING_COMPONENT_INDEXES_TASK + ":false}") final boolean disableTask)
+      @Value("${" + DISABLE_CREATING_COMPONENT_INDEXES_TASK + ":false}") final boolean disableTask)
   {
     this.createComponentIndexService = checkNotNull(createComponentIndexService);
     this.disableTask = disableTask;

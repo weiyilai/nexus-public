@@ -16,7 +16,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.i18n.I18N;
@@ -264,7 +264,7 @@ public abstract class CapabilitySupport<ConfigT>
   /**
    * @since 3.0
    */
-  protected String render(final String template, final Map<String,Object> params) {
+  protected String render(final String template, final Map<String, Object> params) {
     return render(template, new TemplateParameters(params));
   }
 
@@ -274,8 +274,7 @@ public abstract class CapabilitySupport<ConfigT>
 
   protected String renderFailure(final Throwable cause) {
     return render("failure.vm", new TemplateParameters()
-            .set("cause", new TemplateThrowableAdapter(cause))
-    );
+        .set("cause", new TemplateThrowableAdapter(cause)));
   }
 
   @Override

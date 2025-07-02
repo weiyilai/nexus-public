@@ -34,15 +34,15 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
-import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Loggers;
 import org.sonatype.nexus.common.app.FeatureFlag;
+import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.event.EventManager;
+import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.search.elasticsearch.index.IndexSettingsContributor;
 import org.sonatype.nexus.thread.NexusThreadFactory;
@@ -73,6 +73,9 @@ import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -83,6 +86,7 @@ import static java.util.stream.Collectors.toList;
 import static org.elasticsearch.cluster.health.ClusterHealthStatus.GREEN;
 import static org.elasticsearch.index.query.QueryBuilders.idsQuery;
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
+import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.STORAGE;
 import static org.sonatype.nexus.repository.search.elasticsearch.index.IndexSettingsContributor.MAPPING_JSON;
 import static org.sonatype.nexus.repository.search.index.SearchConstants.TYPE;
 import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
@@ -92,12 +96,15 @@ import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
  *
  * @since 3.25
  */
-@Named("default")
+@ManagedLifecycle(phase = STORAGE)
+@Component
+@Qualifier("default")
+@Primary
 @Singleton
 @FeatureFlag(name = ELASTIC_SEARCH_ENABLED, enabledByDefault = true)
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class ElasticSearchIndexServiceImpl
-    extends ComponentSupport
+    extends StateGuardLifecycleSupport
     implements ElasticSearchIndexService
 {
   private final Provider<Client> client;
@@ -120,6 +127,14 @@ public class ElasticSearchIndexServiceImpl
 
   private Map<Integer, Entry<BulkProcessor, ExecutorService>> bulkProcessorToExecutors;
 
+  private int bulkCapacity;
+
+  private int concurrentRequests;
+
+  private int flushInterval;
+
+  private int batchingThreads;
+
   /**
    * @param client source for a {@link Client}
    * @param indexNamingPolicy the index naming policy
@@ -139,11 +154,11 @@ public class ElasticSearchIndexServiceImpl
       final IndexNamingPolicy indexNamingPolicy,
       final List<IndexSettingsContributor> indexSettingsContributors,
       final EventManager eventManager,
-      @Named("${nexus.elasticsearch.bulkCapacity:-1000}") @Value("${nexus.elasticsearch.bulkCapacity:1000}") final int bulkCapacity,
-      @Named("${nexus.elasticsearch.concurrentRequests:-1}") @Value("${nexus.elasticsearch.concurrentRequests:1}") final int concurrentRequests,
-      @Named("${nexus.elasticsearch.flushInterval:-0}") @Value("${nexus.elasticsearch.flushInterval:0}") final int flushInterval,
-      @Named("${nexus.elasticsearch.calmTimeout:-3000}") @Value("${nexus.elasticsearch.calmTimeout:3000}") final int calmTimeout,
-      @Named("${nexus.elasticsearch.batching.threads.count:-1}") @Value("${nexus.elasticsearch.batching.threads.count:1}") final int batchingThreads)
+      @Value("${nexus.elasticsearch.bulkCapacity:1000}") final int bulkCapacity,
+      @Value("${nexus.elasticsearch.concurrentRequests:1}") final int concurrentRequests,
+      @Value("${nexus.elasticsearch.flushInterval:0}") final int flushInterval,
+      @Value("${nexus.elasticsearch.calmTimeout:3000}") final int calmTimeout,
+      @Value("${nexus.elasticsearch.batching.threads.count:1}") final int batchingThreads)
   {
     checkState(batchingThreads > 0,
         "'nexus.elasticsearch.batching.threads.count' must be positive.");
@@ -155,6 +170,14 @@ public class ElasticSearchIndexServiceImpl
     this.calmTimeout = calmTimeout;
     this.periodicFlush = flushInterval > 0;
 
+    this.bulkCapacity = bulkCapacity;
+    this.concurrentRequests = concurrentRequests;
+    this.flushInterval = flushInterval;
+    this.batchingThreads = batchingThreads;
+  }
+
+  @Override
+  protected void doStart() throws Exception {
     createBulkProcessorsAndExecutors(bulkCapacity, concurrentRequests, flushInterval, batchingThreads);
   }
 
@@ -365,7 +388,7 @@ public class ElasticSearchIndexServiceImpl
   }
 
   @VisibleForTesting
-  static String filterConanAssetAttributes(String json) {
+  static String filterConanAssetAttributes(final String json) {
     Logger logger = Loggers.getLogger(ElasticSearchIndexServiceImpl.class);
     try {
       JsonNode root = JsonUtils.readTree(json);

@@ -14,16 +14,21 @@ package com.sonatype.nexus.ssl.plugin.tasks;
 
 import java.security.cert.Certificate;
 import java.util.Collection;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import com.sonatype.nexus.ssl.plugin.internal.keystore.TrustedSSLCertificateStore;
+
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.kv.GlobalKeyValueStore;
 import org.sonatype.nexus.ssl.CertificateUtil;
 import org.sonatype.nexus.ssl.KeyStoreManager;
 import org.sonatype.nexus.ssl.KeystoreException;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sonatype.nexus.ssl.plugin.internal.TrustStoreImpl.TRUSTED_CERTIFICATES_MIGRATION_COMPLETE;
@@ -31,8 +36,9 @@ import static com.sonatype.nexus.ssl.plugin.internal.TrustStoreImpl.TRUSTED_CERT
 /**
  * Service to migrate trusted certificates from key_store_data to trusted_ssl_certificate.
  */
+@Lazy
 @Singleton
-@Named
+@Component
 public class TrustedCertificateMigrationService
     extends ComponentSupport
 {
@@ -44,7 +50,7 @@ public class TrustedCertificateMigrationService
 
   @Inject
   public TrustedCertificateMigrationService(
-      @Named("ssl") final KeyStoreManager keyStoreManager,
+      @Qualifier("ssl") final KeyStoreManager keyStoreManager,
       final TrustedSSLCertificateStore trustedSSLCertificateStore,
       final GlobalKeyValueStore globalKeyValueStore)
   {

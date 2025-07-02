@@ -15,7 +15,6 @@ package org.sonatype.nexus.repository.apt.datastore.internal.hosted;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import javax.inject.Named;
 
 import org.sonatype.nexus.repository.Facet.Exposed;
 import org.sonatype.nexus.repository.FacetSupport;
@@ -26,28 +25,33 @@ import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.view.Payload;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Apt hosted facet.
  *
  * @since 3.31
  */
-@Named
+@Component
 @Exposed
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AptHostedFacet
     extends FacetSupport
 {
   /**
    * Saves asset to the database and triggers metadata recalculation
    *
-   * @param assetPath   - Asset path
-   * @param payload     - Request  payload
+   * @param assetPath - Asset path
+   * @param payload - Request payload
    * @param packageInfo - Package info
    * @return - Returns Fluent asset after successful save.
    */
-  public FluentAsset put(final String assetPath,
-                         final Payload payload,
-                         final PackageInfo packageInfo) throws IOException
+  public FluentAsset put(
+      final String assetPath,
+      final Payload payload,
+      final PackageInfo packageInfo) throws IOException
   {
     checkNotNull(assetPath);
     checkNotNull(payload);

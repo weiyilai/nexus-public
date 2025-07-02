@@ -12,21 +12,24 @@
  */
 package org.sonatype.nexus.self.hosted.node;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.crypto.CryptoHelper;
 import org.sonatype.nexus.ssl.KeyStoreManager;
 import org.sonatype.nexus.ssl.KeyStoreManagerConfiguration;
-import org.sonatype.nexus.ssl.spi.KeyStoreStorageManager;
+import org.sonatype.nexus.ssl.KeyStoreStorageFactory;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 /**
  * Node {@link KeyStoreManager}.
  *
  * @since 3.0
  */
-@Named(NodeKeyStoreManagerImpl.NAME)
+@Component
+@Qualifier(NodeKeyStoreManagerImpl.NAME)
 @Singleton
 public class NodeKeyStoreManagerImpl
     extends org.sonatype.nexus.ssl.KeyStoreManagerImpl
@@ -36,8 +39,8 @@ public class NodeKeyStoreManagerImpl
   @Inject
   public NodeKeyStoreManagerImpl(
       final CryptoHelper crypto,
-      @Named(NAME) final KeyStoreStorageManager storageManager,
-      @Named(NAME) final KeyStoreManagerConfiguration config)
+      @Qualifier(NAME) final KeyStoreStorageFactory storageManager,
+      @Qualifier(NAME) final KeyStoreManagerConfiguration config)
   {
     super(crypto, storageManager, config);
   }

@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.content.raw.internal.recipe;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.content.raw.RawContentFacet;

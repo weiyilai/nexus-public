@@ -13,9 +13,8 @@
 package org.sonatype.nexus.content.raw.internal.recipe;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.repository.Format;
@@ -33,6 +32,8 @@ import org.sonatype.nexus.repository.view.matchers.ActionMatcher;
 import org.sonatype.nexus.repository.view.matchers.SuffixMatcher;
 
 import static org.sonatype.nexus.repository.view.matchers.logic.LogicMatchers.and;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Raw hosted repository recipe.
@@ -40,7 +41,8 @@ import static org.sonatype.nexus.repository.view.matchers.logic.LogicMatchers.an
  * @since 3.24
  */
 @AvailabilityVersion(from = "1.0")
-@Named(RawHostedRecipe.NAME)
+@Component
+@Qualifier(RawHostedRecipe.NAME)
 @Singleton
 public class RawHostedRecipe
     extends RawRecipeSupport
@@ -48,7 +50,7 @@ public class RawHostedRecipe
   public static final String NAME = "raw-hosted";
 
   @Inject
-  public RawHostedRecipe(@Named(HostedType.NAME) final Type type, @Named(RawFormat.NAME) final Format format) {
+  public RawHostedRecipe(@Qualifier(HostedType.NAME) final Type type, @Qualifier(RawFormat.NAME) final Format format) {
     super(type, format);
   }
 

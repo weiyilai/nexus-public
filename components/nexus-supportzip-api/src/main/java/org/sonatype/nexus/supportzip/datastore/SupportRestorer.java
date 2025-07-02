@@ -15,24 +15,28 @@ package org.sonatype.nexus.supportzip.datastore;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.supportzip.ImportData;
 
 import org.apache.commons.io.FileUtils;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Integer.MAX_VALUE;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.RESTORE;
 import static org.sonatype.nexus.supportzip.datastore.RestoreHelper.FILE_SUFFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * Restore {@link org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type#CONFIG} and
@@ -40,9 +44,10 @@ import static org.sonatype.nexus.supportzip.datastore.RestoreHelper.FILE_SUFFIX;
  *
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 @Priority(MAX_VALUE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @ManagedLifecycle(phase = RESTORE)
 public class SupportRestorer
     extends StateGuardLifecycleSupport
@@ -54,10 +59,10 @@ public class SupportRestorer
   @Inject
   public SupportRestorer(
       final RestoreHelper restoreHelper,
-      final Map<String, ImportData> importDataByName)
+      final List<ImportData> importDataByNameList)
   {
     this.restoreHelper = checkNotNull(restoreHelper);
-    this.importDataByName = checkNotNull(importDataByName);
+    this.importDataByName = QualifierUtil.buildQualifierBeanMap(checkNotNull(importDataByNameList));
   }
 
   @Override

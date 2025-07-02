@@ -14,8 +14,7 @@ package org.sonatype.nexus.internal.httpclient;
 
 import javax.annotation.Nullable;
 import javax.annotation.Priority;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 
 import org.sonatype.goodies.common.ComponentSupport;
@@ -27,6 +26,10 @@ import org.sonatype.nexus.httpclient.config.ProxyConfiguration;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.http.client.AuthenticationStrategy;
 import org.apache.http.client.RedirectStrategy;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -35,9 +38,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named("memory")
+@Component
+@Qualifier("memory")
 @Singleton
 @Priority(Integer.MIN_VALUE)
+@Order(Ordered.LOWEST_PRECEDENCE)
 @VisibleForTesting
 public class MemoryHttpClientConfigurationStore
     extends ComponentSupport
@@ -67,7 +72,8 @@ public class MemoryHttpClientConfigurationStore
   private static class MemoryHttpClientConfiguration
       implements HttpClientConfiguration, Cloneable
   {
-    MemoryHttpClientConfiguration() {}
+    MemoryHttpClientConfiguration() {
+    }
 
     @Valid
     @Nullable

@@ -13,17 +13,17 @@
 package org.sonatype.nexus.internal.node;
 
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.transaction.Transactional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class DeploymentIdStoreImpl
     extends ConfigStoreSupport<DeploymentIdDAO>

@@ -17,9 +17,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.cleanup.storage.CleanupPolicy;
@@ -35,6 +34,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.nonNull;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.CLEANUP_ATTRIBUTES_KEY;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.CLEANUP_NAME_KEY;
+import org.springframework.stereotype.Component;
 
 /**
  * Event handler for {@link CleanupPolicy}'s
@@ -42,7 +42,7 @@ import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.CLEANUP_N
  * @since 3.14
  */
 @Singleton
-@Named
+@Component
 public class CleanupPolicyEventHandler
     extends ComponentSupport
     implements EventAware, Asynchronous
@@ -67,7 +67,6 @@ public class CleanupPolicyEventHandler
     }
   }
 
-
   private void remove(final Configuration configuration, final CleanupPolicy cleanupPolicy) {
     try {
       removeFromConfigurationIfHasCleanupPolicy(configuration, cleanupPolicy);
@@ -91,8 +90,9 @@ public class CleanupPolicyEventHandler
     return event.isLocal();
   }
 
-  private void removeFromConfigurationIfHasCleanupPolicy(final Configuration configuration,
-                                                         final CleanupPolicy cleanupPolicy)
+  private void removeFromConfigurationIfHasCleanupPolicy(
+      final Configuration configuration,
+      final CleanupPolicy cleanupPolicy)
   {
     Map<String, Map<String, Object>> attributes = configuration.getAttributes();
     if (nonNull(attributes)) {
@@ -104,9 +104,10 @@ public class CleanupPolicyEventHandler
   }
 
   @SuppressWarnings("unchecked")
-  private void removeAttributeOrRemoveFromCleanupIfCleanupPolicyPresent(final Map<String, Map<String, Object>> attributes,
-                                                                        final Map<String, Object> cleanup,
-                                                                        final CleanupPolicy cleanupPolicy)
+  private void removeAttributeOrRemoveFromCleanupIfCleanupPolicyPresent(
+      final Map<String, Map<String, Object>> attributes,
+      final Map<String, Object> cleanup,
+      final CleanupPolicy cleanupPolicy)
   {
     Set<String> policyNames = new HashSet<>((Collection<String>) cleanup.get(CLEANUP_NAME_KEY));
     if (policyNames.removeIf(policyName -> policyName.equals(cleanupPolicy.getName()))) {

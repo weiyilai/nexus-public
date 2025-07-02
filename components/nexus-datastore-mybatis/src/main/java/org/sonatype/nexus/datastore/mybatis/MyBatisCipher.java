@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.datastore.mybatis;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.crypto.LegacyCipherFactory;
 import org.sonatype.nexus.crypto.LegacyCipherFactory.PbeCipher;
@@ -26,6 +25,8 @@ import com.google.common.annotations.VisibleForTesting;
 import org.eclipse.sisu.Hidden;
 import org.eclipse.sisu.Typed;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Database cipher shared between all MyBatis handlers that want to encrypt data at rest.
@@ -35,7 +36,8 @@ import org.springframework.beans.factory.annotation.Value;
  *
  * @since 3.21
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 @Typed(PbeCipher.class)
 @Hidden // don't publish this to other modules
@@ -47,9 +49,9 @@ final class MyBatisCipher
   @Inject
   MyBatisCipher(
       final LegacyCipherFactory legacyCipherFactory,
-      @Named("${nexus.mybatis.cipher.password:-changeme}") @Value("${nexus.mybatis.cipher.password:changeme}") final String password,
-      @Named("${nexus.mybatis.cipher.salt:-changeme}") @Value("${nexus.mybatis.cipher.salt:changeme}") final String salt,
-      @Named("${nexus.mybatis.cipher.iv:-0123456789ABCDEF}") @Value("${nexus.mybatis.cipher.iv:0123456789ABCDEF}") final String iv) throws Exception
+      @Value("${nexus.mybatis.cipher.password:changeme}") final String password,
+      @Value("${nexus.mybatis.cipher.salt:changeme}") final String salt,
+      @Value("${nexus.mybatis.cipher.iv:0123456789ABCDEF}") final String iv) throws Exception
   {
     this.pbeCipher = legacyCipherFactory.create(password, salt, iv);
   }

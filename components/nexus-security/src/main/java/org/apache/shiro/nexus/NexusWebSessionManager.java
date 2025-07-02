@@ -12,8 +12,8 @@
  */
 package org.apache.shiro.nexus;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FeatureFlags;
 
@@ -27,6 +27,7 @@ import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Custom {@link WebSessionManager}.
@@ -34,21 +35,23 @@ import org.springframework.beans.factory.annotation.Value;
  * This session manager predates the more recent JWT session management in org.sonatype.nexus.security. It's used
  * in for single node deployments typically, however it is not used for Pro deployments using SAML (HA or not).
  */
+@Singleton
+@Component
 public class NexusWebSessionManager
     extends DefaultWebSessionManager
 {
   private static final Logger log = LoggerFactory.getLogger(NexusWebSessionManager.class);
 
-  private static final String DEFAULT_NEXUS_SESSION_COOKIE_NAME = "NXSESSIONID";
+  public static final String DEFAULT_NEXUS_SESSION_COOKIE_NAME = "NXSESSIONID";
 
   private static final ThreadLocal<Boolean> requestIsHttps = ThreadLocal.withInitial(() -> Boolean.TRUE);
 
   @Inject
   public void configureProperties(
-      @Named("${shiro.globalSessionTimeout:-" + DEFAULT_GLOBAL_SESSION_TIMEOUT + "}") final long globalSessionTimeout,
-      @Named("${nexus.sessionCookieName:-" + DEFAULT_NEXUS_SESSION_COOKIE_NAME + "}") final String sessionCookieName,
-      @Named("${nexus.session.enabled:-true}") @Value("${nexus.session.enabled:true}") final boolean sessionEnabled,
-      @Named(FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED) @Value(FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED_VALUE) final boolean cookieSecure)
+      @Value("${shiro.globalSessionTimeout:" + DEFAULT_GLOBAL_SESSION_TIMEOUT + "}") final long globalSessionTimeout,
+      @Value("${nexus.sessionCookieName:" + DEFAULT_NEXUS_SESSION_COOKIE_NAME + "}") final String sessionCookieName,
+      @Value("${nexus.session.enabled:true}") final boolean sessionEnabled,
+      @Value(FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED_VALUE) final boolean cookieSecure)
   {
     setGlobalSessionTimeout(globalSessionTimeout);
     log.info("Global session timeout: {} ms", getGlobalSessionTimeout());

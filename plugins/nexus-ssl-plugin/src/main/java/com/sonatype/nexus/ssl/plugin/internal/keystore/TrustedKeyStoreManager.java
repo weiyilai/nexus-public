@@ -19,9 +19,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -32,12 +31,14 @@ import org.sonatype.nexus.ssl.KeystoreException;
 import org.sonatype.nexus.ssl.internal.ReloadableX509TrustManager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * key-store manager for only trusted certificates.
  *
  */
-@Named
+@Component
 @Singleton
 public class TrustedKeyStoreManager
 {
@@ -48,7 +49,7 @@ public class TrustedKeyStoreManager
   @Inject
   public TrustedKeyStoreManager(
       final CryptoHelper crypto,
-      final @Named("ssl") KeyStoreManagerConfiguration config)
+      @Qualifier("ssl") KeyStoreManagerConfiguration config)
   {
     this.crypto = checkNotNull(crypto);
     this.config = checkNotNull(config);

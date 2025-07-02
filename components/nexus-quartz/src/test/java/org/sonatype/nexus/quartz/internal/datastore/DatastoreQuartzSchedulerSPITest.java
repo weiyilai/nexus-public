@@ -16,7 +16,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.inject.Provider;
+
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.event.EventHelper;
@@ -63,6 +64,7 @@ import org.quartz.TriggerKey;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.JobStore;
 import org.quartz.spi.OperableTrigger;
+import org.springframework.beans.factory.FactoryBean;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -70,18 +72,9 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 public class DatastoreQuartzSchedulerSPITest
     extends TestSupport
@@ -116,7 +109,7 @@ public class DatastoreQuartzSchedulerSPITest
     }).when(statusDelayedExecutor).execute(any(Runnable.class));
 
     underTest = new DatastoreQuartzSchedulerSPI(
-        eventManager, nodeAccess, provider, scheduler, lastShutdownTimeService, statusDelayedExecutor, true);
+        eventManager, nodeAccess, provider, factory(scheduler), lastShutdownTimeService, statusDelayedExecutor, true);
     scheduler.start();
     underTest.start();
     underTest.getStateGuard().transition(StateGuardLifecycleSupport.State.STARTED);
@@ -318,10 +311,10 @@ public class DatastoreQuartzSchedulerSPITest
   }
 
   private void recoveryTest(
-      int invocationCount,
-      String scheduleType,
-      boolean requestsRecovery,
-      String endState) throws SchedulerException
+      final int invocationCount,
+      final String scheduleType,
+      final boolean requestsRecovery,
+      final String endState) throws SchedulerException
   {
     JobDataMap jobDataMap = new JobDataMap();
     jobDataMap.put(Schedule.SCHEDULE_TYPE, scheduleType);
@@ -481,12 +474,12 @@ public class DatastoreQuartzSchedulerSPITest
   public void testAttachJobListener_WhenTriggerIsNull() throws Exception {
     Scheduler localScheduler = mock(Scheduler.class);
     QuartzSchedulerProvider schedulerProvider = mock(QuartzSchedulerProvider.class);
-    when(schedulerProvider.get()).thenReturn(localScheduler);
+    when(schedulerProvider.getObject()).thenReturn(localScheduler);
     DatastoreQuartzSchedulerSPI custom = new DatastoreQuartzSchedulerSPI(
         mock(EventManager.class),
         mock(NodeAccess.class),
         mock(Provider.class),
-        schedulerProvider,
+        factory(schedulerProvider),
         mock(LastShutdownTimeService.class),
         mock(DatabaseStatusDelayedExecutor.class),
         true);
@@ -505,12 +498,12 @@ public class DatastoreQuartzSchedulerSPITest
   public void testAttachJobListener_WhenJobDetailIsNull() throws Exception {
     Scheduler localScheduler = mock(Scheduler.class);
     QuartzSchedulerProvider schedulerProvider = mock(QuartzSchedulerProvider.class);
-    when(schedulerProvider.get()).thenReturn(localScheduler);
+    when(schedulerProvider.getObject()).thenReturn(localScheduler);
     DatastoreQuartzSchedulerSPI custom = new DatastoreQuartzSchedulerSPI(
         mock(EventManager.class),
         mock(NodeAccess.class),
         mock(Provider.class),
-        schedulerProvider,
+        factory(schedulerProvider),
         mock(LastShutdownTimeService.class),
         mock(DatabaseStatusDelayedExecutor.class),
         true);
@@ -546,9 +539,9 @@ public class DatastoreQuartzSchedulerSPITest
   }
 
   public static Pair<Trigger, JobDetail> setupJobParameters(
-      Scheduler scheduler,
-      ListenerManager listenerManager,
-      String keyName) throws SchedulerException
+      final Scheduler scheduler,
+      final ListenerManager listenerManager,
+      final String keyName) throws SchedulerException
   {
     JobKey key = new JobKey(keyName, "nexus");
 
@@ -583,10 +576,10 @@ public class DatastoreQuartzSchedulerSPITest
   }
 
   void interruptStateTestHelper(
-      boolean shouldBeInterrupted,
-      Date lastTriggerDate,
-      TaskState endState,
-      Date lastRunDate,
+      final boolean shouldBeInterrupted,
+      final Date lastTriggerDate,
+      final TaskState endState,
+      final Date lastRunDate,
       Date shutdownDate) throws SchedulerException
   {
 
@@ -655,7 +648,7 @@ public class DatastoreQuartzSchedulerSPITest
     return jobKey;
   }
 
-  private TriggerKey mockTrigger(JobKey jobKey) throws JobPersistenceException {
+  private TriggerKey mockTrigger(final JobKey jobKey) throws JobPersistenceException {
     OperableTrigger trigger = mock(OperableTrigger.class);
     TriggerKey triggerKey = new TriggerKey("testTriggerKeyName", "testTriggerKeyGroup");
 
@@ -671,5 +664,16 @@ public class DatastoreQuartzSchedulerSPITest
     when(jobStore.retrieveTrigger(triggerKey)).thenReturn(trigger);
 
     return triggerKey;
+  }
+
+  private static <T> Provider<T> factory(final FactoryBean<T> factory) {
+    return () -> {
+      try {
+        return factory.getObject();
+      }
+      catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    };
   }
 }

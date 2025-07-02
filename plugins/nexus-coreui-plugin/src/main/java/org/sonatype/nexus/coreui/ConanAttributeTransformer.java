@@ -14,8 +14,7 @@ package org.sonatype.nexus.coreui;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 
@@ -24,11 +23,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static java.util.Collections.emptyMap;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * This is used for transforming "infoBinary" attribute of a Conan asset.
  */
-@Named(ConanAttributeTransformer.CONAN_FORMAT)
+@Component
+@Qualifier(ConanAttributeTransformer.CONAN_FORMAT)
 @Singleton
 public class ConanAttributeTransformer
     extends ComponentSupport
@@ -41,7 +43,9 @@ public class ConanAttributeTransformer
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private static final TypeReference<Map<String, Object>> MAP_STRING_OBJECT =
-      new TypeReference<Map<String, Object>>() { };
+      new TypeReference<Map<String, Object>>()
+      {
+      };
 
   /**
    * Transforms the given {@link AssetXO} by expanding its "infoBinary"
@@ -53,7 +57,8 @@ public class ConanAttributeTransformer
   public void transform(final AssetXO assetXO) {
 
     @SuppressWarnings("unchecked")
-    Map<String, Object> formatAttributes = (Map<String, Object>) assetXO.getAttributes().getOrDefault(assetXO.getFormat(), emptyMap());
+    Map<String, Object> formatAttributes =
+        (Map<String, Object>) assetXO.getAttributes().getOrDefault(assetXO.getFormat(), emptyMap());
 
     if (formatAttributes.containsKey(INFO_BINARY_ATTRIBUTE)) {
       updateFormatAttributesMap(formatAttributes);
@@ -65,7 +70,8 @@ public class ConanAttributeTransformer
     try {
       formatAttributesMap.putAll(getBinaryInfoAsMap(json));
       formatAttributesMap.remove(INFO_BINARY_ATTRIBUTE);
-    } catch (IllegalStateException e) {
+    }
+    catch (IllegalStateException e) {
       log.debug("Failed to parse {} as json", json);
     }
   }
@@ -94,7 +100,8 @@ public class ConanAttributeTransformer
       String key = parentKey == null ? entry.getKey() : parentKey + "." + entry.getKey();
       if (entry.getValue() instanceof Map) {
         flattenedMap.putAll(flattenMap((Map<String, Object>) entry.getValue(), key));
-      } else {
+      }
+      else {
         flattenedMap.put(key, entry.getValue());
       }
     }

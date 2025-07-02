@@ -12,15 +12,16 @@
  */
 package org.sonatype.nexus.rapture.internal.security;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
 import org.sonatype.nexus.common.app.FeatureFlag;
+import org.sonatype.nexus.common.app.WebFilterPriority;
 import org.sonatype.nexus.security.JwtHelper;
 
 import org.apache.shiro.authc.AuthenticationToken;
@@ -28,6 +29,8 @@ import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
@@ -37,7 +40,9 @@ import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
  *
  * @since 3.38
  */
-@Named
+@WebFilter(filterName = JwtAuthenticationFilter.NAME)
+@Order(WebFilterPriority.AUTHENTICATION)
+@Component
 @Singleton
 @FeatureFlag(name = JWT_ENABLED)
 @ConditionalOnProperty(name = JWT_ENABLED, havingValue = "true")

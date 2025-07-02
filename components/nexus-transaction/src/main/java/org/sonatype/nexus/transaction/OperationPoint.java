@@ -12,12 +12,15 @@
  */
 package org.sonatype.nexus.transaction;
 
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
 
 import com.google.common.base.Suppliers;
 import org.aopalliance.intercept.Joinpoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
+import org.aspectj.lang.reflect.SourceLocation;
+import org.aspectj.runtime.internal.AroundClosure;
 
 /**
  * {@link Joinpoint} for operations; handles non-void and void return cases.
@@ -25,7 +28,7 @@ import org.aopalliance.intercept.Joinpoint;
  * @since 3.2
  */
 final class OperationPoint<T, E extends Exception>
-    implements Joinpoint
+    implements ProceedingJoinPoint
 {
   private final Operation<T, E> proceed;
 
@@ -70,8 +73,8 @@ final class OperationPoint<T, E extends Exception>
   }
 
   @Override
-  public final AccessibleObject getStaticPart() {
-    return staticPart.get();
+  public final StaticPart getStaticPart() {
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -92,5 +95,50 @@ final class OperationPoint<T, E extends Exception>
         throw new LinkageError("Missing '" + method + "' method", e);
       }
     });
+  }
+
+  @Override
+  public String toShortString() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public String toLongString() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Object getTarget() {
+    return self;
+  }
+
+  @Override
+  public Object[] getArgs() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Signature getSignature() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public SourceLocation getSourceLocation() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public String getKind() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void set$AroundClosure(final AroundClosure arc) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Object proceed(final Object[] args) throws Throwable {
+    throw new UnsupportedOperationException();
   }
 }

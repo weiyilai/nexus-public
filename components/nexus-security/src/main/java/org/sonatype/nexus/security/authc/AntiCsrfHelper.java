@@ -16,9 +16,8 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.HttpMethod;
@@ -31,11 +30,12 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.16
  */
-@Named
+@Component
 @Singleton
 public class AntiCsrfHelper
     extends ComponentSupport
@@ -52,7 +52,7 @@ public class AntiCsrfHelper
 
   @Inject
   public AntiCsrfHelper(
-      @Named("${" + ENABLED + ":-true}") @Value("${" + ENABLED + ":true}") final boolean enabled,
+      @Value("${" + ENABLED + ":true}") final boolean enabled,
       final List<CsrfExemption> csrfExemptPaths)
   {
     this.enabled = enabled;

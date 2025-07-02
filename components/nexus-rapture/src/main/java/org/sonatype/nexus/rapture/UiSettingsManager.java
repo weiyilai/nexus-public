@@ -12,20 +12,20 @@
  */
 package org.sonatype.nexus.rapture;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rapture.settings.RaptureSettings;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Rapture.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class UiSettingsManager
     extends ComponentSupport

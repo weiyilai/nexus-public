@@ -16,8 +16,7 @@ import java.util.Locale;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.maven.MavenPath;
@@ -27,6 +26,8 @@ import org.sonatype.nexus.repository.maven.MavenPath.SignatureType;
 import org.sonatype.nexus.repository.maven.MavenPathParser;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Maven 2 path parser.
@@ -34,7 +35,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 3.0
  */
 @Singleton
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 public class Maven2MavenPathParser
     extends ComponentSupport
     implements MavenPathParser
@@ -140,13 +142,13 @@ public class Maven2MavenPathParser
         if (Constants.SNAPSHOT_VERSION_SUFFIX.equals(version)) {
           int vTimestampStart = vSnapshotStart + version.length() + 1;
 
-          //this would be expected in most cases
+          // this would be expected in most cases
           version = baseVersion; // reset it
           tail = str.substring(artifactId.length() + baseVersion.length() + 1);
 
-          //check if we have something hokey like SNAPSHOT-20180101.121212
+          // check if we have something hokey like SNAPSHOT-20180101.121212
           if (str.length() > vTimestampStart + Constants.DOTTED_TIMESTAMP_VERSION_FORMAT.length()) {
-            try { //NOSONAR not extracting to method as many variables external to the method need to be updated
+            try { // NOSONAR not extracting to method as many variables external to the method need to be updated
               Constants.METADATA_DOTTED_TIMESTAMP.parseDateTime(
                   str.substring(vTimestampStart, vTimestampStart + Constants.DOTTED_TIMESTAMP_VERSION_FORMAT.length()))
                   .getMillis();
@@ -154,8 +156,8 @@ public class Maven2MavenPathParser
               vSnapshotStart = vTimestampStart;
               tail = null;
             }
-            catch (IllegalArgumentException e) { //NOSONAR
-              //usually expected
+            catch (IllegalArgumentException e) { // NOSONAR
+              // usually expected
             }
           }
         }
@@ -231,8 +233,7 @@ public class Maven2MavenPathParser
           baseVersion,
           classifier,
           ext + extSuffix,
-          signatureType
-      );
+          signatureType);
     }
     catch (StringIndexOutOfBoundsException e) {
       return null;
@@ -253,7 +254,7 @@ public class Maven2MavenPathParser
     else if (tailWithoutExt.endsWith(CPIO_EXT_PREFIX)) {
       nExtPos -= CPIO_EXT_PREFIX.length();
     }
-    else if (tail.endsWith(NK_OS_EXT)){
+    else if (tail.endsWith(NK_OS_EXT)) {
       nExtPos = tail.length() - NK_OS_EXT.length();
     }
 

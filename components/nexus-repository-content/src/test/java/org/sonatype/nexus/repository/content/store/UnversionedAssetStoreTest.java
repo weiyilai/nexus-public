@@ -12,34 +12,38 @@
  */
 package org.sonatype.nexus.repository.content.store;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class UnversionedAssetStoreTest
+class UnversionedAssetStoreTest
     extends AssetStoreTestSupport
 {
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     initialiseStores(false);
   }
 
+  @Override
   @Test
-  public void testDeleteAsset() {
+  protected void testDeleteAsset() {
     super.testDeleteAsset();
   }
 
+  @Override
   @Test
-  public void testBrowseUpdatedAssetsDifferentDates() {
+  protected void testBrowseUpdatedAssetsDifferentDates() {
     super.testBrowseUpdatedAssetsDifferentDates();
   }
 
+  @Override
   @Test
-  public void testBrowseUpdatedAssetsIdenticalDates() {
+  protected void testBrowseUpdatedAssetsIdenticalDates() {
     super.testBrowseUpdatedAssetsIdenticalDates();
   }
 
+  @Override
   @Test
-  public void testDeleteAssetsByPaths() {
+  protected void testDeleteAssetsByPaths() {
     super.testDeleteAssetsByPaths();
   }
 }

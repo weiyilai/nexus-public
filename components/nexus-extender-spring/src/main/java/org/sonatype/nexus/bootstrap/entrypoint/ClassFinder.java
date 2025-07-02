@@ -14,8 +14,7 @@ package org.sonatype.nexus.bootstrap.entrypoint;
 
 import java.util.Objects;
 import java.util.Set;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +27,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.sonatype.nexus.bootstrap.entrypoint.ClassFilter.ClassType.CLASS;
 import static org.sonatype.nexus.bootstrap.entrypoint.ClassFilter.ClassType.INTERFACE;
 import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
+import org.springframework.stereotype.Component;
 
 /**
  * Finds classes in the classpath based on a given Classfilter. This is NOT
@@ -35,7 +35,7 @@ import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
  * (Like when you need to load a bunch of interface classes dynamically, where interfaces
  * aren't something generally managed by DI
  */
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 public class ClassFinder

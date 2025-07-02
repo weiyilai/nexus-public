@@ -20,10 +20,6 @@
 
   <display-name>Sonatype Nexus</display-name>
 
-  <listener>
-    <listener-class>org.sonatype.nexus.extender.NexusServletContextListener</listener-class>
-  </listener>
-
   <filter>
     <filter-name>nexusFilter</filter-name>
     <filter-class>org.sonatype.nexus.bootstrap.application.DelegatingFilter</filter-class>

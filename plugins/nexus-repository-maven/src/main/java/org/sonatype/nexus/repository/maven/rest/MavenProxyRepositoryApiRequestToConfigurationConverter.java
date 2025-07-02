@@ -14,18 +14,21 @@ package org.sonatype.nexus.repository.maven.rest;
 
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.rest.api.ProxyRepositoryApiRequestToConfigurationConverter;
 import org.sonatype.nexus.repository.routing.RoutingRuleStore;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.20
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenProxyRepositoryApiRequestToConfigurationConverter
     extends ProxyRepositoryApiRequestToConfigurationConverter<MavenProxyRepositoryApiRequest>
 {

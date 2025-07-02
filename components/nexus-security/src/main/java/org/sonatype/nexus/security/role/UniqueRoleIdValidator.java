@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.security.role;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.security.SecuritySystem;
@@ -23,13 +22,17 @@ import org.sonatype.nexus.security.internal.AuthorizationManagerImpl;
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link UniqueRoleId} validator.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class UniqueRoleIdValidator
     extends ConstraintValidatorSupport<UniqueRoleId, String>
 {

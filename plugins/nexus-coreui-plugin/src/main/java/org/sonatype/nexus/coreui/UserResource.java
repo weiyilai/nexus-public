@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.coreui;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -44,13 +43,14 @@ import org.apache.shiro.authz.annotation.RequiresUser;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.sonatype.nexus.security.user.UserManager.DEFAULT_SOURCE;
+import org.springframework.stereotype.Component;
 
 /**
  * User resource.
  *
  * @since 3.24
  */
-@Named
+@Component
 @Singleton
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
@@ -68,9 +68,10 @@ public class UserResource
   private final AnonymousManager anonymousManager;
 
   @Inject
-  public UserResource(final SecuritySystem securitySystem,
-                      final AuthTicketService authTickets,
-                      final AnonymousManager anonymousManager)
+  public UserResource(
+      final SecuritySystem securitySystem,
+      final AuthTicketService authTickets,
+      final AnonymousManager anonymousManager)
   {
     this.securitySystem = checkNotNull(securitySystem);
     this.authTickets = checkNotNull(authTickets);
@@ -84,9 +85,7 @@ public class UserResource
    */
   @GET
   @RequiresUser
-  public UserAccountXO readAccount()
-      throws UserNotFoundException
-  {
+  public UserAccountXO readAccount() throws UserNotFoundException {
     return convert(getCurrentUser());
   }
 
@@ -94,8 +93,8 @@ public class UserResource
   @RequiresUser
   @RequiresAuthentication
   @Validate
-  public void updateAccount(@NotNull @Valid final UserAccountXO xo)
-      throws UserNotFoundException, NoSuchUserManagerException
+  public void updateAccount(
+      @NotNull @Valid final UserAccountXO xo) throws UserNotFoundException, NoSuchUserManagerException
   {
     User user = getCurrentUser();
     if (!user.getUserId().equals(xo.getUserId())) {
@@ -114,9 +113,9 @@ public class UserResource
   @RequiresAuthentication
   @RequiresPermissions("nexus:userschangepw:create")
   @Validate
-  public void changePassword(@PathParam("userId") @NotNull final String userId,
-                             @NotNull @Valid final UserAccountPasswordXO xo)
-      throws Exception
+  public void changePassword(
+      @PathParam("userId") @NotNull final String userId,
+      @NotNull @Valid final UserAccountPasswordXO xo) throws Exception
   {
     if (authTickets.redeemTicket(xo.getAuthToken())) {
       if (isAnonymousUser(userId)) {

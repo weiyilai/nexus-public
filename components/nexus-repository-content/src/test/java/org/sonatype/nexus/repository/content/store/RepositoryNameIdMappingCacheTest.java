@@ -58,7 +58,7 @@ public class RepositoryNameIdMappingCacheTest
   public void setup() {
     when(formatStoreManager.contentRepositoryStore(any())).thenReturn(contentRepositoryStore);
     when(databaseCheck.isPostgresql()).thenReturn(true);
-    underTest = new RepositoryNameIdMappingCache(formatStoreManager, formatNames, databaseCheck);
+    underTest = new RepositoryNameIdMappingCache(List.of(formatStoreManager), formatNames, databaseCheck);
   }
 
   @Test

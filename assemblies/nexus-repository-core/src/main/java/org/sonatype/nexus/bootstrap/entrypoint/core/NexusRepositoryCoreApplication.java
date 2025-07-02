@@ -14,10 +14,12 @@ package org.sonatype.nexus.bootstrap.entrypoint.core;
 
 import java.util.Map;
 
-import org.sonatype.nexus.bootstrap.entrypoint.NexusApplication;
+import org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirectoryConfiguration;
+import org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusProperties;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.springframework.boot.Banner.Mode.OFF;
@@ -27,16 +29,24 @@ import static org.springframework.boot.Banner.Mode.OFF;
     "org.sonatype.nexus.bootstrap.entrypoint"
 })
 public class NexusRepositoryCoreApplication
-    extends NexusApplication
 {
-  public static void main(String[] args) {
+  public static void main(final String[] args) {
     System.setProperty("spring.config.location", "etc/default-application.properties");
+    // Ensure karaf.data is set as logback needs it early
+    NexusDirectoryConfiguration.load();
     // since logback is going to start on its own, we need to tell it where to find its configuration
     System.setProperty("logback.configurationFile", "etc/logback/logback.xml");
 
     new SpringApplicationBuilder(NexusRepositoryCoreApplication.class)
         .bannerMode(OFF)
+        .initializers(NexusRepositoryCoreApplication::initialize)
         .properties(Map.of(FEATURE_SPRING_ONLY, "true"))
         .run(args);
+  }
+
+  private static void initialize(final ConfigurableApplicationContext applicationContext) {
+    applicationContext.getEnvironment()
+        .getPropertySources()
+        .addFirst(new NexusProperties());
   }
 }

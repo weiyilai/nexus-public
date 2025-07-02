@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.node;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -31,6 +30,7 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * REST API to reset the stored Node ID. This is intended for use when cloning a system.
@@ -40,7 +40,7 @@ import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @Path(NodeIdApiResource.PATH)
-@Named
+@Component
 @Singleton
 public class NodeIdApiResource
     extends ComponentSupport

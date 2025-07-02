@@ -17,9 +17,8 @@ import java.net.UnknownHostException;
 import java.security.cert.Certificate;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 
@@ -38,16 +37,18 @@ import com.softwarementors.extjs.djn.config.annotations.DirectAction;
 import com.softwarementors.extjs.djn.config.annotations.DirectMethod;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.context.annotation.Lazy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.sonatype.nexus.ssl.plugin.internal.ui.TrustStoreComponent.asCertificateXO;
 import static org.sonatype.nexus.ssl.CertificateUtil.calculateFingerprint;
 import static org.sonatype.nexus.ssl.CertificateUtil.decodePEMFormattedCertificate;
+import org.springframework.stereotype.Component;
 
 /**
  * SSL Certificate {@link DirectComponent}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "ssl_Certificate")
 public class CertificateComponent
@@ -58,7 +59,7 @@ public class CertificateComponent
   private final CertificateRetriever certificateRetriever;
 
   @Inject
-  public CertificateComponent(final TrustStore trustStore, final CertificateRetriever certificateRetriever) {
+  public CertificateComponent(@Lazy final TrustStore trustStore, final CertificateRetriever certificateRetriever) {
     this.trustStore = checkNotNull(trustStore);
     this.certificateRetriever = checkNotNull(certificateRetriever);
   }

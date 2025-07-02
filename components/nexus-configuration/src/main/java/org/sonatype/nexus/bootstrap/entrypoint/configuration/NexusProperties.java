@@ -15,17 +15,16 @@ package org.sonatype.nexus.bootstrap.entrypoint.configuration;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.codehaus.plexus.interpolation.EnvarBasedValueSource;
 import org.codehaus.plexus.interpolation.InterpolationException;
@@ -34,7 +33,9 @@ import org.codehaus.plexus.interpolation.MapBasedValueSource;
 import org.codehaus.plexus.interpolation.StringSearchInterpolator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.core.env.PropertySource;
+import org.springframework.stereotype.Component;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.util.Collections.emptySet;
@@ -43,12 +44,11 @@ import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirecto
 import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirectoryConfiguration.DATADIR_SYS_PROP;
 import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirectoryConfiguration.getBasePath;
 import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirectoryConfiguration.getDataPath;
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 
-@Named
-@Singleton
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
+@Lazy
+@Component
 public class NexusProperties
+    extends PropertySource<String>
 {
   private static final String INTERNAL_DEFAULT_PATH = "/org/sonatype/nexus/bootstrap/application/default.properties";
 
@@ -61,17 +61,55 @@ public class NexusProperties
 
   private static final Logger LOG = LoggerFactory.getLogger(NexusProperties.class);
 
-  private PropertyMap nexusProperties;
+  private static PropertyMap nexusProperties;
 
-  private final NexusPropertiesVerifier nexusPropertiesVerifier;
+  private final NexusPropertiesVerifier nexusPropertiesVerifier = new NexusPropertiesVerifier();
 
-  @Inject
-  public NexusProperties(final NexusPropertiesVerifier nexusPropertiesVerifier) {
-    this.nexusPropertiesVerifier = nexusPropertiesVerifier;
+  public NexusProperties() {
+    super("nexus-properties");
+    init();
   }
 
-  public PropertyMap get() throws IOException {
-    if (nexusProperties == null) {
+  @Override
+  public String getProperty(final String propertyName) {
+    try {
+      Interpolator interpolator = new StringSearchInterpolator();
+      interpolator.addValueSource(new MapBasedValueSource(nexusProperties));
+      interpolator.addValueSource(new MapBasedValueSource(System.getProperties()));
+      interpolator.addValueSource(new EnvarBasedValueSource());
+
+      String propertyValue = nexusProperties.get(propertyName);
+
+      if (propertyValue != null) {
+        propertyValue = interpolator.interpolate(propertyValue);
+      }
+      return propertyValue;
+    }
+    catch (IOException | InterpolationException e) {
+      throw new RuntimeException("Failed to interpolate nexus.properties entry: " + propertyName, e);
+    }
+  }
+
+  void put(final String key, final String value) {
+    nexusProperties.put(key, value);
+  }
+
+  String get(final String property, final String defaultValue) {
+    String value = getProperty(property);
+
+    return value != null ? value : defaultValue;
+  }
+
+  public Map<String, String> get() {
+    return Map.copyOf(nexusProperties);
+  }
+
+  private void init() {
+    if (nexusProperties != null) {
+      return;
+    }
+
+    try {
       maybeCopyDefaults();
 
       nexusProperties = new PropertyMap();
@@ -93,7 +131,9 @@ public class NexusProperties
 
       nexusProperties.forEach(System::setProperty);
     }
-    return nexusProperties;
+    catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   private void applyClasspathProperties(final PropertyMap nexusProperties) throws IOException {
@@ -108,7 +148,7 @@ public class NexusProperties
     }
   }
 
-  private void applyProperties(
+  private static void applyProperties(
       final PropertyMap nexusProperties,
       final File externalFilepath,
       final boolean required,
@@ -144,7 +184,7 @@ public class NexusProperties
     }
   }
 
-  private void applySystemProperties(final PropertyMap nexusProperties) {
+  private static void applySystemProperties(final PropertyMap nexusProperties) {
     for (Entry<Object, Object> entry : System.getProperties().entrySet()) {
       String key = entry.getKey().toString();
       String value = entry.getValue().toString();
@@ -153,7 +193,7 @@ public class NexusProperties
     }
   }
 
-  private void maybeCopyDefaults() throws IOException {
+  private static void maybeCopyDefaults() throws IOException {
     if (EXTERNAL_DEFAULT_NEXUS_PROPERTIES_FILEPATH.exists() && !EXTERNAL_NEXUS_PROPERTIES_FILEPATH.exists()) {
       File parentDir = EXTERNAL_NEXUS_PROPERTIES_FILEPATH.getParentFile();
       if (parentDir != null && !parentDir.isDirectory()) {
@@ -168,7 +208,7 @@ public class NexusProperties
     }
   }
 
-  private List<String> getDefaultPropertiesCommentedOut(final Path defaultPropertiesPath) throws IOException {
+  private static List<String> getDefaultPropertiesCommentedOut(final Path defaultPropertiesPath) throws IOException {
     return Files.readAllLines(defaultPropertiesPath, ISO_8859_1)
         .stream()
         .filter(l -> !l.startsWith("##"))
@@ -176,7 +216,7 @@ public class NexusProperties
         .collect(Collectors.toList());
   }
 
-  private void canonicalize(final PropertyMap nexuProperties, final String name) throws IOException {
+  private static void canonicalize(final PropertyMap nexuProperties, final String name) throws IOException {
     String value = nexuProperties.get(name);
     if (value == null) {
       LOG.warn("Unable to canonicalize null entry: {}", name);
@@ -184,30 +224,6 @@ public class NexusProperties
     }
     File file = new File(value).getCanonicalFile();
     nexuProperties.put(name, file.getPath());
-  }
-
-  public void put(final String key, final String value) {
-    nexusProperties.put(key, value);
-  }
-
-  public String get(final String property) {
-    try {
-      Interpolator interpolator = new StringSearchInterpolator();
-      interpolator.addValueSource(new MapBasedValueSource(get()));
-      interpolator.addValueSource(new MapBasedValueSource(System.getProperties()));
-      interpolator.addValueSource(new EnvarBasedValueSource());
-
-      return interpolator.interpolate(nexusProperties.get(property));
-    }
-    catch (IOException | InterpolationException e) {
-      throw new RuntimeException("Failed to interpolate nexus.properties entry: " + property, e);
-    }
-  }
-
-  public String get(final String property, final String defaultValue) {
-    String value = get(property);
-
-    return value != null ? value : defaultValue;
   }
 
   private void interpolate() throws IOException {

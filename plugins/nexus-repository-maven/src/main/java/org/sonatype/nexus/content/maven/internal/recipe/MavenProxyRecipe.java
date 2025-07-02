@@ -13,10 +13,9 @@
 package org.sonatype.nexus.content.maven.internal.recipe;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.content.maven.internal.index.MavenContentProxyIndexFacet;
@@ -39,12 +38,15 @@ import org.sonatype.nexus.repository.view.ViewFacet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.http.HttpHandlers.notFound;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.26
  */
 @AvailabilityVersion(from = "1.0")
-@Named(Maven2ProxyRecipe.NAME)
+@Component
+@Qualifier(Maven2ProxyRecipe.NAME)
 @Singleton
 public class MavenProxyRecipe
     extends MavenRecipeSupport
@@ -66,8 +68,8 @@ public class MavenProxyRecipe
 
   @Inject
   public MavenProxyRecipe(
-      @Named(ProxyType.NAME) final Type type,
-      @Named(Maven2Format.NAME) final Format format,
+      @Qualifier(ProxyType.NAME) final Type type,
+      @Qualifier(Maven2Format.NAME) final Format format,
       final Provider<HttpClientFacet> httpClientFacet,
       final Provider<NegativeCacheFacet> negativeCacheFacet,
       final Provider<MavenProxyFacet> proxyFacet,

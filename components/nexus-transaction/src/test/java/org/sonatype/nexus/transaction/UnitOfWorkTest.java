@@ -13,9 +13,9 @@
 package org.sonatype.nexus.transaction;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.transaction.ExampleMethods.ExampleNestedStore;
 
 import com.google.common.base.Suppliers;
-import com.google.inject.Guice;
 import org.junit.Test;
 
 /**
@@ -42,7 +42,7 @@ public class UnitOfWorkTest
 
   @Test(expected = IllegalStateException.class)
   public void testCannotResumeTwice() {
-    UnitOfWork.begin(Suppliers.<TransactionalSession<Transaction>> ofInstance(null));
+    UnitOfWork.begin(Suppliers.<TransactionalSession<Transaction>>ofInstance(null));
     try {
       UnitOfWork work = UnitOfWork.pause();
       UnitOfWork.resume(work);
@@ -55,6 +55,6 @@ public class UnitOfWorkTest
 
   @Test(expected = IllegalStateException.class)
   public void testCannotStartTransactionWithNoWork() {
-    Guice.createInjector(new TransactionModule()).getInstance(ExampleMethods.class).transactional();
+    new ExampleMethods(new ExampleNestedStore()).transactional();
   }
 }

@@ -18,8 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.content.maven.MavenContentFacet;
 import org.sonatype.nexus.content.maven.store.GAV;
@@ -43,13 +42,18 @@ import org.joda.time.DateTime;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.logging.task.TaskLoggingMarkers.PROGRESS;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Facet handling the removal of snapshots from a repository.
  *
  * @since 3.30
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RemoveSnapshotsFacetImpl
     extends FacetSupport
     implements RemoveSnapshotsFacet
@@ -58,7 +62,7 @@ public class RemoveSnapshotsFacetImpl
 
   @Inject
   public RemoveSnapshotsFacetImpl(
-      @Named(GroupType.NAME) final Type groupType)
+      @Qualifier(GroupType.NAME) final Type groupType)
   {
     this.groupType = checkNotNull(groupType);
   }
@@ -83,7 +87,9 @@ public class RemoveSnapshotsFacetImpl
    * Iterate over group members which may contain snapshots and recursively apply the snapshot removal.
    */
   private void processGroup(final MavenGroupFacet groupFacet, final RemoveSnapshotsConfig config) {
-    groupFacet.members().stream().filter(member -> isSnapshotRepo(member) || groupType.equals(member.getType()))
+    groupFacet.members()
+        .stream()
+        .filter(member -> isSnapshotRepo(member) || groupType.equals(member.getType()))
         .forEach(member -> member.facet(RemoveSnapshotsFacet.class).removeSnapshots(config));
   }
 
@@ -100,13 +106,14 @@ public class RemoveSnapshotsFacetImpl
    */
   @VisibleForTesting
   void processRepository(
-      final Repository repository, final RemoveSnapshotsConfig config)
+      final Repository repository,
+      final RemoveSnapshotsConfig config)
   {
     log.info("Begin processing snapshots in repository '{}'", repository.getName());
 
     deleteRedundantSnapshots(repository, config);
 
-    deleteSnapshotsForReleasedComponents(repository,config);
+    deleteSnapshotsForReleasedComponents(repository, config);
 
     log.info("Finished processing snapshots with more than {} versions created before {}", config.getMinimumRetained(),
         DateTime.now().minusDays(Math.max(config.getSnapshotRetentionDays(), 0)));
@@ -116,8 +123,7 @@ public class RemoveSnapshotsFacetImpl
    * Find all GAVs that qualify for deletion.
    */
   @VisibleForTesting
-  Set<GAV> findSnapshotCandidates(final Repository repository, final int minimumRetained)
-  {
+  Set<GAV> findSnapshotCandidates(final Repository repository, final int minimumRetained) {
     log.info(PROGRESS, "Searching for GAVs with snapshots that qualify for deletion on repository '{}'",
         repository.getName());
 
@@ -129,8 +135,7 @@ public class RemoveSnapshotsFacetImpl
    * Find all components (snapshot *OR* release) for a given GAV
    */
   @VisibleForTesting
-  List<Maven2ComponentData> findComponentsForGav(final Repository repository, final GAV gav)
-  {
+  List<Maven2ComponentData> findComponentsForGav(final Repository repository, final GAV gav) {
     MavenContentFacet facet = repository.facet(MavenContentFacet.class);
     String releaseVersion = gav.baseVersion.replace("-SNAPSHOT", "");
     return facet.findComponentsForGav(gav.name, gav.group, gav.baseVersion, releaseVersion);
@@ -150,7 +155,8 @@ public class RemoveSnapshotsFacetImpl
     int keptSnapshotsCount = 0;
     if (config.getMinimumRetained() >= 0) {
       for (Maven2ComponentData component : components) {
-        if (retentionTimeBorder.isAfter(calculateLastUpdated(component)) && keptSnapshotsCount >= config.getMinimumRetained()) {
+        if (retentionTimeBorder.isAfter(calculateLastUpdated(component))
+            && keptSnapshotsCount >= config.getMinimumRetained()) {
           snapshotsToDelete.add(component);
         }
         else {
@@ -168,7 +174,8 @@ public class RemoveSnapshotsFacetImpl
   OffsetDateTime calculateLastUpdated(final ComponentData component) {
     OffsetDateTime lastUpdated = component.lastUpdated();
     if (component.getAssets() != null) {
-      lastUpdated = component.getAssets().stream()
+      lastUpdated = component.getAssets()
+          .stream()
           .map(Asset::blob)
           .filter(Optional::isPresent)
           .map(assetBlob -> assetBlob.get().blobCreated())
@@ -182,8 +189,7 @@ public class RemoveSnapshotsFacetImpl
    * Delete snapshots based on desired minimum and last update date
    */
   @VisibleForTesting
-  void deleteRedundantSnapshots(final Repository repository, final RemoveSnapshotsConfig config)
-  {
+  void deleteRedundantSnapshots(final Repository repository, final RemoveSnapshotsConfig config) {
     Set<GAV> snapshotCandidates = findSnapshotCandidates(repository, Math.max(config.getMinimumRetained(), 0));
     log.debug("Found {} snapshot GAVs to analyze", snapshotCandidates.size());
 
@@ -219,8 +225,7 @@ public class RemoveSnapshotsFacetImpl
    * Delete snapshots for released components after grace period
    */
   @VisibleForTesting
-  void deleteSnapshotsForReleasedComponents(final Repository repository, final RemoveSnapshotsConfig config)
-  {
+  void deleteSnapshotsForReleasedComponents(final Repository repository, final RemoveSnapshotsConfig config) {
     if (config.getRemoveIfReleased()) {
       MavenContentFacet facet = repository.facet(MavenContentFacet.class);
       int[] snapshotsAfterReleaseToDelete = facet.selectSnapshotsAfterRelease(Math.max(config.getGracePeriod(), 0));

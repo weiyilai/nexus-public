@@ -12,11 +12,10 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.blobstore;
 
-import java.util.Map;
+import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response.Status;
 
@@ -28,6 +27,7 @@ import org.sonatype.nexus.repository.blobstore.BlobStoreConfigurationStore;
 import org.sonatype.nexus.rest.WebApplicationMessageException;
 
 import io.swagger.annotations.Api;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.api.rest.selfhosted.blobstore.BlobStoreResourceBeta.RESOURCE_URI;
 import static org.sonatype.nexus.rest.APIConstants.BETA_API_PREFIX;
@@ -39,7 +39,7 @@ import static org.sonatype.nexus.rest.APIConstants.BETA_API_PREFIX;
  * @deprecated moving to {@link BlobStoreResourceV1}
  */
 @Api(hidden = true)
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 @Deprecated
@@ -53,7 +53,7 @@ public class BlobStoreResourceBeta
       final BlobStoreManager blobStoreManager,
       final BlobStoreConfigurationStore store,
       final BlobStoreQuotaService quotaService,
-      final Map<String, ConnectionChecker> connectionCheckers)
+      final List<ConnectionChecker> connectionCheckers)
   {
     super(blobStoreManager, store, quotaService, connectionCheckers);
   }

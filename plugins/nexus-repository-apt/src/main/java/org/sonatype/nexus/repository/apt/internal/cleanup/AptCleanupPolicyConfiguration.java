@@ -14,13 +14,14 @@ package org.sonatype.nexus.repository.apt.internal.cleanup;
 
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.cleanup.config.CleanupPolicyConfiguration;
 import org.sonatype.nexus.repository.apt.AptFormat;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.IS_PRERELEASE_KEY;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.LAST_BLOB_UPDATED_KEY;
@@ -30,7 +31,8 @@ import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.REGEX_KEY
 /**
  * @since 3.19
  */
-@Named(AptFormat.NAME)
+@Component
+@Qualifier(AptFormat.NAME)
 @Singleton
 public class AptCleanupPolicyConfiguration
     implements CleanupPolicyConfiguration

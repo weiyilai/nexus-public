@@ -15,14 +15,15 @@ package org.sonatype.nexus.internal.datastore;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.supportzip.ExportConfigData;
 import org.sonatype.nexus.supportzip.GeneratedContentSourceSupport;
 import org.sonatype.nexus.supportzip.SupportBundle;
@@ -30,13 +31,14 @@ import org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type;
 import org.sonatype.nexus.supportzip.SupportBundleCustomizer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Add {@link SupportBundle} to export {@link Type#CONFIG} data to serialized files.
  *
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 public class ConfigDatabase
     extends ComponentSupport
@@ -51,8 +53,8 @@ public class ConfigDatabase
   private final Map<String, ExportConfigData> exportDataByName;
 
   @Inject
-  public ConfigDatabase(final Map<String, ExportConfigData> exportDataByName) {
-    this.exportDataByName = checkNotNull(exportDataByName);
+  public ConfigDatabase(final List<ExportConfigData> exportDataByNameList) {
+    this.exportDataByName = QualifierUtil.buildQualifierBeanMap(checkNotNull(exportDataByNameList));
   }
 
   @Override

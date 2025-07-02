@@ -22,14 +22,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.cleanup.datastore.search.criteria.AssetCleanupEvaluator;
 import org.sonatype.nexus.cleanup.datastore.search.criteria.ComponentCleanupEvaluator;
 import org.sonatype.nexus.cleanup.storage.CleanupPolicy;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.Continuations;
 import org.sonatype.nexus.extdirect.model.PagedResponse;
 import org.sonatype.nexus.repository.Repository;
@@ -40,12 +40,15 @@ import org.sonatype.nexus.repository.content.fluent.FluentComponent;
 import org.sonatype.nexus.repository.query.QueryOptions;
 import org.sonatype.nexus.scheduling.CancelableHelper;
 
+import org.springframework.context.annotation.Primary;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @since 3.38
  */
-@Named
+@org.springframework.stereotype.Component
+@Primary
 @Singleton
 public class DefaultCleanupComponentBrowse
     extends ComponentSupport
@@ -57,18 +60,17 @@ public class DefaultCleanupComponentBrowse
 
   @Inject
   public DefaultCleanupComponentBrowse(
-      final Map<String, ComponentCleanupEvaluator> componentCriteria,
-      final Map<String, AssetCleanupEvaluator> assetCriteria)
+      final List<ComponentCleanupEvaluator> componentCriteriaList,
+      final List<AssetCleanupEvaluator> assetCriteriaList)
   {
-    this.componentCriteria = checkNotNull(componentCriteria);
-    this.assetCriteria = checkNotNull(assetCriteria);
+    this.componentCriteria = QualifierUtil.buildQualifierBeanMap(checkNotNull(componentCriteriaList));
+    this.assetCriteria = QualifierUtil.buildQualifierBeanMap(checkNotNull(assetCriteriaList));
   }
 
   @Override
   public Stream<FluentComponent> browse(final CleanupPolicy policy, final Repository repository) {
     checkNotNull(policy);
     checkNotNull(repository);
-
 
     return Continuations.streamOf(getComponentBrowser(repository, policy)::browse)
         .filter(createComponentFilter(repository, policy));
@@ -101,7 +103,7 @@ public class DefaultCleanupComponentBrowse
 
     List<Component> result =
         Continuations.streamOf(getComponentBrowser(repository, policy)::browse, Continuations.BROWSE_LIMIT,
-                options.getLastId())
+            options.getLastId())
             .peek(__ -> CancelableHelper.checkCancellation())
             .filter(componentFilter)
             .limit(options.getLimit())
@@ -117,7 +119,7 @@ public class DefaultCleanupComponentBrowse
    * Format or Feature specific requirements.
    *
    * @param repository the Repository that the policy is being applied to
-   * @param policy     the cleanup policy that is being applied
+   * @param policy the cleanup policy that is being applied
    * @return the cleanup criteria that should be used when filtering items
    */
   protected Map<String, String> getFilterableCriteria(Repository repository, CleanupPolicy policy) {
@@ -131,10 +133,9 @@ public class DefaultCleanupComponentBrowse
   private Optional<Predicate<FluentComponent>> createOptionsFilter(final QueryOptions options) {
     String filter = options.getFilter();
     if (filter != null && filter.trim().length() > 0) {
-      Predicate<FluentComponent> optionsFilter = (component) ->
-          component.name().contains(filter) ||
-              component.namespace().contains(filter) ||
-              component.version().contains(filter);
+      Predicate<FluentComponent> optionsFilter = (component) -> component.name().contains(filter) ||
+          component.namespace().contains(filter) ||
+          component.version().contains(filter);
       return Optional.of(optionsFilter);
     }
     else {
@@ -150,7 +151,8 @@ public class DefaultCleanupComponentBrowse
     validateCleanupPolicy(policy);
 
     List<BiPredicate<Component, Iterable<Asset>>> componentFilters =
-        getFilterableCriteria(repository, policy).entrySet().stream()
+        getFilterableCriteria(repository, policy).entrySet()
+            .stream()
             .filter(entry -> componentCriteria.containsKey(entry.getKey()))
             .map(entry -> componentCriteria.get(entry.getKey()).getPredicate(repository, entry.getValue()))
             .filter(Objects::nonNull)
@@ -159,7 +161,8 @@ public class DefaultCleanupComponentBrowse
     componentFilters.add(createAssetFilter(repository, policy));
 
     return component -> {
-      Iterable<Asset> assets = component.assets().stream()
+      Iterable<Asset> assets = component.assets()
+          .stream()
           .map(Asset.class::cast)
           .collect(Collectors.toList());
 
@@ -179,7 +182,8 @@ public class DefaultCleanupComponentBrowse
       final Repository repository,
       final CleanupPolicy policy)
   {
-    List<Predicate<Asset>> filters = getFilterableCriteria(repository, policy).entrySet().stream()
+    List<Predicate<Asset>> filters = getFilterableCriteria(repository, policy).entrySet()
+        .stream()
         .map(entry -> {
           if (!assetCriteria.containsKey(entry.getKey())) {
             return null;
@@ -198,7 +202,9 @@ public class DefaultCleanupComponentBrowse
    * Checks the cleanup policy configuration to ensure that all criteria are known to the system.
    */
   protected void validateCleanupPolicy(final CleanupPolicy policy) {
-    String missingCriteria = policy.getCriteria().keySet().stream()
+    String missingCriteria = policy.getCriteria()
+        .keySet()
+        .stream()
         .filter(((Predicate<String>) componentCriteria::containsKey).negate())
         .filter(((Predicate<String>) assetCriteria::containsKey).negate())
         .collect(Collectors.joining(", "));
@@ -213,12 +219,14 @@ public class DefaultCleanupComponentBrowse
 
   /**
    * Returns a Continuation-based browser of components that are eligible for cleanup.
+   *
    * @param repository the Repository to browse
    * @param policy the Cleanup Policy to use for filtering
    * @return a continuation of components eligible for cleanup
    */
   protected ContinuationBrowse<FluentComponent> getComponentBrowser(
-      final Repository repository, final CleanupPolicy policy)
+      final Repository repository,
+      final CleanupPolicy policy)
   {
     return repository.facet(ContentFacet.class).components()::browse;
   }

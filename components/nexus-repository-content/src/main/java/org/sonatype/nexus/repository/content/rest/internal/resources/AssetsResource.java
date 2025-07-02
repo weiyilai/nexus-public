@@ -15,9 +15,8 @@ package org.sonatype.nexus.repository.content.rest.internal.resources;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -28,6 +27,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.DetachedEntityId;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.Asset;
@@ -53,11 +53,12 @@ import static org.sonatype.nexus.repository.content.store.InternalIds.toExternal
 import static org.sonatype.nexus.repository.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.sonatype.nexus.repository.rest.api.RepositoryItemIDXO.fromString;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.27
  */
-@Named
+@Component
 @Singleton
 @Path(AssetsResource.RESOURCE_URI)
 @Produces(APPLICATION_JSON)
@@ -79,12 +80,12 @@ public class AssetsResource
       final RepositoryManagerRESTAdapter repositoryManagerRESTAdapter,
       final MaintenanceService maintenanceService,
       final ContentAuthHelper contentAuthHelper,
-      final Map<String, AssetXODescriptor> assetDescriptors)
+      final List<AssetXODescriptor> assetDescriptorsList)
   {
     super(contentAuthHelper);
     this.repositoryManagerRESTAdapter = checkNotNull(repositoryManagerRESTAdapter);
     this.maintenanceService = checkNotNull(maintenanceService);
-    this.assetDescriptors = assetDescriptors;
+    this.assetDescriptors = QualifierUtil.buildQualifierBeanMap(assetDescriptorsList);
   }
 
   @GET

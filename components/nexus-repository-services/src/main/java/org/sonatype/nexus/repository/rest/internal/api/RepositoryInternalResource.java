@@ -18,9 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Collection;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -29,6 +28,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Recipe;
 import org.sonatype.nexus.repository.Repository;
@@ -52,11 +52,13 @@ import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.sonatype.nexus.security.BreadActions.READ;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
@@ -69,8 +71,7 @@ public class RepositoryInternalResource
 
   static final RepositoryXO ALL_REFERENCE = new RepositoryXO(
       RepositorySelector.all().toSelector(),
-      "(All Repositories)"
-  );
+      "(All Repositories)");
 
   static final String ALL_FORMATS = "*";
 
@@ -98,8 +99,8 @@ public class RepositoryInternalResource
       final ProxyType proxyType,
       final List<Recipe> recipes,
       final AuthorizingRepositoryManager authorizingRepositoryManager,
-      final Map<String, ApiRepositoryAdapter> convertersByFormat,
-      @Named("default") final ApiRepositoryAdapter defaultAdapter)
+      final List<ApiRepositoryAdapter> convertersByFormatList,
+      @Qualifier("default") final ApiRepositoryAdapter defaultAdapter)
   {
     this.formats = checkNotNull(formats);
     this.repositoryManager = checkNotNull(repositoryManager);
@@ -107,7 +108,7 @@ public class RepositoryInternalResource
     this.proxyType = checkNotNull(proxyType);
     this.recipes = checkNotNull(recipes);
     this.authorizingRepositoryManager = checkNotNull(authorizingRepositoryManager);
-    this.convertersByFormat = checkNotNull(convertersByFormat);
+    this.convertersByFormat = QualifierUtil.buildQualifierBeanMap(checkNotNull(convertersByFormatList));
     this.defaultAdapter = checkNotNull(defaultAdapter);
   }
 
@@ -123,8 +124,8 @@ public class RepositoryInternalResource
         .stream()
         .filter(repository -> isBlank(type) || type.equals(repository.getType().getValue()))
         .filter(repository -> isBlank(formatParam)
-                    || formatParam.equals(ALL_FORMATS)
-                    || formatParam.equals(repository.getFormat().getValue()))
+            || formatParam.equals(ALL_FORMATS)
+            || formatParam.equals(repository.getFormat().getValue()))
         .map(repository -> new RepositoryXO(repository.getName(), repository.getName()))
         .sorted(Comparator.comparing(RepositoryXO::getName))
         .collect(toList());
@@ -137,8 +138,7 @@ public class RepositoryInternalResource
       formats.stream()
           .map(format -> new RepositoryXO(
               RepositorySelector.allOfFormat(format.getValue()).toSelector(),
-              "(All " + format.getValue() + " Repositories)"
-          ))
+              "(All " + format.getValue() + " Repositories)"))
           .sorted(Comparator.comparing(RepositoryXO::getName))
           .forEach(result::add);
     }
@@ -151,14 +151,15 @@ public class RepositoryInternalResource
   @Path("/repository/{repositoryName}")
   @RequiresAuthentication
   public AbstractApiRepository getRepository(@PathParam("repositoryName") final String repositoryName) {
-    return authorizingRepositoryManager.getRepositoryWithAdmin(repositoryName).map(repository ->
-        convertersByFormat.getOrDefault(repository.getFormat().getValue(), defaultAdapter).adapt(repository)).get();
+    return authorizingRepositoryManager.getRepositoryWithAdmin(repositoryName)
+        .map(repository -> convertersByFormat.getOrDefault(repository.getFormat().getValue(), defaultAdapter)
+            .adapt(repository))
+        .get();
   }
 
   @GET
   @Path("/details")
-  public List<RepositoryDetailXO> getRepositoryDetails()
-  {
+  public List<RepositoryDetailXO> getRepositoryDetails() {
     return stream(repositoryManager.browse())
         .filter(repository -> repositoryPermissionChecker.userHasRepositoryAdminPermission(repository, READ))
         .map(this::asRepositoryDetail)
@@ -167,8 +168,7 @@ public class RepositoryInternalResource
 
   @GET
   @Path("/recipes")
-  public List<RecipeXO> getRecipes()
-  {
+  public List<RecipeXO> getRecipes() {
     return recipes.stream()
         .filter(Recipe::isFeatureEnabled)
         .map(RecipeXO::new)
@@ -183,8 +183,8 @@ public class RepositoryInternalResource
     RepositoryStatusXO statusXO = getStatusXO(repository);
 
     return format.equals("nuget")
-            ? asNugetRepository(repository)
-            : new RepositoryDetailXO(name, type, format, url, statusXO);
+        ? asNugetRepository(repository)
+        : new RepositoryDetailXO(name, type, format, url, statusXO);
   }
 
   @SuppressWarnings("unchecked")
@@ -200,15 +200,17 @@ public class RepositoryInternalResource
 
     if (type.equals(ProxyType.NAME)) {
       nugetVersion = (String) repository
-              .getConfiguration()
-              .attributes("nugetProxy")
-              .get("nugetVersion");
-    } else if (type.equals(GroupType.NAME)) {
+          .getConfiguration()
+          .attributes("nugetProxy")
+          .get("nugetVersion");
+    }
+    else if (type.equals(GroupType.NAME)) {
       memberNames = (Collection<String>) repository
-              .getConfiguration()
-              .attributes("group")
-              .get("memberNames");
-    } else {
+          .getConfiguration()
+          .attributes("group")
+          .get("memberNames");
+    }
+    else {
       return new RepositoryDetailXO(name, type, format, url, statusXO);
     }
 
@@ -242,4 +244,3 @@ public class RepositoryInternalResource
     return new RepositoryStatusXO(online, description, reason);
   }
 }
-

@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.maven.rest;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.repository.rest.api.RepositoriesApiResourceBeta;
@@ -22,14 +21,15 @@ import org.sonatype.nexus.rest.APIConstants;
 import io.swagger.annotations.Api;
 
 import static org.sonatype.nexus.repository.maven.rest.MavenGroupRepositoriesApiResourceBeta.RESOURCE_URI;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  * @deprecated the 'beta' prefix is being phased out, prefer starting new APIs with {@link APIConstants#V1_API_PREFIX}
- * instead. Support backward compatibility.
+ *             instead. Support backward compatibility.
  */
 @Api(hidden = true)
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 @Deprecated

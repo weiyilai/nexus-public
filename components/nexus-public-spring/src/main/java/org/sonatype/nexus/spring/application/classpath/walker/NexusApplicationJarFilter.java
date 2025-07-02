@@ -15,14 +15,14 @@ package org.sonatype.nexus.spring.application.classpath.walker;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.annotation.Nullable;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
+import org.springframework.stereotype.Component;
 
 /**
  * !!!! DEPRECATED no new impl needed. This class should be removed when
@@ -30,7 +30,7 @@ import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
  * "nexus.spring.only=true" impl, then only brought back to this class if necessary
  */
 @Deprecated(since = "4/1/2025", forRemoval = true)
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "false", matchIfMissing = true)
 public class NexusApplicationJarFilter

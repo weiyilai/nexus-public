@@ -15,19 +15,19 @@ package org.sonatype.nexus.coreui;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * API feature flag
  */
-@Named
+@Component
 @Singleton
 public class ApiDocsStateContributor
     implements StateContributor
@@ -36,7 +36,7 @@ public class ApiDocsStateContributor
 
   @Inject
   public ApiDocsStateContributor(
-      @Named("${nexus.admin.system.apidocs.enabled:-true}") @Value("${nexus.admin.system.apidocs.enabled:true}") final boolean enabled)
+      @Value("${nexus.admin.system.apidocs.enabled:true}") final boolean enabled)
   {
     this.enabled = enabled;
   }

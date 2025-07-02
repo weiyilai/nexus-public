@@ -21,10 +21,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
 
@@ -62,6 +61,8 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -74,8 +75,9 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.CAPABILITIES;
 /**
  * Default {@link CapabilityRegistry} implementation.
  */
+@Primary
 @Singleton
-@Named
+@Component
 @ManagedLifecycle(phase = CAPABILITIES)
 public class DefaultCapabilityRegistry
     extends StateGuardLifecycleSupport

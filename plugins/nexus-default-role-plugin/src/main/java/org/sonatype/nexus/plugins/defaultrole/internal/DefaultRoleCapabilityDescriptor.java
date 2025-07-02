@@ -14,8 +14,8 @@ package org.sonatype.nexus.plugins.defaultrole.internal;
 
 import java.util.List;
 import java.util.Map;
-import javax.inject.Named;
-import javax.inject.Singleton;
+
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -28,6 +28,8 @@ import org.sonatype.nexus.formfields.FormField;
 import static java.util.Collections.singletonList;
 import static org.sonatype.nexus.capability.CapabilityType.capabilityType;
 import static org.sonatype.nexus.plugins.defaultrole.internal.DefaultRoleCapabilityConfiguration.P_ROLE;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Descriptor of the {@link DefaultRoleCapability} for UI configuration
@@ -35,7 +37,8 @@ import static org.sonatype.nexus.plugins.defaultrole.internal.DefaultRoleCapabil
  * @since 3.22
  */
 @AvailabilityVersion(from = "1.0")
-@Named(DefaultRoleCapabilityDescriptor.TYPE_ID)
+@Component
+@Qualifier(DefaultRoleCapabilityDescriptor.TYPE_ID)
 @Singleton
 public class DefaultRoleCapabilityDescriptor
     extends CapabilityDescriptorSupport<DefaultRoleCapabilityConfiguration>

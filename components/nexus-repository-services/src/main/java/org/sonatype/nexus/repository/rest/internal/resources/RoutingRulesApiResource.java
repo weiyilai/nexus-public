@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -69,8 +69,7 @@ public class RoutingRulesApiResource
   @POST
   @RequiresAuthentication
   @RequiresPermissions("nexus:*")
-  public void createRoutingRule(@NotNull final RoutingRuleXO routingRuleXO)
-  {
+  public void createRoutingRule(@NotNull final RoutingRuleXO routingRuleXO) {
     final RoutingRule routingRule = routingRuleStore.newRoutingRule();
     routingRule.name(routingRuleXO.getName());
     routingRule.description(routingRuleXO.getDescription());
@@ -85,9 +84,9 @@ public class RoutingRulesApiResource
   public List<RoutingRuleXO> getRoutingRules() {
     routingRuleHelper.ensureUserHasPermissionToRead();
     return routingRuleStore.list()
-            .stream()
-            .map(RoutingRuleXO::fromRoutingRule)
-            .collect(Collectors.toList());
+        .stream()
+        .map(RoutingRuleXO::fromRoutingRule)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -104,8 +103,9 @@ public class RoutingRulesApiResource
   @Path("/{name}")
   @RequiresAuthentication
   @RequiresPermissions("nexus:*")
-  public void updateRoutingRule(@PathParam("name") final String name,
-                                @NotNull final RoutingRuleXO routingRuleXO)
+  public void updateRoutingRule(
+      @PathParam("name") final String name,
+      @NotNull final RoutingRuleXO routingRuleXO)
   {
     RoutingRule routingRule = getRuleFromStore(name);
 
@@ -143,9 +143,8 @@ public class RoutingRulesApiResource
     if (null == routingRule) {
       throw new WebApplicationMessageException(
           Status.NOT_FOUND,
-         "\"Did not find a routing rule with the name '" + name + "'\"",
-          APPLICATION_JSON
-      );
+          "\"Did not find a routing rule with the name '" + name + "'\"",
+          APPLICATION_JSON);
     }
     return routingRule;
   }

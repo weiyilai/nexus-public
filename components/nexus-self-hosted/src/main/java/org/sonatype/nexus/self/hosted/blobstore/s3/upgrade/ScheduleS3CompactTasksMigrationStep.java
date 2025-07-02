@@ -16,8 +16,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.s3.internal.S3BlobStore;
@@ -25,11 +24,15 @@ import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
 import org.sonatype.nexus.upgrade.datastore.RepeatableDatabaseMigrationStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Our S3 blob store implementation previously used the S3 expiration policy, this schedules compact tasks
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ScheduleS3CompactTasksMigrationStep
     extends ComponentSupport
     implements RepeatableDatabaseMigrationStep

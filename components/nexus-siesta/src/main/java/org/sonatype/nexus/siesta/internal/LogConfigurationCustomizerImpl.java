@@ -12,19 +12,19 @@
  */
 package org.sonatype.nexus.siesta.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.log.LogConfigurationCustomizer;
 
 import static org.sonatype.nexus.common.log.LoggerLevel.DEFAULT;
+import org.springframework.stereotype.Component;
 
 /**
  * Siesta {@link LogConfigurationCustomizer}.
  *
  * @since 2.7
  */
-@Named
+@Component
 @Singleton
 public class LogConfigurationCustomizerImpl
     implements LogConfigurationCustomizer

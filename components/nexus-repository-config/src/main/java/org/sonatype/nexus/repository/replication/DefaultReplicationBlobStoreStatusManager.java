@@ -12,18 +12,21 @@
  */
 package org.sonatype.nexus.repository.replication;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.repository.replication.ReplicationBlobStoreStatusManager.BlobStoreReplicationStatus;
+
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.repository.replication.ReplicationBlobStoreStatusManager.BlobStoreReplicationStatus.ATTRIBUTES_MISSING;
 
 /**
  * @since 3.32
  */
-@Named
+@Primary
+@Component
 @Singleton
 public class DefaultReplicationBlobStoreStatusManager
     implements ReplicationBlobStoreStatusManager
@@ -40,7 +43,10 @@ public class DefaultReplicationBlobStoreStatusManager
   }
 
   @Override
-  public void setReplicationStatus(final BlobStoreConfiguration configuration, final BlobStoreReplicationStatus status) {
+  public void setReplicationStatus(
+      final BlobStoreConfiguration configuration,
+      final BlobStoreReplicationStatus status)
+  {
     throw new UnsupportedOperationException();
   }
 }

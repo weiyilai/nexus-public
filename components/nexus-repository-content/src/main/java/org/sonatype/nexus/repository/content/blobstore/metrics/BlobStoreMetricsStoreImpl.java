@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.content.blobstore.metrics;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.metrics.BlobStoreMetricsEntity;
 import org.sonatype.nexus.blobstore.api.metrics.BlobStoreMetricsStore;
@@ -22,8 +21,9 @@ import org.sonatype.nexus.datastore.ConfigStoreSupport;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.datastore.api.DuplicateKeyException;
 import org.sonatype.nexus.transaction.Transactional;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class BlobStoreMetricsStoreImpl
     extends ConfigStoreSupport<BlobStoreMetricsDAO>

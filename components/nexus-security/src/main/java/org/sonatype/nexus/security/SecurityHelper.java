@@ -15,8 +15,7 @@ package org.sonatype.nexus.security;
 import java.util.Arrays;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.security.authz.WildcardPermission2;
@@ -29,6 +28,7 @@ import org.apache.shiro.subject.Subject;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 // NOTE: Specifically not using SecuritySystem here as that is a legacy api and has a lot of cruft
 
@@ -39,7 +39,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class SecurityHelper
     extends ComponentSupport
@@ -85,12 +85,13 @@ public class SecurityHelper
     checkArgument(permissions.length != 0);
 
     if (log.isTraceEnabled()) {
-      log.trace("Ensuring subject '{}' has any of the following permissions: {}", subject.getPrincipal(), Arrays.toString(permissions));
+      log.trace("Ensuring subject '{}' has any of the following permissions: {}", subject.getPrincipal(),
+          Arrays.toString(permissions));
     }
 
     if (!anyPermitted(subject, permissions)) {
-      throw new AuthorizationException("User is not permitted: " + 
-        (permissions.length > 1 ? "[" + permissions[0] + ", ...]" : permissions[0]));
+      throw new AuthorizationException("User is not permitted: " +
+          (permissions.length > 1 ? "[" + permissions[0] + ", ...]" : permissions[0]));
     }
   }
 
@@ -137,8 +138,7 @@ public class SecurityHelper
   public boolean anyPermitted(final Subject subject, final Iterable<Permission> permissions) {
     return anyPermitted(
         subject,
-        StreamSupport.stream(permissions.spliterator(), false).toArray(Permission[]::new)
-    );
+        StreamSupport.stream(permissions.spliterator(), false).toArray(Permission[]::new));
   }
 
   /**

@@ -12,18 +12,21 @@
  */
 package org.sonatype.nexus.repository.browse.node;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Configuration options for browse tree
  *
  * @since 3.6
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BrowseNodeConfiguration
 {
   private final boolean automaticRebuild;
@@ -38,11 +41,11 @@ public class BrowseNodeConfiguration
 
   @Inject
   public BrowseNodeConfiguration(
-      @Named("${nexus.browse.component.tree.automaticRebuild:-true}") @Value("${nexus.browse.component.tree.automaticRebuild:true}") final boolean automaticRebuild,
-      @Named("${nexus.browse.component.tree.rebuildPageSize:-1000}") @Value("${nexus.browse.component.tree.rebuildPageSize:1000}") final int rebuildPageSize,
-      @Named("${nexus.browse.component.tree.deletePageSize:-1000}") @Value("${nexus.browse.component.tree.deletePageSize:1000}") final int deletePageSize,
-      @Named("${nexus.browse.component.tree.maxNodes:-10000}") @Value("${nexus.browse.component.tree.maxNodes:10000}") final int maxNodes,
-      @Named("${nexus.browse.component.tree.maxHtmlNodes:-10000}") @Value("${nexus.browse.component.tree.maxHtmlNodes:10000}") final int maxHtmlNodes)
+      @Value("${nexus.browse.component.tree.automaticRebuild:true}") final boolean automaticRebuild,
+      @Value("${nexus.browse.component.tree.rebuildPageSize:1000}") final int rebuildPageSize,
+      @Value("${nexus.browse.component.tree.deletePageSize:1000}") final int deletePageSize,
+      @Value("${nexus.browse.component.tree.maxNodes:10000}") final int maxNodes,
+      @Value("${nexus.browse.component.tree.maxHtmlNodes:10000}") final int maxHtmlNodes)
   {
     this.automaticRebuild = automaticRebuild;
     this.rebuildPageSize = rebuildPageSize;

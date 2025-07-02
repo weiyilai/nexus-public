@@ -16,21 +16,23 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.security.realm.RealmConfiguration;
 import org.sonatype.nexus.supportzip.ExportSecurityData;
 import org.sonatype.nexus.supportzip.ImportData;
 import org.sonatype.nexus.supportzip.datastore.JsonExporter;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Write/Read {@link RealmConfiguration} data to/from a JSON file.
  *
  * @since 3.29
  */
-@Named("realmConfigurationExport")
+@Component
+@Qualifier("realmConfigurationExport")
 @Singleton
 public class RealmConfigurationExport
     extends JsonExporter

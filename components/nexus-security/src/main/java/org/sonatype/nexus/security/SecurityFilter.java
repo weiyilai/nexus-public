@@ -15,29 +15,34 @@ package org.sonatype.nexus.security;
 import java.io.IOException;
 import java.security.Principal;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.web.filter.mgt.FilterChainResolver;
 import org.apache.shiro.web.mgt.WebSecurityManager;
 import org.apache.shiro.web.servlet.AbstractShiroFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.commons.lang.StringUtils.removeStart;
 import static org.apache.shiro.web.util.WebUtils.INCLUDE_SERVLET_PATH_ATTRIBUTE;
+import static org.sonatype.nexus.common.app.FeatureFlags.SESSION_ENABLED;
 
 /**
  * Security filter.
  *
  * @since 2.8
  */
+@WebFilter("/*")
+@ConditionalOnProperty(name = SESSION_ENABLED, havingValue = "true", matchIfMissing = true)
 @Singleton
 public class SecurityFilter
     extends AbstractShiroFilter
@@ -49,8 +54,9 @@ public class SecurityFilter
   public static final String ATTR_USER_ID = "nexus.user.id";
 
   @Inject
-  public SecurityFilter(final WebSecurityManager webSecurityManager,
-                        final FilterChainResolver filterChainResolver)
+  public SecurityFilter(
+      final WebSecurityManager webSecurityManager,
+      final FilterChainResolver filterChainResolver)
   {
     checkNotNull(webSecurityManager);
     log.trace("Security manager: {}", webSecurityManager);
@@ -67,16 +73,16 @@ public class SecurityFilter
    * This is invoked in the execute context of subject.
    */
   @Override
-  protected void executeChain(final ServletRequest request,
-                              final ServletResponse response,
-                              final FilterChain origChain)
-      throws IOException, ServletException
+  protected void executeChain(
+      final ServletRequest request,
+      final ServletResponse response,
+      final FilterChain origChain) throws IOException, ServletException
   {
     UserIdMdcHelper.set();
 
     // HACK: Attach principal to underlying request so we can use that in the request-log
     if (request instanceof HttpServletRequest) {
-      HttpServletRequest httpRequest = (HttpServletRequest)request;
+      HttpServletRequest httpRequest = (HttpServletRequest) request;
       Principal p = httpRequest.getUserPrincipal();
       if (p != null) {
         httpRequest.setAttribute(ATTR_USER_PRINCIPAL, p);
@@ -84,7 +90,8 @@ public class SecurityFilter
       }
       /**
        * set request URI as servlet path for avoid url mismatching between
-       * data url processing: {@link com.google.inject.servlet.ServletUtils#getContextRelativePath(javax.servlet.http.HttpServletRequest)}
+       * data url processing:
+       * {@link com.google.inject.servlet.ServletUtils#getContextRelativePath(javax.servlet.http.HttpServletRequest)}
        * and
        * security url processing: {@link org.apache.shiro.web.util.WebUtils#getPathWithinApplication}
        */
@@ -100,12 +107,13 @@ public class SecurityFilter
    * Unset MDC after we finish filtering to restore thread state.
    */
   @Override
-  protected void doFilterInternal(final ServletRequest request,
-                                  final ServletResponse response,
-                                  final FilterChain chain)
-      throws ServletException, IOException
+  protected void doFilterInternal(
+      final ServletRequest request,
+      final ServletResponse response,
+      final FilterChain chain) throws ServletException, IOException
   {
-    // FIXME: Really should find a better place to do this so its covered in all request, not just those with security-filter
+    // FIXME: Really should find a better place to do this so its covered in all request, not just those with
+    // security-filter
     UserIdMdcHelper.unknown();
 
     try {

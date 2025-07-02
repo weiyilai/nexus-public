@@ -12,21 +12,26 @@
  */
 package org.sonatype.nexus.internal.security.anonymous;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.security.anonymous.AnonymousConfiguration;
 import org.sonatype.nexus.transaction.Transactional;
 
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
+
 /**
  * MyBatis {@link AnonymousConfigurationStore} implementation.
  *
  * @since 3.21
  */
-@Named("mybatis")
+@Primary
+@Component
+@Qualifier("mybatis")
 @Singleton
 public class AnonymousConfigurationStoreImpl
     extends ConfigStoreSupport<AnonymousConfigurationDAO>

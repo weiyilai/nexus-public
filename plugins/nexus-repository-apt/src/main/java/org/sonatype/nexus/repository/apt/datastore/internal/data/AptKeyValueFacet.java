@@ -14,8 +14,7 @@ package org.sonatype.nexus.repository.apt.datastore.internal.data;
 
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.entity.Continuations;
 import org.sonatype.nexus.repository.Facet.Exposed;
@@ -26,12 +25,18 @@ import org.sonatype.nexus.repository.content.kv.KeyValue;
 import org.sonatype.nexus.repository.content.kv.KeyValueFacetSupport;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-@Named(AptFormat.NAME)
+@Component
+@Qualifier(AptFormat.NAME)
 @Exposed
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AptKeyValueFacet
     extends KeyValueFacetSupport<AptKeyValueDAO, AptKeyValueStore>
 {
@@ -41,7 +46,7 @@ public class AptKeyValueFacet
 
   @Inject
   public AptKeyValueFacet(
-      @Named("${nexus.apt.paging.size:-100}") @Value("${nexus.apt.paging.size:100}") final int limit)
+      @Value("${nexus.apt.paging.size:100}") final int limit)
   {
     super(AptFormat.NAME, AptKeyValueDAO.class);
     checkArgument(limit > 0);

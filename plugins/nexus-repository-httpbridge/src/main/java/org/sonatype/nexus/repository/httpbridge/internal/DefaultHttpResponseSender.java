@@ -16,8 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import javax.annotation.Nullable;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
@@ -30,6 +29,8 @@ import org.sonatype.nexus.repository.view.Payload;
 import org.sonatype.nexus.repository.view.Request;
 import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.repository.view.Status;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import org.apache.shiro.web.servlet.ShiroHttpServletResponse;
 
@@ -38,7 +39,8 @@ import org.apache.shiro.web.servlet.ShiroHttpServletResponse;
  *
  * @since 3.0
  */
-@Named(DefaultHttpResponseSender.NEXUS_HTTP_RESPONSE_SENDER)
+@Component
+@Qualifier(DefaultHttpResponseSender.NEXUS_HTTP_RESPONSE_SENDER)
 @Singleton
 public class DefaultHttpResponseSender
     extends ComponentSupport

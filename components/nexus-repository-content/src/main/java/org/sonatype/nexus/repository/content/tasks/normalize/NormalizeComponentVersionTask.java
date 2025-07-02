@@ -12,11 +12,11 @@
  */
 package org.sonatype.nexus.repository.content.tasks.normalize;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.entity.Continuations;
@@ -42,10 +42,15 @@ import static java.lang.String.format;
 import static org.sonatype.nexus.common.app.FeatureFlags.DISABLE_NORMALIZE_VERSION_TASK;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 /**
  * System task to populate the {format}_component tables
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @TaskLogging(TaskLogType.TASK_LOG_ONLY_WITH_PROGRESS)
 public class NormalizeComponentVersionTask
     extends TaskSupport
@@ -67,14 +72,13 @@ public class NormalizeComponentVersionTask
 
   @Inject
   public NormalizeComponentVersionTask(
-      final NormalizationPriorityService normalizationPriorityService,
+      final List<NormalizationPriorityService> priorityServices,
       final VersionNormalizerService versionNormalizerService,
       final GlobalKeyValueStore globalKeyValueStore,
       final EventManager eventManager,
-      @Named("${" + DISABLE_NORMALIZE_VERSION_TASK + ":-false}") @Value("${" + DISABLE_NORMALIZE_VERSION_TASK
-          + ":false}") final boolean disableTask)
+      @Value("${" + DISABLE_NORMALIZE_VERSION_TASK + ":false}") final boolean disableTask)
   {
-    this.normalizationPriorityService = normalizationPriorityService;
+    this.normalizationPriorityService = priorityServices.get(priorityServices.size() - 1);
     this.versionNormalizerService = versionNormalizerService;
     this.globalKeyValueStore = globalKeyValueStore;
     this.eventManager = eventManager;

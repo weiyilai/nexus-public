@@ -14,17 +14,17 @@ package org.sonatype.nexus.common.time.internal;
 
 import java.time.OffsetDateTime;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.time.Clock;
+import org.springframework.stereotype.Component;
 
 /**
  * A provider of the current time.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class LocalClock
     implements Clock

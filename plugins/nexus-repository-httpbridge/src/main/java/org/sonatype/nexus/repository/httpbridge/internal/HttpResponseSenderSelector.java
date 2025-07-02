@@ -12,18 +12,20 @@
  */
 package org.sonatype.nexus.repository.httpbridge.internal;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.httpbridge.HttpResponseSender;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Response sender selector.
@@ -31,7 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 3.0
  */
 @Singleton
-@Named
+@Component
 class HttpResponseSenderSelector
     extends ComponentSupport
 {
@@ -41,10 +43,10 @@ class HttpResponseSenderSelector
 
   @Inject
   public HttpResponseSenderSelector(
-      final Map<String, HttpResponseSender> responseSenders,
-      @Named(DefaultHttpResponseSender.NEXUS_HTTP_RESPONSE_SENDER) final DefaultHttpResponseSender defaultHttpResponseSender)
+      final List<HttpResponseSender> responseSendersList,
+      final DefaultHttpResponseSender defaultHttpResponseSender)
   {
-    this.responseSenders = checkNotNull(responseSenders);
+    this.responseSenders = QualifierUtil.buildQualifierBeanMap(checkNotNull(responseSendersList));
     this.defaultHttpResponseSender = checkNotNull(defaultHttpResponseSender);
   }
 

@@ -18,9 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import javax.validation.ValidationException;
 
 import org.sonatype.goodies.i18n.I18N;
@@ -59,13 +58,21 @@ import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.ENDPOINT_KEY;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.SECRET_ACCESS_KEY_KEY;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.SESSION_TOKEN_KEY;
 
+import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
+
 /**
  * A {@link BlobStoreDescriptor} for {@link S3BlobStore}.
  *
  * @since 3.6.1
  */
 @AvailabilityVersion(from = "1.0")
-@Named(S3BlobStoreDescriptor.TYPE)
+@Component
+@Qualifier(S3BlobStoreDescriptor.TYPE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class S3BlobStoreDescriptor
     extends BlobStoreDescriptorSupport
 {
@@ -93,7 +100,7 @@ public class S3BlobStoreDescriptor
   @Inject
   public S3BlobStoreDescriptor(
       final BlobStoreQuotaService quotaService,
-      final BlobStoreManager blobStoreManager,
+      @Lazy final BlobStoreManager blobStoreManager,
       final Provider<CapabilityRegistry> capabilityRegistryProvider)
   {
     super(quotaService);

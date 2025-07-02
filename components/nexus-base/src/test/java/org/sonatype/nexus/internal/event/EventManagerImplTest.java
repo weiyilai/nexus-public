@@ -12,13 +12,15 @@
  */
 package org.sonatype.nexus.internal.event;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.sonatype.goodies.common.Time;
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.bootstrap.entrypoint.event.EventExecutor;
+import org.sonatype.nexus.bootstrap.entrypoint.event.EventManagerImpl;
 import org.sonatype.nexus.common.event.EventAware.Asynchronous;
 import org.sonatype.nexus.common.event.EventHelper;
 import org.sonatype.nexus.common.event.EventManager;
@@ -26,24 +28,21 @@ import org.sonatype.nexus.security.subject.FakeAlmightySubject;
 
 import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
-import org.eclipse.sisu.inject.DefaultBeanLocator;
 import org.junit.Test;
 
+import static java.util.Collections.emptyList;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
-/**
- * Tests for {@link EventManagerImpl}.
- */
 public class EventManagerImplTest
     extends TestSupport
 {
   @Test
   public void dispatchOrder() {
-    EventManager underTest = new EventManagerImpl(new DefaultBeanLocator(), newEventExecutor());
+    EventManager underTest = new EventManagerImpl(newEventExecutor(), emptyList());
     ReentrantHandler handler = new ReentrantHandler(underTest);
 
     underTest.register(handler);
@@ -52,7 +51,7 @@ public class EventManagerImplTest
     assertThat(handler.firstCalled, is("handle2"));
   }
 
-  private class ReentrantHandler
+  private static class ReentrantHandler
   {
     private final EventManager eventManager;
 
@@ -81,7 +80,7 @@ public class EventManagerImplTest
   @Test
   public void asyncInheritsIsReplicating() throws Exception {
     EventExecutor executor = newEventExecutor();
-    EventManager underTest = new EventManagerImpl(new DefaultBeanLocator(), executor);
+    EventManager underTest = new EventManagerImpl(executor, emptyList());
     AsyncReentrantHandler handler = new AsyncReentrantHandler(underTest);
     underTest.register(handler);
 
@@ -113,14 +112,14 @@ public class EventManagerImplTest
     executor.stop(); // go back to single-threaded mode
   }
 
-  private class AsyncReentrantHandler
+  private static class AsyncReentrantHandler
       implements Asynchronous
   {
     private final EventManager eventManager;
 
-    private AtomicInteger handledCount = new AtomicInteger();
+    private final AtomicInteger handledCount = new AtomicInteger();
 
-    private AtomicInteger replicatingCount = new AtomicInteger();
+    private final AtomicInteger replicatingCount = new AtomicInteger();
 
     AsyncReentrantHandler(final EventManager eventManager) {
       this.eventManager = eventManager;
@@ -148,7 +147,7 @@ public class EventManagerImplTest
   @Test
   public void singleThreadedOnShutdown() throws Exception {
     EventExecutor executor = newEventExecutor();
-    EventManager underTest = new EventManagerImpl(new DefaultBeanLocator(), executor);
+    EventManager underTest = new EventManagerImpl(executor, emptyList());
     AsyncHandler handler = new AsyncHandler();
     underTest.register(handler);
 
@@ -180,7 +179,7 @@ public class EventManagerImplTest
   }
 
   @Test
-  public void singleThreadedOnShutdownWhenReplicating() throws Exception {
+  public void singleThreadedOnShutdownWhenReplicating() {
     EventHelper.asReplicating(() -> {
       try {
         singleThreadedOnShutdown();
@@ -193,13 +192,13 @@ public class EventManagerImplTest
   }
 
   private static EventExecutor newEventExecutor() {
-    return new EventExecutor(false, 0, Time.seconds(0), false, false);
+    return new EventExecutor(false, 0, Duration.ofSeconds(0), false, false);
   }
 
-  private class AsyncHandler
+  private static class AsyncHandler
       implements Asynchronous
   {
-    private List<Thread> handledByThread = new CopyOnWriteArrayList<>();
+    private final List<Thread> handledByThread = new CopyOnWriteArrayList<>();
 
     @Subscribe
     public void handle(final String event) throws Exception {

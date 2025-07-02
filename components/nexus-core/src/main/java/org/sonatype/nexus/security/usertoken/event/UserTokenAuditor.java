@@ -13,9 +13,8 @@
 package org.sonatype.nexus.security.usertoken.event;
 
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -23,12 +22,13 @@ import org.sonatype.nexus.common.event.EventAware;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * UserToken auditor.
  *
  */
-@Named
+@Component
 @Singleton
 public class UserTokenAuditor
     extends AuditorSupport
@@ -37,8 +37,7 @@ public class UserTokenAuditor
   public static final String DOMAIN = "userToken";
 
   @Inject
-  public UserTokenAuditor()
-  {
+  public UserTokenAuditor() {
     registerType(UserTokenEvent.class, CREATED_TYPE);
     registerType(UserTokenDeletedEvent.class, DELETED_TYPE);
     registerType(UserTokenPurgedEvent.class, PURGE_TYPE);

@@ -15,19 +15,15 @@ package org.sonatype.nexus.bootstrap.entrypoint.edition;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_SINGLETON;
 
-import static java.util.Collections.reverse;
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Named
-@Singleton
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
+@Component
+@Scope(SCOPE_SINGLETON)
 public class NexusEditionSelector
 {
   public static final String PROPERTY_KEY = "nexus-edition";
@@ -38,10 +34,8 @@ public class NexusEditionSelector
   public NexusEditionSelector(final List<NexusEdition> editions) {
     this.editions = new ArrayList<>(editions);
     this.editions.sort(Comparator.comparingInt(NexusEdition::getPriority));
-    reverse(this.editions);
   }
 
-  @Bean("nexus.edition")
   public NexusEdition getCurrent() {
     return editions
         .stream()

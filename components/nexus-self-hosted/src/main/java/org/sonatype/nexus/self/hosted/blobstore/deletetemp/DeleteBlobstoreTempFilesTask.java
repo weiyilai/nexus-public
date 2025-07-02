@@ -12,19 +12,23 @@
  */
 package org.sonatype.nexus.self.hosted.blobstore.deletetemp;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.scheduling.Cancelable;
 import org.sonatype.nexus.scheduling.TaskSupport;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.self.hosted.blobstore.deletetemp.DeleteBlobstoreTempFilesTaskDescriptor.BLOB_STORE_NAME_FIELD_ID;
 import static org.sonatype.nexus.self.hosted.blobstore.deletetemp.DeleteBlobstoreTempFilesTaskDescriptor.DAYS_OLDER_THAN;
 
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DeleteBlobstoreTempFilesTask
     extends TaskSupport
     implements Cancelable

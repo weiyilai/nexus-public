@@ -16,9 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.repository.config.Configuration;
@@ -32,15 +31,18 @@ import org.sonatype.nexus.repository.maven.internal.recipes.Maven2GroupRecipe;
 import org.sonatype.nexus.repository.maven.internal.recipes.Maven2HostedRecipe;
 import org.sonatype.nexus.repository.maven.internal.recipes.Maven2ProxyRecipe;
 
+import org.springframework.context.annotation.Lazy;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.DATA_STORE_NAME;
+import org.springframework.stereotype.Component;
 
 /**
  * Provide default hosted and proxy repositories for Maven.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class MavenDefaultRepositoriesContributor
     implements DefaultRepositoriesContributor
@@ -60,7 +62,7 @@ public class MavenDefaultRepositoriesContributor
   private final RepositoryManager repositoryManager;
 
   @Inject
-  public MavenDefaultRepositoriesContributor(final RepositoryManager repositoryManager) {
+  public MavenDefaultRepositoriesContributor(@Lazy final RepositoryManager repositoryManager) {
     this.repositoryManager = checkNotNull(repositoryManager);
   }
 

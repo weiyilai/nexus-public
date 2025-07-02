@@ -22,6 +22,7 @@ import org.sonatype.nexus.cleanup.datastore.search.criteria.AssetCleanupEvaluato
 import org.sonatype.nexus.cleanup.datastore.search.criteria.ComponentCleanupEvaluator;
 import org.sonatype.nexus.cleanup.internal.storage.CleanupPolicyData;
 import org.sonatype.nexus.cleanup.storage.CleanupPolicy;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.extdirect.model.PagedResponse;
 import org.sonatype.nexus.repository.Repository;
@@ -34,9 +35,12 @@ import org.sonatype.nexus.repository.content.fluent.FluentComponents;
 import org.sonatype.nexus.repository.query.QueryOptions;
 
 import com.google.common.collect.ForwardingCollection;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -78,14 +82,26 @@ class DefaultCleanupComponentBrowseTest
 
   private DefaultCleanupComponentBrowse underTest;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @BeforeEach
   void setUp() {
+    mockedStatic = Mockito.mockStatic(QualifierUtil.class);
+    List<ComponentCleanupEvaluator> componentEvaluators = List.of(componentCleanupEvaluator);
+    List<AssetCleanupEvaluator> assetCleanupEvaluators = List.of(assetCleanupEvaluator);
     Map<String, ComponentCleanupEvaluator> componentCriteria = Map.of("componentKey", componentCleanupEvaluator);
     Map<String, AssetCleanupEvaluator> assetCriteria = Map.of("componentKey", assetCleanupEvaluator);
-    underTest = new DefaultCleanupComponentBrowse(componentCriteria, assetCriteria);
+    when(QualifierUtil.buildQualifierBeanMap(componentEvaluators)).thenReturn(componentCriteria);
+    when(QualifierUtil.buildQualifierBeanMap(assetCleanupEvaluators)).thenReturn(assetCriteria);
+    underTest = new DefaultCleanupComponentBrowse(componentEvaluators, assetCleanupEvaluators);
 
     when(repository.facet(ContentFacet.class)).thenReturn(contentFacet);
     when(contentFacet.components()).thenReturn(fluentComponents);
+  }
+
+  @AfterEach
+  void tearDown() {
+    mockedStatic.close();
   }
 
   @Test

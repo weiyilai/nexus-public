@@ -12,15 +12,16 @@
  */
 package org.sonatype.nexus.security.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.security.realm.RealmConfiguration;
 import org.sonatype.nexus.security.realm.RealmConfigurationStore;
 
 import com.google.common.collect.Lists;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -29,10 +30,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named("initial")
+@Component
+@Qualifier("initial")
 @Singleton
 public class InitialRealmConfigurationProvider
-    implements Provider<RealmConfiguration>
+    implements FactoryBean<RealmConfiguration>
 {
   private final RealmConfigurationStore store;
 
@@ -42,12 +44,16 @@ public class InitialRealmConfigurationProvider
   }
 
   @Override
-  public RealmConfiguration get() {
+  public RealmConfiguration getObject() {
     RealmConfiguration configuration = store.newEntity();
     configuration.setRealmNames(Lists.newArrayList(
         AuthenticatingRealmImpl.NAME,
-        AuthorizingRealmImpl.NAME
-    ));
+        AuthorizingRealmImpl.NAME));
     return configuration;
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return RealmConfiguration.class;
   }
 }

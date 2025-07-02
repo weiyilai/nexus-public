@@ -14,8 +14,7 @@ package org.sonatype.nexus.internal.scheduling;
 
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -34,13 +33,14 @@ import org.sonatype.nexus.scheduling.events.TaskScheduledEvent;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * Task auditor.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class TaskAuditor
     extends AuditorSupport

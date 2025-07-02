@@ -29,8 +29,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.cooperation2.Cooperation2;
 import org.sonatype.nexus.common.cooperation2.Cooperation2Factory;
@@ -64,7 +63,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.http.protocol.HttpDateGenerator.PATTERN_RFC1123;
@@ -84,8 +87,10 @@ import static org.sonatype.nexus.repository.apt.internal.ReleaseName.RELEASE_GPG
 /**
  * Apt metadata facet. Holds the logic for metadata recalculation.
  */
-@Named(AptFormat.NAME)
+@Component
+@Qualifier(AptFormat.NAME)
 @Exposed
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AptHostedMetadataFacet
     extends FacetSupport
 {
@@ -103,10 +108,10 @@ public class AptHostedMetadataFacet
       final ObjectMapper mapper,
       final Clock clock,
       final Cooperation2Factory cooperationFactory,
-      @Named("${nexus.apt.metadata.cooperation.enabled:-true}") @Value("${nexus.apt.metadata.cooperation.enabled:true}") final boolean cooperationEnabled,
-      @Named("${nexus.apt.metadata.cooperation.majorTimeout:-0s}") @Value("${nexus.apt.metadata.cooperation.majorTimeout:0s}") final Duration majorTimeout,
-      @Named("${nexus.apt.metadata.cooperation.minorTimeout:-30s}") @Value("${nexus.apt.metadata.cooperation.minorTimeout:30s}") final Duration minorTimeout,
-      @Named("${nexus.apt.metadata.cooperation.threadsPerKey:-100}") @Value("${nexus.apt.metadata.cooperation.threadsPerKey:100}") final int threadsPerKey)
+      @Value("${nexus.apt.metadata.cooperation.enabled:true}") final boolean cooperationEnabled,
+      @Value("${nexus.apt.metadata.cooperation.majorTimeout:0s}") final Duration majorTimeout,
+      @Value("${nexus.apt.metadata.cooperation.minorTimeout:30s}") final Duration minorTimeout,
+      @Value("${nexus.apt.metadata.cooperation.threadsPerKey:100}") final int threadsPerKey)
   {
     this.mapper = checkNotNull(mapper);
     this.clock = checkNotNull(clock);

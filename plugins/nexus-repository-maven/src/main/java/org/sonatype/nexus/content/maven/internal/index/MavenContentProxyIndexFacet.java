@@ -14,8 +14,7 @@ package org.sonatype.nexus.content.maven.internal.index;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
@@ -31,13 +30,17 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.maven.index.reader.Record;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Proxy implementation of {@link MavenIndexFacet}.
  *
  * @since 3.26
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenContentProxyIndexFacet
     extends MavenContentIndexFacetSupport
 {
@@ -73,8 +76,7 @@ public class MavenContentProxyIndexFacet
   @Override
   protected void doValidate(final Configuration configuration) {
     facet(ConfigurationFacet.class).validateSection(configuration, CONFIG_KEY, MavenContentProxyIndexFacet.Config.class,
-        Default.class, getRepository().getType().getValidationGroup()
-    );
+        Default.class, getRepository().getType().getValidationGroup());
   }
 
   @Override
@@ -87,8 +89,8 @@ public class MavenContentProxyIndexFacet
   @Override
   public void publishIndex() throws IOException {
     log.debug("Fetching maven index properties from remote");
-    try (DuplicateDetectionStrategy<Record> strategy = duplicateDetectionStrategyProvider.get()) {
-      mavenIndexPublisher.publishProxyIndex(getRepository(), config.cacheFallback, strategy );
+    try (DuplicateDetectionStrategy<Record> strategy = duplicateDetectionStrategyProvider.getObject()) {
+      mavenIndexPublisher.publishProxyIndex(getRepository(), config.cacheFallback, strategy);
     }
   }
 }

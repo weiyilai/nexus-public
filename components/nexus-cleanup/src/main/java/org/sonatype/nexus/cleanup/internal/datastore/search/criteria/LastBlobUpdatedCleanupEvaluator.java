@@ -17,8 +17,6 @@ import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.cleanup.datastore.search.criteria.ComponentCleanupEvaluator;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.Asset;
@@ -29,13 +27,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.LAST_BLOB_UPDATED_KEY;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 
 /**
  * Creates a test which evaluates whether all assets under a component had their blob created (i.e. attached) before the
  * time determined by the offset.
  *
  */
-@Named(LAST_BLOB_UPDATED_KEY)
+@org.springframework.stereotype.Component
+@Qualifier(LAST_BLOB_UPDATED_KEY)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class LastBlobUpdatedCleanupEvaluator
     implements ComponentCleanupEvaluator
 {
@@ -54,7 +57,8 @@ public class LastBlobUpdatedCleanupEvaluator
           .filter(Optional::isPresent)
           .map(Optional::get)
           .map(AssetBlob::blobCreated)
-          .max(OffsetDateTime::compareTo).orElse(null);
+          .max(OffsetDateTime::compareTo)
+          .orElse(null);
       if (max != null) {
         boolean shouldCleanup = max.isBefore(cutTime);
         log.debug("{} cleanup component (assuming other criteria pass) with max blob updated timestamp {} < {}",

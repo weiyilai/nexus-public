@@ -70,7 +70,7 @@ public class HttpClientManagerImplTest
   }
 
   @Test
-  public void testPrepareUserAgentHeaderSetOnBuilder() {
+  public void testPrepareUserAgentHeaderSetOnBuilder() throws Exception {
     // Setup
     String expectedUserAgentHeader = "Nexus/Agent my user agent";
     HttpClientPlan plan = mock(HttpClientPlan.class);
@@ -88,7 +88,9 @@ public class HttpClientManagerImplTest
     doReturn(sock).when(plan).getSocket();
     doReturn(req).when(plan).getRequest();
 
+    underTest.start();
     HttpClientManagerImpl spy = spy(underTest);
+
     doReturn(plan).when(spy).httpClientPlan();
 
     // Execute

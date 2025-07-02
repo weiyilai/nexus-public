@@ -17,9 +17,8 @@ import java.util.Objects;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.io.InputStreamSupplier;
@@ -27,6 +26,9 @@ import org.sonatype.nexus.mime.MimeRulesSource;
 import org.sonatype.nexus.repository.apt.AptFormat;
 import org.sonatype.nexus.repository.mime.ContentValidator;
 import org.sonatype.nexus.repository.mime.DefaultContentValidator;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -36,13 +38,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.17
  */
-@Named(AptFormat.NAME)
+@Component
+@Qualifier(AptFormat.NAME)
 @Singleton
 public class AptContentValidator
     extends ComponentSupport
     implements ContentValidator
 {
   private static final String TEXT_PLAIN = "text/plain";
+
   private static final String TXT = ".txt";
 
   private final DefaultContentValidator defaultContentValidator;
@@ -54,11 +58,12 @@ public class AptContentValidator
 
   @Nonnull
   @Override
-  public String determineContentType(final boolean strictContentTypeValidation,
-                                     final InputStreamSupplier contentSupplier,
-                                     @Nullable final MimeRulesSource mimeRulesSource,
-                                     @Nullable final String contentName,
-                                     @Nullable final String declaredContentType) throws IOException
+  public String determineContentType(
+      final boolean strictContentTypeValidation,
+      final InputStreamSupplier contentSupplier,
+      @Nullable final MimeRulesSource mimeRulesSource,
+      @Nullable final String contentName,
+      @Nullable final String declaredContentType) throws IOException
   {
     String name = contentName;
     // if name is Packages without extension - it's plain/text
@@ -66,7 +71,6 @@ public class AptContentValidator
       name += TXT;
     }
     return defaultContentValidator.determineContentType(
-        strictContentTypeValidation, contentSupplier, mimeRulesSource, name, declaredContentType
-    );
+        strictContentTypeValidation, contentSupplier, mimeRulesSource, name, declaredContentType);
   }
 }

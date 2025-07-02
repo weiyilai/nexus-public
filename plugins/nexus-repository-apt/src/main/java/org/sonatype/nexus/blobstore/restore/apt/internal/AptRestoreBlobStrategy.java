@@ -17,9 +17,8 @@ import java.util.Optional;
 import java.util.Properties;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.blobstore.api.BlobStore;
@@ -34,10 +33,14 @@ import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.view.Payload;
 import org.sonatype.nexus.repository.view.payloads.DetachedBlobPayload;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
 /**
  * @since 3.31
  */
-@Named(AptFormat.NAME)
+@Component
+@Qualifier(AptFormat.NAME)
 @Singleton
 public class AptRestoreBlobStrategy
     extends BaseRestoreBlobStrategy<DataStoreRestoreBlobData>

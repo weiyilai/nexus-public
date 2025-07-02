@@ -16,9 +16,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.log.LogManager;
@@ -31,13 +30,14 @@ import org.apache.commons.io.FileUtils;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Priority.LOW;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.AUDITLOG;
+import org.springframework.stereotype.Component;
 
 /**
  * Adds audit log files to support bundle.
  *
  * @since 3.16
  */
-@Named
+@Component
 @Singleton
 public class AuditLogCustomizer
     extends ComponentSupport
@@ -58,7 +58,7 @@ public class AuditLogCustomizer
       @Override
       protected void generate(final File file) {
         try {
-          //didn't bother with try-with-resources as FileUtils.copyInputStreamToFile handles closing the input stream
+          // didn't bother with try-with-resources as FileUtils.copyInputStreamToFile handles closing the input stream
           InputStream is = logManager.getLogFileStream("audit.log", 0, Long.MAX_VALUE);
           if (is != null) {
             FileUtils.copyInputStreamToFile(is, file);

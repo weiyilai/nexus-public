@@ -12,17 +12,17 @@
  */
 package org.sonatype.nexus.repository.httpbridge.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.repository.httpbridge.legacy.LegacyUrlEnabledHelper;
 
 import com.google.inject.AbstractModule;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.eclipse.sisu.inject.MutableBeanLocator;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.stereotype.Component;
 
+import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
 
 /**
@@ -31,10 +31,10 @@ import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
  *
  * @since 3.38
  */
-@Named
+@Component
 @Singleton
 @FeatureFlag(name = JWT_ENABLED)
-@ConditionalOnProperty(name = JWT_ENABLED, havingValue = "true")
+@ConditionalOnExpression("${" + JWT_ENABLED + ":true} && !${" + FEATURE_SPRING_ONLY + "}")
 public class JwtLegacyHttpBridgeService
     extends LegacyHttpBridgeService
 {

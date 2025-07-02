@@ -12,19 +12,19 @@
  */
 package org.sonatype.nexus.quartz.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.log.LogConfigurationCustomizer;
 import org.sonatype.nexus.common.log.LoggerLevel;
+import org.springframework.stereotype.Component;
 
 /**
  * Quartz {@link LogConfigurationCustomizer}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class LogConfigurationCustomizerImpl
     extends ComponentSupport

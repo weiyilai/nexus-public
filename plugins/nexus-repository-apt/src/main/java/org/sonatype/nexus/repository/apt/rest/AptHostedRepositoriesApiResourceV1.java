@@ -12,19 +12,19 @@
  */
 package org.sonatype.nexus.repository.apt.rest;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.repository.rest.api.RepositoriesApiResourceV1;
 
 import static org.sonatype.nexus.repository.apt.rest.AptHostedRepositoriesApiResourceV1.RESOURCE_URI;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 public class AptHostedRepositoriesApiResourceV1

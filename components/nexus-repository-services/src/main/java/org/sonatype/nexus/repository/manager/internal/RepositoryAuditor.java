@@ -13,14 +13,15 @@
 package org.sonatype.nexus.repository.manager.internal;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
 import org.sonatype.nexus.common.event.EventAware;
 import org.sonatype.nexus.distributed.event.service.api.common.RepositoryCacheInvalidationEvent;
@@ -43,13 +44,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Repository auditor.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class RepositoryAuditor
     extends AuditorSupport
@@ -65,10 +68,10 @@ public class RepositoryAuditor
 
   @Inject
   public RepositoryAuditor(
-      final Map<String, ApiRepositoryAdapter> convertersByFormat,
-      @Named("default") final ApiRepositoryAdapter defaultAdapter)
+      final List<ApiRepositoryAdapter> convertersByFormatList,
+      @Qualifier("default") final ApiRepositoryAdapter defaultAdapter)
   {
-    this.convertersByFormat = convertersByFormat;
+    this.convertersByFormat = QualifierUtil.buildQualifierBeanMap(convertersByFormatList);
     this.defaultAdapter = defaultAdapter;
 
     registerType(RepositoryCacheInvalidationEvent.class, "cacheInvalidated");

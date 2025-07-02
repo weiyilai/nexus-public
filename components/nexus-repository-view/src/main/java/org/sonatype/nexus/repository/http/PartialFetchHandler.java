@@ -16,9 +16,8 @@ import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.Handler;
@@ -34,6 +33,7 @@ import org.apache.http.client.utils.DateUtils;
 import org.joda.time.DateTime;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Implements partial-fetch semantics (as per RFC 2616) for {@link Status#isSuccessful() successful}
@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class PartialFetchHandler
     implements Handler
@@ -113,9 +113,10 @@ public class PartialFetchHandler
   /**
    * Mutate the response into one that returns part of the payload.
    */
-  private Response partialResponse(final Response response,
-                                   final Payload payload,
-                                   final Range<Long> requestedRange)
+  private Response partialResponse(
+      final Response response,
+      final Payload payload,
+      final Range<Long> requestedRange)
   {
     Response.Builder builder = new Response.Builder()
         .copy(response)
@@ -126,7 +127,7 @@ public class PartialFetchHandler
 
     // ResponseSender takes care of Content-Length header, via payload.size
     builder.header(HttpHeaders.CONTENT_RANGE,
-       "bytes " + requestedRange.lowerEndpoint() + "-" + requestedRange.upperEndpoint() + "/" + payload.getSize());
+        "bytes " + requestedRange.lowerEndpoint() + "-" + requestedRange.upperEndpoint() + "/" + payload.getSize());
 
     return builder.build();
   }

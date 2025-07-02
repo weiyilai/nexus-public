@@ -12,9 +12,10 @@
  */
 package org.sonatype.nexus.coreui;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import java.util.List;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -24,37 +25,36 @@ import org.sonatype.nexus.validation.Validate;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import com.google.inject.Key;
 import com.softwarementors.extjs.djn.config.annotations.DirectAction;
 import com.softwarementors.extjs.djn.config.annotations.DirectMethod;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.realm.Realm;
-import org.eclipse.sisu.inject.BeanLocator;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.stream.StreamSupport.stream;
+import static org.sonatype.nexus.common.QualifierUtil.description;
+import org.springframework.stereotype.Component;
 
 /**
  * Realm Security Settings {@link DirectComponentSupport}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_RealmSettings")
 public class RealmSettingsComponent
     extends DirectComponentSupport
+    implements ApplicationContextAware
 {
   private final RealmManager realmManager;
 
-  private final BeanLocator beanLocator;
+  private ApplicationContext applicationContext;
 
   @Inject
-  public RealmSettingsComponent(final RealmManager realmManager, final BeanLocator beanLocator) {
+  public RealmSettingsComponent(final RealmManager realmManager) {
     this.realmManager = checkNotNull(realmManager);
-    this.beanLocator = checkNotNull(beanLocator);
   }
 
   /**
@@ -82,10 +82,12 @@ public class RealmSettingsComponent
   @ExceptionMetered
   @RequiresPermissions("nexus:settings:read")
   public List<ReferenceXO> readRealmTypes() {
-    return stream(beanLocator.locate(Key.get(Realm.class, Named.class)).spliterator(), false)
-        .map(entry -> new ReferenceXO(((Named) entry.getKey()).value(), entry.getDescription()))
+    return applicationContext.getBeansOfType(Realm.class)
+        .entrySet()
+        .stream()
+        .map(entry -> new ReferenceXO(entry.getKey(), description(entry.getValue())))
         .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
-        .collect(Collectors.toList()); // NOSONAR
+        .toList();
   }
 
   /**
@@ -102,5 +104,10 @@ public class RealmSettingsComponent
   public RealmSettingsXO update(@NotNull @Valid final RealmSettingsXO realmSettingsXO) {
     realmManager.setConfiguredRealmIds(realmSettingsXO.getRealms());
     return read();
+  }
+
+  @Override
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    this.applicationContext = applicationContext;
   }
 }

@@ -12,18 +12,18 @@
  */
 package org.sonatype.nexus.tasklog;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.5
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class TaskLogCleanupTaskDescriptor
     extends TaskDescriptorSupport

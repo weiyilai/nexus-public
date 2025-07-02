@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.siesta;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -27,8 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @Path("/validationErrors")
 public class ValidationErrorsResource

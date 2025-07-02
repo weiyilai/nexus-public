@@ -14,8 +14,7 @@ package org.sonatype.nexus.security.internal;
 
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -28,13 +27,14 @@ import org.sonatype.nexus.security.role.RoleUpdatedEvent;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link Role} auditor.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class RoleAuditor
     extends AuditorSupport

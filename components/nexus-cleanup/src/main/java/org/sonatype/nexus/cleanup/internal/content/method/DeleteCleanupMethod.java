@@ -15,8 +15,7 @@ package org.sonatype.nexus.cleanup.internal.content.method;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.cleanup.internal.method.CleanupMethod;
@@ -33,13 +32,17 @@ import org.sonatype.nexus.scheduling.TaskInterruptedException;
 import com.google.common.collect.Iterators;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Provides a delete mechanism for cleanup
  *
  * @since 3.29
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DeleteCleanupMethod
     extends ComponentSupport
     implements CleanupMethod

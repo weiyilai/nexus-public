@@ -14,6 +14,7 @@ package org.sonatype.nexus.internal.security.apikey;
 
 import java.time.OffsetDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -22,10 +23,10 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.common.event.EventAware;
@@ -49,9 +50,11 @@ import org.apache.shiro.subject.SimplePrincipalCollection;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
 import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 @ManagedLifecycle(phase = TASKS)
-@Named
+@Component
 @Singleton
 public class ApiKeyServiceImpl
     extends StateGuardLifecycleSupport
@@ -79,12 +82,12 @@ public class ApiKeyServiceImpl
 
   @Inject
   public ApiKeyServiceImpl(
-      final @Named("v1") ApiKeyStore apiKeyStoreV1,
-      final @Named("v2") ApiKeyStore apiKeyStoreV2,
+      @Qualifier("v1") final ApiKeyStore apiKeyStoreV1,
+      @Qualifier("v2") final ApiKeyStore apiKeyStoreV2,
       final DatabaseCheck check,
       final GlobalKeyValueStore kv,
       final UserPrincipalsHelper principalsHelper,
-      final Map<String, ApiKeyFactory> apiKeyFactories,
+      final List<ApiKeyFactory> apiKeyFactoriesList,
       final DefaultApiKeyFactory defaultApiKeyFactory)
   {
     this.apiKeyStore = checkNotNull(apiKeyStoreV1);
@@ -92,7 +95,7 @@ public class ApiKeyServiceImpl
     this.databaseCheck = checkNotNull(check);
     this.kv = checkNotNull(kv);
     this.principalsHelper = checkNotNull(principalsHelper);
-    this.apiKeyFactories = checkNotNull(apiKeyFactories);
+    this.apiKeyFactories = QualifierUtil.buildQualifierBeanMap(checkNotNull(apiKeyFactoriesList));
     this.defaultApiKeyFactory = checkNotNull(defaultApiKeyFactory);
   }
 

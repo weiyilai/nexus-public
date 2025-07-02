@@ -17,13 +17,17 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import javax.inject.Named;
-import javax.inject.Singleton;
+
+import jakarta.inject.Singleton;
+
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 /**
  * Helper to create directories.
  */
-@Named
+@Primary
+@Component
 @Singleton
 public class DirectoryHelper
 {

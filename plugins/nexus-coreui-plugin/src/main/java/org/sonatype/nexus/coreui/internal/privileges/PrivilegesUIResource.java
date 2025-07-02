@@ -14,15 +14,15 @@ package org.sonatype.nexus.coreui.internal.privileges;
 
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.rest.Resource;
 import org.sonatype.nexus.security.privilege.PrivilegeDescriptor;
 
@@ -32,8 +32,9 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
@@ -45,8 +46,8 @@ public class PrivilegesUIResource
   private final Map<String, PrivilegeDescriptor> privilegeDescriptors;
 
   @Inject
-  public PrivilegesUIResource(final Map<String, PrivilegeDescriptor> privilegeDescriptors) {
-    this.privilegeDescriptors = checkNotNull(privilegeDescriptors);
+  public PrivilegesUIResource(final List<PrivilegeDescriptor> privilegeDescriptorsList) {
+    this.privilegeDescriptors = QualifierUtil.buildQualifierBeanMap(checkNotNull(privilegeDescriptorsList));
   }
 
   @RequiresAuthentication
@@ -54,7 +55,9 @@ public class PrivilegesUIResource
   @GET
   @Path("/types")
   public List<PrivilegesTypesUIResponse> listPrivilegesTypes() {
-    return privilegeDescriptors.entrySet().stream().map(PrivilegesTypesUIResponse::new)
+    return privilegeDescriptors.entrySet()
+        .stream()
+        .map(PrivilegesTypesUIResponse::new)
         .collect(toList());
   }
 }

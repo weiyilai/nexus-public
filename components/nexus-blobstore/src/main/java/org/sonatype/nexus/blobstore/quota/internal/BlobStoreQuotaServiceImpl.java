@@ -12,13 +12,13 @@
  */
 package org.sonatype.nexus.blobstore.quota.internal;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.BlobStore;
@@ -26,19 +26,21 @@ import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuota;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaResult;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaService;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Optional.ofNullable;
 import static org.sonatype.nexus.blobstore.quota.BlobStoreQuotaSupport.ROOT_KEY;
 import static org.sonatype.nexus.blobstore.quota.BlobStoreQuotaSupport.TYPE_KEY;
+import org.springframework.stereotype.Component;
 
 /**
  * Default implementation of {@link BlobStoreQuotaService}
  *
  * @since 3.14
  */
-@Named
+@Component
 @Singleton
 public class BlobStoreQuotaServiceImpl
     extends ComponentSupport
@@ -47,8 +49,8 @@ public class BlobStoreQuotaServiceImpl
   private final Map<String, BlobStoreQuota> quotas;
 
   @Inject
-  public BlobStoreQuotaServiceImpl(final Map<String, BlobStoreQuota> quotas) {
-    this.quotas = checkNotNull(quotas);
+  public BlobStoreQuotaServiceImpl(final List<BlobStoreQuota> quotasList) {
+    this.quotas = QualifierUtil.buildQualifierBeanMap(checkNotNull(quotasList));
   }
 
   @Override

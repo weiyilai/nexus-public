@@ -23,7 +23,7 @@ import org.apache.shiro.subject.PrincipalCollection;
  *
  * @since 3.21
  */
-// not @Named because we register this manually
+// not @Component
 public class PrincipalCollectionTypeHandler
     extends AbstractSerializableTypeHandler<PrincipalCollection>
 {

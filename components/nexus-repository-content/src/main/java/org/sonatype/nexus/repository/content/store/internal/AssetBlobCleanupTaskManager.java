@@ -15,9 +15,8 @@ package org.sonatype.nexus.repository.content.store.internal;
 import java.util.Date;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -47,11 +46,12 @@ import static org.sonatype.nexus.repository.content.store.internal.AssetBlobClea
 import static org.sonatype.nexus.repository.content.store.internal.AssetBlobCleanupTaskDescriptor.CONTENT_STORE_FIELD_ID;
 import static org.sonatype.nexus.repository.content.store.internal.AssetBlobCleanupTaskDescriptor.FORMAT_FIELD_ID;
 import static org.sonatype.nexus.repository.content.store.internal.AssetBlobCleanupTaskDescriptor.TYPE_ID;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.24
  */
-@Named
+@Component
 @ManagedLifecycle(phase = TASKS)
 @Singleton
 public class AssetBlobCleanupTaskManager

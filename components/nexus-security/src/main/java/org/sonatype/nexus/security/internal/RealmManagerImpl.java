@@ -17,14 +17,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.Mutex;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
@@ -40,7 +39,6 @@ import org.sonatype.nexus.security.realm.SecurityRealm;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Key;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.cache.Cache;
@@ -48,8 +46,12 @@ import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.realm.AuthenticatingRealm;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.realm.Realm;
-import org.eclipse.sisu.inject.BeanLocator;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
@@ -61,14 +63,12 @@ import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.St
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class RealmManagerImpl
     extends StateGuardLifecycleSupport
-    implements RealmManager
+    implements RealmManager, ApplicationContextAware
 {
-  private final BeanLocator beanLocator;
-
   private final EventManager eventManager;
 
   private final RealmConfigurationStore store;
@@ -85,24 +85,24 @@ public class RealmManagerImpl
 
   private final boolean enableAuthorizationRealmManagement;
 
+  private ApplicationContext applicationContext;
+
   @Inject
   public RealmManagerImpl(
-      final BeanLocator beanLocator,
       final EventManager eventManager,
       final RealmConfigurationStore store,
-      @Named("initial") final Provider<RealmConfiguration> defaults,
+      @Qualifier("initial") final Provider<RealmConfiguration> defaults,
       final RealmSecurityManager realmSecurityManager,
-      final Map<String, Realm> availableRealms,
-      @Named("${nexus.security.enableAuthorizationRealmManagement:-false}") @Value("${nexus.security.enableAuthorizationRealmManagement:false}") final boolean enableAuthorizationRealmManagement)
+      final List<Realm> availableRealmsList,
+      @Value("${nexus.security.enableAuthorizationRealmManagement:false}") final boolean enableAuthorizationRealmManagement)
   {
-    this.beanLocator = checkNotNull(beanLocator);
     this.eventManager = checkNotNull(eventManager);
     this.store = checkNotNull(store);
     log.debug("Store: {}", store);
     this.defaults = checkNotNull(defaults);
     log.debug("Defaults: {}", defaults);
     this.realmSecurityManager = checkNotNull(realmSecurityManager);
-    this.availableRealms = checkNotNull(availableRealms);
+    this.availableRealms = QualifierUtil.buildQualifierBeanMap(checkNotNull(availableRealmsList));
     this.enableAuthorizationRealmManagement = enableAuthorizationRealmManagement;
   }
 
@@ -427,16 +427,18 @@ public class RealmManagerImpl
 
   @Override
   public List<SecurityRealm> getAvailableRealms(final boolean includeHidden) {
-    return StreamSupport
-        .stream(beanLocator.locate(Key.get(Realm.class, Named.class)).spliterator(), false)
+    return applicationContext.getBeansOfType(Realm.class)
+        .values()
+        .stream()
         .filter(entry -> {
           if (includeHidden || enableAuthorizationRealmManagement) {
             return true;
           }
           // don't want users to be aware of this realm any longer
-          return !AuthorizingRealmImpl.NAME.equals(((Named) entry.getKey()).value());
+          return !AuthorizingRealmImpl.NAME.equals(QualifierUtil.value(entry).orElseThrow());
         })
-        .map(entry -> new SecurityRealm(((Named) entry.getKey()).value(), entry.getDescription()))
+        // TODO the name
+        .map(entry -> new SecurityRealm(QualifierUtil.value(entry).orElseThrow(), QualifierUtil.description(entry)))
         .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
         .collect(toList());
   }
@@ -478,5 +480,10 @@ public class RealmManagerImpl
       realmIds.remove(AuthorizingRealmImpl.NAME);
       realmIds.add(AuthorizingRealmImpl.NAME);
     }
+  }
+
+  @Override
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    this.applicationContext = applicationContext;
   }
 }

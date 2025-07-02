@@ -22,7 +22,7 @@ import org.apache.ibatis.type.TypeHandler;
 /**
  * MyBatis {@link TypeHandler} that maps a {@link ExternalMetadata} to/from JSON.
  */
-// not @Named because we register this manually
+// not @Component
 public class ExternalMetadataTypeHandler
     extends AbstractJsonTypeHandler<ExternalMetadata>
 {

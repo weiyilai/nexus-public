@@ -19,9 +19,8 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.maven.ContentDisposition;
@@ -35,11 +34,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import org.springframework.stereotype.Component;
 
 /**
  * Upgrade to update contentDisposition of default maven repositories
  */
-@Named
+@Component
 @Singleton
 public class MavenDefaultReposUpgrade_1_17
     implements DatabaseMigrationStep

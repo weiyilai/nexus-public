@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.testsupport.TestUtil;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
@@ -26,7 +26,6 @@ import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.log.LastShutdownTimeService;
 import org.sonatype.nexus.common.node.NodeAccess;
-import org.sonatype.nexus.common.stateguard.StateGuardModule;
 import org.sonatype.nexus.quartz.internal.QuartzSchedulerProvider;
 import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.scheduling.spi.SchedulerSPI;
@@ -70,8 +69,8 @@ public class TaskSchedulerHelper
   @Inject
   private SchedulerSPI scheduler;
 
-  //@Inject
-  //private JobStoreImpl jobStore;
+  // @Inject
+  // private JobStoreImpl jobStore;
 
   @Inject
   private QuartzSchedulerProvider schedulerProvider;
@@ -86,14 +85,14 @@ public class TaskSchedulerHelper
 
   private NodeAccess nodeAccess;
 
-  //private final DatabaseInstance databaseInstance;
+  // private final DatabaseInstance databaseInstance;
 
   private DatabaseStatusDelayedExecutor statusDelayedExecutor;
 
   private DatabaseCheck databaseCheck;
 
-  public TaskSchedulerHelper(/*final DatabaseInstance databaseInstance*/) {
-    //this.databaseInstance = checkNotNull(databaseInstance);
+  public TaskSchedulerHelper(/* final DatabaseInstance databaseInstance */) {
+    // this.databaseInstance = checkNotNull(databaseInstance);
   }
 
   public void init(@Nullable final Integer poolSize, @Nullable final JobFactory factory) throws Exception {
@@ -124,11 +123,11 @@ public class TaskSchedulerHelper
       binder.bind(BaseUrlManager.class)
           .toInstance(baseUrlManager);
 
-      //binder.bind(DatabaseInstance.class)
-      //    .annotatedWith(Names.named("config"))
-      //    .toInstance(databaseInstance);
+      // binder.bind(DatabaseInstance.class)
+      // .annotatedWith(Names.named("config"))
+      // .toInstance(databaseInstance);
 
-      doAnswer(i  -> {
+      doAnswer(i -> {
         ((Runnable) i.getArguments()[0]).run();
         return null;
       }).when(statusDelayedExecutor).execute(any(Runnable.class));
@@ -147,21 +146,20 @@ public class TaskSchedulerHelper
       when(lastShutdownTimeService.estimateLastShutdownTime()).thenReturn(Optional.empty());
 
       // filtering by feature flag is not supported here yet
-      //binder.bind(JobStore.class).to(JobStoreImpl.class);
+      // binder.bind(JobStore.class).to(JobStoreImpl.class);
 
       when(databaseCheck.isAllowedByVersion(any())).thenReturn(true);
       binder.bind(DatabaseCheck.class).toInstance(databaseCheck);
     };
 
     this.injector = Guice.createInjector(new WireModule(
-        module, new StateGuardModule(),
-        new SpaceModule(new URLClassSpace(TaskSchedulerHelper.class.getClassLoader()), BeanScanning.INDEX)
-    ));
+        module,
+        new SpaceModule(new URLClassSpace(TaskSchedulerHelper.class.getClassLoader()), BeanScanning.INDEX)));
     injector.injectMembers(this);
   }
 
   public void start() throws Exception {
-//    jobStore.start();
+    // jobStore.start();
     schedulerProvider.start();
     scheduler.start();
     scheduler.resume();
@@ -171,7 +169,7 @@ public class TaskSchedulerHelper
     scheduler.pause();
     scheduler.stop();
     schedulerProvider.stop();
-//    jobStore.stop();
+    // jobStore.stop();
 
     locator.clear();
   }

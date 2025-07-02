@@ -14,7 +14,7 @@ package org.sonatype.nexus.datastore;
 
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.datastore.api.DataAccess;
@@ -22,8 +22,7 @@ import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.transaction.UnitOfWork;
 
-import com.google.inject.TypeLiteral;
-import org.eclipse.sisu.inject.TypeArguments;
+import com.google.common.annotations.VisibleForTesting;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
@@ -34,23 +33,17 @@ import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTOR
  * @since 3.21
  */
 public abstract class ConfigStoreSupport<T extends DataAccess>
-    extends TransactionalStoreSupport
+    extends TransactionalStoreSupport<T>
 {
-  private final Class<T> daoClass;
-
   private EventManager eventManager;
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   protected ConfigStoreSupport(final DataSessionSupplier sessionSupplier) {
-    super(sessionSupplier, DEFAULT_DATASTORE_NAME);
-
-    // use generic type information to discover the DAO class from the concrete implementation
-    TypeLiteral<?> superType = TypeLiteral.get(getClass()).getSupertype(ConfigStoreSupport.class);
-    this.daoClass = (Class) TypeArguments.get(superType, 0).getRawType();
+    super(sessionSupplier, DEFAULT_DATASTORE_NAME, ConfigStoreSupport.class);
   }
 
+  @VisibleForTesting
   @Inject
-  protected void setDependencies(final EventManager eventManager) {
+  public void setDependencies(final EventManager eventManager) {
     this.eventManager = checkNotNull(eventManager);
   }
 
@@ -64,8 +57,7 @@ public abstract class ConfigStoreSupport<T extends DataAccess>
 
   // alternative constructor that overrides discovery of the DAO class
   protected ConfigStoreSupport(final DataSessionSupplier sessionSupplier, final Class<T> daoClass) {
-    super(sessionSupplier, DEFAULT_DATASTORE_NAME);
-    this.daoClass = checkNotNull(daoClass);
+    super(sessionSupplier, DEFAULT_DATASTORE_NAME, ConfigStoreSupport.class, daoClass);
   }
 
   protected DataSession<?> thisSession() {

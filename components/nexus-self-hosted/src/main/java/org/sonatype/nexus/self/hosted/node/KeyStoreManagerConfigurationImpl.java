@@ -12,24 +12,25 @@
  */
 package org.sonatype.nexus.self.hosted.node;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import org.sonatype.goodies.common.Time;
 import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.ssl.KeyStoreManagerConfiguration;
 import org.sonatype.nexus.ssl.KeyStoreManagerConfigurationSupport;
 
 import com.google.common.annotations.VisibleForTesting;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Node {@link KeyStoreManagerConfiguration}.
  *
  * @since 3.0
  */
-@Named(NodeKeyStoreManagerImpl.NAME)
+@Component
+@Qualifier(NodeKeyStoreManagerImpl.NAME)
 @Singleton
 public class KeyStoreManagerConfigurationImpl
     extends KeyStoreManagerConfigurationSupport
@@ -53,14 +54,14 @@ public class KeyStoreManagerConfigurationImpl
 
   @Inject
   public KeyStoreManagerConfigurationImpl(
-      @Named(CPREFIX + ".keyStoreType:-JKS}") final String keyStoreType,
-      @Named(CPREFIX + ".keyAlgorithm:-RSA}") final String keyAlgorithm,
-      @Named(CPREFIX + ".keyAlgorithmSize:-2048}") final int keyAlgorithmSize,
-      @Named(CPREFIX + ".certificateValidity:-36500d}") final Time certificateValidity,
-      @Named(CPREFIX + ".signatureAlgorithm:-SHA1WITHRSA}") final String signatureAlgorithm,
-      @Named(CPREFIX + ".keyManagerAlgorithm:-DEFAULT}") final String keyManagerAlgorithm,
-      @Named(CPREFIX + ".trustManagerAlgorithm:-DEFAULT}") final String trustManagerAlgorithm,
-      @Named(FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED_NAMED) @Value(FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED_NAMED_VALUE) final boolean nexusSecurityFipsEnabled)
+      @Value(CPREFIX + ".keyStoreType:JKS}") final String keyStoreType,
+      @Value(CPREFIX + ".keyAlgorithm:RSA}") final String keyAlgorithm,
+      @Value(CPREFIX + ".keyAlgorithmSize:2048}") final int keyAlgorithmSize,
+      @Value(CPREFIX + ".certificateValidity:36500d}") final Time certificateValidity,
+      @Value(CPREFIX + ".signatureAlgorithm:SHA1WITHRSA}") final String signatureAlgorithm,
+      @Value(CPREFIX + ".keyManagerAlgorithm:DEFAULT}") final String keyManagerAlgorithm,
+      @Value(CPREFIX + ".trustManagerAlgorithm:DEFAULT}") final String trustManagerAlgorithm,
+      @Value(FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED_NAMED_VALUE) final boolean nexusSecurityFipsEnabled)
   {
     setPrivateKeyStorePassword(PKSP);
     setTrustedKeyStorePassword(TKSP);

@@ -12,67 +12,59 @@
  */
 package org.sonatype.nexus.extdirect.internal;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.extdirect.model.Response;
 
-import com.google.inject.Key;
 import com.softwarementors.extjs.djn.api.RegisteredMethod;
 import com.softwarementors.extjs.djn.servlet.ssm.SsmDispatcher;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.inject.BeanLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 import static org.sonatype.nexus.extdirect.model.Responses.success;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.15
  */
-@Named
+@Component
 @ManagedLifecycle(phase = SERVICES)
 @Singleton
 public class ExtDirectDispatcher
     extends SsmDispatcher
+    implements ApplicationContextAware
 {
   private static final Logger log = LoggerFactory.getLogger(ExtDirectDispatcher.class);
 
-  private final BeanLocator beanLocator;
-
   private final ExtDirectExceptionHandler exceptionHandler;
 
+  private ApplicationContext applicationContext;
+
   @Inject
-  public ExtDirectDispatcher(final BeanLocator beanLocator, final ExtDirectExceptionHandler exceptionHandler)
-  {
-    this.beanLocator = checkNotNull(beanLocator);
+  public ExtDirectDispatcher(final ExtDirectExceptionHandler exceptionHandler) {
     this.exceptionHandler = checkNotNull(exceptionHandler);
   }
 
   @Override
-  protected Object createInvokeInstanceForMethodWithDefaultConstructor(final RegisteredMethod method)
-  {
+  protected Object createInvokeInstanceForMethodWithDefaultConstructor(final RegisteredMethod method) {
     log.debug("Creating instance of action class '{}' mapped to '{}", method.getActionClass().getName(),
         method.getActionName());
 
-    @SuppressWarnings("unchecked")
-    Iterable<BeanEntry<Annotation, Object>> actionInstance = beanLocator.locate(
-        Key.get((Class) method.getActionClass())
-    );
-    return actionInstance.iterator().next().getValue();
+    return applicationContext.getBean(method.getActionClass());
   }
 
   @Override
-  protected Object invokeMethod(final RegisteredMethod method, final Object actionInstance, final Object[] parameters)
-  {
+  protected Object invokeMethod(final RegisteredMethod method, final Object actionInstance, final Object[] parameters) {
     log.debug("Invoking action method: {}, java-method: {}", method.getFullName(), method.getFullJavaMethodName());
 
     Response response = null;
@@ -108,5 +100,10 @@ public class ExtDirectDispatcher
       }
     }
     return response;
+  }
+
+  @Override
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    this.applicationContext = applicationContext;
   }
 }

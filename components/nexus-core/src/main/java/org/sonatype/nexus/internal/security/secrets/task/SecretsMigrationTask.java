@@ -13,8 +13,7 @@
 package org.sonatype.nexus.internal.security.secrets.task;
 
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.logging.task.TaskLogType;
 import org.sonatype.nexus.logging.task.TaskLogging;
@@ -23,12 +22,16 @@ import org.sonatype.nexus.scheduling.TaskSupport;
 import org.sonatype.nexus.security.secrets.SecretsMigrator;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Task to migrate secrets from external sources to a single source of truth
  */
-@Named
+@Component
 @TaskLogging(TaskLogType.TASK_LOG_ONLY)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SecretsMigrationTask
     extends TaskSupport
     implements Cancelable

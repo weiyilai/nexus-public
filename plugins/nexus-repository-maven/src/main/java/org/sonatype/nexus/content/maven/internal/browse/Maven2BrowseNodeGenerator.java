@@ -15,8 +15,7 @@ package org.sonatype.nexus.content.maven.internal.browse;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.browse.node.BrowsePath;
 import org.sonatype.nexus.repository.content.Asset;
@@ -30,6 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.text.Strings2.isBlank;
 import static org.sonatype.nexus.repository.browse.node.BrowsePathBuilder.appendPath;
 import static org.sonatype.nexus.repository.browse.node.BrowsePathBuilder.fromPaths;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Browse node generator for Maven.
@@ -60,7 +60,8 @@ import static org.sonatype.nexus.repository.browse.node.BrowsePathBuilder.fromPa
  * @since 3.26
  */
 @Singleton
-@Named(Maven2Format.NAME)
+@org.springframework.stereotype.Component
+@Qualifier(Maven2Format.NAME)
 public class Maven2BrowseNodeGenerator
     extends ComponentPathBrowseNodeGenerator
 {
@@ -109,7 +110,7 @@ public class Maven2BrowseNodeGenerator
    * Generates a path to the artifact folder using the standard Maven layout.
    * <ul>
    * <li>For snapshots: /org/some/group/myartifact/1.0-SNAPSHOT/
-   * <li>For releases:  /org/some/group/myartifact/1.0/
+   * <li>For releases: /org/some/group/myartifact/1.0/
    * </ul>
    */
   private List<String> pathToArtifactFolder(Component component) {

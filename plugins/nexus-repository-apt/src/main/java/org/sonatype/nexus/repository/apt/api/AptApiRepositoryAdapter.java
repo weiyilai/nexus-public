@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.apt.api;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.text.Strings2;
@@ -25,12 +24,19 @@ import org.sonatype.nexus.repository.routing.RoutingRuleStore;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.repository.types.ProxyType;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 /**
  * Adapter to expose Apt specific properties for the repositories REST API.
  *
  * @since 3.20
  */
-@Named(AptFormat.NAME)
+@Component
+@Qualifier(AptFormat.NAME)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AptApiRepositoryAdapter
     extends SimpleApiRepositoryAdapter
 {

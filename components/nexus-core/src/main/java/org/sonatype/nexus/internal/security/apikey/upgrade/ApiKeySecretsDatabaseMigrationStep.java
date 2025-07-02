@@ -14,20 +14,20 @@ package org.sonatype.nexus.internal.security.apikey.upgrade;
 
 import java.sql.Connection;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
 import org.sonatype.nexus.upgrade.datastore.DefinedUpgradeRound;
 import org.sonatype.nexus.upgrade.datastore.RepeatableDatabaseMigrationStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * An upgrade step which triggers the task to move from {@code api_key} to {@code api_key_v2}
  */
-@Named
+@Component
 @Singleton
 public class ApiKeySecretsDatabaseMigrationStep
     implements RepeatableDatabaseMigrationStep, DefinedUpgradeRound

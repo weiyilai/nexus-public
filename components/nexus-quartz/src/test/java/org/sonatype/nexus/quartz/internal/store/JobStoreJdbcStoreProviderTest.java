@@ -36,8 +36,13 @@ public class JobStoreJdbcStoreProviderTest
 
   @Override
   protected JobStore createJobStore(final String name) {
-    jobStore =
-        new JobStoreJdbcProvider(new ConfigStoreConnectionProvider(sessionRule), new SimpleNodeAccess(), false).get();
+    try {
+      jobStore = new JobStoreJdbcProvider(new ConfigStoreConnectionProvider(sessionRule), new SimpleNodeAccess(), false)
+          .getObject();
+    }
+    catch (Exception e) {
+      throw new RuntimeException(e);
+    }
     jobStore.setInstanceId("SINGLE_NODE_TEST");
     jobStore.setInstanceName(name);
 

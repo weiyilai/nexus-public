@@ -17,9 +17,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
@@ -40,13 +39,14 @@ import static org.sonatype.nexus.supportzip.PasswordSanitizing.REPLACEMENT;
 import static org.sonatype.nexus.supportzip.PasswordSanitizing.SENSITIVE_FIELD_NAMES;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Priority.HIGH;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.CONFIG;
+import org.springframework.stereotype.Component;
 
 /**
  * Adds installation directory configuration files to support bundle.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class InstallConfigurationCustomizer
     extends ComponentSupport

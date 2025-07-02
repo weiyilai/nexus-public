@@ -15,9 +15,8 @@ package org.sonatype.nexus.scheduling.internal.resources;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotAllowedException;
@@ -48,11 +47,12 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.6
  */
-@Named
+@Component
 @Singleton
 @Path(TasksApiResource.RESOURCE_URI)
 @Produces(APPLICATION_JSON)

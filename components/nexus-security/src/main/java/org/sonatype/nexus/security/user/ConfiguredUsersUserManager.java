@@ -17,17 +17,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
+import org.sonatype.nexus.common.Description;
 import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.config.CUserRoleMapping;
 import org.sonatype.nexus.security.config.SecurityConfigurationManager;
 
 import com.google.common.collect.Sets;
-import org.eclipse.sisu.Description;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -37,7 +38,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * added to them.
  */
 @Singleton
-@Named(ConfiguredUsersUserManager.SOURCE)
+@Component
+@Qualifier(ConfiguredUsersUserManager.SOURCE)
 @Description("All Users with Roles")
 public class ConfiguredUsersUserManager
     extends AbstractReadOnlyUserManager
@@ -49,8 +51,9 @@ public class ConfiguredUsersUserManager
   private final SecurityConfigurationManager configuration;
 
   @Inject
-  public ConfiguredUsersUserManager(final SecuritySystem securitySystem,
-                                    final SecurityConfigurationManager configuration)
+  public ConfiguredUsersUserManager(
+      @Lazy final SecuritySystem securitySystem,
+      @Lazy final SecurityConfigurationManager configuration)
   {
     this.securitySystem = checkNotNull(securitySystem);
     this.configuration = checkNotNull(configuration);
@@ -68,7 +71,8 @@ public class ConfiguredUsersUserManager
     List<CUserRoleMapping> userRoleMappings = configuration.listUserRoleMappings();
     for (CUserRoleMapping userRoleMapping : userRoleMappings) {
       try {
-        User user = securitySystem.getUser(userRoleMapping.getUserId(), userRoleMapping.getSource(), userRoleMapping.getRoles());
+        User user = securitySystem.getUser(userRoleMapping.getUserId(), userRoleMapping.getSource(),
+            userRoleMapping.getRoles());
         if (user != null) {
           users.add(user);
         }
@@ -126,10 +130,11 @@ public class ConfiguredUsersUserManager
   }
 
   @Override
-  protected boolean matchesCriteria(final String userId,
-                                    final String userSource,
-                                    final Collection<String> usersRoles,
-                                    final UserSearchCriteria criteria)
+  protected boolean matchesCriteria(
+      final String userId,
+      final String userSource,
+      final Collection<String> usersRoles,
+      final UserSearchCriteria criteria)
   {
     // basically the same as the super, but we don't want to check the source
     if (!Strings2.isBlank(criteria.getUserId())

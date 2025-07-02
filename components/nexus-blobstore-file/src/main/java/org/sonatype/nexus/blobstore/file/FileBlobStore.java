@@ -48,8 +48,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.BlobIdLocationResolver;
 import org.sonatype.nexus.blobstore.BlobStoreReconciliationLogger;
@@ -121,13 +120,19 @@ import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.St
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STOPPED;
 import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * A {@link BlobStore} that stores its content on the file system.
  *
  * @since 3.0
  */
-@Named(FileBlobStore.TYPE)
+@Component
+@Qualifier(FileBlobStore.TYPE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class FileBlobStore
     extends BlobStoreSupport<FileAttributesLocation>
 {
@@ -199,11 +204,11 @@ public class FileBlobStore
       final BlobIdLocationResolver blobIdLocationResolver,
       final FileOperations fileOperations,
       final ApplicationDirectories applicationDirectories,
-      @Named(FileBlobStore.TYPE) final BlobStoreMetricsService<FileBlobStore> metricsService,
+      @Qualifier(FileBlobStore.TYPE) final BlobStoreMetricsService<FileBlobStore> metricsService,
       final NodeAccess nodeAccess,
       final DryRunPrefix dryRunPrefix,
       final BlobStoreReconciliationLogger reconciliationLogger,
-      @Named("${nexus.blobstore.prune.empty.directory.age.ms:-86400000}") @Value("${nexus.blobstore.prune.empty.directory.age.ms:86400000}") final long pruneEmptyDirectoryAge,
+      @Value("${nexus.blobstore.prune.empty.directory.age.ms:86400000}") final long pruneEmptyDirectoryAge,
       final BlobStoreQuotaUsageChecker blobStoreQuotaUsageChecker,
       final FileBlobDeletionIndex blobDeletionIndex)
   {

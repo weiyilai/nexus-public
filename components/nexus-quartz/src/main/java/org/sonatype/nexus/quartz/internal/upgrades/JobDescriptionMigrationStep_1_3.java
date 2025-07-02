@@ -15,17 +15,19 @@ package org.sonatype.nexus.quartz.internal.upgrades;
 import java.sql.Connection;
 import java.util.Optional;
 
-import javax.inject.Named;
-
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Resolve issue when job can't be scheduled due to limited size of 'description' column
  *
  * @since 3.37
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class JobDescriptionMigrationStep_1_3
     extends ComponentSupport
     implements DatabaseMigrationStep

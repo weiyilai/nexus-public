@@ -18,6 +18,9 @@ import java.util.regex.Pattern;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Implementation of {@link Comparator} for comparing {@link Version} Strings, specifically using a {@link
@@ -30,6 +33,8 @@ import org.eclipse.aether.version.Version;
  *
  * @since 3.1
  */
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class VersionComparator
     implements Comparator<String>
 {

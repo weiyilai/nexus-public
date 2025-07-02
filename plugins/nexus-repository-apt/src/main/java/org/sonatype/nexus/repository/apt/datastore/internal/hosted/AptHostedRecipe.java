@@ -12,10 +12,9 @@
  */
 package org.sonatype.nexus.repository.apt.datastore.internal.hosted;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.repository.Format;
@@ -46,7 +45,10 @@ import org.sonatype.nexus.repository.view.handlers.LastDownloadedHandler;
 import org.sonatype.nexus.repository.view.handlers.TimingHandler;
 import org.sonatype.nexus.repository.view.matchers.AlwaysMatcher;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+
 import static org.sonatype.nexus.repository.http.HttpHandlers.notFound;
+import org.springframework.stereotype.Component;
 
 /**
  * Apt hosted repository recipe.
@@ -54,7 +56,8 @@ import static org.sonatype.nexus.repository.http.HttpHandlers.notFound;
  * @since 3.31
  */
 @AvailabilityVersion(from = "1.0")
-@Named(AptHostedRecipe.NAME)
+@Component
+@Qualifier(AptHostedRecipe.NAME)
 @Singleton
 public class AptHostedRecipe
     extends RecipeSupport
@@ -126,8 +129,8 @@ public class AptHostedRecipe
 
   @Inject
   public AptHostedRecipe(
-      @Named(HostedType.NAME) final Type type,
-      @Named(AptFormat.NAME) final Format format)
+      @Qualifier(HostedType.NAME) final Type type,
+      @Qualifier(AptFormat.NAME) final Format format)
   {
     super(type, format);
   }
@@ -160,7 +163,8 @@ public class AptHostedRecipe
         .handler(contentHeadersHandler)
         .handler(lastDownloadedHandler)
         .handler(snapshotHandler)
-        .handler(hostedHandler).create());
+        .handler(hostedHandler)
+        .create());
 
     builder.defaultHandlers(notFound());
     facet.configure(builder.create());

@@ -13,9 +13,8 @@
 package org.sonatype.nexus.coreui.internal.wonderland;
 
 import java.io.IOException;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -38,13 +37,14 @@ import static com.google.common.net.HttpHeaders.CONTENT_LENGTH;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import org.springframework.stereotype.Component;
 
 /**
  * Downloads resource.
  *
  * @since 2.8
  */
-@Named
+@Component
 @Singleton
 @Path(DownloadResource.RESOURCE_URI)
 public class DownloadResource
@@ -71,8 +71,7 @@ public class DownloadResource
   @Produces("application/zip")
   @RequiresPermissions("nexus:wonderland:download")
   @NotCacheable
-  public Response downloadZip(@PathParam("fileName") final String fileName)
-  {
+  public Response downloadZip(@PathParam("fileName") final String fileName) {
     checkNotNull(fileName);
     log.info("Download: {}", fileName);
 

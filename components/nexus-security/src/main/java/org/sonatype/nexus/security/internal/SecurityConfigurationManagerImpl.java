@@ -23,9 +23,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.event.EventAware;
@@ -58,13 +57,18 @@ import com.google.common.collect.Sets.SetView;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import org.apache.shiro.authc.credential.PasswordService;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Default {@link SecurityConfigurationManager}.
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @Singleton
 public class SecurityConfigurationManagerImpl
     extends ComponentSupport
@@ -166,8 +170,8 @@ public class SecurityConfigurationManagerImpl
       getDefaultConfiguration().removePrivilege(id);
     }
     catch (NoSuchPrivilegeException e) {
-      //note that readonly check is done here, rather than at orient level, as we dont store readonly flag with
-      //config, basically any privileges added via SecurityContributor impls are marked as readonly
+      // note that readonly check is done here, rather than at orient level, as we dont store readonly flag with
+      // config, basically any privileges added via SecurityContributor impls are marked as readonly
       if (getMergedConfiguration().getPrivileges().stream().anyMatch(p -> p.getId().equals(id))) {
         throw new ReadonlyPrivilegeException(id);
       }
@@ -180,20 +184,21 @@ public class SecurityConfigurationManagerImpl
   @Override
   public void deletePrivilegeByName(final String name) {
     CPrivilege existing = readPrivilegeByName(name);
-   try {
-     getDefaultConfiguration().removePrivilegeByName(name);
-   }catch (NoSuchPrivilegeException e){
+    try {
+      getDefaultConfiguration().removePrivilegeByName(name);
+    }
+    catch (NoSuchPrivilegeException e) {
 
-     boolean isReadOnly = getMergedConfiguration().getPrivileges().stream().anyMatch(p -> p.getName().equals(name));
+      boolean isReadOnly = getMergedConfiguration().getPrivileges().stream().anyMatch(p -> p.getName().equals(name));
 
-     if(isReadOnly){
-       throw new ReadonlyPrivilegeException(name);
-     }
+      if (isReadOnly) {
+        throw new ReadonlyPrivilegeException(name);
+      }
 
-     throw new NoSuchPrivilegeException(name);
-   }
+      throw new NoSuchPrivilegeException(name);
+    }
 
-   cleanRemovedPrivilege(existing.getId());
+    cleanRemovedPrivilege(existing.getId());
   }
 
   @Override
@@ -202,8 +207,8 @@ public class SecurityConfigurationManagerImpl
       getDefaultConfiguration().removeRole(id);
     }
     catch (NoSuchRoleException e) {
-      //note that readonly check is done here, rather than at orient level, as we dont store readonly flag with
-      //config, basically any roles added via SecurityContributor impls are marked as readonly
+      // note that readonly check is done here, rather than at orient level, as we dont store readonly flag with
+      // config, basically any roles added via SecurityContributor impls are marked as readonly
       if (getMergedConfiguration().getRoles().stream().anyMatch(p -> p.getId().equals(id))) {
         throw new ReadonlyRoleException(id);
       }
@@ -260,7 +265,7 @@ public class SecurityConfigurationManagerImpl
   public CPrivilege readPrivilegeByName(final String name) {
     return Optional.of(name)
         .map(n -> getMergedConfiguration().getPrivilegeByName(n))
-        .orElseGet(() ->Optional.ofNullable(getDefaultConfiguration().getPrivilegeByName(name))
+        .orElseGet(() -> Optional.ofNullable(getDefaultConfiguration().getPrivilegeByName(name))
             .orElseThrow(() -> new NoSuchPrivilegeException(name)));
   }
 
@@ -317,8 +322,8 @@ public class SecurityConfigurationManagerImpl
     CPrivilege existing = getDefaultConfiguration().getPrivilege(privilege.getId());
 
     if (existing == null) {
-      //note that readonly check is done here, rather than at orient level, as we dont store readonly flag with
-      //config, basically any privileges added via SecurityContributor impls are marked as readonly
+      // note that readonly check is done here, rather than at orient level, as we dont store readonly flag with
+      // config, basically any privileges added via SecurityContributor impls are marked as readonly
       if (getMergedConfiguration().getPrivileges().stream().anyMatch(p -> p.getId().equals(privilege.getId()))) {
         throw new ReadonlyPrivilegeException(privilege.getId());
       }
@@ -334,9 +339,10 @@ public class SecurityConfigurationManagerImpl
         .isPresent();
 
     if (!onDefaultConfig) {
-      //note that readonly check is done here, rather than at orient level, as we dont store readonly flag with
-      //config, basically any privileges added via SecurityContributor impls are marked as readonly
-      boolean isReadOnly = getMergedConfiguration().getPrivileges().stream().anyMatch(p -> p.getName().equals(privilege.getName()));
+      // note that readonly check is done here, rather than at orient level, as we dont store readonly flag with
+      // config, basically any privileges added via SecurityContributor impls are marked as readonly
+      boolean isReadOnly =
+          getMergedConfiguration().getPrivileges().stream().anyMatch(p -> p.getName().equals(privilege.getName()));
 
       if (isReadOnly) {
         throw new ReadonlyPrivilegeException(privilege.getName());
@@ -352,8 +358,8 @@ public class SecurityConfigurationManagerImpl
     CRole existing = getDefaultConfiguration().getRole(role.getId());
 
     if (existing == null) {
-      //note that readonly check is done here, rather than at orient level, as we dont store readonly flag with
-      //config, basically any role added via SecurityContributor impls are marked as readonly
+      // note that readonly check is done here, rather than at orient level, as we dont store readonly flag with
+      // config, basically any role added via SecurityContributor impls are marked as readonly
       if (getMergedConfiguration().getRoles().stream().anyMatch(p -> p.getId().equals(role.getId()))) {
         throw new ReadonlyRoleException(role.getId());
       }
@@ -383,7 +389,10 @@ public class SecurityConfigurationManagerImpl
   }
 
   @Override
-  public CUserRoleMapping readUserRoleMapping(final String userId, final String source) throws NoSuchRoleMappingException {
+  public CUserRoleMapping readUserRoleMapping(
+      final String userId,
+      final String source) throws NoSuchRoleMappingException
+  {
     CUserRoleMapping mapping = getDefaultConfiguration().getUserRoleMapping(userId, source);
 
     if (mapping != null) {
@@ -486,12 +495,10 @@ public class SecurityConfigurationManagerImpl
       if (contribution != null) {
         checkState(
             contribution.getUsers() == null || contribution.getUsers().isEmpty(),
-            "Security contributions cannot have users"
-        );
+            "Security contributions cannot have users");
         checkState(
             contribution.getUserRoleMappings() == null || contribution.getUserRoleMappings().isEmpty(),
-            "Security contributions cannot have user/role mappings"
-        );
+            "Security contributions cannot have user/role mappings");
         appendConfig(configuration, contribution);
       }
     }

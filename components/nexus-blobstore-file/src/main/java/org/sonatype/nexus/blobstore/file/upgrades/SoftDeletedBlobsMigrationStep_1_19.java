@@ -17,15 +17,17 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
 
-import javax.inject.Named;
-
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Updates PK for soft_deleted_blobs table
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SoftDeletedBlobsMigrationStep_1_19
     extends ComponentSupport
     implements DatabaseMigrationStep

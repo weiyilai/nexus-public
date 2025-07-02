@@ -14,8 +14,7 @@ package org.sonatype.nexus.internal.email;
 
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -25,13 +24,14 @@ import org.sonatype.nexus.email.EmailConfigurationChangedEvent;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * Email auditor.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class EmailAuditor
     extends AuditorSupport
@@ -57,7 +57,7 @@ public class EmailAuditor
       attributes.put("username", configuration.getUsername());
       attributes.put("fromAddress", configuration.getFromAddress());
       attributes.put("subjectPrefix", configuration.getSubjectPrefix());
-      
+
       record(data);
     }
   }

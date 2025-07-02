@@ -17,9 +17,10 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.sonatype.nexus.blobstore.api.BlobRef;
@@ -38,16 +39,11 @@ import org.sonatype.nexus.repository.content.store.example.TestAssetData;
 import org.sonatype.nexus.repository.content.store.example.TestComponentDAO;
 import org.sonatype.nexus.repository.content.store.example.TestContentRepositoryDAO;
 
-import com.google.common.collect.ImmutableList;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 
-import static com.google.common.collect.ImmutableSet.of;
 import static com.google.common.collect.Sets.newHashSet;
-import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.summingInt;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -58,9 +54,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.repository.content.store.ComponentDAOTestSupport.browseComponents;
 import static org.sonatype.nexus.repository.content.store.ComponentDAOTestSupport.countComponents;
@@ -68,14 +64,14 @@ import static org.sonatype.nexus.repository.content.store.ComponentDAOTestSuppor
 /**
  * Support class for AssetDao tests.
  */
-public class AssetDAOTestSupport
+public abstract class AssetDAOTestSupport
     extends ExampleContentTestSupport
 {
   protected int repositoryId;
 
   private boolean entityVersionEnabled;
 
-  protected void initialiseContent(boolean entityVersionEnabled) {
+  protected void initialiseContent(final boolean entityVersionEnabled) {
     this.entityVersionEnabled = entityVersionEnabled;
     ContentRepositoryData contentRepository = randomContentRepository();
 
@@ -89,7 +85,7 @@ public class AssetDAOTestSupport
     generateRandomPaths(100);
   }
 
-  public void testCrudOperations() throws InterruptedException {
+  protected void testCrudOperations() throws InterruptedException {
 
     String aKind = "a kind";
     String anotherKind = "another kind";
@@ -322,7 +318,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testLastDownloaded() throws InterruptedException {
+  protected void testLastDownloaded() throws InterruptedException {
 
     AssetData asset = randomAsset(repositoryId);
     String path = asset.path();
@@ -383,7 +379,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testAttachingBlobs() throws InterruptedException {
+  protected void testAttachingBlobs() throws InterruptedException {
 
     AssetBlobData assetBlob1 = randomAssetBlob();
     AssetBlobData assetBlob2 = randomAssetBlob();
@@ -572,7 +568,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testBrowseComponentAssets() {
+  protected void testBrowseComponentAssets() {
 
     // scatter components and assets
     generateRandomRepositories(10);
@@ -621,7 +617,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testContinuationBrowsing() {
+  protected void testContinuationBrowsing() {
 
     generateRandomNamespaces(1);
     generateRandomNames(1);
@@ -659,7 +655,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testFlaggedBrowsing() {
+  protected void testFlaggedBrowsing() {
 
     TestAssetData asset1 = randomAsset(repositoryId);
     TestAssetData asset2 = randomAsset(repositoryId);
@@ -692,7 +688,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testReadPathTest() {
+  protected void testReadPathTest() {
     TestAssetData asset1 = randomAsset(repositoryId);
     TestAssetData asset2 = randomAsset(repositoryId);
     asset2.setPath(asset1.path() + "/2"); // make sure paths are different
@@ -726,7 +722,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testDeleteAllAssets() {
+  protected void testDeleteAllAssets() {
 
     // scatter components and assets
     generateRandomRepositories(1);
@@ -759,7 +755,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testReadPaths() {
+  protected void testReadPaths() {
 
     AssetData asset1 = randomAsset(repositoryId);
     AssetData asset2 = randomAsset(repositoryId);
@@ -785,17 +781,17 @@ public class AssetDAOTestSupport
       assertThat(countAssets(dao, repositoryId), is(5));
 
       Collection<Asset> assets =
-          dao.readPathsFromRepository(repositoryId, asList(asset1.path(), asset2.path(), asset3.path()));
+          dao.readPathsFromRepository(repositoryId, List.of(asset1.path(), asset2.path(), asset3.path()));
 
       assertThat(assets.size(), is(3));
 
-      assets = dao.readPathsFromRepository(repositoryId, asList(asset4.path(), asset5.path()));
+      assets = dao.readPathsFromRepository(repositoryId, List.of(asset4.path(), asset5.path()));
 
       assertThat(assets.size(), is(2));
     }
   }
 
-  public void testPurgeOperation() {
+  protected void testPurgeOperation() {
     AssetData asset1 = randomAsset(repositoryId);
     AssetData asset2 = randomAsset(repositoryId);
     asset2.setPath(asset1.path() + "/2"); // make sure paths are different
@@ -831,7 +827,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testRoundTrip() {
+  protected void testRoundTrip() {
     AssetData asset1 = randomAsset(repositoryId);
     AssetData asset2 = randomAsset(repositoryId);
     asset2.setPath(asset1.path() + "/2"); // make sure paths are different
@@ -860,7 +856,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testBrowseAssetsInRepositories() {
+  protected void testBrowseAssetsInRepositories() {
     ContentRepositoryData anotherContentRepository = randomContentRepository();
     createContentRepository(anotherContentRepository);
     int anotherRepositoryId = anotherContentRepository.repositoryId;
@@ -881,14 +877,14 @@ public class AssetDAOTestSupport
 
       assertThat(
           dao.browseAssetsInRepositories(newHashSet(repositoryId, anotherRepositoryId), null,
-              null, null, emptyMap(), 10),
+              null, null, Map.of(), 10),
           emptyIterable());
 
       dao.createAsset(asset1, false);
 
       assertThat(
           dao.browseAssetsInRepositories(newHashSet(repositoryId, anotherRepositoryId), null,
-              null, null, emptyMap(), 10),
+              null, null, Map.of(), 10),
           contains(allOf(samePath(asset1), sameAttributes(asset1))));
 
       dao.createAsset(asset2, false);
@@ -898,7 +894,7 @@ public class AssetDAOTestSupport
       // browse all assets
       assertThat(
           dao.browseAssetsInRepositories(newHashSet(repositoryId, anotherRepositoryId), null,
-              null, null, emptyMap(), 10),
+              null, null, Map.of(), 10),
           contains(allOf(samePath(asset1), sameAttributes(asset1)), allOf(samePath(asset2), sameAttributes(asset2)),
               allOf(samePath(asset3), sameAttributes(asset3)), allOf(samePath(asset4), sameAttributes(asset4))));
 
@@ -906,7 +902,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testBrowseEagerAssetsInRepository() {
+  protected void testBrowseEagerAssetsInRepository() {
     generateConfiguration();
     EntityId entityId = generatedConfigurations().get(0).getRepositoryId();
     generateSingleRepository(UUID.fromString(entityId.getValue()));
@@ -928,7 +924,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testSetLastDownloaded() {
+  protected void testSetLastDownloaded() {
     AssetData asset1 = randomAsset(repositoryId);
     ComponentData componentData = randomComponent(repositoryId);
     componentData.setComponentId(1);
@@ -952,7 +948,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testLastUpdated() {
+  protected void testLastUpdated() {
     AssetData asset1 = randomAsset(repositoryId);
     ComponentData componentData = randomComponent(repositoryId);
     componentData.setComponentId(1);
@@ -976,7 +972,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testFilterClauseIsolation() {
+  protected void testFilterClauseIsolation() {
     ContentRepositoryData anotherContentRepository = randomContentRepository();
     createContentRepository(anotherContentRepository);
     int anotherRepositoryId = anotherContentRepository.repositoryId;
@@ -991,13 +987,14 @@ public class AssetDAOTestSupport
 
       assertThat(dao.browseAssets(repositoryId, 1000, null, null, "true or true", null), hasSize(1));
       assertThat(dao.countAssets(repositoryId, null, "true or true", null), equalTo(1));
-      assertThat(dao.browseAssetsInRepositories(of(repositoryId), null, null, "true or true", null, 1000), hasSize(1));
+      assertThat(dao.browseAssetsInRepositories(Set.of(repositoryId), null, null, "true or true", null, 1000),
+          hasSize(1));
     }
   }
 
-  public void testFindByBlobRef() throws InterruptedException {
+  protected void testFindByBlobRef() throws InterruptedException {
     AssetBlobData assetBlob = randomAssetBlob();
-    AssetData asset1 = randomAsset(repositoryId);
+    randomAsset(repositoryId);
     AssetData asset2 = randomAsset(repositoryId);
     String path = asset2.path();
     Asset tempResult;
@@ -1027,7 +1024,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testFindByComponentIds() {
+  protected void testFindByComponentIds() {
     generateConfiguration();
     EntityId repositoryId = generatedConfigurations().get(0).getRepositoryId();
     generateSingleRepository(UUID.fromString(repositoryId.getValue()));
@@ -1035,7 +1032,7 @@ public class AssetDAOTestSupport
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       TestAssetDAO dao = session.access(TestAssetDAO.class);
-      Collection<AssetInfo> assets = dao.findByComponentIds(Collections.singleton(1), null, Collections.emptyMap());
+      Collection<AssetInfo> assets = dao.findByComponentIds(Set.of(1), null, Map.of());
 
       Optional<AssetInfo> assetOpt = assets.stream().findFirst();
       assertThat(assetOpt.isPresent(), is(true));
@@ -1051,16 +1048,16 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testFindAddedToRepository() {
+  protected void testFindAddedToRepository() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
       AssetBlobDAO blobDao = session.access(TestAssetBlobDAO.class);
       OffsetDateTime baseTime = OffsetDateTime.of(2022, 4, 24, 15, 18, 22,
           111111000, ZoneOffset.UTC);
       Collection<AssetInfo> found = dao.findAddedToRepositoryWithinRange(repositoryId, baseTime,
-          baseTime.plus(1, ChronoUnit.MILLIS), ImmutableList.of(), null, null, 100);
+          baseTime.plus(1, ChronoUnit.MILLIS), List.of(), null, null, 100);
       assertThat(found, emptyIterable());
-      found = dao.findGreaterThanOrEqualToAddedToRepository(repositoryId, baseTime, ImmutableList.of(), null, null, 10);
+      found = dao.findGreaterThanOrEqualToAddedToRepository(repositoryId, baseTime, List.of(), null, null, 10);
       assertThat(found, emptyIterable());
 
       AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
@@ -1095,31 +1092,31 @@ public class AssetDAOTestSupport
       createAssets(dao, entityVersionEnabled, asset1, asset2, asset3, asset4, asset5, asset6);
 
       found = dao.findAddedToRepositoryWithinRange(repositoryId, baseTime, baseTime.plus(1, ChronoUnit.MILLIS),
-          ImmutableList.of(), null, null, 100);
+          List.of(), null, null, 100);
       assertThat(found.size(), is(2));
 
       found =
-          dao.findGreaterThanOrEqualToAddedToRepository(repositoryId, baseTime, ImmutableList.of(), null, null, 100);
+          dao.findGreaterThanOrEqualToAddedToRepository(repositoryId, baseTime, List.of(), null, null, 100);
       assertThat(found.size(), is(4));
 
-      found = dao.findGreaterThanOrEqualToAddedToRepository(repositoryId, baseTime, ImmutableList.of(), null, null, 1);
+      found = dao.findGreaterThanOrEqualToAddedToRepository(repositoryId, baseTime, List.of(), null, null, 1);
       assertThat(found.size(), is(1));
 
       found = dao.findGreaterThanOrEqualToAddedToRepository(repositoryId, baseTime.minusDays(1),
-          ImmutableList.of(".*/asset1/.*"), null, null, 100);
+          List.of(".*/asset1/.*"), null, null, 100);
       assertThat(found.size(), is(1));
 
       found = dao.findGreaterThanOrEqualToAddedToRepository(repositoryId, baseTime.minusDays(1),
-          ImmutableList.of(".*/asset3/.*", ".*/asset5/.*"), null, null, 100);
+          List.of(".*/asset3/.*", ".*/asset5/.*"), null, null, 100);
       assertThat(found.size(), is(2));
 
       found = dao.findGreaterThanOrEqualToAddedToRepository(repositoryId, baseTime.minusDays(1),
-          ImmutableList.of(".*/asset.?/a.*\\.jar.*"), null, null, 100);
+          List.of(".*/asset.?/a.*\\.jar.*"), null, null, 100);
       assertThat(found.size(), is(6));
     }
   }
 
-  public void testFindAddedToRepositoryTruncatesToMilliseconds() {
+  protected void testFindAddedToRepositoryTruncatesToMilliseconds() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
       AssetBlobDAO blobDao = session.access(TestAssetBlobDAO.class);
@@ -1127,9 +1124,9 @@ public class AssetDAOTestSupport
           111111000, ZoneOffset.UTC);
       Collection<AssetInfo> found =
           dao.findAddedToRepositoryWithinRange(repositoryId, baseTime, baseTime.plus(1, ChronoUnit.MILLIS),
-              ImmutableList.of(), null, null, 100);
+              List.of(), null, null, 100);
       assertThat(found, emptyIterable());
-      found = dao.findGreaterThanOrEqualToAddedToRepository(repositoryId, baseTime, ImmutableList.of(), null, null, 10);
+      found = dao.findGreaterThanOrEqualToAddedToRepository(repositoryId, baseTime, List.of(), null, null, 10);
       assertThat(found, emptyIterable());
 
       AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
@@ -1159,16 +1156,16 @@ public class AssetDAOTestSupport
       createAssets(dao, entityVersionEnabled, asset1, asset2, asset3, asset4);
 
       found = dao.findAddedToRepositoryWithinRange(repositoryId, baseTime, baseTime.plus(1, ChronoUnit.MILLIS),
-          ImmutableList.of(), null, null, 100);
+          List.of(), null, null, 100);
       assertThat(found.size(), is(4));
 
       found = dao.findGreaterThanOrEqualToAddedToRepository(repositoryId,
-          baseTime.plus(1, ChronoUnit.MILLIS).truncatedTo(ChronoUnit.MILLIS), ImmutableList.of(), null, null, 100);
+          baseTime.plus(1, ChronoUnit.MILLIS).truncatedTo(ChronoUnit.MILLIS), List.of(), null, null, 100);
       assertThat(found.size(), is(0));
     }
   }
 
-  public void testDeleteByPaths() {
+  protected void testDeleteByPaths() {
 
     AssetData asset1 = randomAsset(repositoryId);
     AssetData asset2 = randomAsset(repositoryId);
@@ -1207,7 +1204,7 @@ public class AssetDAOTestSupport
 
       assertThat(countAssets(dao, repositoryId), is(5));
       assertThat(dao.readPathsFromRepository(repositoryId,
-          asList(asset1.path(), asset2.path(), asset3.path(), asset4.path(), asset5.path())).size(),
+          List.of(asset1.path(), asset2.path(), asset3.path(), asset4.path(), asset5.path())).size(),
           is(5));
 
       assertEntityVersion(component1.componentId, session.access(TestComponentDAO.class),
@@ -1215,21 +1212,21 @@ public class AssetDAOTestSupport
       assertEntityVersion(component2.componentId, session.access(TestComponentDAO.class),
           entityVersionEnabled ? 3 : null);
 
-      dao.deleteAssetsByPaths(repositoryId, asList(asset1.path(), asset2.path()), entityVersionEnabled);
+      dao.deleteAssetsByPaths(repositoryId, List.of(asset1.path(), asset2.path()), entityVersionEnabled);
 
       assertEntityVersion(component1.componentId, session.access(TestComponentDAO.class),
           entityVersionEnabled ? 5 : null);
       assertEntityVersion(component2.componentId, session.access(TestComponentDAO.class),
           entityVersionEnabled ? 3 : null);
 
-      dao.deleteAssetsByPaths(repositoryId, singletonList(asset4.path()), entityVersionEnabled);
+      dao.deleteAssetsByPaths(repositoryId, List.of(asset4.path()), entityVersionEnabled);
 
       assertEntityVersion(component1.componentId, session.access(TestComponentDAO.class),
           entityVersionEnabled ? 5 : null);
       assertEntityVersion(component2.componentId, session.access(TestComponentDAO.class),
           entityVersionEnabled ? 4 : null);
 
-      dao.deleteAssetsByPaths(repositoryId, asList(asset3.path(), asset5.path()), entityVersionEnabled);
+      dao.deleteAssetsByPaths(repositoryId, List.of(asset3.path(), asset5.path()), entityVersionEnabled);
 
       assertEntityVersion(component1.componentId, session.access(TestComponentDAO.class),
           entityVersionEnabled ? 6 : null);
@@ -1237,7 +1234,7 @@ public class AssetDAOTestSupport
           entityVersionEnabled ? 5 : null);
 
       // assets don't exist - should still be the same
-      dao.deleteAssetsByPaths(repositoryId, asList(asset1.path(), asset2.path()), entityVersionEnabled);
+      dao.deleteAssetsByPaths(repositoryId, List.of(asset1.path(), asset2.path()), entityVersionEnabled);
       assertEntityVersion(component1.componentId, session.access(TestComponentDAO.class),
           entityVersionEnabled ? 6 : null);
       assertEntityVersion(component2.componentId, session.access(TestComponentDAO.class),
@@ -1245,7 +1242,7 @@ public class AssetDAOTestSupport
     }
   }
 
-  public void testAssetRecordsExist() {
+  protected void testAssetRecordsExist() {
     AssetBlobData assetBlob = randomAssetBlob();
     AssetBlobData assetBlobWithoutComponent = randomAssetBlob();
 
@@ -1294,7 +1291,7 @@ public class AssetDAOTestSupport
   protected void createComponents(
       final ComponentDAO componentDAO,
       final boolean entityVersionEnabled,
-      ComponentData... components)
+      final ComponentData... components)
   {
     stream(components).forEach(component -> componentDAO.createComponent(component, entityVersionEnabled));
   }

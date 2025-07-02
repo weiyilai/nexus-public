@@ -17,8 +17,7 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 
@@ -32,13 +31,14 @@ import org.sonatype.nexus.ssl.CertificateEvent;
 import com.google.common.base.Throwables;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * SSL certificate auditor.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class SslCertificateAuditor
     extends AuditorSupport

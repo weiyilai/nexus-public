@@ -12,24 +12,34 @@
  */
 package org.sonatype.nexus.coreui;
 
-import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Path;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import javax.validation.executable.ExecutableValidator;
 
-import org.sonatype.goodies.testsupport.inject.InjectedTestSupport;
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.selector.CselSelector;
+import org.sonatype.nexus.selector.CselToSql;
 import org.sonatype.nexus.selector.SelectorConfiguration;
 import org.sonatype.nexus.selector.SelectorConfigurationStore;
+import org.sonatype.nexus.selector.SelectorFactory;
 import org.sonatype.nexus.selector.SelectorManager;
 import org.sonatype.nexus.validation.ConstraintViolationFactory;
 
-import com.google.inject.Binder;
-import org.eclipse.sisu.space.BeanScanning;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.subject.Subject;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -39,42 +49,75 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 /**
  * Tests {@link SelectorComponent}.
  */
 public class SelectorComponentTest
-    extends InjectedTestSupport
+    extends TestSupport
 {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  @Inject
-  private SelectorComponent component;
+  @Mock
+  private Path path;
 
-  private Path path = mock(Path.class);
+  @Mock
+  private SelectorManager mockSelectorManager;
 
-  private SelectorManager mockSelectorManager = mock(SelectorManager.class);
+  @Mock
+  private SelectorConfigurationStore mockStore;
 
-  private SelectorConfigurationStore mockStore = mock(SelectorConfigurationStore.class);
+  @Mock
+  private ValidatorFactory validatorFactory;
 
-  @Override
-  public void configure(final Binder binder) {
+  @Mock
+  private Validator validator;
+
+  @Mock
+  private ExecutableValidator executableValidator;
+
+  @Mock
+  private SelectorConfiguration selectorConfiguration;
+
+  @Mock
+  private Subject subject;
+
+  private MockedStatic<SecurityUtils> securityUtils;
+
+  @Mock
+  private SecurityManager securityManager;
+
+  private SelectorComponent underTest;
+
+  @Before
+  public void setup() {
+    securityUtils = mockStatic(SecurityUtils.class);
+    securityUtils.when(SecurityUtils::getSubject).thenReturn(subject);
+
     ConstraintViolationFactory constraintViolationFactory = mock(ConstraintViolationFactory.class);
     ConstraintViolation constraintViolation = mock(ConstraintViolation.class);
     SecuritySystem securitySystem = mock(SecuritySystem.class);
-    binder.bind(ConstraintViolationFactory.class).toInstance(constraintViolationFactory);
-    binder.bind(SelectorManager.class).toInstance(mockSelectorManager);
-    binder.bind(SelectorConfigurationStore.class).toInstance(mockStore);
-    binder.bind(SecuritySystem.class).toInstance(securitySystem);
+
     when(constraintViolationFactory.createViolation(eq("expression"), anyString())).thenReturn(constraintViolation);
     when(constraintViolation.getPropertyPath()).thenReturn(path);
+
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = executableValidator;
+    when(mockSelectorManager.newSelectorConfiguration(any(), any(), any(), any())).thenReturn(selectorConfiguration);
+    when(mockSelectorManager.readByName(any())).thenReturn(selectorConfiguration);
+
+    SelectorFactory selectorFactory = new SelectorFactory(constraintViolationFactory, mock(CselToSql.class));
+
+    underTest = new SelectorComponent(mockSelectorManager, constraintViolationFactory, selectorFactory, securitySystem,
+        mockStore);
   }
 
-  @Override
-  public BeanScanning scanning() {
-    return BeanScanning.INDEX;
+  @After
+  public void tearDown() {
+    securityUtils.close();
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
   }
 
   @Test
@@ -84,7 +127,7 @@ public class SelectorComponentTest
     xo.setType("jexl");
 
     try {
-      component.create(xo);
+      underTest.create(xo);
       fail();
     }
     catch (ConstraintViolationException e) {
@@ -100,7 +143,7 @@ public class SelectorComponentTest
     xo.setType(CselSelector.TYPE);
 
     try {
-      component.create(xo);
+      underTest.create(xo);
       fail();
     }
     catch (ConstraintViolationException e) {
@@ -116,7 +159,7 @@ public class SelectorComponentTest
     xo.setType("jexl");
 
     try {
-      component.update(xo);
+      underTest.update(xo);
       fail();
     }
     catch (ConstraintViolationException e) {
@@ -132,7 +175,9 @@ public class SelectorComponentTest
     xo.setType(CselSelector.TYPE);
 
     try {
-      component.update(xo);
+      // doThrow(new ConstraintViolationException("Invalid CSEL expression", emptySet()))
+      // .when(selectorFactory).validateSelector(eq(CselSelector.TYPE), anyString());
+      underTest.update(xo);
       fail();
     }
     catch (ConstraintViolationException e) {
@@ -149,6 +194,6 @@ public class SelectorComponentTest
     expectedException.expect(ConstraintViolationException.class);
     expectedException.expectMessage("a message");
 
-    component.remove("someSelector");
+    underTest.remove("someSelector");
   }
 }

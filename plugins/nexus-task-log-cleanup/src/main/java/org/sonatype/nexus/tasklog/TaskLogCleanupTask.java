@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.tasklog;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.logging.task.TaskLogging;
 import org.sonatype.nexus.scheduling.Cancelable;
@@ -21,14 +20,18 @@ import org.sonatype.nexus.scheduling.TaskSupport;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.logging.task.TaskLogType.NEXUS_LOG_ONLY;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Background task (hidden from users) that cleans up old log files.
  *
  * @since 3.5
  */
-@Named
+@Component
 @TaskLogging(NEXUS_LOG_ONLY)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class TaskLogCleanupTask
     extends TaskSupport
     implements Cancelable

@@ -53,17 +53,17 @@ public class EhCacheManagerProviderTest
   @Test
   public void basicLifecycle() throws Exception {
     // get should return non-null
-    CacheManager cacheManager = underTest.get();
+    CacheManager cacheManager = underTest.getObject();
     assertThat(cacheManager, notNullValue());
 
     // repeated get should return same object
-    CacheManager cacheManager2 = underTest.get();
+    CacheManager cacheManager2 = underTest.getObject();
     assertThat(cacheManager2, is(cacheManager));
 
     // after stop get should fail
     underTest.stop();
     try {
-      underTest.get();
+      underTest.getObject();
       fail();
     }
     catch (IllegalStateException e) {
@@ -75,7 +75,7 @@ public class EhCacheManagerProviderTest
   @Test
   @Ignore("Disabled due to https://github.com/ehcache/ehcache-jcache/issues/40")
   public void preconfiguredCacheWithEternal() {
-    CacheManager cacheManager = underTest.get();
+    CacheManager cacheManager = underTest.getObject();
     log(cacheManager);
     assertThat(cacheManager, notNullValue());
 

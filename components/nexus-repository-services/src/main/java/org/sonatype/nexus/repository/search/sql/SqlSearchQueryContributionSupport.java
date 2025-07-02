@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.repository.rest.SearchMapping;
@@ -82,8 +82,7 @@ public abstract class SqlSearchQueryContributionSupport
             .map(tokens -> tokenize(exact, tokens))
             .map(TermCollection::create)
             .map(terms -> new SqlPredicate(EQ, field.get(), terms))
-            .collect(Collectors.toList())
-        )
+            .collect(Collectors.toList()))
         .map(expressions -> SqlClause.create(OR, expressions));
   }
 
@@ -102,7 +101,7 @@ public abstract class SqlSearchQueryContributionSupport
 
     StringBuilder token = new StringBuilder();
     boolean quoted = false;
-    for (int i=0; i<chars.length; i++) {
+    for (int i = 0; i < chars.length; i++) {
       char c = chars[i];
       if (c == '\\') {
         token.append(c);
@@ -154,7 +153,7 @@ public abstract class SqlSearchQueryContributionSupport
     boolean quoted = false;
     boolean terminated = false;
     boolean terminalWildcard = false;
-    for (int i=0; i<chars.length; i++) {
+    for (int i = 0; i < chars.length; i++) {
       char c = chars[i];
       if (c == '\\') {
         if (i + 1 < chars.length) {

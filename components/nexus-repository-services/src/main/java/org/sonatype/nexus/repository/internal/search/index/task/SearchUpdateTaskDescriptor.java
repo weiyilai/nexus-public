@@ -12,14 +12,14 @@
  */
 package org.sonatype.nexus.repository.internal.search.index.task;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * Task descriptor for {@link SearchUpdateTask}.
@@ -27,7 +27,7 @@ import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
  * @since 3.37
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class SearchUpdateTaskDescriptor
     extends TaskDescriptorSupport
@@ -44,8 +44,7 @@ public class SearchUpdateTaskDescriptor
         SearchUpdateTask.class,
         messages.name(),
         NOT_VISIBLE,
-        NOT_EXPOSED
-    );
+        NOT_EXPOSED);
   }
 
   private interface Messages

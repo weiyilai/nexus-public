@@ -12,12 +12,15 @@
  */
 package org.sonatype.nexus.repository.application.scan;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 
-@Named(DefaultRepositoryApplicationScanSupport.DEFAULT)
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+@Component
+@Qualifier(DefaultRepositoryApplicationScanSupport.DEFAULT)
 @Singleton
 public class DefaultRepositoryApplicationScanSupport
     implements RepositoryApplicationScanSupport

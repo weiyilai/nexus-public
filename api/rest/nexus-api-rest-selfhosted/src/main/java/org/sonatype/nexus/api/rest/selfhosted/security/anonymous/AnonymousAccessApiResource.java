@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.security.anonymous;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;

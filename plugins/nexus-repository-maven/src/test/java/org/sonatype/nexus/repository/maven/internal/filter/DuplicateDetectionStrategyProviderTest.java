@@ -48,12 +48,12 @@ public class DuplicateDetectionStrategyProviderTest
   @Test
   public void shouldReturnBloomStrategy() throws Exception {
     DuplicateDetectionStrategy<Record> strategy = new DuplicateDetectionStrategyProvider(applicationDirectories,
-        "BLOOM", MAX_HEAP_GB, MAX_DISK_SIZE_GB).get();
+        "BLOOM", MAX_HEAP_GB, MAX_DISK_SIZE_GB).getObject();
 
     assertThat(strategy, is(instanceOf(BloomFilterDuplicateDetectionStrategy.class)));
 
     DuplicateDetectionStrategy<Record> strategyLowerCase = new DuplicateDetectionStrategyProvider(
-        applicationDirectories, "bloom", MAX_HEAP_GB, MAX_DISK_SIZE_GB).get();
+        applicationDirectories, "bloom", MAX_HEAP_GB, MAX_DISK_SIZE_GB).getObject();
 
     assertThat(strategyLowerCase, is(instanceOf(BloomFilterDuplicateDetectionStrategy.class)));
   }
@@ -62,13 +62,13 @@ public class DuplicateDetectionStrategyProviderTest
   public void shouldReturnDiskStrategy() throws Exception {
     DuplicateDetectionStrategy<Record> strategy = new DuplicateDetectionStrategyProvider(applicationDirectories, "DISK",
         MAX_HEAP_GB, MAX_DISK_SIZE_GB)
-        .get();
+            .getObject();
 
     assertThat(strategy, is(instanceOf(DiskBackedDuplicateDetectionStrategy.class)));
 
     DuplicateDetectionStrategy<Record> strategyLowerCase = new DuplicateDetectionStrategyProvider(
         applicationDirectories, "disk", MAX_HEAP_GB, MAX_DISK_SIZE_GB)
-        .get();
+            .getObject();
 
     assertThat(strategyLowerCase, is(instanceOf(DiskBackedDuplicateDetectionStrategy.class)));
   }
@@ -77,13 +77,13 @@ public class DuplicateDetectionStrategyProviderTest
   public void shouldReturnInMemoryStrategy() throws Exception {
     DuplicateDetectionStrategy<Record> strategy = new DuplicateDetectionStrategyProvider(applicationDirectories, "HASH",
         MAX_HEAP_GB, MAX_DISK_SIZE_GB)
-        .get();
+            .getObject();
 
     assertThat(strategy, is(instanceOf(HashBasedDuplicateDetectionStrategy.class)));
 
     DuplicateDetectionStrategy<Record> strategyLowerCase = new DuplicateDetectionStrategyProvider(
         applicationDirectories, "hash", MAX_HEAP_GB, MAX_DISK_SIZE_GB)
-        .get();
+            .getObject();
 
     assertThat(strategyLowerCase, is(instanceOf(HashBasedDuplicateDetectionStrategy.class)));
   }
@@ -92,7 +92,7 @@ public class DuplicateDetectionStrategyProviderTest
   public void shouldFallBackToBloomForUnknownStrategy() throws Exception {
     DuplicateDetectionStrategy<Record> strategy = new DuplicateDetectionStrategyProvider(applicationDirectories,
         "unknown", MAX_HEAP_GB, MAX_DISK_SIZE_GB)
-        .get();
+            .getObject();
 
     assertThat(strategy, is(instanceOf(BloomFilterDuplicateDetectionStrategy.class)));
   }

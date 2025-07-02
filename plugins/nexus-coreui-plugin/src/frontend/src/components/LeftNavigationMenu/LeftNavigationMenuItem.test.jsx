@@ -100,7 +100,7 @@ describe('LeftNavigationMenuItem', () => {
 
   function getDefaultActiveBundleState() {
     return {
-      'org.sonatype.nexus.plugins.nexus-coreui-plugin': true,
+      'nexus-coreui-plugin': true,
     };
   }
 

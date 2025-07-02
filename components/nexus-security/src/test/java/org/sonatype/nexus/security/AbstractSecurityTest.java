@@ -14,108 +14,64 @@ package org.sonatype.nexus.security;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-
-import javax.cache.CacheManager;
-import javax.inject.Inject;
-import javax.servlet.ServletContext;
 
 import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.goodies.testsupport.TestUtil;
+import org.sonatype.nexus.bootstrap.security.WebSecurityConfiguration;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
+import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.node.NodeAccess;
+import org.sonatype.nexus.crypto.secrets.SecretsStore;
+import org.sonatype.nexus.security.AbstractSecurityTest.TestSecurityConfigurationMocks;
 import org.sonatype.nexus.security.anonymous.AnonymousManager;
 import org.sonatype.nexus.security.config.PreconfiguredSecurityConfigurationSource;
 import org.sonatype.nexus.security.config.SecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityConfigurationSource;
 import org.sonatype.nexus.security.internal.AuthorizingRealmImpl;
+import org.sonatype.nexus.security.realm.MemoryRealmConfigurationStore;
 import org.sonatype.nexus.security.realm.RealmConfiguration;
+import org.sonatype.nexus.security.realm.RealmConfigurationStore;
 import org.sonatype.nexus.security.realm.TestRealmConfiguration;
 import org.sonatype.nexus.security.user.UserManager;
 import org.sonatype.nexus.testcommon.event.SimpleEventManager;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Key;
-import com.google.inject.Module;
-import com.google.inject.name.Names;
 import org.apache.shiro.util.ThreadContext;
-import org.eclipse.sisu.inject.BeanLocator;
-import org.eclipse.sisu.space.BeanScanning;
-import org.eclipse.sisu.space.SpaceModule;
-import org.eclipse.sisu.space.URLClassSpace;
-import org.eclipse.sisu.wire.WireModule;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.BeanFactoryAnnotationUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScan.Filter;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
+@SpringBootTest
+@ContextConfiguration(classes = TestSecurityConfigurationMocks.class)
+@ComponentScan(basePackages = "org.sonatype.nexus",
+    excludeFilters = @Filter(type = FilterType.REGEX, pattern = ".*ManagedJetty"))
+@Import({org.sonatype.nexus.bootstrap.security.SecurityConfiguration.class, WebSecurityConfiguration.class})
 public abstract class AbstractSecurityTest
-  extends TestSupport
+    extends TestSupport
 {
-  protected final TestUtil util = new TestUtil(this);
+  @Autowired
+  protected ApplicationContext applicationContext;
 
-  @Inject
-  private BeanLocator beanLocator;
-
-  @Before
-  public final void doSetUp() throws Exception {
-    List<Module> modules = new ArrayList<>();
-
-    customizeModules(modules);
-    modules.add(new SpaceModule(new URLClassSpace(getClass().getClassLoader()), BeanScanning.INDEX));
-    Guice.createInjector(new WireModule(modules));
-
-    setUp();
-  }
-
-  @After
-  public final void doTearDown() throws Exception {
-    tearDown();
-  }
-
-  protected void customizeModules(List<Module> modules) {
-    modules.add(new AbstractModule()
-    {
-      @Override
-      protected void configure() {
-        install(new WebSecurityModule(mock(ServletContext.class)));
-
-        bind(SecurityConfigurationSource.class).annotatedWith(Names.named("default")).toInstance(
-            new PreconfiguredSecurityConfigurationSource(initialSecurityConfiguration()));
-
-        RealmConfiguration realmConfiguration = new TestRealmConfiguration();
-        realmConfiguration.setRealmNames(
-            new ArrayList<>(Arrays.asList("MockRealmA", "MockRealmB", "MockRealmC", AuthorizingRealmImpl.NAME)));
-        bind(RealmConfiguration.class).annotatedWith(Names.named("initial")).toInstance(realmConfiguration);
-
-        bind(ApplicationDirectories.class).toInstance(mock(ApplicationDirectories.class));
-        bind(NodeAccess.class).toInstance(mock(NodeAccess.class));
-        bind(AnonymousManager.class).toInstance(mock(AnonymousManager.class));
-        bind(EventManager.class).toInstance(getEventManager());
-
-        requestInjection(AbstractSecurityTest.this);
-      }
-    });
-  }
-
-  protected EventManager getEventManager() {
-    return new SimpleEventManager();
-  }
-
-  protected <T> T lookup(Class<T> role) {
-    return beanLocator.locate(Key.get(role)).iterator().next().getValue();
-  }
-
-  protected <T> T lookup(Class<T> role, String hint) {
-    return beanLocator.locate(Key.get(role, Names.named(hint))).iterator().next().getValue();
-  }
-
+  @BeforeEach
   protected void setUp() throws Exception {
     getSecuritySystem().start();
   }
 
+  @AfterEach
   protected void tearDown() throws Exception {
     try {
       getSecuritySystem().stop();
@@ -124,14 +80,16 @@ public abstract class AbstractSecurityTest
       util.getLog().warn("Failed to stop security-system", e);
     }
 
-    try {
-      lookup(CacheManager.class).close();
-    }
-    catch (Exception e) {
-      util.getLog().warn("Failed to shutdown cache-manager", e);
-    }
-
     ThreadContext.remove();
+  }
+
+  protected <T> T lookup(final Class<T> role) {
+    return applicationContext.getBean(role);
+  }
+
+  protected <T> T lookup(final Class<T> role, final String hint) {
+    return BeanFactoryAnnotationUtils.qualifiedBeanOfType(applicationContext.getAutowireCapableBeanFactory(), role,
+        hint);
   }
 
   protected SecuritySystem getSecuritySystem() {
@@ -142,11 +100,70 @@ public abstract class AbstractSecurityTest
     return lookup(UserManager.class);
   }
 
-  protected SecurityConfiguration initialSecurityConfiguration() {
-    return BaseSecurityConfig.get();
-  }
-
   protected final SecurityConfiguration getSecurityConfiguration() {
     return lookup(SecurityConfigurationSource.class, "default").getConfiguration();
+  }
+
+  public static class BaseSecurityConfiguration
+  {
+    @Qualifier("default")
+    @Primary
+    @Bean
+    public SecurityConfigurationSource securityConfigurationSource() {
+      return new PreconfiguredSecurityConfigurationSource(BaseSecurityConfig.get());
+    }
+  }
+
+  @Configuration
+  public static class TestSecurityConfigurationMocks
+  {
+    @Primary
+    @Bean
+    public EventManager eventManager() {
+      return spy(new SimpleEventManager());
+    }
+
+    @Primary
+    @Bean
+    public AnonymousManager anonymousManager() {
+      return mock(AnonymousManager.class);
+    }
+
+    @Qualifier("initial")
+    @Primary
+    @Bean
+    public RealmConfiguration realmConfiguration() {
+      RealmConfiguration realmConfiguration = new TestRealmConfiguration();
+      realmConfiguration.setRealmNames(
+          new ArrayList<>(Arrays.asList("MockRealmA", "MockRealmB", "MockRealmC", AuthorizingRealmImpl.NAME)));
+      return realmConfiguration;
+    }
+
+    @Primary
+    @Bean
+    public NodeAccess nodeAccess() {
+      return mock(NodeAccess.class);
+    }
+
+    @Primary
+    @Bean
+    public ApplicationDirectories applicationDirectories() {
+      return mock(ApplicationDirectories.class);
+    }
+
+    @Bean
+    public DatabaseCheck databaseCheck() {
+      return mock(DatabaseCheck.class);
+    }
+
+    @Bean
+    public SecretsStore secrestsStore() {
+      return mock(SecretsStore.class);
+    }
+
+    @Bean
+    RealmConfigurationStore memoryRealmConfigurationStore() {
+      return new MemoryRealmConfigurationStore();
+    }
   }
 }

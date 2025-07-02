@@ -15,130 +15,152 @@ package org.sonatype.nexus.repository.content.store;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.repository.content.Asset;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test {@link AssetDAO} with component entity versioning
  */
-public class VersionedAssetDAOTest
+class VersionedAssetDAOTest
     extends AssetDAOTestSupport
 {
-  @Before
-  public void setupContent() {
+  @BeforeEach
+  void setupContent() {
     initialiseContent(true);
   }
 
+  @Override
   @Test
-  public void testCrudOperations() throws InterruptedException {
+  protected void testCrudOperations() throws InterruptedException {
     super.testCrudOperations();
   }
 
+  @Override
   @Test
-  public void testLastDownloaded() throws InterruptedException {
+  protected void testLastDownloaded() throws InterruptedException {
     super.testLastDownloaded();
   }
 
+  @Override
   @Test
-  public void testAttachingBlobs() throws InterruptedException {
+  protected void testAttachingBlobs() throws InterruptedException {
     super.testAttachingBlobs();
   }
 
+  @Override
   @Test
-  public void testBrowseComponentAssets() {
+  protected void testBrowseComponentAssets() {
     super.testBrowseComponentAssets();
   }
 
+  @Override
   @Test
-  public void testContinuationBrowsing() {
+  protected void testContinuationBrowsing() {
     super.testContinuationBrowsing();
   }
 
+  @Override
   @Test
-  public void testFlaggedBrowsing() {
+  protected void testFlaggedBrowsing() {
     super.testFlaggedBrowsing();
   }
 
+  @Override
   @Test
-  public void testReadPathTest() {
+  protected void testReadPathTest() {
     super.testReadPathTest();
   }
 
+  @Override
   @Test
-  public void testDeleteAllAssets() {
+  protected void testDeleteAllAssets() {
     super.testDeleteAllAssets();
   }
 
+  @Override
   @Test
-  public void testReadPaths() {
+  protected void testReadPaths() {
     super.testReadPaths();
   }
 
+  @Override
   @Test
-  public void testPurgeOperation() {
+  protected void testPurgeOperation() {
     super.testPurgeOperation();
   }
 
+  @Override
   @Test
-  public void testRoundTrip() {
+  protected void testRoundTrip() {
     super.testRoundTrip();
   }
 
+  @Override
   @Test
-  public void testBrowseAssetsInRepositories() {
+  protected void testBrowseAssetsInRepositories() {
     super.testBrowseAssetsInRepositories();
   }
 
+  @Override
   @Test
-  public void testBrowseEagerAssetsInRepository() {
+  protected void testBrowseEagerAssetsInRepository() {
     super.testBrowseEagerAssetsInRepository();
   }
 
+  @Override
   @Test
-  public void testSetLastDownloaded() {
+  protected void testSetLastDownloaded() {
     super.testSetLastDownloaded();
   }
 
+  @Override
   @Test
-  public void testLastUpdated() {
+  protected void testLastUpdated() {
     super.testLastUpdated();
   }
 
+  @Override
   @Test
-  public void testFilterClauseIsolation() {
+  protected void testFilterClauseIsolation() {
     super.testFilterClauseIsolation();
   }
 
+  @Override
   @Test
-  public void testFindByBlobRef() throws InterruptedException {
+  protected void testFindByBlobRef() throws InterruptedException {
     super.testFindByBlobRef();
   }
 
+  @Override
   @Test
-  public void testFindByComponentIds() {
+  protected void testFindByComponentIds() {
     super.testFindByComponentIds();
   }
 
+  @Override
   @Test
-  public void testFindAddedToRepository() {
+  protected void testFindAddedToRepository() {
     super.testFindAddedToRepository();
   }
 
+  @Override
   @Test
-  public void testFindAddedToRepositoryTruncatesToMilliseconds() {
+  protected void testFindAddedToRepositoryTruncatesToMilliseconds() {
     super.testFindAddedToRepositoryTruncatesToMilliseconds();
   }
 
+  @Override
   @Test
-  public void testDeleteByPaths() {
+  protected void testDeleteByPaths() {
     super.testDeleteByPaths();
   }
 
+  @Override
   @Test
-  @Ignore
+  @Disabled("NEXUS-46837")
   // Disabled pending fix: https://sonatype.atlassian.net/browse/NEXUS-46837
-  public void testAssetRecordsExist() {
+  protected void testAssetRecordsExist() {
     super.testAssetRecordsExist();
   }
 

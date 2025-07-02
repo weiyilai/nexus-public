@@ -19,10 +19,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.event.EventAware;
@@ -57,11 +56,12 @@ import static org.quartz.impl.matchers.GroupMatcher.jobGroupEquals;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
 import static org.sonatype.nexus.quartz.internal.task.QuartzTaskJobListener.listenerName;
+import org.springframework.stereotype.Component;
 
 /**
  * Quartz {@link SchedulerSPI}.
  */
-@Named
+@Component
 @ManagedLifecycle(phase = SERVICES)
 @Singleton
 public class DatastoreQuartzSchedulerSPI
@@ -78,7 +78,7 @@ public class DatastoreQuartzSchedulerSPI
       final Provider<Scheduler> schedulerProvider,
       final LastShutdownTimeService lastShutdownTimeService,
       final DatabaseStatusDelayedExecutor delayedExecutor,
-      @Named("${nexus.quartz.recoverInterruptedJobs:-true}") @Value("${nexus.quartz.recoverInterruptedJobs:true}") final boolean recoverInterruptedJobs)
+      @Value("${nexus.quartz.recoverInterruptedJobs:true}") final boolean recoverInterruptedJobs)
   {
     super(eventManager, nodeAccess, jobStoreProvider, schedulerProvider, lastShutdownTimeService, delayedExecutor,
         recoverInterruptedJobs);

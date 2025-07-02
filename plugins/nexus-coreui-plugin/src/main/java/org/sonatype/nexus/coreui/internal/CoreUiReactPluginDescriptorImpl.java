@@ -15,26 +15,26 @@ package org.sonatype.nexus.coreui.internal;
 import java.util.List;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.ui.UiPluginDescriptor;
 import org.sonatype.nexus.ui.UiUtil;
 
 import org.eclipse.sisu.Priority;
-import org.eclipse.sisu.space.ClassSpace;
-
-import static java.util.Arrays.asList;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link UiPluginDescriptor} for {@code nexus-coreui-plugin} react code.
  *
  * @since 3.22
  */
-@Named
+@Component
 @Singleton
 @Priority(Integer.MAX_VALUE - 100) // after nexus-rapture
+@Order(Ordered.HIGHEST_PRECEDENCE + 100)
 public class CoreUiReactPluginDescriptorImpl
     implements UiPluginDescriptor
 {
@@ -45,10 +45,10 @@ public class CoreUiReactPluginDescriptorImpl
   private final List<String> styles;
 
   @Inject
-  public CoreUiReactPluginDescriptorImpl(final ClassSpace space) {
-    scripts = asList(UiUtil.getPathForFile("nexus-coreui-bundle.js", space));
-    debugScripts = asList(UiUtil.getPathForFile("nexus-coreui-bundle.debug.js", space));
-    styles = asList(UiUtil.getPathForFile("nexus-coreui-bundle.css", space));
+  public CoreUiReactPluginDescriptorImpl(final UiUtil uiUtil) {
+    scripts = List.of(uiUtil.getPathForFile("nexus-coreui-bundle.js"));
+    debugScripts = List.of(uiUtil.getPathForFile("nexus-coreui-bundle.debug.js"));
+    styles = List.of(uiUtil.getPathForFile("nexus-coreui-bundle.css"));
   }
 
   @Override

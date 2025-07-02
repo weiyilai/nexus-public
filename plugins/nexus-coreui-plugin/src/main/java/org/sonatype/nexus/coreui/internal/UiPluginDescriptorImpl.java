@@ -12,22 +12,25 @@
  */
 package org.sonatype.nexus.coreui.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.rapture.UiPluginDescriptor;
 import org.sonatype.nexus.rapture.UiPluginDescriptorSupport;
 
 import org.eclipse.sisu.Priority;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 /**
  * Rapture {@link UiPluginDescriptor} for {@code nexus-coreui-plugin}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @Priority(Integer.MAX_VALUE - 100) // after nexus-rapture
+@Order(Ordered.HIGHEST_PRECEDENCE + 100)
 public class UiPluginDescriptorImpl
     extends UiPluginDescriptorSupport
 {

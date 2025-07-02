@@ -14,12 +14,15 @@ package org.sonatype.nexus.rapture.internal.settings;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.capability.CapabilitySupport;
 import org.sonatype.nexus.capability.Condition;
 import org.sonatype.nexus.rapture.UiSettingsManager;
+
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -28,7 +31,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named(SettingsCapabilityDescriptor.TYPE_ID)
+@Component(SettingsCapabilityDescriptor.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SettingsCapability
     extends CapabilitySupport<SettingsCapabilityConfiguration>
 {

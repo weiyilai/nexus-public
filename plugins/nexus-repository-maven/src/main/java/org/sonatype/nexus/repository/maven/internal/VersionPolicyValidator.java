@@ -12,15 +12,17 @@
  */
 package org.sonatype.nexus.repository.maven.internal;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.repository.maven.MavenPath;
 import org.sonatype.nexus.repository.maven.VersionPolicy;
 
 import static org.sonatype.nexus.repository.maven.internal.Constants.METADATA_FILENAME;
 import static org.sonatype.nexus.repository.maven.internal.Constants.SNAPSHOT_VERSION_SUFFIX;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class VersionPolicyValidator
 {
   private static final String METADATA_SNAPSHOT_PATH_SUFFIX = SNAPSHOT_VERSION_SUFFIX + "/" + METADATA_FILENAME;

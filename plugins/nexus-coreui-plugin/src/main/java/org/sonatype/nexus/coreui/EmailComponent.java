@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.coreui;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Email;
@@ -35,13 +34,14 @@ import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Email {@link DirectComponent}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Email")
 public class EmailComponent
@@ -78,8 +78,7 @@ public class EmailComponent
         value.isStartTlsRequired(),
         value.isSslOnConnectEnabled(),
         value.isSslCheckServerIdentityEnabled(),
-        value.isNexusTrustStoreEnabled()
-    );
+        value.isNexusTrustStoreEnabled());
   }
 
   @DirectMethod
@@ -118,8 +117,7 @@ public class EmailComponent
   @Validate
   public void sendVerification(
       @NotNull @Valid final EmailConfigurationXO configuration,
-      @NotNull @Email final String address)
-      throws EmailException
+      @NotNull @Email final String address) throws EmailException
   {
     emailManager.sendVerification(convert(configuration), configuration.getPassword(), address);
   }

@@ -17,7 +17,7 @@ import org.sonatype.nexus.crypto.internal.PbeCipherFactoryImpl;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class EncryptDecryptServiceTest
 {

@@ -15,9 +15,8 @@ package org.sonatype.nexus.coreui.internal;
 import java.io.IOException;
 import java.util.Collection;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.goodies.common.ComponentSupport;
@@ -32,14 +31,15 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Iterables;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.7
  */
-@Named
+@Component
 @Singleton
 public class UploadService
-  extends ComponentSupport
+    extends ComponentSupport
 {
   private UploadManager uploadManager;
 
@@ -50,9 +50,10 @@ public class UploadService
   private static final String NPM_FORMAT = "npm";
 
   @Inject
-  public UploadService(final RepositoryManager repositoryManager,
-                       final UploadManager uploadManager,
-                       final RepositoryCacheInvalidationService repositoryCacheInvalidationService)
+  public UploadService(
+      final RepositoryManager repositoryManager,
+      final UploadManager uploadManager,
+      final RepositoryCacheInvalidationService repositoryCacheInvalidationService)
   {
     this.uploadManager = checkNotNull(uploadManager);
     this.repositoryManager = checkNotNull(repositoryManager);

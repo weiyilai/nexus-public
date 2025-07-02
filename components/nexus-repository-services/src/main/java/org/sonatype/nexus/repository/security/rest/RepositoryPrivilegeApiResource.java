@@ -12,9 +12,9 @@
  */
 package org.sonatype.nexus.repository.security.rest;
 
-import java.util.Map;
+import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -46,8 +46,9 @@ public class RepositoryPrivilegeApiResource
     implements Resource, RepositoryPrivilegeApiResourceDoc
 {
   @Inject
-  public RepositoryPrivilegeApiResource(final SecuritySystem securitySystem,
-                                        final Map<String, PrivilegeDescriptor> privilegeDescriptors)
+  public RepositoryPrivilegeApiResource(
+      final SecuritySystem securitySystem,
+      final List<PrivilegeDescriptor> privilegeDescriptors)
   {
     super(securitySystem, privilegeDescriptors);
   }
@@ -66,8 +67,9 @@ public class RepositoryPrivilegeApiResource
   @RequiresAuthentication
   @RequiresPermissions("nexus:privileges:update")
   @Path("repository-admin/{privilegeName}")
-  public void updatePrivilege(@PathParam("privilegeName") final String privilegeName,
-                              final ApiPrivilegeRepositoryAdminRequest privilege)
+  public void updatePrivilege(
+      @PathParam("privilegeName") final String privilegeName,
+      final ApiPrivilegeRepositoryAdminRequest privilege)
   {
     doUpdate(privilegeName, RepositoryAdminPrivilegeDescriptor.TYPE, privilege);
   }
@@ -86,8 +88,9 @@ public class RepositoryPrivilegeApiResource
   @RequiresAuthentication
   @RequiresPermissions("nexus:privileges:update")
   @Path("repository-view/{privilegeName}")
-  public void updatePrivilege(@PathParam("privilegeName") final String privilegeName,
-                              final ApiPrivilegeRepositoryViewRequest privilege)
+  public void updatePrivilege(
+      @PathParam("privilegeName") final String privilegeName,
+      final ApiPrivilegeRepositoryViewRequest privilege)
   {
     doUpdate(privilegeName, RepositoryViewPrivilegeDescriptor.TYPE, privilege);
   }
@@ -106,8 +109,9 @@ public class RepositoryPrivilegeApiResource
   @RequiresAuthentication
   @RequiresPermissions("nexus:privileges:update")
   @Path("repository-content-selector/{privilegeName}")
-  public void updatePrivilege(@PathParam("privilegeName") final String privilegeName,
-                              final ApiPrivilegeRepositoryContentSelectorRequest privilege)
+  public void updatePrivilege(
+      @PathParam("privilegeName") final String privilegeName,
+      final ApiPrivilegeRepositoryContentSelectorRequest privilege)
   {
     doUpdate(privilegeName, RepositoryContentSelectorPrivilegeDescriptor.TYPE, privilege);
   }

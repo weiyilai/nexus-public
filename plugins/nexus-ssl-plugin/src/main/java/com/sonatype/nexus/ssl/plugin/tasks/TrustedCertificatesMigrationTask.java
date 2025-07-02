@@ -12,21 +12,27 @@
  */
 package com.sonatype.nexus.ssl.plugin.tasks;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.logging.task.TaskLogging;
 import org.sonatype.nexus.scheduling.Cancelable;
 import org.sonatype.nexus.scheduling.TaskSupport;
 
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.logging.task.TaskLogType.NEXUS_LOG_ONLY;
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
 /**
  * Background task (hidden from users) that migrate trusted certificates from key_store_data to trusted_ssl_certificate.
  *
  */
-@Named
+@Lazy
+@Scope(SCOPE_PROTOTYPE)
+@Component
 @TaskLogging(NEXUS_LOG_ONLY)
 public class TrustedCertificatesMigrationTask
     extends TaskSupport

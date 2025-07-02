@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.coreui;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -49,11 +48,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Selector {@link DirectComponent}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Selector")
 public class SelectorComponent

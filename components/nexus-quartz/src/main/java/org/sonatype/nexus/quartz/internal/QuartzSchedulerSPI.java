@@ -28,9 +28,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.event.EventHelper;
@@ -149,7 +148,7 @@ public abstract class QuartzSchedulerSPI
       final Provider<Scheduler> schedulerProvider,
       final LastShutdownTimeService lastShutdownTimeService,
       final DatabaseStatusDelayedExecutor delayedExecutor,
-      @Named("${nexus.quartz.recoverInterruptedJobs:-true}") @Value("${nexus.quartz.recoverInterruptedJobs:true}") final boolean recoverInterruptedJobs)
+      @Value("${nexus.quartz.recoverInterruptedJobs:true}") final boolean recoverInterruptedJobs)
   {
     this.eventManager = checkNotNull(eventManager);
     this.nodeAccess = checkNotNull(nodeAccess);

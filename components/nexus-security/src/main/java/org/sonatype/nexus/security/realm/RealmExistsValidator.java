@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.security.realm;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
@@ -22,13 +21,17 @@ import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.realm.Realm;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link RealmExists} validator.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RealmExistsValidator
     extends ConstraintValidatorSupport<RealmExists, String>
 {

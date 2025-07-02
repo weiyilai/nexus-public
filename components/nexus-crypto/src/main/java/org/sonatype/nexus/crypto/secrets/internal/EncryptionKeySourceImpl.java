@@ -17,9 +17,8 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.secrets.EncryptionKeyValidator;
@@ -32,11 +31,14 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.SECRETS_FILE;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 /**
  * Default implementation for {@link EncryptionKeySource} This implementation uses a JSON file to read the secret keys
  * expected to be used in nexus
  */
-@Named
+@Component
 @Singleton
 public class EncryptionKeySourceImpl
     extends ComponentSupport
@@ -54,7 +56,7 @@ public class EncryptionKeySourceImpl
 
   @Inject
   public EncryptionKeySourceImpl(
-      @Nullable @Named("${" + SECRETS_FILE + "}") final String secretsFilePath)
+      @Nullable @Value("${" + SECRETS_FILE + ":#{null}}") final String secretsFilePath)
   {
     this(secretsFilePath, JsonMapper.builder()
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -62,7 +64,7 @@ public class EncryptionKeySourceImpl
   }
 
   public EncryptionKeySourceImpl(
-      @Nullable @Named("${" + SECRETS_FILE + "}") final String secretsFilePath,
+      @Nullable @Value("${" + SECRETS_FILE + ":#{null}}") final String secretsFilePath,
       final ObjectMapper objectMapper)
   {
     this.objectMapper = objectMapper;

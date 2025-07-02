@@ -16,8 +16,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.fluent.FluentComponent;
@@ -29,6 +28,8 @@ import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.repository.maven.internal.search.Maven2SearchResultComponentGenerator;
 
 import static java.util.Comparator.reverseOrder;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Maven {@link ComponentFinder} that also includes all snapshots with the same base version.
@@ -36,11 +37,12 @@ import static java.util.Comparator.reverseOrder;
  * @since 3.26
  */
 @Singleton
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 public class Maven2ComponentFinder
     extends DefaultComponentFinder
 {
-  public static final Pattern SNAPSHOT_TIMESTAMP = Pattern.compile( "^(.*-)?([0-9]{8}\\.[0-9]{6}-[0-9]+)$" );
+  public static final Pattern SNAPSHOT_TIMESTAMP = Pattern.compile("^(.*-)?([0-9]{8}\\.[0-9]{6}-[0-9]+)$");
 
   @Override
   public Stream<FluentComponent> findComponentsByModel(
@@ -58,7 +60,8 @@ public class Maven2ComponentFinder
       String versionPrefix = version.replace("SNAPSHOT", "");
 
       // find timestamped versions that match the base version and fetch their components
-      return components.versions(namespace, name).stream()
+      return components.versions(namespace, name)
+          .stream()
           .filter(v -> v.startsWith(versionPrefix))
           .filter(v -> SNAPSHOT_TIMESTAMP.matcher(v).matches())
           .sorted(reverseOrder())

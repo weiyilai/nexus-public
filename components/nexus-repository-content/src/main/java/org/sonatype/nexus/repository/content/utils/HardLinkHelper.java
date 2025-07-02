@@ -21,9 +21,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.mime.MimeSupport;
@@ -36,13 +35,14 @@ import com.google.common.hash.HashCode;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.blobstore.api.BlobStore.BLOB_NAME_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.CONTENT_TYPE_HEADER;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.35
  * @deprecated please use the appropriate ingest methods on {@code StorageFacet} and {@code FluentBlobs}
  */
 @Deprecated
-@Named
+@Component
 @Singleton
 public class HardLinkHelper
 {
@@ -56,8 +56,10 @@ public class HardLinkHelper
   /**
    * Ingests a blob from a {@code content} via hard-linking.
    */
-  public Blob ingestHardLink(final Repository repository, final File content, final HashCode hashCodeSha1)
-      throws IOException
+  public Blob ingestHardLink(
+      final Repository repository,
+      final File content,
+      final HashCode hashCodeSha1) throws IOException
   {
     checkNotNull(repository);
     checkNotNull(content);
@@ -83,8 +85,7 @@ public class HardLinkHelper
       final Repository repository,
       final File content,
       final HashCode hashCodeSha1,
-      final String contentType)
-      throws IOException
+      final String contentType) throws IOException
   {
     checkNotNull(repository);
     checkNotNull(content);

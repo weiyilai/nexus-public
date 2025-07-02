@@ -14,9 +14,11 @@ package org.sonatype.nexus.coreui.internal.content;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.coreui.AssetXO;
 import org.sonatype.nexus.repository.Repository;
@@ -32,11 +34,16 @@ import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.repository.types.ProxyType;
 import org.sonatype.nexus.selector.SelectorFactory;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -45,9 +52,6 @@ public class ContentComponentHelperTest
 {
   @Mock
   MaintenanceService maintenanceService;
-
-  @Mock
-  Map<String, ComponentFinder> componentFinders;
 
   @Mock
   ComponentFinder componentFinder;
@@ -70,16 +74,29 @@ public class ContentComponentHelperTest
   @Mock
   Repository repository;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
+  @Before
+  public void setUp() {
+    mockedStatic = Mockito.mockStatic(QualifierUtil.class);
+    when(QualifierUtil.buildQualifierBeanMap(anyList()))
+        .thenReturn(Map.of("default", componentFinder));
+  }
+
+  @After
+  public void tearDown() {
+    mockedStatic.close();
+  }
+
   @Test
   public void toAssetXOTestHosted() {
 
     when(repositoryManager.get("maven-hosted")).thenReturn(repository);
     when(repository.getType()).thenReturn(new HostedType());
-    when(componentFinders.get("default")).thenReturn(componentFinder);
 
     ContentComponentHelper underTest = new ContentComponentHelper(
         maintenanceService,
-        componentFinders,
+        List.of(componentFinder),
         assetPermissionChecker,
         selectorFactory,
         repositoryManager
@@ -99,11 +116,10 @@ public class ContentComponentHelperTest
 
     when(repositoryManager.get("maven-hosted")).thenReturn(repository);
     when(repository.getType()).thenReturn(new ProxyType());
-    when(componentFinders.get("default")).thenReturn(componentFinder);
 
     ContentComponentHelper underTest = new ContentComponentHelper(
         maintenanceService,
-        componentFinders,
+        List.of(componentFinder),
         assetPermissionChecker,
         selectorFactory,
         repositoryManager

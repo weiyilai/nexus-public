@@ -15,9 +15,8 @@ package org.sonatype.nexus.coreui;
 import java.io.IOException;
 import java.util.Arrays;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -41,16 +40,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.softwarementors.extjs.djn.EncodingUtils.htmlEncode;
+import org.springframework.stereotype.Component;
 
 /*
  * Endpoint used by the Nexus RM UI for component uploads
  *
  * @since 3.16
  */
-@Named
+@Component
 @Singleton
 @Path(UploadResource.RESOURCE_PATH)
-public class UploadResource extends ComponentSupport implements Resource
+public class UploadResource
+    extends ComponentSupport
+    implements Resource
 {
   public static final String RESOURCE_PATH = "internal/ui/upload";
 
@@ -61,7 +63,11 @@ public class UploadResource extends ComponentSupport implements Resource
   private ObjectMapper objectMapper;
 
   @Inject
-  public UploadResource(final UploadService uploadService, final UploadConfiguration configuration, final ObjectMapper objectMapper) {
+  public UploadResource(
+      final UploadService uploadService,
+      final UploadConfiguration configuration,
+      final ObjectMapper objectMapper)
+  {
     this.uploadService = uploadService;
     this.configuration = configuration;
     this.objectMapper = objectMapper;
@@ -75,9 +81,9 @@ public class UploadResource extends ComponentSupport implements Resource
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
   @RequiresPermissions("nexus:component:create")
-  public String postComponent(@PathParam("repositoryName") final String repositoryName,
-                                @Context final HttpServletRequest request)
-      throws IOException
+  public String postComponent(
+      @PathParam("repositoryName") final String repositoryName,
+      @Context final HttpServletRequest request) throws IOException
   {
     try {
       if (!configuration.isEnabled()) {
@@ -101,9 +107,9 @@ public class UploadResource extends ComponentSupport implements Resource
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.TEXT_HTML)
   @RequiresPermissions("nexus:component:create")
-  public String postComponentWithHtmlResponse(@PathParam("repositoryName") final String repositoryName,
-                                                @Context final HttpServletRequest request)
-      throws IOException
+  public String postComponentWithHtmlResponse(
+      @PathParam("repositoryName") final String repositoryName,
+      @Context final HttpServletRequest request) throws IOException
   {
     return htmlWrap(postComponent(repositoryName, request));
   }

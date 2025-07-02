@@ -16,39 +16,50 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.sonatype.nexus.security.AbstractSecurityTest;
+import org.sonatype.nexus.security.config.SecurityContributorTest.SecurityContributorTestConfiguration;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
-import com.google.inject.name.Names;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class SecurityContributorTest
+@Import(SecurityContributorTestConfiguration.class)
+class SecurityContributorTest
     extends AbstractSecurityTest
 {
+  static class SecurityContributorTestConfiguration
+  {
+    @Qualifier("default")
+    @Primary
+    @Bean
+    SecurityConfigurationSource securityConfigurationSource() {
+      return new PreconfiguredSecurityConfigurationSource(InitialSecurityConfiguration.getConfiguration());
+    }
+
+    @Qualifier("s1")
+    @Bean
+    SecurityContributor testSecurityContributor1() {
+      return new TestSecurityContributor1();
+    }
+
+    @Qualifier("s2")
+    @Bean
+    SecurityContributor testSecurityContributor2() {
+      return new TestSecurityContributor2();
+    }
+  }
+
   private SecurityConfigurationManager manager;
 
-  @Override
-  protected MemorySecurityConfiguration initialSecurityConfiguration() {
-    return InitialSecurityConfiguration.getConfiguration();
-  }
-
-  @Override
-  protected void customizeModules(List<Module> modules) {
-    super.customizeModules(modules);
-    modules.add(new AbstractModule()
-    {
-      @Override
-      protected void configure() {
-        bind(SecurityContributor.class).annotatedWith(Names.named("s2")).to(TestSecurityContributor2.class);
-        bind(SecurityContributor.class).annotatedWith(Names.named("s1")).to(TestSecurityContributor1.class);
-      }
-    });
-  }
-
+  @BeforeEach
   @Override
   protected void setUp() throws Exception {
     super.setUp();
@@ -57,28 +68,28 @@ public class SecurityContributorTest
   }
 
   @Test
-  public void testRoleMerging() throws Exception {
+  void testRoleMerging() throws Exception {
     List<CRole> roles = manager.listRoles();
 
     CRole anon = manager.readRole("anon");
-    assertTrue("roles: " + anon.getRoles(), anon.getRoles().contains("other"));
-    assertTrue("roles: " + anon.getRoles(), anon.getRoles().contains("role2"));
-    assertEquals("roles: " + anon.getRoles(), 2, anon.getRoles().size());
+    assertTrue(anon.getRoles().contains("other"), "roles: " + anon.getRoles());
+    assertTrue(anon.getRoles().contains("role2"), "roles: " + anon.getRoles());
+    assertEquals(2, anon.getRoles().size(), "roles: " + anon.getRoles());
 
     assertTrue(anon.getPrivileges().contains("priv1"));
     assertTrue(anon.getPrivileges().contains("4-test"));
-    assertEquals("privs: " + anon.getPrivileges(), 2, anon.getPrivileges().size());
+    assertThat(anon.getPrivileges(), hasSize(2));
 
     assertEquals("Test Anon Role", anon.getName());
     assertEquals("Test Anon Role Description", anon.getDescription());
 
     CRole other = manager.readRole("other");
     assertTrue(other.getRoles().contains("role2"));
-    assertEquals("roles: " + other.getRoles(), 1, other.getRoles().size());
+    assertThat(other.getRoles(), hasSize(1));
 
     assertTrue(other.getPrivileges().contains("6-test"));
     assertTrue(other.getPrivileges().contains("priv2"));
-    assertEquals("privs: " + other.getPrivileges(), 2, other.getPrivileges().size());
+    assertThat(other.getPrivileges(), hasSize(2));
 
     assertEquals("Other Role", other.getName());
     assertEquals("Other Role Description", other.getDescription());
@@ -89,7 +100,7 @@ public class SecurityContributorTest
   }
 
   @Test
-  public void testPrivsMerging() throws Exception {
+  void testPrivsMerging() throws Exception {
     List<CPrivilege> privs = manager.listPrivileges();
 
     CPrivilege priv = manager.readPrivilege("1-test");
@@ -113,10 +124,10 @@ public class SecurityContributorTest
     assertNotNull(manager.readPrivilege("priv4"));
     assertNotNull(manager.readPrivilege("priv5"));
 
-    assertEquals("privs: " + this.privilegeListToStringList(privs), 10, privs.size());
+    assertThat(privs, hasSize(10));
   }
 
-  private List<String> privilegeListToStringList(List<CPrivilege> privs) {
+  private static List<String> privilegeListToStringList(final List<CPrivilege> privs) {
     List<String> ids = new ArrayList<String>();
 
     for (CPrivilege priv : privs) {

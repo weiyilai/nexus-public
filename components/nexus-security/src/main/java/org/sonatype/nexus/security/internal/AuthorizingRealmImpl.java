@@ -14,13 +14,14 @@ package org.sonatype.nexus.security.internal;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.security.role.RoleIdentifier;
 import org.sonatype.nexus.security.user.RoleMappingUserManager;
 import org.sonatype.nexus.security.user.UserManager;
@@ -37,9 +38,11 @@ import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.eclipse.sisu.Description;
+import org.sonatype.nexus.common.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Default {@link AuthorizingRealm}.
@@ -47,7 +50,8 @@ import org.slf4j.LoggerFactory;
  * This realm ONLY handles authorization.
  */
 @Singleton
-@Named(AuthorizingRealmImpl.NAME)
+@Component
+@Qualifier(AuthorizingRealmImpl.NAME)
 @Description("Local Authorizing Realm")
 public class AuthorizingRealmImpl
     extends AuthorizingRealm
@@ -64,13 +68,14 @@ public class AuthorizingRealmImpl
   private final Map<String, UserManager> userManagerMap;
 
   @Inject
-  public AuthorizingRealmImpl(final RealmSecurityManager realmSecurityManager,
-                              final UserManager userManager,
-                              final Map<String, UserManager> userManagerMap)
+  public AuthorizingRealmImpl(
+      final RealmSecurityManager realmSecurityManager,
+      final UserManager userManager,
+      final List<UserManager> userManagerList)
   {
     this.realmSecurityManager = realmSecurityManager;
     this.userManager = userManager;
-    this.userManagerMap = userManagerMap;
+    this.userManagerMap = QualifierUtil.buildQualifierBeanMap(userManagerList);
     HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher();
     credentialsMatcher.setHashAlgorithmName(Sha1Hash.ALGORITHM_NAME);
     setCredentialsMatcher(credentialsMatcher);

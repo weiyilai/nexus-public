@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.elasticsearch.internal.repository.selector;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.elasticsearch.PluginLocator;
 import org.sonatype.nexus.elasticsearch.internal.repository.query.SearchSubjectHelper;
@@ -25,8 +24,10 @@ import org.sonatype.nexus.repository.security.VariableResolverAdapterManager;
 import org.elasticsearch.plugins.Plugin;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Lazy;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link PluginLocator} for {@link ContentAuthPlugin}. Also responsible for setting some required objects into static
@@ -34,7 +35,7 @@ import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class ContentAuthPluginLocator
@@ -45,8 +46,8 @@ public class ContentAuthPluginLocator
       final ContentPermissionChecker contentPermissionChecker,
       final VariableResolverAdapterManager variableResolverAdapterManager,
       final SearchSubjectHelper searchSubjectHelper,
-      final RepositoryManager repositoryManager,
-      @Named("${nexus.elasticsearch.contentAuthSleep:-false}") @Value("${nexus.elasticsearch.contentAuthSleep:false}") final boolean contentAuthSleep)
+      @Lazy final RepositoryManager repositoryManager,
+      @Value("${nexus.elasticsearch.contentAuthSleep:false}") final boolean contentAuthSleep)
   {
     ContentAuthPlugin.setDependencies(contentPermissionChecker, variableResolverAdapterManager,
         searchSubjectHelper, repositoryManager, contentAuthSleep);

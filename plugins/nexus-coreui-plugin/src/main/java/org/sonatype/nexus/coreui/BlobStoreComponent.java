@@ -13,9 +13,8 @@
 package org.sonatype.nexus.coreui;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -32,6 +31,7 @@ import org.sonatype.nexus.blobstore.api.tasks.BlobStoreTaskService;
 import org.sonatype.nexus.blobstore.group.BlobStoreGroup;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuota;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.extdirect.DirectComponentSupport;
@@ -62,13 +62,14 @@ import static java.util.Collections.singletonList;
 import static org.sonatype.nexus.coreui.internal.blobstore.BlobStoreInternalResource.AZURE_CONFIG;
 import static org.sonatype.nexus.repository.internal.blobstore.BlobStoreConfigurationData.SECRET_ACCESS_KEY;
 import static org.sonatype.nexus.security.BreadActions.READ;
+import org.springframework.stereotype.Component;
 
 /**
  * BlobStore {@link org.sonatype.nexus.extdirect.DirectComponent}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Blobstore")
 public class BlobStoreComponent
@@ -101,7 +102,7 @@ public class BlobStoreComponent
       final BlobStoreManager blobStoreManager,
       final BlobStoreConfigurationStore store,
       final BlobStoreDescriptorProvider blobStoreDescriptorProvider,
-      final Map<String, BlobStoreQuota> quotaFactories,
+      final List<BlobStoreQuota> quotaFactoriesList,
       final ApplicationDirectories applicationDirectories,
       final RepositoryManager repositoryManager,
       final RepositoryPermissionChecker repositoryPermissionChecker,
@@ -110,7 +111,7 @@ public class BlobStoreComponent
     this.blobStoreManager = checkNotNull(blobStoreManager);
     this.store = checkNotNull(store);
     this.blobStoreDescriptorProvider = checkNotNull(blobStoreDescriptorProvider);
-    this.quotaFactories = checkNotNull(quotaFactories);
+    this.quotaFactories = QualifierUtil.buildQualifierBeanMap(checkNotNull(quotaFactoriesList));
     this.applicationDirectories = checkNotNull(applicationDirectories);
     this.repositoryManager = checkNotNull(repositoryManager);
     this.repositoryPermissionChecker = checkNotNull(repositoryPermissionChecker);

@@ -14,9 +14,8 @@ package org.sonatype.nexus.repository.security;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -38,11 +37,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import org.apache.shiro.authz.Permission;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_VALUE;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Repository admin {@link PrivilegeDescriptor}.
@@ -50,7 +51,8 @@ import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_
  * @see RepositoryAdminPermission
  * @since 3.0
  */
-@Named(RepositoryAdminPrivilegeDescriptor.TYPE)
+@Component
+@Qualifier(RepositoryAdminPrivilegeDescriptor.TYPE)
 @Singleton
 public class RepositoryAdminPrivilegeDescriptor
     extends RepositoryPrivilegeDescriptorSupport<ApiPrivilegeRepositoryAdmin, ApiPrivilegeRepositoryAdminRequest>
@@ -101,9 +103,9 @@ public class RepositoryAdminPrivilegeDescriptor
 
   @Inject
   public RepositoryAdminPrivilegeDescriptor(
-      final RepositoryManager repositoryManager,
+      @Lazy final RepositoryManager repositoryManager,
       final List<Format> formats,
-      @Named(REACT_PRIVILEGES_NAMED) @Value(REACT_PRIVILEGES_NAMED_VALUE) final boolean isReactPrivileges)
+      @Value(REACT_PRIVILEGES_NAMED_VALUE) final boolean isReactPrivileges)
   {
     super(TYPE, repositoryManager, formats);
     this.formFields = ImmutableList.of(

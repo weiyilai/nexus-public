@@ -12,18 +12,13 @@
  */
 package org.sonatype.nexus.repository.apt.datastore.internal.proxy;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.RecipeSupport;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.Type;
-import org.sonatype.nexus.repository.apt.datastore.AptContentFacet;
 import org.sonatype.nexus.repository.apt.AptFormat;
+import org.sonatype.nexus.repository.apt.datastore.AptContentFacet;
 import org.sonatype.nexus.repository.apt.internal.AptSecurityFacet;
 import org.sonatype.nexus.repository.apt.internal.snapshot.AptSnapshotHandler;
 import org.sonatype.nexus.repository.cache.NegativeCacheFacet;
@@ -50,6 +45,12 @@ import org.sonatype.nexus.repository.view.handlers.LastDownloadedHandler;
 import org.sonatype.nexus.repository.view.handlers.TimingHandler;
 import org.sonatype.nexus.repository.view.matchers.AlwaysMatcher;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
 import static org.sonatype.nexus.repository.http.HttpHandlers.notFound;
 
 /**
@@ -58,7 +59,8 @@ import static org.sonatype.nexus.repository.http.HttpHandlers.notFound;
  * @since 3.31
  */
 @AvailabilityVersion(from = "1.0")
-@Named(AptProxyRecipe.NAME)
+@Component
+@Qualifier(AptProxyRecipe.NAME)
 @Singleton
 public class AptProxyRecipe
     extends RecipeSupport
@@ -86,6 +88,7 @@ public class AptProxyRecipe
   @Inject
   Provider<PurgeUnusedFacet> purgeUnusedFacet;
 
+  @Qualifier(AptFormat.NAME)
   @Inject
   Provider<LastAssetMaintenanceFacet> lastAssetMaintenanceFacet;
 
@@ -135,8 +138,7 @@ public class AptProxyRecipe
   HandlerContributor handlerContributor;
 
   @Inject
-  public AptProxyRecipe(@Named(ProxyType.NAME) final Type type, @Named(AptFormat.NAME) final Format format)
-  {
+  public AptProxyRecipe(@Qualifier(ProxyType.NAME) final Type type, @Qualifier(AptFormat.NAME) final Format format) {
     super(type, format);
   }
 
@@ -170,7 +172,8 @@ public class AptProxyRecipe
         .handler(contentHeadersHandler)
         .handler(snapshotHandler)
         .handler(lastDownloadedHandler)
-        .handler(proxyHandler).create());
+        .handler(proxyHandler)
+        .create());
 
     builder.defaultHandlers(notFound());
     facet.configure(builder.create());

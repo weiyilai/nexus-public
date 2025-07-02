@@ -13,10 +13,12 @@
 package org.sonatype.nexus.siesta;
 
 import java.util.Collections;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Path;
 
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.siesta.internal.resteasy.ComponentContainerImpl;
 
 import org.jboss.resteasy.core.ResourceMethodInvoker;
@@ -32,7 +34,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 class SiestaResourceMethodFinderTest
-    extends SiestaTestSupport
+    extends Test5Support
 {
   private SiestaResourceMethodFinder underTest;
 

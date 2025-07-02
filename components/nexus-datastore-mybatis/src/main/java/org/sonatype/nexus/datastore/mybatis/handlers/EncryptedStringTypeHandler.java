@@ -38,7 +38,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  *
  * @since 3.21
  */
-//not @Named because we register this manually
+// not @Component
 public class EncryptedStringTypeHandler
     extends CipherAwareTypeHandler<String>
 {

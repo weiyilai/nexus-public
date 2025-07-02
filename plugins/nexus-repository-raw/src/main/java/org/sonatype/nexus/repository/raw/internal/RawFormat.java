@@ -12,17 +12,19 @@
  */
 package org.sonatype.nexus.repository.raw.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Format;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * RAW repository format.
  *
  * @since 3.0
  */
-@Named(RawFormat.NAME)
+@Component
+@Qualifier(RawFormat.NAME)
 @Singleton
 public class RawFormat
     extends Format

@@ -18,8 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.common.collect.AttributesMap;
 import org.sonatype.nexus.repository.Facet;
 import org.sonatype.nexus.repository.apt.datastore.AptContentFacet;
@@ -53,14 +51,18 @@ import org.joda.time.DateTime;
 import static com.google.common.base.Preconditions.checkState;
 import static org.sonatype.nexus.repository.apt.internal.ReleaseName.RELEASE;
 import static org.sonatype.nexus.repository.apt.debian.Utils.isDebPackageContentType;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * The implementation of a logic specific to the proxy repository
  *
  * @since 3.31
  */
-@Named
+@Component
 @Facet.Exposed
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AptProxyFacet
     extends ContentProxyFacetSupport
 {

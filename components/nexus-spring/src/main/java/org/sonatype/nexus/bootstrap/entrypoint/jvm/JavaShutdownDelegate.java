@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.bootstrap.entrypoint.jvm;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.bootstrap.entrypoint.jvm.JavaShutdownDelegate.AnotherPropertyCondition;
 
@@ -24,8 +23,9 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 @Conditional(AnotherPropertyCondition.class)

@@ -12,17 +12,19 @@
  */
 package org.sonatype.nexus.repository.maven.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Format;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Maven 2 format.
  *
  * @since 3.0
  */
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 @Singleton
 public class Maven2Format
     extends Format

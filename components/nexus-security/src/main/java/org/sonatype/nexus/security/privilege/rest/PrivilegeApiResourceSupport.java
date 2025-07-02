@@ -12,6 +12,7 @@
  */
 package org.sonatype.nexus.security.privilege.rest;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -19,6 +20,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.rest.WebApplicationMessageException;
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.authz.AuthorizationManager;
@@ -33,7 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.security.user.UserManager.DEFAULT_SOURCE;
 
 public abstract class PrivilegeApiResourceSupport
-  extends ComponentSupport
+    extends ComponentSupport
 {
   public static final String PRIV_NOT_FOUND = "\"Privilege '%s' not found.\"";
 
@@ -41,17 +43,19 @@ public abstract class PrivilegeApiResourceSupport
 
   public static final String PRIV_UNIQUE = "\"Privilege '%s' already exists, use a unique name.\"";
 
-  public static final String PRIV_CONFLICT = "\"The privilege name '%s' does not match the name used in the path '%s'.\"";
+  public static final String PRIV_CONFLICT =
+      "\"The privilege name '%s' does not match the name used in the path '%s'.\"";
 
   private final SecuritySystem securitySystem;
 
   private final Map<String, PrivilegeDescriptor> privilegeDescriptors;
 
-  public PrivilegeApiResourceSupport(final SecuritySystem securitySystem,
-                                     final Map<String, PrivilegeDescriptor> privilegeDescriptors)
+  public PrivilegeApiResourceSupport(
+      final SecuritySystem securitySystem,
+      final List<PrivilegeDescriptor> privilegeDescriptorsList)
   {
     this.securitySystem = checkNotNull(securitySystem);
-    this.privilegeDescriptors = checkNotNull(privilegeDescriptors);
+    this.privilegeDescriptors = QualifierUtil.buildQualifierBeanMap(checkNotNull(privilegeDescriptorsList));
   }
 
   protected Response doCreate(String type, ApiPrivilegeRequest apiPrivilege) {
@@ -122,7 +126,7 @@ public abstract class PrivilegeApiResourceSupport
     try {
       return securitySystem.getAuthorizationManager(DEFAULT_SOURCE);
     }
-    //this should never happen, the default source is always available
+    // this should never happen, the default source is always available
     catch (NoSuchAuthorizationManagerException e) {
       log.error("Unable to retrieve the default authorization manager", e);
       return null;

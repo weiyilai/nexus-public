@@ -20,9 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.scheduling.schedule.Schedule;
 import org.sonatype.nexus.scheduling.schedule.ScheduleDeserializer;
@@ -34,13 +33,16 @@ import org.sonatype.nexus.supportzip.datastore.JsonExporter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Write/Read {@link TaskInfo} data to/from a JSON file.
  *
  * @since 3.30
  */
-@Named("taskExport")
+@Component
+@Qualifier("taskExport")
 @Singleton
 public class TaskExport
     extends JsonExporter

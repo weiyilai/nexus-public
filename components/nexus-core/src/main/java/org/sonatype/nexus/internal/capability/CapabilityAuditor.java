@@ -16,8 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -32,13 +31,14 @@ import org.sonatype.nexus.formfields.FormField;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link Capability} auditor.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class CapabilityAuditor
     extends AuditorSupport
@@ -75,8 +75,8 @@ public class CapabilityAuditor
       attributes.put("failed", string(context.hasFailure()));
 
       // include all non-secure properties
-      Map<String,FormField> fields = fields(descriptor);
-      for (Entry<String,String> entry : context.properties().entrySet()) {
+      Map<String, FormField> fields = fields(descriptor);
+      for (Entry<String, String> entry : context.properties().entrySet()) {
         FormField field = fields.get(entry.getKey());
         // skip secure fields
         if (field instanceof Encrypted) {
@@ -90,7 +90,7 @@ public class CapabilityAuditor
   }
 
   private static Map<String, FormField> fields(final CapabilityDescriptor descriptor) {
-    Map<String,FormField> result = new HashMap<>();
+    Map<String, FormField> result = new HashMap<>();
     for (FormField field : descriptor.formFields()) {
       result.put(field.getId(), field);
     }

@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.repository.rest.api;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

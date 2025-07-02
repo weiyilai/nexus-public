@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.coreui.internal.log;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -29,13 +28,14 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import org.springframework.stereotype.Component;
 
 /**
  * Log REST resource.
  *
  * @since 2.7
  */
-@Named
+@Component
 @Singleton
 @Path(LogResource.RESOURCE_URI)
 public class LogResource

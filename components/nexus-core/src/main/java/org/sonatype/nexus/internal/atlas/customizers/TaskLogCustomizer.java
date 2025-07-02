@@ -15,8 +15,7 @@ package org.sonatype.nexus.internal.atlas.customizers;
 import java.io.File;
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.logging.task.TaskLogHome;
@@ -30,13 +29,14 @@ import static java.time.Instant.ofEpochMilli;
 import static org.apache.commons.io.FileUtils.iterateFiles;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Priority.DEFAULT;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.TASKLOG;
+import org.springframework.stereotype.Component;
 
 /**
  * Adds log files to support bundle.
  *
  * @since 3.5
  */
-@Named
+@Component
 @Singleton
 public class TaskLogCustomizer
     extends ComponentSupport

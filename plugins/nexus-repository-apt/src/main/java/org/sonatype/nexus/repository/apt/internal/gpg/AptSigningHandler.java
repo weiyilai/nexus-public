@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.apt.internal.gpg;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.apt.internal.snapshot.AptSnapshotHandler;
@@ -22,13 +21,13 @@ import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.Handler;
 import org.sonatype.nexus.repository.view.Response;
 
-
 import static org.sonatype.nexus.repository.http.HttpMethods.GET;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.17
  */
-@Named
+@Component
 @Singleton
 public class AptSigningHandler
     extends ComponentSupport

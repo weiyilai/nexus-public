@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.security.role.rest;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.rest.APIConstants;
@@ -22,13 +21,14 @@ import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.internal.rest.SecurityApiResourceBeta;
 
 import io.swagger.annotations.Api;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  * @deprecated beta prefix is being phased out, prefer starting new APIs with {@link APIConstants#V1_API_PREFIX} instead
  */
 @Api(hidden = true)
-@Named
+@Component
 @Singleton
 @Path(RoleApiResourceBeta.RESOURCE_URI)
 @Deprecated

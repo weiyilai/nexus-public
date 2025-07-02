@@ -12,18 +12,18 @@
  */
 package org.sonatype.nexus.repository.maven.rest;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.repository.rest.api.RepositoriesApiResourceV1;
 
 import static org.sonatype.nexus.repository.maven.rest.MavenGroupRepositoriesApiResourceV1.RESOURCE_URI;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 public class MavenGroupRepositoriesApiResourceV1

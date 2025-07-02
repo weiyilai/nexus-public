@@ -12,13 +12,15 @@
  */
 package org.sonatype.nexus.security.user;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.security.role.RoleIdentifier;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 @Singleton
-@Named("MockUserManagerA")
+@Component
+@Qualifier("MockUserManagerA")
 public class MockUserManagerA
     extends MockUserManagerSupport
 {

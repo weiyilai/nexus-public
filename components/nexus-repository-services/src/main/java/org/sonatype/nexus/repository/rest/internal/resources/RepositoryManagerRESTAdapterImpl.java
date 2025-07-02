@@ -20,12 +20,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.repository.Format;
@@ -50,13 +50,17 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.sonatype.nexus.repository.http.HttpStatus.FORBIDDEN;
 import static org.sonatype.nexus.repository.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * An implementation of the {@link RepositoryManagerRESTAdapter}
  *
  * @since 3.4
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RepositoryManagerRESTAdapterImpl
     extends ComponentSupport
     implements RepositoryManagerRESTAdapter
@@ -75,13 +79,13 @@ public class RepositoryManagerRESTAdapterImpl
   public RepositoryManagerRESTAdapterImpl(
       final RepositoryManager repositoryManager,
       final ConfigurationStore configurationStore,
-      final Map<String, Recipe> recipes,
+      final List<Recipe> recipesList,
       final RepositoryPermissionChecker repositoryPermissionChecker,
       @Nullable final RepositoryMetricsService repositoryMetricsService)
   {
     this.repositoryManager = checkNotNull(repositoryManager);
     this.configurationStore = checkNotNull(configurationStore);
-    this.recipes = checkNotNull(recipes);
+    this.recipes = QualifierUtil.buildQualifierBeanMap(checkNotNull(recipesList));
     this.repositoryPermissionChecker = checkNotNull(repositoryPermissionChecker);
     this.repositoryMetricsService = Optional.ofNullable(repositoryMetricsService);
   }

@@ -18,8 +18,10 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,6 +29,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -35,10 +38,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.sql.DataSource;
 
 import org.sonatype.nexus.common.app.ApplicationDirectories;
@@ -57,6 +60,7 @@ import org.sonatype.nexus.crypto.LegacyCipherFactory.PbeCipher;
 import org.sonatype.nexus.crypto.internal.CryptoHelperImpl;
 import org.sonatype.nexus.crypto.internal.MavenCipherImpl;
 import org.sonatype.nexus.datastore.DataStoreSupport;
+import org.sonatype.nexus.datastore.TransactionalStoreSupport;
 import org.sonatype.nexus.datastore.api.DataAccess;
 import org.sonatype.nexus.datastore.api.DataAccessException;
 import org.sonatype.nexus.datastore.api.DataStore;
@@ -82,15 +86,13 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Splitter.MapSplitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
-import com.google.inject.Key;
-import com.google.inject.TypeLiteral;
+import com.google.common.reflect.TypeToken;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.pool.HikariPool;
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.ibatis.builder.xml.XMLConfigBuilder;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.mapping.Environment;
@@ -105,9 +107,18 @@ import org.apache.ibatis.type.OffsetDateTimeTypeHandler;
 import org.apache.ibatis.type.TypeAliasRegistry;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.Mediator;
-import org.eclipse.sisu.inject.BeanLocator;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -139,18 +150,17 @@ import static org.sonatype.nexus.datastore.mybatis.SensitiveAttributes.buildSens
  *
  * @since 3.19
  */
-@Named(MyBatisDataStoreDescriptor.NAME)
+@Qualifier(MyBatisDataStoreDescriptor.NAME)
+@Component
 @SuppressWarnings("rawtypes")
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MyBatisDataStore
     extends DataStoreSupport<MyBatisDataSession>
+    implements ApplicationContextAware, Ordered
 {
   private static final String REGISTERED_MESSAGE = "Registered {}";
 
   public static final String H2_DATABASE = "H2";
-
-  private static final Key<TypeHandler> TYPE_HANDLER_KEY = Key.get(TypeHandler.class);
-
-  private static final TypeHandlerMediator TYPE_HANDLER_MEDIATOR = new TypeHandlerMediator();
 
   private static final Splitter BY_LINE = onPattern("\\r?\\n").trimResults().omitEmptyStrings();
 
@@ -165,7 +175,7 @@ public class MyBatisDataStore
   private final Predicate<Throwable> isH2JdbcSQLNonTransientConnectionException =
       isH2JdbcSQLNonTransientConnectionException();
 
-  private final Iterable<? extends BeanEntry<Named, Class<DataAccess>>> declaredAccessTypes;
+  private final List<TransactionalStoreSupport> declaredAccessTypes;
 
   private final Set<Class<?>> registeredAccessTypes = new HashSet<>();
 
@@ -177,11 +187,7 @@ public class MyBatisDataStore
 
   private final ApplicationDirectories directories;
 
-  private final BeanLocator beanLocator;
-
   private final LogManager logManager;
-
-  private final ClassLoader uberClassLoader;
 
   private ManagedLifecycleManager managedLifecycleManager;
 
@@ -193,37 +199,32 @@ public class MyBatisDataStore
 
   private Optional<Configuration> previousConfig = empty();
 
+  private ApplicationContext context;
+
   @Nullable
   private Predicate<String> sensitiveAttributeFilter;
 
-  @Inject
-  @Named(FeatureFlags.ORIENT_WARNING_NAMED)
-  private boolean orientWarning;
+  private final boolean orientWarning;
 
   @Inject
   public MyBatisDataStore(
-      @Named("mybatis") final PbeCipher databaseCipher,
-      @Named("nexus-uber") final ClassLoader classLoader,
+      @Qualifier("mybatis") final PbeCipher databaseCipher,
       final PasswordHelper passwordHelper,
       final ApplicationDirectories directories,
-      final BeanLocator beanLocator,
-      final LogManager logManager)
+      final LogManager logManager,
+      @Lazy final List<TransactionalStoreSupport> declaredAccessTypes,
+      @Value(FeatureFlags.ORIENT_WARNING_NAMED_VALUE) final boolean orientWarning)
   {
     checkState(databaseCipher instanceof MyBatisCipher);
-    this.uberClassLoader = checkNotNull(classLoader);
     this.databaseCipher = checkNotNull(databaseCipher);
     this.passwordHelper = checkNotNull(passwordHelper);
     this.directories = checkNotNull(directories);
-    this.beanLocator = checkNotNull(beanLocator);
     this.logManager = checkNotNull(logManager);
 
     useMyBatisClassLoaderForEntityProxies();
 
-    // any DAO types in plugins are bound by DataAccessModule so we can locate them here
-    // (the same bindings are used to drive store registration in DataStoreManagerImpl)
-    this.declaredAccessTypes = beanLocator.locate(new Key<Class<DataAccess>>()
-    {
-    });
+    this.declaredAccessTypes = checkNotNull(declaredAccessTypes);
+    this.orientWarning = orientWarning;
   }
 
   @VisibleForTesting
@@ -233,16 +234,15 @@ public class MyBatisDataStore
       this.databaseCipher = new MyBatisCipher();
       MavenCipherImpl passwordCipher = new MavenCipherImpl(new CryptoHelperImpl(false));
       this.passwordHelper = new PasswordHelper(passwordCipher, LEGACY_PHRASE_SERVICE);
-      this.uberClassLoader = Thread.currentThread().getContextClassLoader();
     }
     catch (Exception e) {
       throw new IllegalStateException("Unexpected error during setup", e);
     }
     this.directories = null;
-    this.beanLocator = null;
     this.logManager = null;
 
-    this.declaredAccessTypes = ImmutableList.of();
+    this.declaredAccessTypes = List.of();
+    this.orientWarning = false;
   }
 
   @Override
@@ -291,11 +291,42 @@ public class MyBatisDataStore
 
       registerCommonTypeHandlers();
 
-      if (beanLocator != null) {
+      if (context != null) {
         // register the appropriate type handlers with the store
-        beanLocator.watch(TYPE_HANDLER_KEY, TYPE_HANDLER_MEDIATOR, this);
+        context.getBeansOfType(TypeHandler.class).values().forEach(this::register);
       }
     }
+    findDaos();
+  }
+
+  @EventListener
+  public void onApplicationEvent(final ContextRefreshedEvent event) {
+    log.trace("onApplicationEvent {}", event);
+    if (isStarted()) {
+      findDaos();
+    }
+  }
+
+  @Override
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    log.trace("setApplicationContext {}", applicationContext);
+    this.context = applicationContext;
+  }
+
+  @Override
+  public int getOrder() {
+    return -1;
+  }
+
+  private void findDaos() {
+    if (context == null) {
+      return;
+    }
+    context.getBeansOfType(TransactionalStoreSupport.class)
+        .values()
+        .stream()
+        .map(TransactionalStoreSupport::getDaoClass)
+        .forEach(this::register);
   }
 
   @Override
@@ -368,12 +399,10 @@ public class MyBatisDataStore
   @Guarded(by = STARTED)
   @Override
   public MyBatisDataSession openSession(final TransactionIsolation isolationLevel) {
-    switch (isolationLevel) {
-      case SERIALIZABLE:
-        return new MyBatisDataSession(new DataAccessSqlSession(mybatisConfig, SERIALIZABLE));
-      default:
-        return new MyBatisDataSession(new DataAccessSqlSession(mybatisConfig));
-    }
+    return switch (isolationLevel) {
+      case SERIALIZABLE -> new MyBatisDataSession(new DataAccessSqlSession(mybatisConfig, SERIALIZABLE));
+      default -> new MyBatisDataSession(new DataAccessSqlSession(mybatisConfig));
+    };
   }
 
   @Guarded(by = STARTED)
@@ -420,12 +449,12 @@ public class MyBatisDataStore
   }
 
   @Inject
-  public void setH2VersionUpgrader(final H2VersionUpgrader h2VersionUpgrader) {
+  public void setH2VersionUpgrader(@Lazy final H2VersionUpgrader h2VersionUpgrader) {
     this.h2VersionUpgrader = checkNotNull(h2VersionUpgrader);
   }
 
   @Inject
-  public void setManagedLifecycleManager(final ManagedLifecycleManager managedLifecycleManager) {
+  public void setManagedLifecycleManager(@Lazy final ManagedLifecycleManager managedLifecycleManager) {
     this.managedLifecycleManager = checkNotNull(managedLifecycleManager);
   }
 
@@ -466,7 +495,7 @@ public class MyBatisDataStore
     return Files.exists(h2Db);
   }
 
-  private boolean isJdbcUrlSet() {
+  private static boolean isJdbcUrlSet() {
     String systemProperty = System.getProperty("nexus.datastore.nexus.jdbcUrl");
     String environmentVariable = System.getenv("NEXUS_DATASTORE_NEXUS_JDBCURL");
 
@@ -590,7 +619,7 @@ public class MyBatisDataStore
     }
 
     // generate new entity ids on-demand
-    register(new EntityInterceptor(new FrozenChecker(frozenMarker, uberClassLoader)));
+    register(new EntityInterceptor(new FrozenChecker(frozenMarker)));
 
     // security handlers that used to only exist in the config store
     register(new PasswordCharacterArrayTypeHandler(passwordHelper));
@@ -645,13 +674,22 @@ public class MyBatisDataStore
    */
   private void registerSimpleAliases(final Class<? extends DataAccess> accessType) {
     TypeAliasRegistry registry = mybatisConfig.getTypeAliasRegistry();
-    TypeLiteral<?> resolvedType = TypeLiteral.get(accessType);
-    for (Method method : accessType.getMethods()) {
-      for (TypeLiteral<?> parameterType : resolvedType.getParameterTypes(method)) {
-        registerSimpleAlias(registry, parameterType.getRawType());
+
+    TypeToken.of(accessType).getTypes().forEach(type -> {
+      Map<TypeVariable<?>, Type> typeArguments =
+          type.getType() instanceof ParameterizedType pt ? TypeUtils.getTypeArguments(pt) : Map.of();
+      for (Method method : type.getRawType().getDeclaredMethods()) {
+        for (Type typeArg : method.getGenericParameterTypes()) {
+          Class<?> arg = TypeToken.of(typeArguments.getOrDefault(typeArg, typeArg)).getRawType();
+          registerSimpleAlias(registry, arg);
+        }
+        Type returnType = method.getGenericReturnType();
+        if (returnType != null && !Void.class.equals(returnType)) {
+          Class<?> returnClass = TypeToken.of(TypeUtils.unrollVariables(typeArguments, returnType)).getRawType();
+          registerSimpleAlias(registry, returnClass);
+        }
       }
-      registerSimpleAlias(registry, resolvedType.getReturnType(method).getRawType());
-    }
+    });
   }
 
   /**
@@ -686,7 +724,7 @@ public class MyBatisDataStore
    * Searches the directly declared interfaces for one annotated with {@link SchemaTemplate}.
    */
   @Nullable
-  private Class<?> findTemplateType(final Class<? extends DataAccess> accessType) {
+  private static Class<?> findTemplateType(final Class<? extends DataAccess> accessType) {
     for (Class<?> candidate : accessType.getInterfaces()) {
       if (candidate.isAnnotationPresent(SchemaTemplate.class)) {
         return candidate;
@@ -705,10 +743,8 @@ public class MyBatisDataStore
       asList(expects.value()).forEach(this::register);
     }
 
-    try (TcclBlock tccl = TcclBlock.begin(uberClassLoader)) {
-      // MyBatis will load the corresponding XML schema
-      mybatisConfig.addMapper(accessType);
-    }
+    // MyBatis will load the corresponding XML schema
+    mybatisConfig.addMapper(accessType);
   }
 
   /**
@@ -823,8 +859,7 @@ public class MyBatisDataStore
    * Returns the first DAO with the given simpleName declared by a plugin/bundle.
    */
   private Optional<? extends Class> findDeclaredAccessType(final String simpleName) {
-    return Streams.stream(declaredAccessTypes)
-        .map(BeanEntry::getValue)
+    return daos(declaredAccessTypes)
         .filter(accessType -> simpleName.equals(accessType.getSimpleName()))
         .findFirst();
   }
@@ -832,7 +867,7 @@ public class MyBatisDataStore
   /**
    * Returns the lower-case form of the prefix after removing templateName from accessName.
    */
-  private String extractPrefix(final String accessName, final String templateName) {
+  private static String extractPrefix(final String accessName, final String templateName) {
     checkArgument(accessName.endsWith(templateName), "%s must end with %s", accessName, templateName);
     String prefix = lower(accessName.substring(0, accessName.length() - templateName.length()));
     checkArgument(!prefix.isEmpty(), "%s must add a prefix to %s", accessName, templateName);
@@ -842,7 +877,7 @@ public class MyBatisDataStore
   /**
    * Absolute resource path to the type's mapper XML.
    */
-  private String mapperXmlPath(final Class type) {
+  private static String mapperXmlPath(final Class type) {
     return '/' + type.getName().replace('.', '/') + ".xml";
   }
 
@@ -850,7 +885,7 @@ public class MyBatisDataStore
    * Attempts to load the type's mapper XML. If the XML is missing and required then it throws
    * {@link IllegalArgumentException}. If it is not required then it returns the empty string.
    */
-  private String loadMapperXml(final Class type, final boolean required) {
+  private static String loadMapperXml(final Class type, final boolean required) {
     URL resource = type.getResource(mapperXmlPath(type));
     checkArgument(!required || resource != null, "XML resource for %s is missing", type);
     try {
@@ -912,24 +947,6 @@ public class MyBatisDataStore
   }
 
   /**
-   * Tracks and registers custom {@link TypeHandler}s with MyBatis.
-   */
-  static class TypeHandlerMediator
-      implements Mediator<Named, TypeHandler, MyBatisDataStore>
-  {
-
-    @Override
-    public void add(final BeanEntry<Named, TypeHandler> entry, final MyBatisDataStore store) {
-      store.register(entry.getValue());
-    }
-
-    @Override
-    public void remove(final BeanEntry<Named, TypeHandler> entry, final MyBatisDataStore store) {
-      // unregistration of custom type handlers is not supported
-    }
-  }
-
-  /**
    * Force use of MyBatis {@link ClassLoader} when generating entity proxies.
    */
   private void useMyBatisClassLoaderForEntityProxies() {
@@ -973,5 +990,10 @@ public class MyBatisDataStore
     catch (ClassNotFoundException e) {
       return Predicates.alwaysFalse();
     }
+  }
+
+  private static Stream<Class<DataAccess>> daos(final List<TransactionalStoreSupport> stores) {
+    return stores.stream()
+        .map(TransactionalStoreSupport::getDaoClass);
   }
 }

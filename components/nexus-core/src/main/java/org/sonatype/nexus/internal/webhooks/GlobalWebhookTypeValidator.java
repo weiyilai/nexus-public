@@ -15,14 +15,20 @@ package org.sonatype.nexus.internal.webhooks;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Named;
+
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
 import org.sonatype.nexus.webhooks.GlobalWebhook;
 
-@Named
+import jakarta.inject.Inject;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class GlobalWebhookTypeValidator
     extends ConstraintValidatorSupport<GlobalWebhookType, List<String>>
 {

@@ -15,9 +15,8 @@ package org.sonatype.nexus.internal.capability;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.capability.CapabilityDescriptor;
 import org.sonatype.nexus.capability.CapabilityDescriptorRegistry;
@@ -25,10 +24,13 @@ import org.sonatype.nexus.capability.CapabilityType;
 import org.sonatype.nexus.capability.DefaultCapabilityDescriptorProvider;
 
 import com.google.common.collect.Lists;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@Named
+@Primary
+@Component
 @Singleton
 class DefaultCapabilityDescriptorRegistry
     implements CapabilityDescriptorRegistry
@@ -73,8 +75,9 @@ class DefaultCapabilityDescriptorRegistry
     return all.toArray(new CapabilityDescriptor[all.size()]);
   }
 
-  private CapabilityDescriptor get(final Collection<CapabilityDescriptor> descriptors,
-                                   final CapabilityType capabilityType)
+  private CapabilityDescriptor get(
+      final Collection<CapabilityDescriptor> descriptors,
+      final CapabilityType capabilityType)
   {
     for (final CapabilityDescriptor descriptor : descriptors) {
       if (descriptor.type().equals(capabilityType)) {

@@ -19,6 +19,7 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Recipe;
@@ -30,10 +31,11 @@ import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.rest.api.RepositoryXO;
 import org.sonatype.nexus.repository.security.RepositoryPermissionChecker;
 
-import com.google.common.collect.ImmutableMap;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import static java.util.Arrays.asList;
@@ -108,8 +110,11 @@ public class RepositoryManagerRESTAdapterImplTest
 
   private RepositoryManagerRESTAdapterImpl underTest;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setUp() throws Exception {
+    mockedStatic = Mockito.mockStatic(QualifierUtil.class);
     BaseUrlHolder.set("http://nexus-url", "");
 
     when(repositoryManager.get(REPOSITORY_NAME)).thenReturn(repository);
@@ -160,10 +165,16 @@ public class RepositoryManagerRESTAdapterImplTest
 
     when(repositoryManager.findContainingGroups(REPOSITORY_NAME))
         .thenReturn(Collections.singletonList(REPOSITORY_GROUP_NAME));
-
-    Map<String, Recipe> recipes = ImmutableMap.of(RECIPE_NAME, recipe, RECIPE_NAME_2, recipe2, RECIPE_NAME_3, recipe3);
+    List<Recipe> recipeList = List.of(recipe, recipe2, recipe3);
+    Map<String, Recipe> recipes = Map.of(RECIPE_NAME, recipe, RECIPE_NAME_2, recipe2, RECIPE_NAME_3, recipe3);
+    when(QualifierUtil.buildQualifierBeanMap(recipeList)).thenReturn(recipes);
     underTest = new RepositoryManagerRESTAdapterImpl(
-        repositoryManager, store, recipes, repositoryPermissionChecker, null);
+        repositoryManager, store, recipeList, repositoryPermissionChecker, null);
+  }
+
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test
@@ -184,7 +195,7 @@ public class RepositoryManagerRESTAdapterImplTest
 
     try {
       underTest.getRepository(REPOSITORY_NAME);
-      fail(); //should have thrown exception
+      fail(); // should have thrown exception
     }
     catch (WebApplicationException e) {
       assertThat(e.getResponse().getStatus(), is(403));
@@ -196,7 +207,7 @@ public class RepositoryManagerRESTAdapterImplTest
     configurePermissions(repository, !PERMIT_BROWSE);
     try {
       underTest.getRepository(REPOSITORY_NAME);
-      fail(); //should have thrown exception
+      fail(); // should have thrown exception
     }
     catch (WebApplicationException e) {
       assertThat(e.getResponse().getStatus(), is(403));
@@ -216,7 +227,7 @@ public class RepositoryManagerRESTAdapterImplTest
   public void getRepository_null() {
     try {
       underTest.getRepository(null);
-      fail(); //should have thrown exception
+      fail(); // should have thrown exception
     }
     catch (WebApplicationException e) {
       assertThat(e.getResponse().getStatus(), is(422));
@@ -232,7 +243,7 @@ public class RepositoryManagerRESTAdapterImplTest
   public void getReadableRepository_null() {
     try {
       underTest.getReadableRepository(null);
-      fail(); //should have thrown exception
+      fail(); // should have thrown exception
     }
     catch (WebApplicationException e) {
       assertThat(e.getResponse().getStatus(), is(422));
@@ -246,7 +257,7 @@ public class RepositoryManagerRESTAdapterImplTest
 
     try {
       underTest.getReadableRepository(repository.getName());
-      fail(); //should have thrown exception
+      fail(); // should have thrown exception
     }
     catch (WebApplicationException e) {
       assertThat(e.getResponse().getStatus(), is(403));

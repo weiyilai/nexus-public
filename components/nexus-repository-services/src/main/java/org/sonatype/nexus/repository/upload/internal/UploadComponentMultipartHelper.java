@@ -21,9 +21,8 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.goodies.common.ComponentSupport;
@@ -45,13 +44,14 @@ import org.apache.commons.io.IOUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
+import org.springframework.stereotype.Component;
 
 /**
  * Extracts fields from a multipart form storing files in the appropriate blob store.
  *
  * @since 3.16
  */
-@Named
+@Component
 @Singleton
 public class UploadComponentMultipartHelper
     extends ComponentSupport
@@ -70,8 +70,9 @@ public class UploadComponentMultipartHelper
    * Parse a multipart-form submission creating file uploads in the blob store of the repository. Reminder, callers must
    * call {@code close} on {@code TempBlobs} returned from this method.
    */
-  public BlobStoreMultipartForm parse(final Repository repository, final HttpServletRequest request)
-      throws FileUploadException
+  public BlobStoreMultipartForm parse(
+      final Repository repository,
+      final HttpServletRequest request) throws FileUploadException
   {
     BlobStoreMultipartForm multipartForm = new BlobStoreMultipartForm();
     TempBlobServletFileUpload upload = new TempBlobServletFileUpload(repository, multipartForm);
@@ -87,7 +88,8 @@ public class UploadComponentMultipartHelper
     return multipartForm;
   }
 
-  private class TempBlobServletFileUpload extends ServletFileUpload
+  private class TempBlobServletFileUpload
+      extends ServletFileUpload
   {
     private final Repository repository;
 
@@ -97,8 +99,9 @@ public class UploadComponentMultipartHelper
 
     private Field field;
 
-    TempBlobServletFileUpload(final Repository repository, final BlobStoreMultipartForm multipartForm)
-        throws FileUploadException
+    TempBlobServletFileUpload(
+        final Repository repository,
+        final BlobStoreMultipartForm multipartForm) throws FileUploadException
     {
       this.repository = repository;
       this.multipartForm = multipartForm;

@@ -13,8 +13,7 @@
 package org.sonatype.nexus.elasticsearch.internal.repository;
 
 import javax.annotation.Nullable;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.io.Hex;
@@ -28,12 +27,13 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 import static org.sonatype.nexus.common.hash.HashAlgorithm.MD5;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.4
  */
 @Singleton
-@Named
+@Component
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class TokenEncoder
     extends ComponentSupport

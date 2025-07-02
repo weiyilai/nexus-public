@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.self.hosted.datastore.task;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.StringTextFormField;
@@ -21,6 +20,7 @@ import org.sonatype.nexus.scheduling.TaskDescriptor;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
 import static org.sonatype.nexus.formfields.FormField.MANDATORY;
+import org.springframework.stereotype.Component;
 
 /**
  * A {@link TaskDescriptor} for backing up an embedded H2 datastore.
@@ -28,7 +28,7 @@ import static org.sonatype.nexus.formfields.FormField.MANDATORY;
  * @since 3.21
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class H2BackupTaskDescriptor
     extends TaskDescriptorSupport

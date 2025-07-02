@@ -22,17 +22,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.capability.CapabilityIdentity;
 import org.sonatype.nexus.common.event.EventManager;
-import org.sonatype.nexus.datastore.api.DataSessionSupplier;
-import org.sonatype.nexus.internal.capability.storage.CapabilityStorage;
 import org.sonatype.nexus.internal.capability.storage.CapabilityStorageImpl;
 import org.sonatype.nexus.internal.capability.storage.CapabilityStorageItem;
 import org.sonatype.nexus.internal.capability.storage.CapabilityStorageItemDAO;
 import org.sonatype.nexus.testdb.DataSessionRule;
-import org.sonatype.nexus.transaction.TransactionModule;
 import org.sonatype.nexus.transaction.UnitOfWork;
 
-import com.google.inject.Guice;
-import com.google.inject.Provides;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -41,10 +36,10 @@ import org.mockito.Mock;
 
 import static java.util.Collections.emptyMap;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
 /**
@@ -59,13 +54,14 @@ public class CleanupCapabilityDuplicatesServiceTest
   @Mock
   private EventManager eventManager;
 
-  private CapabilityStorage capabilityStorage;
+  private CapabilityStorageImpl capabilityStorage;
 
   private CleanupCapabilityDuplicatesService underTest;
 
   @Before
   public void start() {
-    capabilityStorage = instantiateStorage();
+    capabilityStorage = new CapabilityStorageImpl(sessionRule);
+    capabilityStorage.setDependencies(eventManager);
     underTest = new CleanupCapabilityDuplicatesService(capabilityStorage);
 
     UnitOfWork.beginBatch(() -> sessionRule.openSession(DEFAULT_DATASTORE_NAME));
@@ -80,18 +76,16 @@ public class CleanupCapabilityDuplicatesServiceTest
   public void testCleanup() throws Exception {
     prepareTestCapabilitiesWithDuplicates();
 
-    assertThat(capabilityStorage.getAll().entrySet(), hasSize(23));
+    assertThat(capabilityStorage.getAll(), aMapWithSize(23));
 
-    assertTrue(capabilityStorage.isDuplicatesFound());
-
-    Map<CapabilityStorageItem, List<CapabilityIdentity>> duplicates = capabilityStorage.browseCapabilityDuplicates();
+    Map<CapabilityStorageItem, List<CapabilityIdentity>> duplicates = underTest.browseCapabilityDuplicates();
     assertThat(duplicates.keySet(), hasSize(5));
     assertCapabilitiesCount(duplicates, 22);
 
     underTest.doCleanup();
 
-    assertThat(capabilityStorage.getAll().entrySet(), hasSize(6));
-    duplicates = capabilityStorage.browseCapabilityDuplicates();
+    assertThat(capabilityStorage.getAll(), aMapWithSize(6));
+    duplicates = underTest.browseCapabilityDuplicates();
     assertCapabilitiesCount(duplicates, 0);
   }
 
@@ -99,24 +93,24 @@ public class CleanupCapabilityDuplicatesServiceTest
   public void testCleanupDoesNotTouchUniqueRecords() throws Exception {
     prepareUniqueTestCapabilities();
 
-    assertThat(capabilityStorage.getAll().entrySet(), hasSize(5));
+    assertThat(capabilityStorage.getAll(), aMapWithSize(5));
 
-    assertFalse(capabilityStorage.isDuplicatesFound());
+    assertTrue(underTest.browseCapabilityDuplicates().isEmpty());
 
     underTest.doCleanup();
 
-    assertThat(capabilityStorage.getAll().entrySet(), hasSize(5));
+    assertThat(capabilityStorage.getAll(), aMapWithSize(5));
   }
 
   @Test
   public void testCleanupNotNeeded() throws Exception {
     underTest.doCleanup();
 
-    Map<CapabilityStorageItem, List<CapabilityIdentity>> duplicates = capabilityStorage.browseCapabilityDuplicates();
+    Map<CapabilityStorageItem, List<CapabilityIdentity>> duplicates = underTest.browseCapabilityDuplicates();
     assertCapabilitiesCount(duplicates, 0);
   }
 
-  private void assertCapabilitiesCount(
+  private static void assertCapabilitiesCount(
       final Map<CapabilityStorageItem, List<CapabilityIdentity>> capabilities,
       final int expectedCount)
   {
@@ -126,21 +120,6 @@ public class CleanupCapabilityDuplicatesServiceTest
     });
 
     assertThat(count.get(), is(expectedCount));
-  }
-
-  private CapabilityStorageImpl instantiateStorage() {
-    return Guice.createInjector(new TransactionModule()
-    {
-      @Provides
-      DataSessionSupplier getDataSessionSupplier() {
-        return sessionRule;
-      }
-
-      @Provides
-      EventManager getEventManager() {
-        return eventManager;
-      }
-    }).getInstance(CapabilityStorageImpl.class);
   }
 
   private void prepareTestCapabilitiesWithDuplicates() throws SQLException {

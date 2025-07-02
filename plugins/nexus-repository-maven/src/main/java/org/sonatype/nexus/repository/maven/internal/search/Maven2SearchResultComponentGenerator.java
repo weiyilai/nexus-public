@@ -17,9 +17,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
@@ -29,19 +28,24 @@ import org.sonatype.nexus.repository.security.ContentPermissionChecker;
 import org.sonatype.nexus.repository.security.VariableResolverAdapterManager;
 
 import static java.util.Objects.nonNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.14
  */
 @Singleton
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 public class Maven2SearchResultComponentGenerator
     extends SearchResultComponentGeneratorSupport
 {
   @Inject
-  public Maven2SearchResultComponentGenerator(final VariableResolverAdapterManager variableResolverAdapterManager,
-                                              final RepositoryManager repositoryManager,
-                                              final ContentPermissionChecker contentPermissionChecker) {
+  public Maven2SearchResultComponentGenerator(
+      final VariableResolverAdapterManager variableResolverAdapterManager,
+      final RepositoryManager repositoryManager,
+      final ContentPermissionChecker contentPermissionChecker)
+  {
     super(variableResolverAdapterManager, repositoryManager, contentPermissionChecker);
   }
 

@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
-import javax.inject.Named;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
 import org.sonatype.nexus.common.entity.EntityId;
@@ -127,11 +126,10 @@ public abstract class SearchEventHandler
   public SearchEventHandler(
       final RepositoryManager repositoryManager,
       final PeriodicJobService periodicJobService,
-      @Named("${" + FLUSH_ON_COUNT_KEY + ":-100}") @Value("${" + FLUSH_ON_COUNT_KEY + ":100}") final int flushOnCount,
-      @Named("${" + FLUSH_ON_SECONDS_KEY + ":-2}") @Value("${" + FLUSH_ON_SECONDS_KEY + ":2}") final int flushOnSeconds,
-      @Named("${" + NO_PURGE_DELAY_KEY + ":-true}") @Value("${" + NO_PURGE_DELAY_KEY
-          + ":true}") final boolean noPurgeDelay,
-      @Named("${" + FLUSH_POOL_SIZE + ":-128}") @Value("${" + FLUSH_POOL_SIZE + ":128}") final int poolSize)
+      @Value("${" + FLUSH_ON_COUNT_KEY + ":100}") final int flushOnCount,
+      @Value("${" + FLUSH_ON_SECONDS_KEY + ":2}") final int flushOnSeconds,
+      @Value("${" + NO_PURGE_DELAY_KEY + ":true}") final boolean noPurgeDelay,
+      @Value("${" + FLUSH_POOL_SIZE + ":128}") final int poolSize)
   {
     this.repositoryManager = checkNotNull(repositoryManager);
     this.periodicJobService = checkNotNull(periodicJobService);

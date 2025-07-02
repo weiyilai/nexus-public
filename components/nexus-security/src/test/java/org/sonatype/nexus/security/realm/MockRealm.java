@@ -15,8 +15,7 @@ package org.sonatype.nexus.security.realm;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.security.role.ExternalRoleMappedTest;
 import org.sonatype.nexus.security.role.RoleIdentifier;
@@ -35,10 +34,12 @@ import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @see ExternalRoleMappedTest
  */
+@Qualifier("Mock")
 public class MockRealm
     extends AuthorizingRealm
 {
@@ -47,7 +48,7 @@ public class MockRealm
   private final UserManager userManager;
 
   @Inject
-  public MockRealm(@Named("Mock") UserManager userManager) {
+  public MockRealm(@Qualifier("Mock") UserManager userManager) {
     this.userManager = userManager;
   }
 

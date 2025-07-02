@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.browse.node;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.common.node.NodeAccess;
@@ -24,6 +23,7 @@ import org.sonatype.nexus.repository.types.GroupType;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Task descriptor for {@link RebuildBrowseNodesTask}.
@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
  * @since 3.6
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class RebuildBrowseNodesTaskDescriptor
     extends TaskDescriptorSupport
@@ -46,7 +46,7 @@ public class RebuildBrowseNodesTaskDescriptor
   public RebuildBrowseNodesTaskDescriptor(
       final NodeAccess nodeAccess,
       final GroupType groupType,
-      @Named(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED) @Value(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean datastoreClustered)
+      @Value(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean datastoreClustered)
   {
     super(TYPE_ID, RebuildBrowseNodesTask.class, TASK_NAME, VISIBLE, EXPOSED,
         new ItemselectFormField(REPOSITORY_NAME_FIELD_ID, "Repository",

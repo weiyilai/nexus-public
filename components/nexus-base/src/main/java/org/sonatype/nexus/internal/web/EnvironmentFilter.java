@@ -14,24 +14,28 @@ package org.sonatype.nexus.internal.web;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.common.app.BaseUrlManager;
+import org.sonatype.nexus.common.app.WebFilterPriority;
 import org.sonatype.nexus.security.UserIdMdcHelper;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.eclipse.sisu.Hidden;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.net.HttpHeaders.CONTENT_SECURITY_POLICY;
@@ -44,7 +48,9 @@ import static com.google.common.net.HttpHeaders.X_CONTENT_TYPE_OPTIONS;
  *
  * @since 3.0
  */
-@Named
+@Order(WebFilterPriority.WEB)
+@WebFilter("/*")
+@Component
 @Hidden // hide from DynamicFilterChainManager because we statically install it in WebModule
 @Singleton
 public class EnvironmentFilter
@@ -68,7 +74,7 @@ public class EnvironmentFilter
   public EnvironmentFilter(
       final ApplicationVersion applicationVersion,
       final BaseUrlManager baseUrlManager,
-      @Named("${nexus-context-path}") final String contextPath)
+      @Value("nexus-context-path") final String contextPath)
   {
     // cache "Server" header value
     checkNotNull(applicationVersion);
@@ -149,7 +155,7 @@ public class EnvironmentFilter
    * @param contextPath
    * @return never null, either "/" or the contextPath with a trailing slash
    */
-  private String resolveContextPath(String contextPath) {
+  private String resolveContextPath(final String contextPath) {
     if (contextPath == null || contextPath.isEmpty()) {
       return "/";
     }

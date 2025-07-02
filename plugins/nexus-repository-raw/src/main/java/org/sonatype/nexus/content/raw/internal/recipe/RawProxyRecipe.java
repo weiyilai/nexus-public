@@ -14,10 +14,9 @@ package org.sonatype.nexus.content.raw.internal.recipe;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.repository.Format;
@@ -39,9 +38,14 @@ import org.sonatype.nexus.repository.view.ViewFacet;
 import org.sonatype.nexus.repository.view.matchers.ActionMatcher;
 import org.sonatype.nexus.repository.view.matchers.SuffixMatcher;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.http.HttpHandlers.notFound;
 import static org.sonatype.nexus.repository.view.matchers.logic.LogicMatchers.and;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Raw proxy repository recipe.
@@ -49,8 +53,10 @@ import static org.sonatype.nexus.repository.view.matchers.logic.LogicMatchers.an
  * @since 3.24
  */
 @AvailabilityVersion(from = "1.0")
-@Named(RawProxyRecipe.NAME)
+@Component
+@Qualifier(RawProxyRecipe.NAME)
 @Priority(Integer.MAX_VALUE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @Singleton
 public class RawProxyRecipe
     extends RawRecipeSupport
@@ -73,8 +79,8 @@ public class RawProxyRecipe
 
   @Inject
   public RawProxyRecipe(
-      @Named(ProxyType.NAME) final Type type,
-      @Named(RawFormat.NAME) final Format format,
+      @Qualifier(ProxyType.NAME) final Type type,
+      @Qualifier(RawFormat.NAME) final Format format,
       final Provider<HttpClientFacet> httpClientFacet,
       final Provider<NegativeCacheFacet> negativeCacheFacet,
       final Provider<RawProxyFacet> proxyFacet,

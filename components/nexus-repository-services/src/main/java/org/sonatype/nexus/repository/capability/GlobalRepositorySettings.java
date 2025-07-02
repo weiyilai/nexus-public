@@ -14,17 +14,17 @@ package org.sonatype.nexus.repository.capability;
 
 import java.time.Duration;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * Global repository settings.
  *
  * @since 3.24
  */
-@Named
+@Component
 @Singleton
 public class GlobalRepositorySettings
     extends ComponentSupport

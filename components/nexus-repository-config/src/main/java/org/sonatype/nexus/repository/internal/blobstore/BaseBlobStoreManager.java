@@ -21,7 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.sonatype.nexus.blobstore.BlobStoreDescriptor;
 import org.sonatype.nexus.blobstore.api.Blob;
@@ -42,6 +42,7 @@ import org.sonatype.nexus.blobstore.api.BlobStoreStoppedEvent;
 import org.sonatype.nexus.blobstore.api.BlobStoreUpdatedEvent;
 import org.sonatype.nexus.blobstore.api.DefaultBlobStoreProvider;
 import org.sonatype.nexus.blobstore.api.tasks.BlobStoreTaskService;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.FreezeService;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.event.EventAware;
@@ -114,8 +115,8 @@ public class BaseBlobStoreManager
   public BaseBlobStoreManager(
       final EventManager eventManager, // NOSONAR
       final BlobStoreConfigurationStore store,
-      final Map<String, BlobStoreDescriptor> blobStoreDescriptors,
-      final Map<String, Provider<BlobStore>> blobStorePrototypes,
+      final List<BlobStoreDescriptor> blobStoreDescriptorsList,
+      final List<Provider<BlobStore>> blobStorePrototypesList,
       final FreezeService freezeService,
       final Provider<RepositoryManager> repositoryManagerProvider,
       final NodeAccess nodeAccess,
@@ -128,8 +129,8 @@ public class BaseBlobStoreManager
   {
     this.eventManager = checkNotNull(eventManager);
     this.store = checkNotNull(store);
-    this.blobStoreDescriptors = checkNotNull(blobStoreDescriptors);
-    this.blobStorePrototypes = checkNotNull(blobStorePrototypes);
+    this.blobStoreDescriptors = QualifierUtil.buildQualifierBeanMap(checkNotNull(blobStoreDescriptorsList));
+    this.blobStorePrototypes = QualifierUtil.buildQualifierBeanMap(checkNotNull(blobStorePrototypesList));
     this.freezeService = checkNotNull(freezeService);
     this.repositoryManagerProvider = checkNotNull(repositoryManagerProvider);
     this.blobStoreTaskService = checkNotNull(blobStoreTaskService);

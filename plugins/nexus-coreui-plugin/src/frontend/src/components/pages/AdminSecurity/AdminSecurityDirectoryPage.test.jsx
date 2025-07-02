@@ -25,7 +25,7 @@ describe('AdminSecurityDirectoryPage', () => {
     givenUserLoggedIn();
 
     givenBundleActiveStates({
-      'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
+      'nexus-coreui-plugin': true
     });
 
     givenExtJSState(defaultExtState());
@@ -94,7 +94,7 @@ describe('AdminSecurityDirectoryPage', () => {
   describe('Crowd Settings Link', () => {
     beforeEach(() => {
       givenBundleActiveStates({
-        'com.sonatype.nexus.plugins.nexus-crowd-plugin': true
+        'nexus-crowd-plugin': true
       });
 
       givenExtJSState({ ...defaultExtState(), crowd: { licenseValid: true }  });
@@ -137,7 +137,7 @@ describe('AdminSecurityDirectoryPage', () => {
 
   describe('SAML Configuration Link', () => {
     beforeEach(() => {
-      givenBundleActiveStates({ 'com.sonatype.nexus.plugins.nexus-saml-plugin': true })
+      givenBundleActiveStates({ 'nexus-saml-plugin': true })
       givenExtJSState(defaultExtState(), 'PRO')
     })
     it('shows given permissions', async () => {

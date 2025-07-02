@@ -14,10 +14,10 @@ package org.sonatype.nexus.security.internal;
 
 import java.util.ConcurrentModificationException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.Description;
 import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.security.NexusSimpleAuthenticationInfo;
 import org.sonatype.nexus.security.RealmCaseMapping;
@@ -39,10 +39,11 @@ import org.apache.shiro.authc.credential.PasswordService;
 import org.apache.shiro.realm.AuthenticatingRealm;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.subject.SimplePrincipalCollection;
-import org.eclipse.sisu.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.security.internal.DefaultRealmConstants.DEFAULT_REALM_NAME;
 import static org.sonatype.nexus.security.internal.DefaultRealmConstants.DESCRIPTION;
@@ -53,7 +54,8 @@ import static org.sonatype.nexus.security.internal.DefaultRealmConstants.DESCRIP
  * This realm ONLY handles authentication.
  */
 @Singleton
-@Named(DEFAULT_REALM_NAME)
+@Component
+@Qualifier(DEFAULT_REALM_NAME)
 @Description(DESCRIPTION)
 public class AuthenticatingRealmImpl
     extends AuthenticatingRealm
@@ -75,8 +77,8 @@ public class AuthenticatingRealmImpl
   public AuthenticatingRealmImpl(
       final SecurityConfigurationManager configuration,
       final PasswordService passwordService,
-      @Named("${nexus.orient.enabled:-false}") @Value("${nexus.orient.enabled:false}") final boolean orient,
-      @Named(FeatureFlags.NEXUS_SECURITY_PASSWORD_ALGORITHM_NAMED) @Value(FeatureFlags.NEXUS_SECURITY_PASSWORD_ALGORITHM_NAMED_VALUE) final String nexusPasswordAlgorithm)
+      @Value("${nexus.orient.enabled:false}") final boolean orient,
+      @Value(FeatureFlags.NEXUS_SECURITY_PASSWORD_ALGORITHM_NAMED_VALUE) final String nexusPasswordAlgorithm)
   {
     this.configuration = configuration;
     this.passwordService = passwordService;

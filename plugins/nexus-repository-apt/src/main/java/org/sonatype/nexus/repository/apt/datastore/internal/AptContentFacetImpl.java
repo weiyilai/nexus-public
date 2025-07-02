@@ -19,9 +19,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.constraints.NotNull;
 
 import org.sonatype.nexus.repository.Facet;
@@ -51,6 +51,10 @@ import org.sonatype.nexus.repository.view.payloads.TempBlob;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.entity.Continuations.iterableOf;
@@ -71,7 +75,9 @@ import static org.sonatype.nexus.repository.apt.internal.AptProperties.P_PACKAGE
  * @since 3.31
  */
 @Facet.Exposed
-@Named(AptFormat.NAME)
+@Component
+@Qualifier(AptFormat.NAME)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AptContentFacetImpl
     extends ContentFacetSupport
     implements AptContentFacet
@@ -81,7 +87,7 @@ public class AptContentFacetImpl
 
   @Inject
   public AptContentFacetImpl(
-      @Named(AptFormat.NAME) final FormatStoreManager formatStoreManager)
+      @Qualifier(AptFormat.NAME) final FormatStoreManager formatStoreManager)
   {
     super(formatStoreManager);
   }
@@ -146,9 +152,10 @@ public class AptContentFacetImpl
   }
 
   @Override
-  public FluentAsset put(final String path,
-                         final Payload payload,
-                         @Nullable final PackageInfo packageInfo) throws IOException
+  public FluentAsset put(
+      final String path,
+      final Payload payload,
+      @Nullable final PackageInfo packageInfo) throws IOException
   {
     String normalizedPath = normalizeAssetPath(path);
 
@@ -159,8 +166,10 @@ public class AptContentFacetImpl
     }
   }
 
-  private FluentAsset findOrCreateDebAsset(final String path, final TempBlob tempBlob, @Nullable PackageInfo packageInfo)
-      throws IOException
+  private FluentAsset findOrCreateDebAsset(
+      final String path,
+      final TempBlob tempBlob,
+      @Nullable PackageInfo packageInfo) throws IOException
   {
     if (packageInfo == null) {
       packageInfo = AptPackageParser.parsePackageInfo(tempBlob);
@@ -195,7 +204,8 @@ public class AptContentFacetImpl
             "Impossible build " + P_INDEX_SECTION + ". Asset blob couldn't be found for asset: " + asset.path()));
     final Map<String, String> checksums = assetBlob.checksums();
 
-    return controlFile.getParagraphs().get(0)
+    return controlFile.getParagraphs()
+        .get(0)
         .withFields(Arrays.asList(
             new ControlFile.ControlField("Filename", asset.path()),
             new ControlFile.ControlField("Size", Long.toString(assetBlob.blobSize())),
@@ -221,7 +231,7 @@ public class AptContentFacetImpl
     return components()
         .name(name)
         .version(version)
-        .normalizedVersion(versionNormalizerService().getNormalizedVersionByFormat(version , repository().getFormat()))
+        .normalizedVersion(versionNormalizerService().getNormalizedVersionByFormat(version, repository().getFormat()))
         .namespace(architecture)
         .getOrCreate();
   }
@@ -254,8 +264,7 @@ public class AptContentFacetImpl
   public Iterable<FluentAsset> getAptPackageAssets() {
     FluentQuery<FluentAsset> query = assets().byFilter(
         "kind = #{" + AssetDAO.FILTER_PARAMS + ".assetKindFilter}",
-        Collections.singletonMap("assetKindFilter", DEB)
-    );
+        Collections.singletonMap("assetKindFilter", DEB));
     return iterableOf(query::browse);
   }
 }

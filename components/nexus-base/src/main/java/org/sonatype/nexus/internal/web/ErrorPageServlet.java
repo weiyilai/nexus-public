@@ -17,10 +17,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URL;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -28,16 +26,21 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import javax.ws.rs.core.Response.Status;
 
+import org.sonatype.nexus.common.app.WebFilterPriority;
 import org.sonatype.nexus.common.template.TemplateHelper;
 import org.sonatype.nexus.common.template.TemplateParameters;
 import org.sonatype.nexus.common.template.TemplateThrowableAdapter;
 import org.sonatype.nexus.servlet.ServletHelper;
 import org.sonatype.nexus.servlet.XFrameOptions;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.shiro.web.servlet.ShiroHttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Throwables.getRootCause;
@@ -51,7 +54,10 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
  *
  * @see ErrorPageFilter
  */
-@Named
+// needs to be first-most when calculating order (some fudge room for edge-cases)
+@Order(WebFilterPriority.WEB)
+@WebServlet("/error.html")
+@Component
 @Singleton
 public class ErrorPageServlet
     extends HttpServlet

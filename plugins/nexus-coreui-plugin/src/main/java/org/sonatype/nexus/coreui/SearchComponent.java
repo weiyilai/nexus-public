@@ -18,9 +18,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.ValidationException;
 
 import org.sonatype.nexus.common.event.EventManager;
@@ -53,13 +52,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.sonatype.nexus.repository.search.index.SearchConstants.FORMAT;
+import org.springframework.stereotype.Component;
 
 /**
  * Search {@link DirectComponent}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Search")
 public class SearchComponent
@@ -76,7 +76,7 @@ public class SearchComponent
   @Inject
   public SearchComponent(
       final SearchService searchService,
-      @Named("${nexus.searchResultsLimit:-1000}") @Value("${nexus.searchResultsLimit:1000}") final int searchResultsLimit,
+      @Value("${nexus.searchResultsLimit:1000}") final int searchResultsLimit,
       final SearchResultsGenerator searchResultsGenerator,
       final EventManager eventManager)
   {

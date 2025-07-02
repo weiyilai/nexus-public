@@ -13,19 +13,16 @@
 package org.sonatype.nexus.repository.internal.blobstore;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Provider;
-
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.blobstore.BlobStoreDescriptor;
 import org.sonatype.nexus.blobstore.MockBlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.BlobId;
@@ -35,10 +32,10 @@ import org.sonatype.nexus.blobstore.api.BlobStoreException;
 import org.sonatype.nexus.blobstore.api.DefaultBlobStoreProvider;
 import org.sonatype.nexus.blobstore.api.tasks.BlobStoreTaskService;
 import org.sonatype.nexus.blobstore.file.FileBlobStore;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.FreezeService;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.node.NodeAccess;
-import org.sonatype.nexus.common.stateguard.InvalidStateException;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
 import org.sonatype.nexus.repository.blobstore.BlobStoreConfigurationStore;
@@ -46,11 +43,10 @@ import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.replication.ReplicationBlobStoreStatusManager;
 import org.sonatype.nexus.security.UserIdHelper;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import jakarta.inject.Provider;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -58,13 +54,25 @@ import org.mockito.MockedStatic;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentCaptor.forClass;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.blobstore.api.BlobStoreManager.DEFAULT_BLOBSTORE_NAME;
 
-public class BaseBlobStoreManagerTest
-    extends TestSupport
+class BaseBlobStoreManagerTest
+    extends Test5Support
 {
   private static final String SECRET_FIELD_KEY = "secretAccessKey";
 
@@ -73,9 +81,6 @@ public class BaseBlobStoreManagerTest
   private static final String TEST_USER = "test-user";
 
   private static final String SECRET_ID = "_1";
-
-  @Rule
-  public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   @Mock
   private EventManager eventManager;
@@ -88,6 +93,9 @@ public class BaseBlobStoreManagerTest
 
   @Mock
   private Provider<BlobStore> provider;
+
+  @Mock
+  private BlobStore blobStore;
 
   @Mock
   private FreezeService freezeService;
@@ -112,60 +120,37 @@ public class BaseBlobStoreManagerTest
 
   private MockedStatic<UserIdHelper> userIdHelperMockedStatic;
 
-  BaseBlobStoreManager underTest;
+  private MockedStatic<QualifierUtil> qualifierUtilMockedStatic;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  public void setup() throws Exception {
+    lenient().when(provider.get()).thenReturn(blobStore);
+
     userIdHelperMockedStatic = mockStatic(UserIdHelper.class);
+    qualifierUtilMockedStatic = mockStatic(QualifierUtil.class);
     userIdHelperMockedStatic.when(UserIdHelper::get).thenReturn(TEST_USER);
-    when(store.newConfiguration()).thenReturn(new MockBlobStoreConfiguration());
-    underTest = newBlobStoreManager(false, this::getBlobStoreConfig);
+    lenient().when(store.newConfiguration()).thenReturn(new MockBlobStoreConfiguration());
   }
 
-  @After
+  @AfterEach
   public void destroy() throws Exception {
     userIdHelperMockedStatic.close();
-  }
-
-  private BaseBlobStoreManager newBlobStoreManager(
-      final Boolean provisionDefaults,
-      final DefaultBlobStoreProvider blobStoreConfigProvider)
-  {
-    Map<String, BlobStoreDescriptor> descriptors = new HashMap<>();
-    descriptors.put("test", descriptor);
-    descriptors.put("File", descriptor);
-    Map<String, Provider<BlobStore>> providers = new HashMap<>();
-    providers.put("test", provider);
-    providers.put("File", provider);
-    return spy(new BaseBlobStoreManager(eventManager, store,
-        descriptors,
-        providers,
-        freezeService, () -> repositoryManager,
-        nodeAccess, provisionDefaults,
-        blobStoreConfigProvider,
-        blobStoreTaskService,
-        blobStoreOverrideProvider,
-        replicationBlobStoreStatusManager,
-        secretsService));
+    qualifierUtilMockedStatic.close();
   }
 
   @Test
   public void shouldNotCreateDefaultBlobStoreWhenProviderIsNull() throws Exception {
-    underTest = newBlobStoreManager(false, null);
-
-    underTest.doStart();
+    newBlobStoreManager(false, null);
 
     verify(store, never()).create(any(BlobStoreConfiguration.class));
   }
 
   @Test
   public void canStartWithNothingConfigured() throws Exception {
-    underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
 
     ArgumentCaptor<BlobStoreConfiguration> configurationArgumentCaptor = forClass(BlobStoreConfiguration.class);
-    when(store.list()).thenReturn(Collections.emptyList());
-    underTest.doStart();
-    assert !underTest.browse().iterator().hasNext();
+    assertFalse(underTest.browse().iterator().hasNext());
 
     verify(store).create(configurationArgumentCaptor.capture());
     assertThat(configurationArgumentCaptor.getValue().getName(), is(DEFAULT_BLOBSTORE_NAME));
@@ -174,87 +159,65 @@ public class BaseBlobStoreManagerTest
   @Test
   public void canStartWithNothingConfiguredAndDoesNotCreateDefaultWhenClustered() throws Exception {
     when(nodeAccess.isClustered()).thenReturn(true);
-    when(store.list()).thenReturn(Collections.emptyList());
-    underTest.doStart();
 
-    verify(store, times(0)).create(any(BlobStoreConfiguration.class));
+    newBlobStoreManager(null, this::getBlobStoreConfig);
+
+    verify(store, never()).create(any(BlobStoreConfiguration.class));
   }
 
   @Test
   public void canStartWithNothingConfiguredAndDoesCreateDefaultWhenClusteredIfProvisionDefaultsIsTrue() throws Exception {
-    underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
-
     ArgumentCaptor<BlobStoreConfiguration> configurationArgumentCaptor = forClass(BlobStoreConfiguration.class);
-    when(nodeAccess.isClustered()).thenReturn(true);
 
-    when(store.list()).thenReturn(Collections.emptyList());
-    underTest.doStart();
+    newBlobStoreManager(true, this::getBlobStoreConfig);
 
+    verify(nodeAccess, never()).isClustered();
     verify(store).create(configurationArgumentCaptor.capture());
     assertThat(configurationArgumentCaptor.getValue().getName(), is(DEFAULT_BLOBSTORE_NAME));
   }
 
   @Test
   public void canSkipCreatingDefaultBlobstoreWhenNonClusteredIfProvisionDefaultsIsFalse() throws Exception {
-    underTest = newBlobStoreManager(false, this::getBlobStoreConfig);
+    newBlobStoreManager(false, this::getBlobStoreConfig);
 
-    when(nodeAccess.isClustered()).thenReturn(false);
-    when(store.list()).thenReturn(Collections.emptyList());
-    underTest.doStart();
-
-    verify(store, times(0)).create(any(BlobStoreConfiguration.class));
+    verify(nodeAccess, never()).isClustered();
+    verify(store, never()).create(any(BlobStoreConfiguration.class));
   }
 
   @Test
   public void canStartWithExistingConfiguration() throws Exception {
-    BlobStore blobStore = mock(BlobStore.class);
-    when(provider.get()).thenReturn(blobStore);
-    when(store.list()).thenReturn(Collections.singletonList(createConfig("test")));
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig, createConfig("test"));
 
-    underTest.doStart();
-
-    // assert underTest.browse().toList().equals(List.of(blobStore));
-
-    assert StreamSupport.stream(underTest.browse().spliterator(), false)
-        .collect(Collectors.toList())
-        .equals(Collections.singletonList(blobStore));
+    assertThat(StreamSupport.stream(underTest.browse().spliterator(), false).toList(), is(List.of(blobStore)));
   }
 
   @Test
   public void nameCanBeDuplicateRegardlessOfCase() throws Exception {
-    BlobStore blobStore = mock(BlobStore.class);
-    when(provider.get()).thenReturn(blobStore);
-    when(store.list()).thenReturn(Collections.singletonList(createConfig("test")));
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig, createConfig("test"));
 
-    underTest.doStart();
-
-    assert !underTest.exists("unique");
-    assert underTest.exists("test");
-    assert underTest.exists("TEST");
+    assertFalse(underTest.exists("unique"));
+    assertTrue(underTest.exists("test"));
+    assertTrue(underTest.exists("TEST"));
   }
 
   @Test
   public void canCreateABlobStore() throws Exception {
-    BlobStore blobStore = mock(BlobStore.class);
-    when(provider.get()).thenReturn(blobStore);
     BlobStoreConfiguration configuration = createConfig("test");
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
 
     BlobStore createdBlobStore = underTest.create(configuration);
 
-    assert createdBlobStore == blobStore;
+    assertThat(createdBlobStore, is(blobStore));
     verify(store).create(configuration);
     verify(blobStore).start();
 
-    assert StreamSupport.stream(underTest.browse().spliterator(), false)
-        .collect(Collectors.toList())
-        .equals(Collections.singletonList(blobStore));
-    assert underTest.get("test") == blobStore;
+    assertThat(StreamSupport.stream(underTest.browse().spliterator(), false).toList(), is(List.of(blobStore)));
+    assertThat(underTest.get("test"), is(blobStore));
   }
 
   @Test
   public void canCreateBlobStoreAndEncryptSensitiveValues() throws Exception {
-    when(descriptor.getSensitiveConfigurationFields()).thenReturn(Collections.singletonList(SECRET_FIELD_KEY));
-    BlobStore blobStore = mock(BlobStore.class);
+    when(descriptor.getSensitiveConfigurationFields()).thenReturn(List.of(SECRET_FIELD_KEY));
     when(provider.get()).thenReturn(blobStore);
     Secret secret = mock(Secret.class);
     when(secret.getId()).thenReturn(SECRET_ID);
@@ -265,9 +228,10 @@ public class BaseBlobStoreManagerTest
     Map<String, Object> blobConfigMap = new HashMap<>();
     blobConfigMap.put(SECRET_FIELD_KEY, SECRET_FIELD_VALUE);
     blobStoreAttributes.put("test", blobConfigMap);
-    blobStoreAttributes.put("file", Collections.singletonMap("path", "foo"));
+    blobStoreAttributes.put("file", Map.of("path", "foo"));
     BlobStoreConfiguration configuration = createConfig("test", blobStoreAttributes);
 
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
     BlobStore createdBlobStore = underTest.create(configuration);
 
     assertThat(configuration.getAttributes().get("test").get(SECRET_FIELD_KEY), is(SECRET_ID));
@@ -280,17 +244,18 @@ public class BaseBlobStoreManagerTest
 
   @Test
   public void canDeleteAnExistingBlobStore() throws Exception {
-    when(descriptor.getSensitiveConfigurationFields()).thenReturn(Collections.singletonList(SECRET_FIELD_KEY));
-    BlobStore blobStore = mock(BlobStore.class);
+    when(descriptor.getSensitiveConfigurationFields()).thenReturn(List.of(SECRET_FIELD_KEY));
     Map<String, Map<String, Object>> blobStoreAttributes = new HashMap<>();
     Map<String, Object> blobConfigMap = new HashMap<>();
     blobConfigMap.put(SECRET_FIELD_KEY, SECRET_ID);
     blobStoreAttributes.put("test", blobConfigMap);
-    blobStoreAttributes.put("file", Collections.singletonMap("path", "foo"));
+    blobStoreAttributes.put("file", Map.of("path", "foo"));
     BlobStoreConfiguration configuration = createConfig("test", blobStoreAttributes);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(configuration);
+
+    BaseBlobStoreManager underTest = spy(newBlobStoreManager(true, this::getBlobStoreConfig, configuration));
+
     doReturn(blobStore).when(underTest).blobStore("test");
-    when(store.list()).thenReturn(Collections.singletonList(configuration));
     Secret secret = mock(Secret.class);
     when(secretsService.from(SECRET_ID)).thenReturn(secret);
 
@@ -305,10 +270,9 @@ public class BaseBlobStoreManagerTest
   @Test
   public void canDeleteAnExistingBlobStoreInFailedState() throws Exception {
     BlobStoreConfiguration configuration = createConfig("test");
-    BlobStore blobStore = mock(BlobStore.class);
+    BaseBlobStoreManager underTest = spy(newBlobStoreManager(true, this::getBlobStoreConfig, configuration));
+
     doReturn(blobStore).when(underTest).blobStore("test");
-    doThrow(InvalidStateException.class).when(blobStore).stop();
-    when(store.list()).thenReturn(Collections.singletonList(configuration));
     when(blobStore.getBlobStoreConfiguration()).thenReturn(configuration);
 
     underTest.delete(configuration.getName());
@@ -316,14 +280,14 @@ public class BaseBlobStoreManagerTest
     verify(blobStore).shutdown();
     verify(store).delete(configuration);
     verify(freezeService).checkWritable("Unable to delete a BlobStore while database is frozen.");
+    verify(blobStore, never()).stop();
   }
 
   @Test
   public void canDeleteAnExistingBlobStoreThatFailsOnRemove() throws Exception {
     BlobStoreConfiguration configuration = createConfig("test");
-    BlobStore blobStore = mock(BlobStore.class);
+    BaseBlobStoreManager underTest = spy(newBlobStoreManager(true, this::getBlobStoreConfig, configuration));
     doReturn(blobStore).when(underTest).blobStore("test");
-    when(store.list()).thenReturn(Collections.singletonList(configuration));
     when(blobStore.getBlobStoreConfiguration()).thenReturn(configuration);
     doThrow(BlobStoreException.class).when(blobStore).remove();
 
@@ -335,25 +299,20 @@ public class BaseBlobStoreManagerTest
     verify(freezeService).checkWritable("Unable to delete a BlobStore while database is frozen.");
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void canNotDeleteAnExistingBlobStoreUsedInAMoveTask() throws Exception {
-    underTest.doStart();
-
     BlobStoreConfiguration configuration = createConfig("test");
-    BlobStore blobStore = mock(BlobStore.class);
-    doReturn(blobStore).when(underTest).blobStore("test");
-    doThrow(InvalidStateException.class).when(blobStore).stop();
-    when(store.list()).thenReturn(Collections.singletonList(configuration));
-    when(blobStore.getBlobStoreConfiguration()).thenReturn(configuration);
     when(blobStoreTaskService.isAnyTaskInUseForBlobStore("test")).thenReturn(true);
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig, configuration);
 
-    underTest.delete(configuration.getName());
+    assertThrows(IllegalStateException.class, () -> underTest.delete("test"));
+    verify(blobStore, never()).stop();
   }
 
   @Test
   public void allBlobStoresAreStoppedWithTheManagerIsStopped() throws Exception {
-    BlobStore blobStore = mock(BlobStore.class);
-    when(provider.get()).thenReturn(blobStore);
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
+
     BlobStoreConfiguration configuration = createConfig("test");
     underTest.create(configuration);
 
@@ -363,10 +322,11 @@ public class BaseBlobStoreManagerTest
   }
 
   @Test
-  public void blobStoreNotCreatedForInvalidConfiguration() {
+  public void blobStoreNotCreatedForInvalidConfiguration() throws Exception {
     when(provider.get()).thenThrow(new IllegalArgumentException());
 
     BlobStoreConfiguration configuration = createConfig("test");
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig, configuration);
 
     try {
       underTest.create(configuration);
@@ -376,30 +336,12 @@ public class BaseBlobStoreManagerTest
       // expected
     }
 
-    assert !underTest.browse().iterator().hasNext();
+    assertFalse(underTest.browse().iterator().hasNext());
   }
 
   @Test
   public void canSuccessfullyCreateNewBlobStoresConcurrently() throws Exception {
-    Map<String, BlobStoreDescriptor> descriptors = new HashMap<>();
-    descriptors.put("test", descriptor);
-    descriptors.put("File", descriptor);
-    Map<String, Provider<BlobStore>> providers = new HashMap<>();
-    providers.put("test", provider);
-    providers.put("File", provider);
-    underTest = new BaseBlobStoreManager(eventManager, store,
-        descriptors,
-        providers,
-        freezeService, () -> repositoryManager,
-        nodeAccess, true,
-        this::getBlobStoreConfig,
-        blobStoreTaskService,
-        blobStoreOverrideProvider,
-        replicationBlobStoreStatusManager,
-        secretsService);
-
-    BlobStore blobStore = mock(BlobStore.class);
-    when(provider.get()).thenReturn(blobStore);
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
 
     underTest.create(createConfig("concurrency-test-1"));
     underTest.create(createConfig("concurrency-test-2"));
@@ -411,113 +353,113 @@ public class BaseBlobStoreManagerTest
     storesIterator.next();
   }
 
-  @Test(expected = BlobStoreException.class)
+  @Test
   public void inUseBlobstoreCannotBeDeleted() throws Exception {
     BlobStore used = mock(BlobStore.class);
     BlobStore unused = mock(BlobStore.class);
     when(used.getBlobStoreConfiguration()).thenReturn(createConfig("used"));
     when(unused.getBlobStoreConfiguration()).thenReturn(createConfig("unused"));
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig,
+        used.getBlobStoreConfiguration(), unused.getBlobStoreConfiguration());
     underTest.track("used", used);
     underTest.track("unused", unused);
     when(repositoryManager.isBlobstoreUsed("used")).thenReturn(true);
     when(repositoryManager.isBlobstoreUsed("unused")).thenReturn(false);
 
-    try {
-      underTest.delete("unused");
-      underTest.delete("used");
-    }
-    finally {
-      verify(unused, times(1)).remove();
-      verify(used, times(0)).remove();
-    }
+    underTest.delete("unused");
+    assertThrows(BlobStoreException.class, () -> underTest.delete("used"));
+    verify(unused).remove();
+    verify(used, never()).remove();
   }
 
   @Test
-  public void itIsConvertableWhenTheStoreFindsNoParentsAndTheBlobStoreIsGroupable() {
+  public void itIsConvertableWhenTheStoreFindsNoParentsAndTheBlobStoreIsGroupable() throws Exception {
     String blobStoreName = "child";
-    BlobStore blobStore = mock(BlobStore.class);
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
     underTest.track(blobStoreName, blobStore);
     when(blobStore.isGroupable()).thenReturn(true);
     when(blobStore.isWritable()).thenReturn(true);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(new MockBlobStoreConfiguration(blobStoreName, "test"));
     when(store.findParent(blobStoreName)).thenReturn(Optional.empty());
-    assert underTest.isConvertable(blobStoreName);
+    assertTrue(underTest.isConvertable(blobStoreName));
   }
 
   @Test
-  public void itIsNotConvertableWhenTheStoreFindsParents() {
+  public void itIsNotConvertableWhenTheStoreFindsParents() throws Exception {
     String blobStoreName = "child";
-    BlobStore blobStore = mock(BlobStore.class);
     when(blobStore.isGroupable()).thenReturn(true);
+    when(blobStore.isWritable()).thenReturn(true);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(new MockBlobStoreConfiguration(blobStoreName, "test"));
     when(store.findParent(blobStoreName)).thenReturn(Optional.of(new MockBlobStoreConfiguration()));
-    assert !underTest.isConvertable(blobStoreName);
+
+    BaseBlobStoreManager underTest =
+        newBlobStoreManager(true, this::getBlobStoreConfig, blobStore.getBlobStoreConfiguration());
+    assertFalse(underTest.isConvertable(blobStoreName));
+
+    verify(store).findParent(blobStoreName);
   }
 
   @Test
-  public void itIsNotConvertableWhenTheStoreIsNotGroupable() {
+  public void itIsNotConvertableWhenTheStoreIsNotGroupable() throws Exception {
     String blobStoreName = "child";
-    BlobStore blobStore = mock(BlobStore.class);
     when(blobStore.isGroupable()).thenReturn(false);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(new MockBlobStoreConfiguration(blobStoreName, "test"));
-    when(store.findParent(blobStoreName)).thenReturn(Optional.empty());
-    assert !underTest.isConvertable(blobStoreName);
+
+    BaseBlobStoreManager underTest =
+        newBlobStoreManager(true, this::getBlobStoreConfig, blobStore.getBlobStoreConfiguration());
+    assertFalse(underTest.isConvertable(blobStoreName));
+    verify(store, never()).findParent(any());
   }
 
   @Test
   public void itIsNotConvertableWhenTheStoreIsInUseByATask() throws Exception {
-    underTest.doStart();
-
     String blobStoreName = "child";
-    BlobStore blobStore = mock(BlobStore.class);
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
+
     underTest.track(blobStoreName, blobStore);
     when(blobStoreTaskService.isAnyTaskInUseForBlobStore("child")).thenReturn(true);
     when(blobStore.isGroupable()).thenReturn(true);
     when(blobStore.isWritable()).thenReturn(true);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(new MockBlobStoreConfiguration(blobStoreName, "test"));
     when(store.findParent(blobStoreName)).thenReturn(Optional.empty());
-    assert !underTest.isConvertable(blobStoreName);
+    assertFalse(underTest.isConvertable(blobStoreName));
   }
 
   @Test
   public void canStartWhenABlobStoreFailsToRestore() throws Exception {
-    BlobStore blobStore = mock(BlobStore.class);
     doThrow(new IllegalStateException()).when(blobStore).init(any(BlobStoreConfiguration.class));
     when(provider.get()).thenReturn(blobStore);
-    when(store.list()).thenReturn(Collections.singletonList(createConfig("test")));
 
-    underTest.doStart();
+    BlobStoreConfiguration configuration = createConfig("test");
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig, configuration);
+
     assertThat("blob store manager should still track blob stores that failed on startup", underTest.get("test"),
         notNullValue());
   }
 
   @Test
   public void canStartWhenABlobStoreFailsToStart() throws Exception {
-    BlobStore blobStore = mock(BlobStore.class);
     doThrow(new IllegalStateException()).when(blobStore).start();
-    when(provider.get()).thenReturn(blobStore);
-    when(store.list()).thenReturn(Collections.singletonList(createConfig("test")));
-    underTest.doStart();
+
+    BlobStoreConfiguration configuration = createConfig("test");
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig, configuration);
+
     // assert underTest.browse().toList().equals(List.of(blobStore));
-    assert StreamSupport.stream(underTest.browse().spliterator(), false)
-        .collect(Collectors.toList())
-        .equals(Collections.singletonList(blobStore));
+    assertThat(StreamSupport.stream(underTest.browse().spliterator(), false).toList(), is(List.of(blobStore)));
   }
 
   @Test
   public void canUpdateBlobStoreFromNewConfig() throws Exception {
-    when(descriptor.getSensitiveConfigurationFields()).thenReturn(Collections.singletonList(SECRET_FIELD_KEY));
-    BlobStore blobStore = mock(BlobStore.class);
+    when(descriptor.getSensitiveConfigurationFields()).thenReturn(List.of(SECRET_FIELD_KEY));
     Map<String, Map<String, Object>> oldBlobStoreAttributes = new HashMap<>();
     Map<String, Object> oldBlobConfigMap = new HashMap<>();
     oldBlobConfigMap.put(SECRET_FIELD_KEY, SECRET_ID);
     oldBlobStoreAttributes.put("test", oldBlobConfigMap);
-    oldBlobStoreAttributes.put("file", Collections.singletonMap("path", "foo"));
+    oldBlobStoreAttributes.put("file", Map.of("path", "foo"));
     BlobStoreConfiguration oldBlobStoreConfig = createConfig("test", oldBlobStoreAttributes);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(oldBlobStoreConfig);
     Secret oldSecret = mock(Secret.class);
     when(secretsService.from(SECRET_ID)).thenReturn(oldSecret);
-    when(oldSecret.decrypt()).thenReturn(SECRET_FIELD_VALUE.toCharArray());
 
     Secret newSecret = mock(Secret.class);
     when(newSecret.getId()).thenReturn("_2");
@@ -525,10 +467,12 @@ public class BaseBlobStoreManagerTest
     Map<String, Object> newBlobConfigMap = new HashMap<>();
     newBlobConfigMap.put(SECRET_FIELD_KEY, SECRET_FIELD_VALUE);
     updatedBlobStoreAttributes.put("test", newBlobConfigMap);
-    updatedBlobStoreAttributes.put("file", Collections.singletonMap("path", "foo"));
+    updatedBlobStoreAttributes.put("file", Map.of("path", "foo"));
     BlobStoreConfiguration newBlobStoreConfig = createConfig("test", updatedBlobStoreAttributes);
     when(secretsService.encryptMaven(BaseBlobStoreManager.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
         TEST_USER)).thenReturn(newSecret);
+
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig);
 
     underTest.track("test", blobStore);
 
@@ -537,19 +481,18 @@ public class BaseBlobStoreManagerTest
     verify(secretsService).remove(oldSecret);
     verify(secretsService).encryptMaven(BaseBlobStoreManager.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
         TEST_USER);
-    verify(store, times(1)).update(newBlobStoreConfig);
-    verify(store, times(0)).update(oldBlobStoreConfig);
+    verify(store).update(newBlobStoreConfig);
+    verify(store, never()).update(oldBlobStoreConfig);
   }
 
-  @Test(expected = BlobStoreException.class)
+  @Test
   public void cannotUpdateBlobStoreFromNewConfig() throws Exception {
-    when(descriptor.getSensitiveConfigurationFields()).thenReturn(Collections.singletonList(SECRET_FIELD_KEY));
-    BlobStore blobStore = mock(BlobStore.class);
+    when(descriptor.getSensitiveConfigurationFields()).thenReturn(List.of(SECRET_FIELD_KEY));
     Map<String, Map<String, Object>> oldBlobStoreAttributes = new HashMap<>();
     Map<String, Object> oldBlobConfigMap = new HashMap<>();
     oldBlobConfigMap.put(SECRET_FIELD_KEY, SECRET_FIELD_VALUE);
     oldBlobStoreAttributes.put("test", oldBlobConfigMap);
-    oldBlobStoreAttributes.put("file", Collections.singletonMap("path", "foo"));
+    oldBlobStoreAttributes.put("file", Map.of("path", "foo"));
     BlobStoreConfiguration oldBlobStoreConfig = createConfig("test", oldBlobStoreAttributes);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(oldBlobStoreConfig);
     BlobId blobId = new BlobId("testBlobId", OffsetDateTime.now());
@@ -562,33 +505,55 @@ public class BaseBlobStoreManagerTest
     Map<String, Map<String, Object>> updatedBlobStoreAttributes = new HashMap<>();
     Map<String, Object> newBlobConfigMap = new HashMap<>();
     newBlobConfigMap.put(SECRET_FIELD_KEY, SECRET_FIELD_VALUE);
-    oldBlobStoreAttributes.put("test", newBlobConfigMap);
-    updatedBlobStoreAttributes.put("file", Collections.singletonMap("path", "foo"));
+    updatedBlobStoreAttributes.put("test", newBlobConfigMap);
+    updatedBlobStoreAttributes.put("file", Map.of("path", "foo"));
     BlobStoreConfiguration newBlobStoreConfig = createConfig("test", updatedBlobStoreAttributes);
     when(secretsService.encryptMaven(BaseBlobStoreManager.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
         TEST_USER)).thenReturn(newSecret);
 
     doThrow(new BlobStoreException("Cannot start blobstore with new config", blobId)).when(blobStore).start();
 
-    underTest.track("test", blobStore);
+    BaseBlobStoreManager underTest = newBlobStoreManager(true, this::getBlobStoreConfig, oldBlobStoreConfig);
+    when(blobStore.isStarted()).thenReturn(true);
 
-    underTest.update(newBlobStoreConfig);
+    assertThrows(BlobStoreException.class, () -> underTest.update(newBlobStoreConfig));
 
-    verify(store, times(1)).update(newBlobStoreConfig);
+    verify(store).update(newBlobStoreConfig);
     verify(secretsService).encryptMaven(BaseBlobStoreManager.BLOBSTORE_CONFIG, SECRET_FIELD_VALUE.toCharArray(),
         TEST_USER);
-    // old blobstore config should be put back in the database and new secret should be deleted
-    verify(secretsService).remove(oldSecret);
-    verify(store, times(1)).update(oldBlobStoreConfig);
   }
 
-  private BlobStoreConfiguration createConfig(String name) {
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private BaseBlobStoreManager newBlobStoreManager(
+      final Boolean provisionDefaults,
+      final DefaultBlobStoreProvider blobStoreConfigProvider,
+      final BlobStoreConfiguration... configurations) throws Exception
+  {
+    Map<String, BlobStoreDescriptor> descriptors = Map.of("test", descriptor, "File", descriptor);
+    Map<String, Provider<BlobStore>> providers = Map.of("test", provider, "File", provider);
+
+    when(QualifierUtil.buildQualifierBeanMap(any())).thenReturn((Map) descriptors, (Map) providers);
+
+    when(store.list()).thenReturn(List.of(configurations));
+
+    BaseBlobStoreManager bbsm = new BaseBlobStoreManager(eventManager, store, List.of(), List.of(),
+        freezeService, () -> repositoryManager, nodeAccess, provisionDefaults, blobStoreConfigProvider,
+        blobStoreTaskService, blobStoreOverrideProvider, replicationBlobStoreStatusManager, secretsService);
+    bbsm.start();
+
+    return bbsm;
+  }
+
+  private static BlobStoreConfiguration createConfig(final String name) {
     Map<String, Map<String, Object>> fileAttributes = new HashMap<>();
-    fileAttributes.put("file", Collections.singletonMap("path", "baz"));
+    fileAttributes.put("file", Map.of("path", "baz"));
     return createConfig(name, fileAttributes);
   }
 
-  private BlobStoreConfiguration createConfig(String name, Map<String, Map<String, Object>> fileAttributes) {
+  private static BlobStoreConfiguration createConfig(
+      final String name,
+      final Map<String, Map<String, Object>> fileAttributes)
+  {
     MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();
     config.setName(name);
     config.setType("test");

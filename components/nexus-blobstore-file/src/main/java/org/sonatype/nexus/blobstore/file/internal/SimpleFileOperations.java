@@ -22,8 +22,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 
-import javax.inject.Named;
-
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.MetricsInputStream;
 import org.sonatype.nexus.blobstore.StreamMetrics;
@@ -33,13 +31,17 @@ import com.google.common.io.ByteStreams;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * A simple {@code java.nio} implementation of {@link FileOperations}.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SimpleFileOperations
     extends ComponentSupport
     implements FileOperations

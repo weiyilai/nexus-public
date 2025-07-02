@@ -21,12 +21,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.core.UriInfo;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.elasticsearch.ElasticSearchContribution;
 import org.sonatype.nexus.elasticsearch.internal.repository.contributions.BlankValueElasticSearchContribution;
 import org.sonatype.nexus.elasticsearch.internal.repository.contributions.DefaultElasticSearchContribution;
@@ -61,11 +61,12 @@ import static org.sonatype.nexus.repository.search.index.SearchConstants.NAME;
 import static org.sonatype.nexus.repository.search.index.SearchConstants.NORMALIZED_VERSION;
 import static org.sonatype.nexus.repository.search.index.SearchConstants.REPOSITORY_NAME;
 import static org.sonatype.nexus.repository.search.index.SearchConstants.VERSION;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.7
  */
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class ElasticSearchUtils
@@ -100,12 +101,13 @@ public class ElasticSearchUtils
   @Inject
   public ElasticSearchUtils(
       final RepositoryManagerRESTAdapter repoAdapter,
-      final Map<String, SearchMappings> searchMappings,
-      final Map<String, ElasticSearchContribution> searchContributions,
-      final Map<String, BlankValueSearchQueryFilter> filterAttributes)
+      final List<SearchMappings> searchMappingsList,
+      final List<ElasticSearchContribution> searchContributionsList,
+      final List<BlankValueSearchQueryFilter> filterAttributesList)
   {
     this.repoAdapter = checkNotNull(repoAdapter);
-    checkNotNull(searchMappings).entrySet()
+    QualifierUtil.buildQualifierBeanMap(checkNotNull(searchMappingsList))
+        .entrySet()
         .stream()
         .flatMap(e -> stream(e.getValue().get().spliterator(), true))
         .forEach(mapping -> {
@@ -116,11 +118,11 @@ public class ElasticSearchUtils
         .stream()
         .filter(e -> e.getValue().startsWith(ASSET_PREFIX))
         .collect(toMap(Entry::getKey, Entry::getValue));
-    this.searchContributions = checkNotNull(searchContributions);
-    this.filterAttributes = checkNotNull(filterAttributes);
-    this.defaultElasticSearchContribution = checkNotNull(searchContributions.get(
+    this.searchContributions = QualifierUtil.buildQualifierBeanMap(checkNotNull(searchContributionsList));
+    this.filterAttributes = QualifierUtil.buildQualifierBeanMap(checkNotNull(filterAttributesList));
+    this.defaultElasticSearchContribution = checkNotNull(this.searchContributions.get(
         DefaultElasticSearchContribution.NAME));
-    this.blankValueElasticSearchContribution = checkNotNull(searchContributions.get(
+    this.blankValueElasticSearchContribution = checkNotNull(this.searchContributions.get(
         BlankValueElasticSearchContribution.NAME));
   }
 

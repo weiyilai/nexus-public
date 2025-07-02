@@ -19,9 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -59,13 +58,14 @@ import static java.util.stream.Collectors.toSet;
 import static org.sonatype.nexus.capability.CapabilityIdentity.capabilityIdentity;
 import static org.sonatype.nexus.capability.CapabilityReferenceFilterBuilder.capabilities;
 import static org.sonatype.nexus.capability.CapabilityType.capabilityType;
+import org.springframework.stereotype.Component;
 
 // FIXME: update action name after refactor to use coreui_*
 
 /**
  * Capabilities {@link DirectComponent}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "capability_Capability")
 public class CapabilityComponent
@@ -113,8 +113,10 @@ public class CapabilityComponent
   @ExceptionMetered
   @RequiresPermissions("nexus:capabilities:read")
   public List<CapabilityTypeXO> readTypes() {
-    return Arrays.stream(capabilityDescriptorRegistry.getAll()).filter(CapabilityDescriptor::isExposed)
-        .map(this::asCapabilityType).collect(toList());
+    return Arrays.stream(capabilityDescriptorRegistry.getAll())
+        .filter(CapabilityDescriptor::isExposed)
+        .map(this::asCapabilityType)
+        .collect(toList());
   }
 
   /**
@@ -288,7 +290,8 @@ public class CapabilityComponent
   }
 
   private Map<String, String> filterProperties(final Map<String, String> properties, final Capability capability) {
-    return properties.entrySet().stream()
+    return properties.entrySet()
+        .stream()
         .filter(this::nonNullKeyAndValue)
         .map(entry -> {
           if (capability.isPasswordProperty(entry.getKey())) {
@@ -298,24 +301,27 @@ public class CapabilityComponent
             return new SimpleEntry<>(entry.getKey(), PasswordPlaceholder.get());
           }
           return entry;
-        }).collect(toMap(Entry::getKey, Entry::getValue));
+        })
+        .collect(toMap(Entry::getKey, Entry::getValue));
   }
 
   private Map<String, String> unfilterProperties(
       final Map<String, String> properties,
       final Map<String, String> referenceProperties)
   {
-    return properties.entrySet().stream()
+    return properties.entrySet()
+        .stream()
         .filter(this::nonNullKeyAndValue)
         .map(entry -> {
           if (PasswordPlaceholder.is(entry.getValue())) {
             return new SimpleEntry<>(entry.getKey(), referenceProperties.get(entry.getKey()));
           }
           return entry;
-        }).collect(toMap(Entry::getKey, Entry::getValue));
+        })
+        .collect(toMap(Entry::getKey, Entry::getValue));
   }
 
-  private boolean nonNullKeyAndValue(final Entry<?,?> entry) {
+  private boolean nonNullKeyAndValue(final Entry<?, ?> entry) {
     return entry != null && entry.getKey() != null && entry.getValue() != null;
   }
 }

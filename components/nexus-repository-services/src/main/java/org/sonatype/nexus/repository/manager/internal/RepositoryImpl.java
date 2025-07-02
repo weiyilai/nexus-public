@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
@@ -77,9 +77,10 @@ public class RepositoryImpl
   private String name;
 
   @Inject
-  public RepositoryImpl(final EventManager eventManager,
-                        @Assisted final Type type,
-                        @Assisted final Format format)
+  public RepositoryImpl(
+      final EventManager eventManager,
+      @Assisted final Type type,
+      @Assisted final Format format)
   {
     this.eventManager = checkNotNull(eventManager);
     this.type = checkNotNull(type);
@@ -264,7 +265,7 @@ public class RepositoryImpl
       try {
         for (Facet facet : facets.reverse()) {
           Lock facetLock = facet.getWriteLock();
-          if (facetLock.tryLock(LOCK_TIMEOUT, TimeUnit.SECONDS)) { //NOSONAR
+          if (facetLock.tryLock(LOCK_TIMEOUT, TimeUnit.SECONDS)) { // NOSONAR
             facetLocks.add(facetLock);
           }
           else {

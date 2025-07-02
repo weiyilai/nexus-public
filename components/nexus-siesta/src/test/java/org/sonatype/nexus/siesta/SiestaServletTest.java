@@ -13,28 +13,25 @@
 package org.sonatype.nexus.siesta;
 
 import java.io.IOException;
+
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.eclipse.sisu.inject.BeanLocator;
+import org.sonatype.goodies.testsupport.Test5Support;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class SiestaServletTest
-    extends SiestaTestSupport
+    extends Test5Support
 {
   private SiestaServlet underTest;
-
-  @Mock
-  private BeanLocator beanLocator;
 
   @Mock
   private ComponentContainer componentContainer;
@@ -50,14 +47,13 @@ class SiestaServletTest
 
   @BeforeEach
   void setup() {
-    underTest = new SiestaServlet(beanLocator, componentContainer);
+    underTest = new SiestaServlet(componentContainer);
   }
 
   @Test
   void testInit() throws ServletException {
     underTest.init(servletConfig);
     verify(componentContainer).init(servletConfig);
-    verify(beanLocator).watch(any(), any(), eq(componentContainer));
   }
 
   @Test

@@ -13,22 +13,25 @@
 package org.sonatype.nexus.onboarding.internal;
 
 import javax.validation.ConstraintViolationException;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
+import javax.validation.executable.ExecutableValidator;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.onboarding.OnboardingManager;
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.config.AdminPasswordFileManager;
-import org.sonatype.nexus.validation.ValidationModule;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.verify;
 import static org.sonatype.nexus.onboarding.internal.OnboardingResource.PASSWORD_REQUIRED;
@@ -48,20 +51,19 @@ public class OnboardingResourceTest
   @Mock
   private AdminPasswordFileManager adminPasswordFileManager;
 
+  @InjectMocks
   private OnboardingResource underTest;
 
-  @Before
-  public void setup() {
-    underTest = Guice.createInjector(new ValidationModule(), new AbstractModule()
-    {
-      @Override
-      protected void configure() {
-        bind(OnboardingManager.class).toInstance(onboardingManager);
-        bind(SecuritySystem.class).toInstance(securitySystem);
-        bind(ApplicationDirectories.class).toInstance(applicationDirectories);
-        bind(AdminPasswordFileManager.class).toInstance(adminPasswordFileManager);
-      }
-    }).getInstance(OnboardingResource.class);
+  @BeforeClass
+  public static void initValidator() {
+    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+    ExecutableValidator execValidator = factory.getValidator().forExecutables();
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = execValidator;
+  }
+
+  @AfterClass
+  public static void cleanupValidator() {
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
   }
 
   @Test

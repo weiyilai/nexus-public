@@ -14,10 +14,12 @@ package org.sonatype.nexus.cleanup.config;
 
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.IS_PRERELEASE_KEY;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.LAST_BLOB_UPDATED_KEY;
@@ -31,11 +33,15 @@ import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.RETAIN_SO
  *
  * @since 3.14
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier(DefaultCleanupPolicyConfiguration.NAME)
 @Singleton
 public class DefaultCleanupPolicyConfiguration
     implements CleanupPolicyConfiguration
 {
+  public static final String NAME = "DefaultCleanupPolicyConfiguration";
+
   @Override
   public Map<String, Boolean> getConfiguration() {
     return ImmutableMap.<String, Boolean>builder()
@@ -43,7 +49,7 @@ public class DefaultCleanupPolicyConfiguration
         .put(LAST_DOWNLOADED_KEY, true)
         .put(IS_PRERELEASE_KEY, false)
         .put(REGEX_KEY, false)
-        //disabling retain-n properties by default
+        // disabling retain-n properties by default
         .put(RETAIN_KEY, false)
         .put(RETAIN_SORT_BY_KEY, false)
         .build();

@@ -18,14 +18,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.blobstore.api.BlobRef;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.entity.EntityUUID;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.time.UTC;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.ContentDataAccess;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.repository.Repository;
@@ -54,29 +54,36 @@ import org.sonatype.nexus.repository.content.store.example.TestAssetBlobDAO;
 import org.sonatype.nexus.repository.content.store.example.TestAssetDAO;
 import org.sonatype.nexus.repository.content.store.example.TestAssetData;
 import org.sonatype.nexus.repository.content.store.example.TestAssetStore;
-import org.sonatype.nexus.repository.content.store.example.TestBespokeStoreModule;
+import org.sonatype.nexus.repository.content.store.example.TestBespokeStoreProvider;
 import org.sonatype.nexus.repository.content.store.example.TestComponentDAO;
 import org.sonatype.nexus.repository.content.store.example.TestContentRepositoryDAO;
-import org.sonatype.nexus.repository.content.store.example.TestPlainStoreModule;
-import org.sonatype.nexus.testdb.DataSessionRule;
-import org.sonatype.nexus.transaction.TransactionModule;
+import org.sonatype.nexus.repository.content.store.example.TestPlainStoreProvider;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 import org.sonatype.nexus.transaction.Transactional;
 import org.sonatype.nexus.transaction.UnitOfWork;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-import org.eclipse.sisu.wire.WireModule;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import jakarta.inject.Provider;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.core.convert.support.DefaultConversionService;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyIterable;
@@ -86,10 +93,10 @@ import static org.hamcrest.Matchers.isA;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.datastore.mybatis.CombUUID.combUUID;
 import static org.sonatype.nexus.repository.content.AttributeOperation.SET;
@@ -97,21 +104,19 @@ import static org.sonatype.nexus.repository.content.AttributeOperation.SET;
 /**
  * Test {@link FormatStoreManager}.
  */
-@Category(SQLTestGroup.class)
-public class FormatStoreManagerTest
-    extends TestSupport
+@SpringBootTest
+@ExtendWith(DatabaseExtension.class)
+class FormatStoreManagerTest
+    extends Test5Support
 {
   private static final String NODE_ID = "ab761d55-5d9c22b6-3f38315a-75b3db34-0922a4d5";
 
   private static final String BLOB_ID = "a8f3f56f-e895-4b6e-984a-1cf1f5107d36";
-  
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME)
-      .handle(new BlobRefTypeHandler())
-      .access(TestContentRepositoryDAO.class)
-      .access(TestComponentDAO.class)
-      .access(TestAssetBlobDAO.class)
-      .access(TestAssetDAO.class);
+
+  @DataSessionConfiguration(
+      daos = {TestContentRepositoryDAO.class, TestComponentDAO.class, TestAssetBlobDAO.class, TestAssetDAO.class},
+      typeHandlers = BlobRefTypeHandler.class)
+  TestDataSessionSupplier dataSessionSupplier;
 
   @Mock
   Repository repository;
@@ -122,28 +127,29 @@ public class FormatStoreManagerTest
   @Mock
   EventManager eventManager;
 
-  class SessionModule
-      extends AbstractModule
-  {
-    @Override
-    protected void configure() {
-      bind(DataSessionSupplier.class).toInstance(sessionRule);
-      bind(ContentFacetFinder.class).toInstance(contentFacetFinder);
-      bind(EventManager.class).toInstance(eventManager);
-    }
+  @Autowired
+  ApplicationContext context;
+
+  AnnotationConfigApplicationContext testContext;
+
+  @BeforeEach
+  void setUp() {
+    lenient().when(contentFacetFinder.findRepository(eq("test"), anyInt())).thenReturn(Optional.of(repository));
+    testContext = new AnnotationConfigApplicationContext();
+    testContext.setParent(context);
+    testContext.registerBean(ContentFacetFinder.class, () -> contentFacetFinder);
+    testContext.registerBean(EventManager.class, () -> eventManager);
+    testContext.registerBean(DataSessionSupplier.class, () -> dataSessionSupplier);
   }
 
-  @Before
-  public void setUp() {
-    when(contentFacetFinder.findRepository(eq("test"), anyInt())).thenReturn(Optional.of(repository));
+  @AfterEach
+  void teardown() {
+    testContext.close();
   }
 
   @Test
-  public void testPlainBindings() {
-    Injector injector =
-        Guice.createInjector(new WireModule(new TestPlainStoreModule(), new SessionModule(), new TransactionModule()));
-
-    FormatStoreManager underTest = injector.getInstance(Key.get(FormatStoreManager.class, Names.named("test")));
+  void testPlainBindings() {
+    FormatStoreManager underTest = getFormatStoreManager(new TestPlainStoreProvider());
 
     ContentRepositoryStore<?> contentRepositoryStore = underTest.contentRepositoryStore(DEFAULT_DATASTORE_NAME);
     ComponentStore<?> componentStore = underTest.componentStore(DEFAULT_DATASTORE_NAME);
@@ -164,11 +170,8 @@ public class FormatStoreManagerTest
   }
 
   @Test
-  public void testPlainOperations() {
-    Injector injector =
-        Guice.createInjector(new WireModule(new TestPlainStoreModule(), new SessionModule(), new TransactionModule()));
-
-    FormatStoreManager underTest = injector.getInstance(Key.get(FormatStoreManager.class, Names.named("test")));
+  void testPlainOperations() {
+    FormatStoreManager underTest = getFormatStoreManager(new TestPlainStoreProvider());
 
     ContentRepositoryStore<?> contentRepositoryStore = underTest.contentRepositoryStore(DEFAULT_DATASTORE_NAME);
     ComponentStore<?> componentStore = underTest.componentStore(DEFAULT_DATASTORE_NAME);
@@ -217,11 +220,8 @@ public class FormatStoreManagerTest
   }
 
   @Test
-  public void testBespokeBindings() {
-    Injector injector =
-        Guice.createInjector(new WireModule(new TestBespokeStoreModule(), new SessionModule(), new TransactionModule()));
-
-    FormatStoreManager underTest = injector.getInstance(Key.get(FormatStoreManager.class, Names.named("test")));
+  void testBespokeBindings() {
+    FormatStoreManager underTest = getFormatStoreManager(new TestBespokeStoreProvider());
 
     ContentRepositoryStore<?> contentRepositoryStore = underTest.contentRepositoryStore(DEFAULT_DATASTORE_NAME);
     ComponentStore<?> componentStore = underTest.componentStore(DEFAULT_DATASTORE_NAME);
@@ -242,13 +242,9 @@ public class FormatStoreManagerTest
   }
 
   @Test
-  public void testBespokeOperations() {
-    Injector injector =
-        Guice.createInjector(new WireModule(new TestBespokeStoreModule(), new SessionModule(), new TransactionModule()));
-
-    FormatStoreManager underTest = injector.getInstance(Key.get(FormatStoreManager.class, Names.named("test")));
-
+  void testBespokeOperations() {
     // our bespoke schema will be applied automatically via 'extendSchema'...
+    FormatStoreManager underTest = getFormatStoreManager(new TestBespokeStoreProvider());
 
     ContentRepositoryStore<?> contentRepositoryStore = underTest.contentRepositoryStore(DEFAULT_DATASTORE_NAME);
     TestAssetStore assetStore = underTest.assetStore(DEFAULT_DATASTORE_NAME);
@@ -276,11 +272,8 @@ public class FormatStoreManagerTest
   }
 
   @Test
-  public void testEventing() {
-    Injector injector =
-        Guice.createInjector(new WireModule(new TestPlainStoreModule(), new SessionModule(), new TransactionModule()));
-
-    FormatStoreManager underTest = injector.getInstance(Key.get(FormatStoreManager.class, Names.named("test")));
+  void testEventing() {
+    FormatStoreManager underTest = getFormatStoreManager(new TestPlainStoreProvider());
 
     ContentRepositoryStore<?> contentRepositoryStore = underTest.contentRepositoryStore(DEFAULT_DATASTORE_NAME);
     ComponentStore<?> componentStore = underTest.componentStore(DEFAULT_DATASTORE_NAME);
@@ -362,11 +355,8 @@ public class FormatStoreManagerTest
   }
 
   @Test
-  public void testPurgeEvent() {
-    Injector injector =
-        Guice.createInjector(new WireModule(new TestPlainStoreModule(), new SessionModule(), new TransactionModule()));
-
-    FormatStoreManager underTest = injector.getInstance(Key.get(FormatStoreManager.class, Names.named("test")));
+  void testPurgeEvent() {
+    FormatStoreManager underTest = getFormatStoreManager(new TestPlainStoreProvider());
 
     ContentRepositoryStore<?> contentRepositoryStore = underTest.contentRepositoryStore(DEFAULT_DATASTORE_NAME);
     ComponentStore<?> componentStore = underTest.componentStore(DEFAULT_DATASTORE_NAME);
@@ -450,10 +440,9 @@ public class FormatStoreManagerTest
   }
 
   @Test
-  public void testFindByComponentIds() {
-    Injector injector =
-        Guice.createInjector(new WireModule(new TestPlainStoreModule(), new SessionModule(), new TransactionModule()));
-    FormatStoreManager underTest = injector.getInstance(Key.get(FormatStoreManager.class, Names.named("test")));
+  void testFindByComponentIds() {
+    FormatStoreManager underTest = getFormatStoreManager(new TestPlainStoreProvider());
+
     ContentRepositoryStore<?> contentRepositoryStore = underTest.contentRepositoryStore(DEFAULT_DATASTORE_NAME);
     AssetBlobStore<?> assetBlobStore = underTest.assetBlobStore(DEFAULT_DATASTORE_NAME);
     AssetStore<?> assetStore = underTest.assetStore(DEFAULT_DATASTORE_NAME);
@@ -505,8 +494,9 @@ public class FormatStoreManagerTest
   }
 
   // checks the DAO access provided by the store matches our expectations
-  private static void assertDaoBinding(final ContentStoreSupport<?> store,
-                                       final Class<? extends ContentDataAccess> daoClass)
+  private static void assertDaoBinding(
+      final ContentStoreSupport<?> store,
+      final Class<? extends ContentDataAccess> daoClass)
   {
     // internal dao() method expects to be called from a transactional method, so mimic one here
     UnitOfWork.begin(store::openSession);
@@ -516,5 +506,35 @@ public class FormatStoreManagerTest
     finally {
       UnitOfWork.end();
     }
+  }
+
+  @Configuration
+  static class FormatStoreManagerTestConfiguration
+  {
+    @Bean
+    ConversionService conversionService() {
+      DefaultConversionService service = new DefaultConversionService();
+      service.addConverter(new GenericConverter()
+      {
+
+        @Override
+        public Set<ConvertiblePair> getConvertibleTypes() {
+          return Set.of(new ConvertiblePair(Object.class, Provider.class));
+        }
+
+        @Override
+        public Object convert(final Object source, final TypeDescriptor sourceType, final TypeDescriptor targetType) {
+          return (Provider) () -> source;
+        }
+      });
+      return service;
+    }
+  }
+
+  private FormatStoreManager getFormatStoreManager(final BeanDefinitionRegistryPostProcessor postProcessor) {
+    postProcessor.postProcessBeanDefinitionRegistry(testContext);
+    testContext.refresh();
+
+    return testContext.getBean(FormatStoreManager.class);
   }
 }

@@ -18,7 +18,6 @@ import org.sonatype.nexus.common.app.BaseUrlHolder;
 import org.sonatype.nexus.security.UserIdMdcHelper;
 
 import com.google.common.base.Throwables;
-import com.google.inject.servlet.ServletScopes;
 import com.softwarementors.extjs.djn.servlet.ssm.SsmJsonRequestProcessorThread;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -49,25 +48,20 @@ public class ExtDirectJsonRequestProcessorThread
     final String baseUrl = BaseUrlHolder.get();
     final String relativePath = BaseUrlHolder.getRelativePath();
 
-    processRequest = ServletScopes.transferRequest(new Callable<String>()
-    {
-      @Override
-      public String call() {
-        threadState.bind();
-        UserIdMdcHelper.set();
-        try {
-          // apply base-url from the original thread
-          BaseUrlHolder.set(baseUrl, relativePath);
+    processRequest = () -> {
+      threadState.bind();
+      UserIdMdcHelper.set();
+      try {
+        // apply base-url from the original thread
+        BaseUrlHolder.set(baseUrl, relativePath);
 
-          return ExtDirectJsonRequestProcessorThread.super.processRequest();
-        }
-        finally {
-          UserIdMdcHelper.unset();
-          threadState.restore();
-        }
-
+        return ExtDirectJsonRequestProcessorThread.super.processRequest();
       }
-    });
+      finally {
+        UserIdMdcHelper.unset();
+        threadState.restore();
+      }
+    };
   }
 
   @Override

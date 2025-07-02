@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
 

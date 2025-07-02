@@ -16,15 +16,17 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.RandomBytesGenerator;
 import org.sonatype.nexus.security.authc.apikey.ApiKeyFactory;
 
 import org.apache.shiro.subject.PrincipalCollection;
+import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -33,7 +35,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @Singleton
 public class DefaultApiKeyFactory
     extends ComponentSupport

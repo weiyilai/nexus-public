@@ -18,9 +18,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.rest.SearchMappings;
 import org.sonatype.nexus.repository.rest.sql.SearchField;
@@ -29,11 +28,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED;
+import org.springframework.stereotype.Component;
 
 /**
  * Provides a mapping from search attribute or alias to {@link SearchField}
  */
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(name = DATASTORE_CLUSTERED_ENABLED, havingValue = "true")
 public class SearchMappingService

@@ -18,9 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.constraints.NotEmpty;
 
 import org.sonatype.nexus.common.text.Strings2;
@@ -46,13 +45,14 @@ import org.apache.shiro.subject.Subject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import org.springframework.stereotype.Component;
 
 /**
  * Security Ext.Direct component.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "rapture_Security")
 public class SecurityComponent
@@ -66,9 +66,10 @@ public class SecurityComponent
   private final AuthTicketService authTickets;
 
   @Inject
-  public SecurityComponent(final SecuritySystem securitySystem,
-                           final AnonymousManager anonymousManager,
-                           final AuthTicketService authTickets)
+  public SecurityComponent(
+      final SecuritySystem securitySystem,
+      final AnonymousManager anonymousManager,
+      final AuthTicketService authTickets)
   {
     this.securitySystem = checkNotNull(securitySystem);
     this.anonymousManager = checkNotNull(anonymousManager);
@@ -81,20 +82,21 @@ public class SecurityComponent
   @Timed
   @ExceptionMetered
   @Validate
-  public UserXO authenticate(@NotEmpty final String base64Username, @NotEmpty final String base64Password)
-      throws Exception
+  public UserXO authenticate(
+      @NotEmpty final String base64Username,
+      @NotEmpty final String base64Password) throws Exception
   {
     Subject subject = securitySystem.getSubject();
 
-    // FIXME: Subject is not nullable, but we have code that checks for nulls, likely from testing setups, verify and simplify
+    // FIXME: Subject is not nullable, but we have code that checks for nulls, likely from testing setups, verify and
+    // simplify
     checkState(subject != null);
 
     try {
       subject.login(new UsernamePasswordToken(
           Strings2.decodeBase64(base64Username),
           Strings2.decodeBase64(base64Password),
-          false
-      ));
+          false));
     }
     catch (Exception e) {
       throw new Exception("Authentication failed", e);
@@ -107,8 +109,9 @@ public class SecurityComponent
   @Timed
   @ExceptionMetered
   @Validate
-  public String authenticationToken(@NotEmpty final String base64Username, @NotEmpty final String base64Password)
-      throws Exception
+  public String authenticationToken(
+      @NotEmpty final String base64Username,
+      @NotEmpty final String base64Password) throws Exception
   {
     Subject subject = securitySystem.getSubject();
     if (subject == null || !subject.isAuthenticated()) {

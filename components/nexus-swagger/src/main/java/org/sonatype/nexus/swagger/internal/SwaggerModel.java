@@ -18,9 +18,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.rest.Component;
@@ -44,7 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.3
  */
-@Named
+@org.springframework.stereotype.Component
 @Singleton
 public class SwaggerModel
     implements Component

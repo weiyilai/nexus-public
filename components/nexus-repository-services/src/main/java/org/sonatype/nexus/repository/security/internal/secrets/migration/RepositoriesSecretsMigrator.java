@@ -16,8 +16,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
@@ -32,8 +31,12 @@ import org.sonatype.nexus.security.secrets.SecretsMigratorSupport;
 import com.google.common.annotations.VisibleForTesting;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RepositoriesSecretsMigrator
     extends SecretsMigratorSupport
 {
@@ -52,8 +55,7 @@ public class RepositoriesSecretsMigrator
   private final RepositoryManager repositoryManager;
 
   @Inject
-  public RepositoriesSecretsMigrator(final SecretsService secretsService, final RepositoryManager repositoryManager)
-  {
+  public RepositoriesSecretsMigrator(final SecretsService secretsService, final RepositoryManager repositoryManager) {
     super(secretsService);
     this.repositoryManager = checkNotNull(repositoryManager);
   }

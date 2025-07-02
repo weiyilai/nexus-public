@@ -15,8 +15,7 @@ package org.sonatype.nexus.common.cooperation2.datastore;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.cooperation2.Cooperation2;
@@ -24,11 +23,14 @@ import org.sonatype.nexus.common.cooperation2.Cooperation2Factory;
 import org.sonatype.nexus.common.cooperation2.datastore.internal.LocalCooperation2;
 import org.sonatype.nexus.common.cooperation2.internal.DisabledCooperation2;
 import org.sonatype.nexus.common.cooperation2.internal.MutableConfigSupport;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.41
  */
-@Named("local")
+@Component
+@Qualifier("local")
 @Singleton
 public class DefaultCooperation2Factory
     extends ComponentSupport

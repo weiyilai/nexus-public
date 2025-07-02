@@ -14,8 +14,7 @@ package org.sonatype.nexus.content.maven.internal.recipe;
 
 import java.time.LocalDate;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.content.maven.MavenContentFacet;
@@ -35,6 +34,10 @@ import org.springframework.beans.factory.annotation.Value;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.FacetSupport.State.STARTED;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Implementation of {@link PurgeUnusedSnapshotsFacet} for the NewDB. The implementation assumes that this facet will
@@ -42,7 +45,8 @@ import static org.sonatype.nexus.repository.FacetSupport.State.STARTED;
  *
  * @since 3.30
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class PurgeUnusedSnapshotsFacetImpl
     extends FacetSupport
     implements PurgeUnusedSnapshotsFacet
@@ -56,9 +60,9 @@ public class PurgeUnusedSnapshotsFacetImpl
 
   @Inject
   public PurgeUnusedSnapshotsFacetImpl(
-      @Named(GroupType.NAME) final Type groupType,
-      @Named(HostedType.NAME) final Type hostedType,
-      @Named("${nexus.tasks.purgeUnusedSnapshots.findUnusedLimit:-100}") @Value("${nexus.tasks.purgeUnusedSnapshots.findUnusedLimit:100}") final int findUnusedLimit)
+      @Qualifier(GroupType.NAME) final Type groupType,
+      @Qualifier(HostedType.NAME) final Type hostedType,
+      @Value("${nexus.tasks.purgeUnusedSnapshots.findUnusedLimit:100}") final int findUnusedLimit)
   {
     this.groupType = checkNotNull(groupType);
     this.hostedType = checkNotNull(hostedType);

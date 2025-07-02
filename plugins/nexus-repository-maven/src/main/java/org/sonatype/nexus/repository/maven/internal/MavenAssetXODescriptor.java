@@ -16,8 +16,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.repository.rest.api.AssetXODescriptor;
 
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_GROUP_ID;
@@ -25,11 +23,17 @@ import static org.sonatype.nexus.repository.maven.internal.Attributes.P_ARTIFACT
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_VERSION;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_CLASSIFIER;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_EXTENSION;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.29
  */
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenAssetXODescriptor
     implements AssetXODescriptor
 {

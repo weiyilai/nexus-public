@@ -14,12 +14,17 @@ package org.sonatype.nexus.security.internal.rest;
 
 import java.util.Collection;
 import java.util.Collections;
-
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
+import javax.validation.executable.ExecutableValidator;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.goodies.testsupport.hamcrest.BeanMatchers;
+import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.rest.WebApplicationMessageException;
 import org.sonatype.nexus.security.ErrorMessageUtil;
@@ -40,7 +45,9 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -63,9 +70,13 @@ public class UserApiResourceTest
     extends TestSupport
 {
   public static final String USER_ID = "jsmith";
+
   private static final String SAML_REALM_NAME = "SamlRealm";
+
   private static final String CROWD_REALM_NAME = "Crowd";
+
   private static final String LDAP_REALM_NAME = "LdapRealm";
+
   private static final String NEXUS_AUTHENTICATING_REALM_NAME = "NexusAuthenticatingRealm";
 
   @Mock
@@ -83,6 +94,18 @@ public class UserApiResourceTest
   public ExpectedException thrown = ExpectedException.none();
 
   private UserApiResource underTest;
+
+  @BeforeClass
+  public static void initValidator() {
+    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+    ExecutableValidator execValidator = factory.getValidator().forExecutables();
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = execValidator;
+  }
+
+  @AfterClass
+  public static void cleanupValidator() {
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
+  }
 
   @Before
   public void setup() throws Exception {
@@ -236,7 +259,8 @@ public class UserApiResourceTest
   public void testDeleteUsersWithDefaultRealm() throws Exception {
     when(securitySystem.isValidRealm(NEXUS_AUTHENTICATING_REALM_NAME)).thenReturn(true);
     when(securitySystem.getUser(USER_ID,
-        RealmToSource.getSource(NEXUS_AUTHENTICATING_REALM_NAME))).thenReturn(createUserWithSource(NEXUS_AUTHENTICATING_REALM_NAME));
+        RealmToSource.getSource(NEXUS_AUTHENTICATING_REALM_NAME))).thenReturn(
+        createUserWithSource(NEXUS_AUTHENTICATING_REALM_NAME));
     underTest.deleteUser(USER_ID, NEXUS_AUTHENTICATING_REALM_NAME);
 
     verify(securitySystem).deleteUser(USER_ID, "default");
@@ -253,8 +277,9 @@ public class UserApiResourceTest
   @Test
   public void testDeleteUsers_somethingWonky() throws Exception {
     User user = createUser();
-    doThrow(new NoSuchUserManagerException(user.getSource())).when(securitySystem).deleteUser(user.getUserId(),
-        user.getSource());
+    doThrow(new NoSuchUserManagerException(user.getSource())).when(securitySystem)
+        .deleteUser(user.getUserId(),
+            user.getSource());
     expectUnknownUserManager(user.getSource());
 
     underTest.deleteUser(USER_ID, null);
@@ -293,16 +318,16 @@ public class UserApiResourceTest
   }
 
   @Test
-  public void testUpdateUser_externalSource_unknownUser() throws Exception {
+  public void testUpdateUser_externalSource_unknownUser() {
     User user = createUser();
 
     ApiUser apiUser = new ApiUser("jdoe", user.getFirstName(), user.getLastName(), user.getEmailAddress(),
-        "LDAP", ApiUserStatus.convert(user.getStatus()), true, Collections.emptySet(), Collections.emptySet());
+        "LDAP", ApiUserStatus.convert(user.getStatus()), true, Collections.singleton("nx-admin"),
+        Collections.emptySet());
 
     thrown.expect(matchWeb(Status.NOT_FOUND, "User 'jdoe' not found."));
 
     underTest.updateUser("jdoe", apiUser);
-
   }
 
   @Test
@@ -361,7 +386,7 @@ public class UserApiResourceTest
 
   @Test
   public void testChangePassword_missingPassword() throws Exception {
-    thrown.expect(matchWeb(Status.BAD_REQUEST, "Password must be supplied."));
+    thrown.expect(matchConstraintViolation(1, "Password must be supplied."));
     try {
       underTest.changePassword("test", null);
     }
@@ -472,7 +497,43 @@ public class UserApiResourceTest
       @Override
       public void describeTo(final Description description) {
         description.appendText("WebApplicationMessageException(" + status.getStatusCode() + ","
-                + ErrorMessageUtil.getFormattedMessage(message) + ")");
+            + ErrorMessageUtil.getFormattedMessage(message) + ")");
+      }
+    };
+  }
+
+  private Matcher<WebApplicationMessageException> matchConstraintViolation(
+      final int violations,
+      final String... messages)
+  {
+    return new BaseMatcher<WebApplicationMessageException>()
+    {
+      @Override
+      public boolean matches(final Object item) {
+        if (item instanceof ConstraintViolationException) {
+          ConstraintViolationException e = (ConstraintViolationException) item;
+          return e.getConstraintViolations().size() == violations
+              && e.getConstraintViolations()
+                  .stream()
+                  .map(ConstraintViolation::getMessage)
+                  .allMatch(message -> containsMessage(messages, message));
+        }
+        return false;
+      }
+
+      private boolean containsMessage(String[] expectedMessages, String actual) {
+        for (String expected : expectedMessages) {
+          if (expected.equals(actual)) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      @Override
+      public void describeTo(final Description description) {
+        description.appendText("ConstraintViolationException with " + violations + " violations containing messages: ")
+            .appendValueList("[", ", ", "]", messages);
       }
     };
   }

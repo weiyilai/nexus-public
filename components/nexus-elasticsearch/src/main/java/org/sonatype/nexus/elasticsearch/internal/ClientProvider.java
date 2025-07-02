@@ -12,28 +12,30 @@
  */
 package org.sonatype.nexus.elasticsearch.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
+
+import org.springframework.stereotype.Component;
 
 /**
  * ElasticSearch {@link Client} provider.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class ClientProvider
-    implements Provider<Client>
+    implements FactoryBean<Client>
 {
   private final Provider<Node> node;
 
@@ -43,7 +45,12 @@ public class ClientProvider
   }
 
   @Override
-  public Client get() {
+  public Client getObject() {
     return node.get().client();
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return Client.class;
   }
 }

@@ -15,9 +15,8 @@ package org.sonatype.nexus.repository.content.handlers;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.collect.AttributesMap;
@@ -30,16 +29,20 @@ import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.repository.view.Status;
 
+import org.springframework.context.annotation.Primary;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.http.HttpMethods.GET;
 import static org.sonatype.nexus.repository.http.HttpMethods.HEAD;
+import org.springframework.stereotype.Component;
 
 /**
  * Updates the asset last downloaded time.
  *
  * @since 3.24
  */
-@Named
+@Primary
+@Component
 @Singleton
 public class LastDownloadedHandler
     extends ComponentSupport

@@ -12,10 +12,11 @@
  */
 package org.sonatype.nexus.self.hosted.repository.manager;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import java.util.List;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.common.app.FreezeService;
@@ -34,9 +35,9 @@ import org.sonatype.nexus.repository.manager.internal.HttpAuthenticationPassword
 import org.sonatype.nexus.repository.manager.internal.RepositoryAdminSecurityContributor;
 import org.sonatype.nexus.repository.manager.internal.RepositoryFactory;
 
-import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.REPOSITORIES;
 
@@ -44,7 +45,7 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.REPOSITORIES;
  * {@link BaseRepositoryManager} for self-hosted deployments.
  * No overrides needed, only annotations for DI.
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = REPOSITORIES)
 @ManagedObject(
@@ -60,11 +61,11 @@ public class RepositoryManagerImpl
       final ConfigurationStore store,
       final RepositoryFactory factory,
       final Provider<ConfigurationFacet> configFacet,
-      final Map<String, Recipe> recipes,
+      @Lazy final List<Recipe> recipes,
       final RepositoryAdminSecurityContributor securityContributor,
       final List<DefaultRepositoriesContributor> defaultRepositoriesContributors,
       final FreezeService freezeService,
-      @Named("${nexus.skipDefaultRepositories:-false}") @Value("${nexus.skipDefaultRepositories:false}") final boolean skipDefaultRepositories,
+      @Value("${nexus.skipDefaultRepositories:false}") final boolean skipDefaultRepositories,
       final BlobStoreManager blobStoreManager,
       final GroupMemberMappingCache groupMemberMappingCache,
       final List<ConfigurationValidator> configurationValidators,

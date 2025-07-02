@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import javax.cache.Cache;
 import javax.cache.configuration.Factory;
 
@@ -48,9 +49,7 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 
 import static com.google.common.collect.Sets.newHashSet;
@@ -59,6 +58,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
@@ -112,9 +112,6 @@ public class SelectorManagerImplTest
 
   private final List<Privilege> privileges = new ArrayList<>();
 
-  @Rule
-  public final ExpectedException expectedException = ExpectedException.none();
-
   @Before
   public void setUp() throws Exception {
     this.manager = new SelectorManagerImpl(store, securitySystem, selectorFactory, cacheHelper, userCacheTimeout);
@@ -142,6 +139,7 @@ public class SelectorManagerImplTest
 
     when(selectorFactory.createSelector(JexlSelector.TYPE, "true")).thenReturn(alwaysTrueSelector);
     when(selectorFactory.createSelector(JexlSelector.TYPE, "false")).thenReturn(alwaysFalseSelector);
+    manager.start();
   }
 
   @Test
@@ -267,10 +265,8 @@ public class SelectorManagerImplTest
   public void testDelete_FailsWhenContentSelectorIsUsedByPrivilege() throws Exception {
     SelectorConfiguration selector = createSelectorConfiguration("role", "privilege", "selector", "repository");
 
-    expectedException.expect(IllegalStateException.class);
-    expectedException.expectMessage("Content selector selector is in use and cannot be deleted");
-
-    manager.delete(selector);
+    assertThrows("Content selector selector is in use and cannot be deleted", IllegalStateException.class,
+        () -> manager.delete(selector));
 
     verifyNoInteractions(store);
   }
@@ -324,7 +320,7 @@ public class SelectorManagerImplTest
     verify(userCache, atLeastOnce()).put(any(), any());
   }
 
-  private SelectorConfiguration getSelectorConfiguration(final String type, final String expression) {
+  private static SelectorConfiguration getSelectorConfiguration(final String type, final String expression) {
     SelectorConfiguration selectorConfiguration = new SelectorConfigurationData();
     Map<String, Object> attributes = new HashMap<>();
     attributes.put("expression", expression);

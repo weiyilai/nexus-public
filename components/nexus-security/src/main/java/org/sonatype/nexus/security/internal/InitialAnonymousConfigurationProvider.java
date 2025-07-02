@@ -12,14 +12,15 @@
  */
 package org.sonatype.nexus.security.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.security.anonymous.AnonymousConfiguration;
 
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Initial {@link AnonymousConfiguration} provider.
@@ -28,22 +29,23 @@ import org.springframework.beans.factory.annotation.Value;
  *
  * @since 3.0
  */
-@Named("initial")
+@Component
+@Qualifier("initial")
 @Singleton
 public class InitialAnonymousConfigurationProvider
-    implements Provider<AnonymousConfiguration>
+    implements FactoryBean<AnonymousConfiguration>
 {
   private final boolean enabled;
 
   @Inject
   public InitialAnonymousConfigurationProvider(
-      @Named("${nexus.security.default.anonymous:-true}") @Value("${nexus.security.default.anonymous:true}") final boolean enabled)
+      @Value("${nexus.security.default.anonymous:true}") final boolean enabled)
   {
     this.enabled = enabled;
   }
 
   @Override
-  public AnonymousConfiguration get() {
+  public AnonymousConfiguration getObject() {
     return new InitialAnonymousConfiguration();
   }
 
@@ -84,5 +86,10 @@ public class InitialAnonymousConfigurationProvider
     public void setUserId(final String userId) {
       throw new UnsupportedOperationException();
     }
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return AnonymousConfiguration.class;
   }
 }

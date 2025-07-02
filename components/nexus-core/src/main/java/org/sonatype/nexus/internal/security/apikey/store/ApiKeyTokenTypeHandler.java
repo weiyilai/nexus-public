@@ -19,8 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.datastore.mybatis.CipherAwareTypeHandler;
 
@@ -30,16 +29,17 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import org.springframework.stereotype.Component;
 
 /**
  * MyBatis {@link TypeHandler} that encrypts {@link ApiKeyToken}s at rest with the property that the same
  * token will always be encrypted to the same database string, assuming the same database cipher settings.
- * This  is needed to support searching by token, otherwise we could have used a plain char array without
+ * This is needed to support searching by token, otherwise we could have used a plain char array without
  * needing the {@link ApiKeyToken} wrapper.
  *
  * @since 3.21
  */
-@Named
+@Component
 @Singleton
 public class ApiKeyTokenTypeHandler
     extends CipherAwareTypeHandler<ApiKeyToken>

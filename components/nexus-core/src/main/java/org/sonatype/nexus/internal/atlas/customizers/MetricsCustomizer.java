@@ -19,9 +19,8 @@ import java.io.UncheckedIOException;
 import java.lang.management.ManagementFactory;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.supportzip.GeneratedContentSourceSupport;
@@ -42,13 +41,14 @@ import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Priority
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.METRICS;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.SYSINFO;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.THREAD;
+import org.springframework.stereotype.Component;
 
 /**
  * Adds metrics (threads,metrics,healthcheck) to support bundle.
  *
  * @since 2.7
  */
-@Named
+@Component
 @Singleton
 public class MetricsCustomizer
     extends ComponentSupport

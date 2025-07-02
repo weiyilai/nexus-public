@@ -12,17 +12,18 @@
  */
 package org.sonatype.nexus.repository.ossindex;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.packageurl.PackageUrl;
-import org.sonatype.nexus.repository.ossindex.PackageUrlMapping;
-import org.sonatype.nexus.repository.ossindex.PackageUrlService;
+import org.sonatype.nexus.common.QualifierUtil;
+
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Optional.empty;
@@ -30,7 +31,7 @@ import static java.util.Optional.empty;
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 public class PackageUrlServiceImpl
     extends ComponentSupport
@@ -39,15 +40,16 @@ public class PackageUrlServiceImpl
   private final Map<String, PackageUrlMapping> packageUrlMappings;
 
   @Inject
-  public PackageUrlServiceImpl(final Map<String, PackageUrlMapping> packageUrlMappings) {
-    this.packageUrlMappings = checkNotNull(packageUrlMappings);
+  public PackageUrlServiceImpl(final List<PackageUrlMapping> packageUrlMappingsList) {
+    this.packageUrlMappings = QualifierUtil.buildQualifierBeanMap(checkNotNull(packageUrlMappingsList));
   }
 
   @Override
-  public Optional<PackageUrl> getPackageUrl(final String format,
-                                            final String namespace,
-                                            final String name,
-                                            final String version)
+  public Optional<PackageUrl> getPackageUrl(
+      final String format,
+      final String namespace,
+      final String name,
+      final String version)
   {
     PackageUrlMapping mapping = packageUrlMappings.get(format);
     if (mapping != null) {

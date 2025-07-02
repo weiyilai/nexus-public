@@ -12,12 +12,10 @@
  */
 package org.sonatype.nexus.repository.config.internal;
 
-import java.util.Map;
+import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.config.ConfigurationObjectMapperCustomizer;
@@ -25,6 +23,9 @@ import org.sonatype.nexus.repository.config.ConfigurationObjectMapperCustomizer;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -33,31 +34,36 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named(ConfigurationObjectMapperProvider.NAME)
+@Component
+@Qualifier(ConfigurationObjectMapperProvider.NAME)
 @Singleton
 public class ConfigurationObjectMapperProvider
     extends ComponentSupport
-    implements Provider<ObjectMapper>
+    implements FactoryBean<ObjectMapper>
 {
   public static final String NAME = "repository-configuration";
 
-  private final Map<String, ConfigurationObjectMapperCustomizer> customizers;
+  private final List<ConfigurationObjectMapperCustomizer> customizers;
 
   @Inject
-  public ConfigurationObjectMapperProvider(final Map<String, ConfigurationObjectMapperCustomizer> customizers)
-  {
-    this.customizers = checkNotNull(customizers);
+  public ConfigurationObjectMapperProvider(final List<ConfigurationObjectMapperCustomizer> customizersList) {
+    this.customizers = checkNotNull(customizersList);
   }
 
   @Override
-  public ObjectMapper get() {
+  public ObjectMapper getObject() throws Exception {
     ObjectMapper mapper = new ObjectMapper().enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    for (ConfigurationObjectMapperCustomizer customizer : customizers.values()) {
+    for (ConfigurationObjectMapperCustomizer customizer : customizers) {
       customizer.customize(mapper);
     }
     // TODO: ISO-8601, joda
     // TODO: null handling
     return mapper;
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return ObjectMapper.class;
   }
 }

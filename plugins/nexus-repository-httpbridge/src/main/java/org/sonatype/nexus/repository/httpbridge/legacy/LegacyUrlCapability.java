@@ -14,18 +14,21 @@ package org.sonatype.nexus.repository.httpbridge.legacy;
 
 import java.util.Map;
 
-import javax.inject.Named;
-
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
 import org.sonatype.nexus.capability.CapabilitySupport;
+
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Legacy URL capability.
  *
  * @since 3.7
  */
-@Named(LegacyUrlCapabilityDescriptor.TYPE_ID)
+@Component(LegacyUrlCapabilityDescriptor.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class LegacyUrlCapability
     extends CapabilitySupport<LegacyUrlCapabilityConfiguration>
 {

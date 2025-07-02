@@ -20,14 +20,18 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Priority;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.datastore.api.DataStoreConfiguration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.springframework.core.annotation.Order;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -36,9 +40,11 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 /**
@@ -50,11 +56,21 @@ public class DataStoreConfigurationManagerTest
   @Mock
   private Map<String, DataStoreConfigurationSource> configurationSources;
 
+  private MockedStatic<QualifierUtil> mockStatic;
+
   private DataStoreConfigurationManager underTest;
 
   @Before
   public void setUp() {
-    underTest = new DataStoreConfigurationManager(configurationSources);
+    mockStatic = mockStatic(QualifierUtil.class);
+    List<DataStoreConfigurationSource> dataStoreConfigurationSourceList = List.of();
+    mockStatic.when(() -> QualifierUtil.buildQualifierBeanMap(any())).thenReturn(configurationSources);
+    underTest = new DataStoreConfigurationManager(dataStoreConfigurationSourceList);
+  }
+
+  @After
+  public void tearDown() {
+    mockStatic.close();
   }
 
   private static DataStoreConfiguration newDataStoreConfiguration(final String name, final String source) {
@@ -67,6 +83,7 @@ public class DataStoreConfigurationManagerTest
   }
 
   @Priority(1)
+  @Order(1)
   private static class NumberOneConfigSource
       implements DataStoreConfigurationSource
   {
@@ -87,6 +104,7 @@ public class DataStoreConfigurationManagerTest
   }
 
   @Priority(2)
+  @Order(2)
   private static class NumberTwoConfigSource
       implements DataStoreConfigurationSource
   {
@@ -107,6 +125,7 @@ public class DataStoreConfigurationManagerTest
   }
 
   @Priority(3)
+  @Order(3)
   private static class NumberThreeConfigSource
       implements DataStoreConfigurationSource
   {

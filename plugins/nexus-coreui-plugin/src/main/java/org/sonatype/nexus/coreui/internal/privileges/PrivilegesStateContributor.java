@@ -14,9 +14,8 @@ package org.sonatype.nexus.coreui.internal.privileges;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rapture.StateContributor;
@@ -25,10 +24,10 @@ import com.google.common.collect.ImmutableMap;
 import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES;
-import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_VALUE;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class PrivilegesStateContributor
     extends ComponentSupport
@@ -38,7 +37,7 @@ public class PrivilegesStateContributor
 
   @Inject
   public PrivilegesStateContributor(
-      @Named(REACT_PRIVILEGES_NAMED) @Value(REACT_PRIVILEGES_NAMED_VALUE) final Boolean featureFlag)
+      @Value(REACT_PRIVILEGES_NAMED_VALUE) final Boolean featureFlag)
   {
     state = ImmutableMap.of(REACT_PRIVILEGES, featureFlag);
   }

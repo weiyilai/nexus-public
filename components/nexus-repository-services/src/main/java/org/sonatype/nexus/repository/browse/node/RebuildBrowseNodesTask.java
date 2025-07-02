@@ -13,8 +13,7 @@
 package org.sonatype.nexus.repository.browse.node;
 
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.RepositoryTaskSupport;
@@ -23,13 +22,17 @@ import org.sonatype.nexus.scheduling.Cancelable;
 import org.sonatype.nexus.scheduling.spi.TaskResultStateStore;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Browse nodes rebuild task.
  *
  * @since 3.6
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RebuildBrowseNodesTask
     extends RepositoryTaskSupport
     implements Cancelable
@@ -41,7 +44,9 @@ public class RebuildBrowseNodesTask
   private final TaskResultStateStore taskResultStateStore;
 
   @Inject
-  public RebuildBrowseNodesTask(final RebuildBrowseNodeService rebuildBrowseNodeService, final TaskResultStateStore taskResultStateStore)
+  public RebuildBrowseNodesTask(
+      final RebuildBrowseNodeService rebuildBrowseNodeService,
+      final TaskResultStateStore taskResultStateStore)
   {
     this.rebuildBrowseNodeService = checkNotNull(rebuildBrowseNodeService);
     this.taskResultStateStore = checkNotNull(taskResultStateStore);
@@ -55,7 +60,7 @@ public class RebuildBrowseNodesTask
   @Override
   protected void execute(final Repository repo) {
     try {
-      //since this task doesn't support 'resume', the progress should be cleared each time it is run
+      // since this task doesn't support 'resume', the progress should be cleared each time it is run
       updateProgress(taskResultStateStore, null);
       delayIfPyPi(repo);
       rebuildBrowseNodeService.rebuild(repo, progressMessage -> updateProgress(taskResultStateStore, progressMessage));

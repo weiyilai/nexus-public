@@ -16,10 +16,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Recipe;
 import org.sonatype.nexus.repository.Repository;
@@ -32,11 +34,14 @@ import org.sonatype.nexus.selector.SelectorManager;
 import com.google.common.collect.ImmutableList;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.subject.Subject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -45,6 +50,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.never;
@@ -114,8 +120,11 @@ public class RepositoryPermissionCheckerTest
 
   private RepositoryPermissionChecker underTest;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setup() {
+    mockedStatic = Mockito.mockStatic(QualifierUtil.class);
     when(recipe.getFormat()).thenReturn(format);
     when(format.getValue()).thenReturn(REPOSITORY_FORMAT);
 
@@ -139,11 +148,16 @@ public class RepositoryPermissionCheckerTest
         Collections.singletonList(REPOSITORY_FORMAT))).thenReturn(asList(selector));
 
     when(securityHelper.isPermitted(same(subject), any(), any(), any()))
-        .thenReturn(new boolean[] { true, false, false });
+        .thenReturn(new boolean[]{true, false, false});
     when(securityHelper.subject()).thenReturn(subject);
-
+    when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(Map.of(RECIPE_NAME, recipe));
     underTest =
-        new RepositoryPermissionChecker(securityHelper, selectorManager, Collections.singletonMap(RECIPE_NAME, recipe));
+        new RepositoryPermissionChecker(securityHelper, selectorManager, List.of(recipe));
+  }
+
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test

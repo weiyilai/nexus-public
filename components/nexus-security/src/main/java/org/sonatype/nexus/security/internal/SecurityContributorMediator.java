@@ -12,32 +12,42 @@
  */
 package org.sonatype.nexus.security.internal;
 
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.security.config.SecurityConfigurationManager;
 import org.sonatype.nexus.security.config.SecurityContributor;
 
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.Mediator;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Notifies {@link SecurityConfigurationManager} as {@link SecurityContributor}s come and go.
  *
  * @since 3.1
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SecurityContributorMediator
     extends ComponentSupport
-    implements Mediator<Named, SecurityContributor, SecurityConfigurationManagerImpl>
 {
-  @Override
-  public void add(BeanEntry<Named, SecurityContributor> entry, SecurityConfigurationManagerImpl watcher) {
-    watcher.addContributor(entry.getValue());
+  private final SecurityConfigurationManagerImpl securityConfigurationManagerImpl;
+
+  @Inject
+  public SecurityContributorMediator(final SecurityConfigurationManagerImpl securityConfigurationManagerImpl) {
+    this.securityConfigurationManagerImpl = checkNotNull(securityConfigurationManagerImpl);
   }
 
-  @Override
-  public void remove(BeanEntry<Named, SecurityContributor> entry, SecurityConfigurationManagerImpl watcher) {
-    watcher.removeContributor(entry.getValue());
+  @EventListener
+  public void on(final ContextRefreshedEvent event) {
+    event.getApplicationContext()
+        .getBeansOfType(SecurityContributor.class)
+        .values()
+        .forEach(securityConfigurationManagerImpl::addContributor);
   }
 }

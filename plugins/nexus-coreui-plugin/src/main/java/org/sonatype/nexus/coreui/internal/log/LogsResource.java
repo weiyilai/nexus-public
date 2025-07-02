@@ -18,9 +18,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
@@ -43,13 +42,14 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import org.springframework.stereotype.Component;
 
 /**
  * Logs REST resource.
  *
  * @since 3.3
  */
-@Named
+@Component
 @Singleton
 @Path(LogsResource.RESOURCE_URI)
 public class LogsResource
@@ -106,8 +106,7 @@ public class LogsResource
   public Response get(
       @PathParam("filename") final String filename,
       @QueryParam("fromByte") final Long fromByte,
-      @QueryParam("bytesCount") final Long bytesCount)
-      throws NotFoundException, IOException
+      @QueryParam("bytesCount") final Long bytesCount) throws NotFoundException, IOException
   {
     Long from = fromByte;
     if (from == null || from < 0) {

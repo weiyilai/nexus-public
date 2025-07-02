@@ -14,10 +14,10 @@ package org.sonatype.nexus.security;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
@@ -26,6 +26,8 @@ import org.sonatype.nexus.security.jwt.JwtVerificationException;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.session.mgt.SimpleSession;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
@@ -36,9 +38,11 @@ import org.apache.shiro.web.subject.support.WebDelegatingSubject;
 import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.stream;
+import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
 import static org.sonatype.nexus.security.JwtHelper.JWT_COOKIE_NAME;
 import static org.sonatype.nexus.security.JwtHelper.REALM;
 import static org.sonatype.nexus.security.JwtHelper.USER;
@@ -48,6 +52,8 @@ import static org.sonatype.nexus.security.JwtHelper.USER;
  *
  * @since 3.38
  */
+@WebFilter("/*")
+@ConditionalOnProperty(value = JWT_ENABLED, havingValue = "true")
 @Singleton
 public class JwtSecurityFilter
     extends SecurityFilter
@@ -99,8 +105,7 @@ public class JwtSecurityFilter
 
           PrincipalCollection principals = new SimplePrincipalCollection(
               user.asString(),
-              realm.asString()
-          );
+              realm.asString());
 
           session.setTimeout(TimeUnit.SECONDS.toMillis(jwtHelper.getExpirySeconds()));
           session.setAttribute(JWT_COOKIE_NAME, jwt);

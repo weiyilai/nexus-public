@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.config.internal.datastore;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.event.EventAware;
@@ -28,11 +27,12 @@ import org.sonatype.nexus.repository.manager.RepositoryManager;
 import com.google.common.eventbus.Subscribe;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Repository configuration subscriber on DB events like CREATE/UPDATE/DELETE.
  */
-@Named
+@Component
 @Singleton
 public class ConfigurationSubscriber
     extends ComponentSupport

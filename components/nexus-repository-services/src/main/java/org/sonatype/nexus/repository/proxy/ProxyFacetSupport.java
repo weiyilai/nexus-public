@@ -30,8 +30,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.constraints.NotNull;
 
 import org.sonatype.nexus.common.cooperation2.Cooperation2;
@@ -203,11 +202,11 @@ public abstract class ProxyFacetSupport
    */
   @Inject
   protected void configureCooperation(
-      @Named final Cooperation2Factory cooperationFactory,
-      @Named("${nexus.proxy.cooperation.enabled:-true}") @Value("${nexus.proxy.cooperation.enabled:true}") final boolean cooperationEnabled,
-      @Named("${nexus.proxy.cooperation.majorTimeout:-0s}") @Value("${nexus.proxy.cooperation.majorTimeout:0s}") final Duration majorTimeout,
-      @Named("${nexus.proxy.cooperation.minorTimeout:-30s}") @Value("${nexus.proxy.cooperation.minorTimeout:30s}") final Duration minorTimeout,
-      @Named("${nexus.proxy.cooperation.threadsPerKey:-100}") @Value("${nexus.proxy.cooperation.threadsPerKey:100}") final int threadsPerKey)
+      final Cooperation2Factory cooperationFactory,
+      @Value("${nexus.proxy.cooperation.enabled:true}") final boolean cooperationEnabled,
+      @Value("${nexus.proxy.cooperation.majorTimeout:0s}") final Duration majorTimeout,
+      @Value("${nexus.proxy.cooperation.minorTimeout:30s}") final Duration minorTimeout,
+      @Value("${nexus.proxy.cooperation.threadsPerKey:100}") final int threadsPerKey)
   {
     this.cooperationBuilder = cooperationFactory.configure()
         .enabled(cooperationEnabled)

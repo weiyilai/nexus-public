@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.blobstore.s3;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.RepositoryCombobox;
@@ -23,13 +22,14 @@ import org.sonatype.nexus.repository.RepositoryTaskSupport;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * This task should only be run after an upgrade to 3.79 is finalized as its intended to be invoked in the context of an
  * upgrade step in the same context as the database upgrade we use 1.0 for the availability version.
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class ExternalMetadataTaskDescriptor
     extends TaskDescriptorSupport
@@ -40,7 +40,7 @@ public class ExternalMetadataTaskDescriptor
 
   @Inject
   public ExternalMetadataTaskDescriptor(
-      @Named("${external.blobstore.metadata:-false}") @Value("${external.blobstore.metadata:false}") final boolean visibleExposed)
+      @Value("${external.blobstore.metadata:false}") final boolean visibleExposed)
   {
     super(TYPE_ID,
         ExternalMetadataTask.class,

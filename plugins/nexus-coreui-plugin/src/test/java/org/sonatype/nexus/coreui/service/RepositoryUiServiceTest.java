@@ -12,6 +12,7 @@
  */
 package org.sonatype.nexus.coreui.service;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,15 +20,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import javax.validation.executable.ExecutableValidator;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
 import org.sonatype.nexus.common.app.GlobalComponentLookupHelper;
 import org.sonatype.nexus.common.entity.EntityId;
-import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.coreui.RepositoryReferenceXO;
 import org.sonatype.nexus.coreui.RepositoryXO;
 import org.sonatype.nexus.extdirect.model.StoreLoadParameters;
+import org.sonatype.nexus.repository.BadRequestException;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Recipe;
 import org.sonatype.nexus.repository.Repository;
@@ -45,28 +49,40 @@ import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.security.SecurityHelper;
 
 import com.google.common.collect.ImmutableMap;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
+import static java.util.Collections.emptySet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.sonatype.nexus.coreui.service.RepositoryUiService.INVALID_BLOBSTORENAME_EXCEPTION_MESSAGE;
 
 /**
- * Test for {@link RepositoryUiServiceImpl}
+ * Test for {@link RepositoryUiService}
  */
-public class RepositoryUiServiceTest
-    extends TestSupport
+@MockitoSettings(strictness = Strictness.LENIENT)
+class RepositoryUiServiceTest
+    extends Test5Support
 {
+  private static final String BLOB_STORE_NAME = "blobStoreName";
+
   @Mock
   private RepositoryCacheInvalidationService repositoryCacheInvalidationService;
 
@@ -104,9 +120,6 @@ public class RepositoryUiServiceTest
   private Format format;
 
   @Mock
-  private EventManager eventManager;
-
-  @Mock
   private Repository repository;
 
   @Mock
@@ -117,7 +130,7 @@ public class RepositoryUiServiceTest
 
   private RepositoryUiService underTest;
 
-  private String BLOB_STORE_NAME = "blobStoreName";
+  private MockedStatic<QualifierUtil> mockedStatic;
 
   @Mock
   private Map<String, Map<String, Object>> attributes;
@@ -125,8 +138,22 @@ public class RepositoryUiServiceTest
   @Mock
   private Map<String, Object> storage;
 
-  @Before
-  public void setup() {
+  @BeforeAll
+  static void initValidator() {
+    ExecutableValidator executableValidator = mock(ExecutableValidator.class);
+    when(executableValidator.validateParameters(any(), any(Method.class), any(), any(Class.class)))
+        .thenReturn(emptySet());
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = executableValidator;
+  }
+
+  @AfterAll
+  static void cleanupValidator() {
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
+  }
+
+  @BeforeEach
+  void setup() {
+    mockedStatic = Mockito.mockStatic(QualifierUtil.class);
     mockRepository();
     mockRecipes();
     BaseUrlHolder.set("http://nexus-url", "");
@@ -136,13 +163,15 @@ public class RepositoryUiServiceTest
     when(repositoryManager.get(anyString())).thenReturn(repository);
     when(repository.getConfiguration()).thenReturn(configuration);
     when(configuration.copy()).thenReturn(configuration);
+    List<Recipe> recipeList = mock(List.class);
+    when(QualifierUtil.buildQualifierBeanMap(recipeList)).thenReturn(recipes);
     when(repositoryXO.getAttributes()).thenReturn(attributes);
     when(attributes.get("storage")).thenReturn(storage);
     when(storage.get(BLOB_STORE_NAME)).thenReturn("ValidName");
 
     underTest = Mockito.spy(new RepositoryUiService(repositoryCacheInvalidationService, repositoryManager,
         repositoryMetricsService,
-        configurationStore, securityHelper, recipes, taskScheduler, typeLookup, formats, repositoryPermissionChecker)
+        configurationStore, securityHelper, recipeList, taskScheduler, typeLookup, formats, repositoryPermissionChecker)
     {
       @Override
       RepositoryXO asRepository(final Repository input) {
@@ -151,14 +180,19 @@ public class RepositoryUiServiceTest
     });
   }
 
+  @AfterEach
+  void teardown() {
+    mockedStatic.close();
+  }
+
   @Test
-  public void checkUserPermissionsOnFilter() {
+  void checkUserPermissionsOnFilter() {
     underTest.filter(createParameters());
     verify(repositoryPermissionChecker).userCanBrowseRepositories(configuration);
   }
 
   @Test
-  public void filterForAutocomplete() {
+  void filterForAutocomplete() {
     List<RepositoryReferenceXO> repositories = getTestRepositories();
     StoreLoadParameters storeLoadParameters = createParameters();
     storeLoadParameters.setQuery("nug");
@@ -170,7 +204,7 @@ public class RepositoryUiServiceTest
   }
 
   @Test
-  public void testRoutingRuleSet() throws Exception {
+  void testRoutingRuleSet() throws Exception {
     when(repositoryXO.getName()).thenReturn("test");
     when(repositoryXO.getFormat()).thenReturn("format");
 
@@ -187,7 +221,7 @@ public class RepositoryUiServiceTest
   }
 
   @Test
-  public void testRoutingRuleCleared() throws Exception {
+  void testRoutingRuleCleared() throws Exception {
     when(repositoryXO.getName()).thenReturn("test");
     when(repositoryXO.getFormat()).thenReturn("format");
 
@@ -204,7 +238,7 @@ public class RepositoryUiServiceTest
   }
 
   @Test
-  public void testReadContainsRepoSize() {
+  void testReadContainsRepoSize() {
     String repoName = "testRepo";
     String recipeName = "testRecipe";
     Long repoSize = 123456L;
@@ -216,16 +250,16 @@ public class RepositoryUiServiceTest
     when(repositoryPermissionChecker.userHasRepositoryAdminPermissionFor(any(Iterable.class), anyString()))
         .thenReturn(Collections.singletonList(configuration));
     List<RepositoryXO> repos = underTest.read();
-    Assert.assertEquals(1, repos.size());
+    assertEquals(1, repos.size());
     RepositoryXO repoXo = repos.get(0);
-    Assert.assertEquals(repoName, repoXo.getName());
-    Assert.assertEquals(Long.valueOf(123456), repoXo.getSize());
-    Assert.assertEquals("maven2", repoXo.getFormat());
-    Assert.assertEquals("hosted", repoXo.getType());
+    assertEquals(repoName, repoXo.getName());
+    assertEquals(Long.valueOf(123456), repoXo.getSize());
+    assertEquals("maven2", repoXo.getFormat());
+    assertEquals("hosted", repoXo.getType());
   }
 
   @Test
-  public void testReadReferencesContainsExpectedInfo() {
+  void testReadReferencesContainsExpectedInfo() {
     List<Configuration> repoConfigurations = givenRepoConfigurations();
     StoreLoadParameters parameters = createParameters();
     doReturn(repoConfigurations).when(underTest).filter(parameters);
@@ -255,17 +289,13 @@ public class RepositoryUiServiceTest
   }
 
   @Test
-  public void testInvalidBLobStoreName() {
+  void testInvalidBLobStoreName() {
     when(repositoryManager.newConfiguration()).thenReturn(new SimpleConfiguration());
     when(repositoryXO.getName()).thenReturn("test");
     when(repositoryXO.getFormat()).thenReturn("format");
     when(storage.get(BLOB_STORE_NAME)).thenReturn("<b>InvalidName</b>");
-    try {
-        underTest.create(repositoryXO);
-        Assert.fail("This should error out");
-    } catch (Exception e) {
-        assert(underTest.INVALID_BLOBSTORENAME_EXCEPTION_MESSAGE.equals(e.getMessage()));
-    }
+    BadRequestException ex = assertThrows(BadRequestException.class, () -> underTest.create(repositoryXO));
+    assertThat(ex.getMessage(), is(INVALID_BLOBSTORENAME_EXCEPTION_MESSAGE));
   }
 
   private List<Configuration> givenRepoConfigurations() {

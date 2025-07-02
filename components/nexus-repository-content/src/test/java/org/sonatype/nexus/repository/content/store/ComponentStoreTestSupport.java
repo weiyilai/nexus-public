@@ -14,7 +14,7 @@ package org.sonatype.nexus.repository.content.store;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.sonatype.nexus.common.event.EventManager;
@@ -28,32 +28,35 @@ import org.sonatype.nexus.repository.content.facet.ContentFacetFinder;
 import org.sonatype.nexus.repository.content.facet.ContentFacetSupport;
 import org.sonatype.nexus.repository.content.fluent.FluentComponent;
 import org.sonatype.nexus.repository.content.fluent.internal.FluentComponentImpl;
+import org.sonatype.nexus.repository.content.store.ComponentStoreTestSupport.ComponentStoreTestConfiguration;
 import org.sonatype.nexus.repository.content.store.example.TestAssetDAO;
 import org.sonatype.nexus.repository.content.store.example.TestAssetData;
-import org.sonatype.nexus.repository.content.store.example.TestBespokeStoreModule;
+import org.sonatype.nexus.repository.content.store.example.TestBespokeStoreProvider;
 import org.sonatype.nexus.repository.content.store.example.TestComponentDAO;
-import org.sonatype.nexus.transaction.TransactionModule;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-import org.eclipse.sisu.wire.WireModule;
+import jakarta.inject.Provider;
 import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.core.convert.support.DefaultConversionService;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class ComponentStoreTestSupport
+@SpringBootTest(classes = {ComponentStoreTestConfiguration.class})
+public abstract class ComponentStoreTestSupport
     extends ExampleContentTestSupport
 {
   private final int componentCount = 201;
@@ -76,20 +79,22 @@ public class ComponentStoreTestSupport
 
   private boolean entityVersioningEnabled;
 
-  public void initialiseStores(final boolean entityVersioningEnabled) {
+  @Autowired
+  ApplicationContext context;
+
+  AnnotationConfigApplicationContext testContext;
+
+  protected void initialiseStores(final boolean entityVersioningEnabled) {
     this.entityVersioningEnabled = entityVersioningEnabled;
-    when(contentFacetFinder.findRepository(eq("test"), anyInt())).thenReturn(Optional.of(repository));
-    FormatStoreManager fsm = Guice.createInjector(new WireModule(new TestBespokeStoreModule(),
-                new AbstractModule()
-            {
-              @Override
-              protected void configure() {
-                bind(DataSessionSupplier.class).toInstance(sessionRule);
-                bind(ContentFacetFinder.class).toInstance(contentFacetFinder);
-                bind(EventManager.class).toInstance(eventManager);
-              }
-            }, new TransactionModule()))
-        .getInstance(Key.get(FormatStoreManager.class, Names.named("test")));;
+    testContext = new AnnotationConfigApplicationContext();
+    testContext.setParent(context);
+    testContext.registerBean(ContentFacetFinder.class, () -> contentFacetFinder);
+    testContext.registerBean(EventManager.class, () -> eventManager);
+    testContext.registerBean(DataSessionSupplier.class, () -> sessionRule);
+    new TestBespokeStoreProvider().postProcessBeanDefinitionRegistry(testContext);
+    testContext.refresh();
+
+    FormatStoreManager fsm = testContext.getBean(FormatStoreManager.class);
 
     underTest = fsm.componentStore(DEFAULT_DATASTORE_NAME);
     generateRandomRepositories(1);
@@ -98,12 +103,12 @@ public class ComponentStoreTestSupport
     repositoryId = generatedRepositories().get(0).repositoryId;
 
     // create a number of components that require paging
-    for (int i=0; i<componentCount; i++) {
+    for (int i = 0; i < componentCount; i++) {
       createComponentWithAsset(i);
     }
   }
 
-  public void testPurge_byComponentIds() {
+  protected void testPurge_byComponentIds() {
     int[] componentIds = getComponentIds();
     assertThat("Sanity check", componentIds.length, is(componentCount));
 
@@ -118,7 +123,7 @@ public class ComponentStoreTestSupport
     verifyNoMoreInteractions(eventManager);
   }
 
-  public void testPurge_byComponent() {
+  protected void testPurge_byComponent() {
     List<FluentComponent> componentIds = getComponents();
     assertThat("Sanity check", componentIds, hasSize(componentCount));
 
@@ -160,6 +165,28 @@ public class ComponentStoreTestSupport
       asset.setComponent(component);
       session.access(TestAssetDAO.class).createAsset(asset, entityVersioningEnabled);
       session.getTransaction().commit();
+    }
+  }
+
+  protected static class ComponentStoreTestConfiguration
+  {
+    @Bean
+    ConversionService conversionService() {
+      DefaultConversionService service = new DefaultConversionService();
+      service.addConverter(new GenericConverter()
+      {
+
+        @Override
+        public Set<ConvertiblePair> getConvertibleTypes() {
+          return Set.of(new ConvertiblePair(Object.class, Provider.class));
+        }
+
+        @Override
+        public Object convert(final Object source, final TypeDescriptor sourceType, final TypeDescriptor targetType) {
+          return (Provider) () -> source;
+        }
+      });
+      return service;
     }
   }
 }

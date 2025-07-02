@@ -15,8 +15,7 @@ package org.sonatype.nexus.repository.content.search;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.entity.EntityHelper;
@@ -25,14 +24,18 @@ import org.sonatype.nexus.repository.content.facet.ContentFacet;
 import org.sonatype.nexus.repository.content.fluent.FluentComponent;
 import org.sonatype.nexus.repository.content.fluent.FluentComponents;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
 import static com.google.common.base.Strings.nullToEmpty;
 import static java.util.Optional.empty;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
+@Qualifier("default")
 public class DefaultComponentFinder
     extends ComponentSupport
     implements ComponentFinder

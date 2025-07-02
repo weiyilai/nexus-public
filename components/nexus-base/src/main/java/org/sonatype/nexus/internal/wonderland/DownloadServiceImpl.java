@@ -20,14 +20,17 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.common.wonderland.AuthTicketService;
 import org.sonatype.nexus.common.wonderland.DownloadService;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -37,7 +40,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 2.8
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @Singleton
 public class DownloadServiceImpl
     extends ComponentSupport

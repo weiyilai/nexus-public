@@ -13,8 +13,7 @@
 package org.sonatype.nexus.content.maven.internal.recipe;
 
 import javax.annotation.Nonnull;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.content.maven.MavenArchetypeCatalogFacet;
@@ -26,13 +25,14 @@ import org.sonatype.nexus.repository.view.Response;
 
 import static org.sonatype.nexus.repository.http.HttpMethods.GET;
 import static org.sonatype.nexus.repository.http.HttpMethods.HEAD;
+import org.springframework.stereotype.Component;
 
 /**
  * Fetches or rebuilds the maven archetype catalog for a given repository.
  *
  * @since 3.25
  */
-@Named
+@Component
 @Singleton
 public class MavenArchetypeCatalogHandler
     extends ComponentSupport

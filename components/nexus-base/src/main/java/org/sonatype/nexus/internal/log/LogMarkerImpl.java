@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.internal.log;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.event.EventManager;
@@ -26,13 +25,14 @@ import org.sonatype.nexus.common.log.LoggerLevel;
 import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Default implementation of {@link LogMarker}.
  * 
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class LogMarkerImpl
     extends ComponentSupport

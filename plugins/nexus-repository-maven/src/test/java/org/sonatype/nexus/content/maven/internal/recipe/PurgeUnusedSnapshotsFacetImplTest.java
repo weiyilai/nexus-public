@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.content.maven.MavenContentFacet;
 import org.sonatype.nexus.content.maven.store.Maven2ComponentStore;
 import org.sonatype.nexus.repository.Repository;
@@ -36,6 +37,7 @@ import org.mockito.Mockito;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -84,8 +86,7 @@ public class PurgeUnusedSnapshotsFacetImplTest
 
   @Before
   public void setUp() throws Exception {
-    purgeUnusedSnapshotsFacet = new PurgeUnusedSnapshotsFacetImpl(groupType, hostedType, FIND_UNUSED_LIMIT);
-    purgeUnusedSnapshotsFacet.attach(repository);
+    purgeUnusedSnapshotsFacet = createFacet(repository);
 
     when(repository.getType()).thenReturn(new HostedType());
     when(repository.facet(MavenContentFacet.class)).thenReturn(mavenContentFacet);
@@ -123,13 +124,20 @@ public class PurgeUnusedSnapshotsFacetImplTest
     when(groupRepository.facet(MavenGroupFacet.class)).thenReturn(mavenGroupFacet);
     when(mavenGroupFacet.leafMembers()).thenReturn(Collections.singletonList(repository));
 
-    PurgeUnusedSnapshotsFacet purgeUnusedSnapshotsFacetForHostedRepo
-        = new PurgeUnusedSnapshotsFacetImpl(groupType, hostedType, FIND_UNUSED_LIMIT);
-    purgeUnusedSnapshotsFacetForHostedRepo.attach(groupRepository);
+    PurgeUnusedSnapshotsFacet purgeUnusedSnapshotsFacetForGroupRepo = createFacet(groupRepository);
 
-    purgeUnusedSnapshotsFacetForHostedRepo.purgeUnusedSnapshots(NUMBER_OF_DAYS_UNUSED);
+    purgeUnusedSnapshotsFacetForGroupRepo.purgeUnusedSnapshots(NUMBER_OF_DAYS_UNUSED);
 
     verify(componentStore, times(2)).selectUnusedSnapshots(anyInt(), any(), anyLong());
     verify(mavenContentFacet, times(1)).deleteComponents(new int[]{COMPONENT_ID});
+  }
+
+  private PurgeUnusedSnapshotsFacetImpl createFacet(final Repository repository) throws Exception {
+    PurgeUnusedSnapshotsFacetImpl facet = new PurgeUnusedSnapshotsFacetImpl(groupType, hostedType, FIND_UNUSED_LIMIT);
+    facet.installDependencies(mock(EventManager.class));
+    facet.attach(repository);
+    facet.init();
+    facet.start();
+    return facet;
   }
 }

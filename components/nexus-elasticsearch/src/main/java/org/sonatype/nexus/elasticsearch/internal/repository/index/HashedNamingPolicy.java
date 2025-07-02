@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.elasticsearch.internal.repository.index;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 
@@ -24,13 +23,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 import static org.sonatype.nexus.common.hash.HashAlgorithm.SHA1;
+import org.springframework.stereotype.Component;
 
 /**
  * Name search indexes by hashing the repository name; avoids characters not allowed by Elasticsearch.
  *
  * @since 3.25
  */
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class HashedNamingPolicy

@@ -14,9 +14,8 @@ package org.sonatype.nexus.rapture.internal.logging;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.gossip.Level;
 import org.sonatype.nexus.extdirect.DirectComponentSupport;
@@ -32,13 +31,14 @@ import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import org.springframework.stereotype.Component;
 
 /**
  * LogEvent component.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "rapture_LogEvent")
 public class LogEventComponent
@@ -48,7 +48,7 @@ public class LogEventComponent
 
   @Inject
   public LogEventComponent(
-      @Named("${nexus.log.extdirect.recording.enabled:-false}") @Value("${nexus.log.extdirect.recording.enabled:false}") final boolean enabled)
+      @Value("${nexus.log.extdirect.recording.enabled:false}") final boolean enabled)
   {
     this.enabled = enabled;
   }

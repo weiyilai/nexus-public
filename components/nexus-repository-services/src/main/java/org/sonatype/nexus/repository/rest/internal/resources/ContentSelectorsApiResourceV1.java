@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.rest.internal.resources;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.common.event.EventManager;
@@ -24,11 +23,12 @@ import org.sonatype.nexus.selector.SelectorFactory;
 import org.sonatype.nexus.selector.SelectorManager;
 
 import static org.sonatype.nexus.repository.rest.internal.resources.ContentSelectorsApiResourceV1.RESOURCE_URI;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 public class ContentSelectorsApiResourceV1

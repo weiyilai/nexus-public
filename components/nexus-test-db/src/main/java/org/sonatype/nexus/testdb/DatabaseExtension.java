@@ -12,12 +12,14 @@
  */
 package org.sonatype.nexus.testdb;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -25,6 +27,7 @@ import javax.annotation.Nullable;
 import org.sonatype.nexus.datastore.api.DataStoreConfiguration;
 import org.sonatype.nexus.datastore.mybatis.MyBatisDataStore;
 
+import org.apache.ibatis.type.TypeHandler;
 import org.assertj.db.type.Table;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -94,39 +97,50 @@ public class DatabaseExtension
 
   @Override
   public void beforeEach(final ExtensionContext context) throws Exception {
-    context.getTestInstance().ifPresent(test -> {
-      AnnotationSupport.findAnnotatedFields(test.getClass(), DataSessionConfiguration.class).forEach(field -> {
-        try {
-          DataSessionConfiguration dataSession = field.getAnnotation(DataSessionConfiguration.class);
-          String storeName = dataSession.storeName();
-          MyBatisDataStore store =
-              newStore(storeName, Map.of("jdbcUrl", discoverJdbcUrl(context.getTestMethod().get().getName())));
+    Optional<Object> testObj = context.getTestInstance();
+    if (testObj.isEmpty()) {
+      return;
+    }
 
-          store.start();
+    Object test = testObj.get();
 
-          Stream.of(dataSession.daos()).forEach(store::register);
-          Stream.of(dataSession.typeHandlers()).map(ReflectionSupport::newInstance).forEach(store::register);
-          stores.put(storeName, store);
+    for (Field field : AnnotationSupport.findAnnotatedFields(test.getClass(), DataSessionConfiguration.class)) {
+      addSession(test, field, context);
+    }
 
-          field.setAccessible(true);
-          field.set(test, new TestDataSessionSupplier(storeName, store));
-        }
-        catch (Exception e) {
-          throw new RuntimeException(e);
-        }
-      });
-
-      AnnotationSupport.findAnnotatedFields(test.getClass(), TestTable.class).forEach(field -> {
-        try {
-          TestTable testTable = field.getAnnotation(TestTable.class);
-          field.setAccessible(true);
-          field.set(test, new Table(store(testTable.storeName()).getDataSource(), testTable.table()));
-        }
-        catch (Exception e) {
-          throw new RuntimeException(e);
-        }
-      });
+    AnnotationSupport.findAnnotatedFields(test.getClass(), TestTable.class).forEach(field -> {
+      try {
+        TestTable testTable = field.getAnnotation(TestTable.class);
+        field.setAccessible(true);
+        field.set(test, new Table(store(testTable.storeName()).getDataSource(), testTable.table()));
+      }
+      catch (Exception e) {
+        throw new RuntimeException(e);
+      }
     });
+  }
+
+  private void addSession(final Object test, final Field field, final ExtensionContext context) {
+    try {
+      DataSessionConfiguration dataSession = field.getAnnotation(DataSessionConfiguration.class);
+      String storeName = dataSession.storeName();
+      MyBatisDataStore store =
+          newStore(storeName, Map.of("jdbcUrl", discoverJdbcUrl(context.getTestMethod().get().getName())));
+
+      store.start();
+
+      for (Class<? extends TypeHandler<?>> handler : dataSession.typeHandlers()) {
+        store.register(ReflectionSupport.newInstance(handler));
+      }
+      Stream.of(dataSession.daos()).forEach(store::register);
+      stores.put(storeName, store);
+
+      field.setAccessible(true);
+      field.set(test, new TestDataSessionSupplier(storeName, store));
+    }
+    catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

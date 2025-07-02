@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -33,6 +32,8 @@ import com.google.common.collect.ImmutableList;
 
 import static org.sonatype.nexus.capability.Tag.categoryTag;
 import static org.sonatype.nexus.capability.Tag.tags;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * {@link BaseUrlCapabilityDescriptor} descriptor.
@@ -40,7 +41,8 @@ import static org.sonatype.nexus.capability.Tag.tags;
  * @since 3.0
  */
 @AvailabilityVersion(from = "1.0")
-@Named(BaseUrlCapabilityDescriptor.TYPE_ID)
+@Component
+@Qualifier(BaseUrlCapabilityDescriptor.TYPE_ID)
 @Singleton
 public class BaseUrlCapabilityDescriptor
     extends CapabilityDescriptorSupport<BaseUrlCapabilityConfiguration>
@@ -69,13 +71,11 @@ public class BaseUrlCapabilityDescriptor
 
   public BaseUrlCapabilityDescriptor() {
     this.formFields = ImmutableList.of(
-        (FormField)new UrlFormField(
+        (FormField) new UrlFormField(
             BaseUrlCapabilityConfiguration.URL,
             messages.urlLabel(),
             messages.urlHelp(),
-            FormField.MANDATORY
-        )
-    );
+            FormField.MANDATORY));
   }
 
   @Override

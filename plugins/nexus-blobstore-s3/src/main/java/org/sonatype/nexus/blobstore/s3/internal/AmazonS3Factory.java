@@ -15,8 +15,7 @@ package org.sonatype.nexus.blobstore.s3.internal;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Time;
@@ -57,13 +56,17 @@ import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.MAX_CONNECTIO
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.SECRET_ACCESS_KEY_KEY;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.SESSION_TOKEN_KEY;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.SIGNERTYPE_KEY;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Creates configured AmazonS3 clients.
  *
  * @since 3.6.1
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AmazonS3Factory
     extends ComponentSupport
 {
@@ -81,10 +84,10 @@ public class AmazonS3Factory
 
   @Inject
   public AmazonS3Factory(
-      @Named("${nexus.s3.connection.pool:--1}") @Value("${nexus.s3.connection.pool:-1}") final int connectionPoolSize,
-      @Nullable @Named("${nexus.s3.connection.ttl:-null}") @Value("${nexus.s3.connection.ttl:null}") final Time connectionTtl,
-      @Named("${nexus.s3.cloudwatchmetrics.enabled:-false}") @Value("${nexus.s3.cloudwatchmetrics.enabled:false}") final boolean cloudWatchMetricsEnabled,
-      @Named("${nexus.s3.cloudwatchmetrics.namespace:-nexus-blobstore-s3}") @Value("${nexus.s3.cloudwatchmetrics.namespace:nexus-blobstore-s3}") final String cloudWatchMetricsNamespace,
+      @Value("${nexus.s3.connection.pool:1}") final int connectionPoolSize,
+      @Nullable @Value("${nexus.s3.connection.ttl:#{null}}") final Time connectionTtl,
+      @Value("${nexus.s3.cloudwatchmetrics.enabled:false}") final boolean cloudWatchMetricsEnabled,
+      @Value("${nexus.s3.cloudwatchmetrics.namespace:nexus-blobstore-s3}") final String cloudWatchMetricsNamespace,
       final SecretsFactory secretsFactory)
   {
     this.defaultConnectionPoolSize = connectionPoolSize;

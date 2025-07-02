@@ -12,15 +12,17 @@
  */
 package org.sonatype.nexus.quartz;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.scheduling.Cancelable;
 import org.sonatype.nexus.scheduling.CancelableHelper;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Simple sleeper task that is cancelable.
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SleeperCancelableTask
     extends SleeperTask
     implements Cancelable

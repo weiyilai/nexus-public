@@ -22,9 +22,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.log.LastShutdownTimeService;
@@ -35,13 +34,14 @@ import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.log.LogManager.DEFAULT_LOGGER;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link LastShutdownTimeService} implementation.
  *
  * @since 3.13
  */
-@Named
+@Component
 @Singleton
 public class LastShutdownTimeServiceImpl
     extends ComponentSupport
@@ -68,7 +68,7 @@ public class LastShutdownTimeServiceImpl
   @Inject
   public LastShutdownTimeServiceImpl(
       final LogManager logManager,
-      @Named("${nexus.log.lastShutdownTime.enabled:-true}") @Value("${nexus.log.lastShutdownTime.enabled:true}") final boolean enabled)
+      @Value("${nexus.log.lastShutdownTime.enabled:true}") final boolean enabled)
   {
     this.logManager = logManager;
     if (!enabled) {

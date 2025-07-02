@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.repository.content.facet;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;

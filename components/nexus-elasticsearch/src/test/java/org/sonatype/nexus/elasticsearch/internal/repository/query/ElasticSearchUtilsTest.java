@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.elasticsearch.ElasticSearchContribution;
 import org.sonatype.nexus.elasticsearch.internal.repository.contributions.BlankValueElasticSearchContribution;
 import org.sonatype.nexus.elasticsearch.internal.repository.contributions.DefaultElasticSearchContribution;
@@ -28,18 +29,20 @@ import org.sonatype.nexus.repository.rest.SearchMapping;
 import org.sonatype.nexus.repository.rest.SearchMappings;
 import org.sonatype.nexus.repository.rest.api.RepositoryManagerRESTAdapter;
 import org.sonatype.nexus.repository.rest.sql.SearchField;
+import org.sonatype.nexus.repository.search.BlankValueSearchQueryFilter;
 import org.sonatype.nexus.repository.search.query.SearchFilter;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.hamcrest.Matcher;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.emptyMap;
@@ -50,6 +53,8 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ElasticSearchUtilsTest
     extends TestSupport
@@ -75,22 +80,35 @@ public class ElasticSearchUtilsTest
 
   ElasticSearchUtils underTest;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setup() {
-
-    Map<String, SearchMappings> searchMappings = ImmutableMap.of(
-        "default", () -> ImmutableList.of(
+    mockedStatic = Mockito.mockStatic(QualifierUtil.class);
+    List<SearchMappings> searchMappingsList = mock(List.class);
+    Map<String, SearchMappings> searchMappings = Map.of(
+        "default", () -> List.of(
             new SearchMapping(SHA1_ALIAS, VALID_SHA1_ATTRIBUTE_NAME, "", SearchField.SHA1)),
-        "testFormat", () -> ImmutableList.of(
+        "testFormat", () -> List.of(
             new SearchMapping("format.custom", "attributes.format.custom", "", SearchField.FORMAT_FIELD_1),
             new SearchMapping("format.test", "attributes.format.test", "", SearchField.FORMAT_FIELD_2),
             new SearchMapping("name", "name.raw", "", SearchField.NAME)));
-
+    when(QualifierUtil.buildQualifierBeanMap(searchMappingsList)).thenReturn(searchMappings);
     Map<String, ElasticSearchContribution> searchContributions = new HashMap<>();
+    List<ElasticSearchContribution> searchContributionsList = mock(List.class);
     searchContributions.put(DefaultElasticSearchContribution.NAME, new DefaultElasticSearchContribution());
     searchContributions.put(BlankValueElasticSearchContribution.NAME, new BlankValueElasticSearchContribution());
     searchContributions.put(KeywordElasticSearchContribution.NAME, new KeywordElasticSearchContribution());
-    underTest = new ElasticSearchUtils(repositoryManagerRESTAdapter, searchMappings, searchContributions, emptyMap());
+    when(QualifierUtil.buildQualifierBeanMap(searchContributionsList)).thenReturn(searchContributions);
+    List<BlankValueSearchQueryFilter> filterAttributeLists = mock(List.class);
+    when(QualifierUtil.buildQualifierBeanMap(filterAttributeLists)).thenReturn(emptyMap());
+    underTest = new ElasticSearchUtils(repositoryManagerRESTAdapter, searchMappingsList, searchContributionsList,
+        filterAttributeLists);
+  }
+
+  @After
+  public void teardown() {
+    mockedStatic.close();
   }
 
   @Test

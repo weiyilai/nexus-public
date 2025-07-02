@@ -19,9 +19,8 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
@@ -35,11 +34,14 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * An {@link ApiKeyStore} implementation which makes use of {@link SecretsService}
  */
-@Named("v2")
+@Component
+@Qualifier("v2")
 @Singleton
 public class ApiKeyStoreV2Impl
     extends ConfigStoreSupport<ApiKeyV2DAO>
@@ -225,7 +227,8 @@ public class ApiKeyStoreV2Impl
     checkNotNull(domain);
     checkNotNull(principals);
 
-    return dao().findApiKey(domain, principals.getPrimaryPrincipal().toString()).stream()
+    return dao().findApiKey(domain, principals.getPrimaryPrincipal().toString())
+        .stream()
         .filter(principalMatcher(principals))
         .findFirst();
   }
@@ -234,7 +237,8 @@ public class ApiKeyStoreV2Impl
   protected Stream<ApiKeyV2Data> findApiKeysForUser(final PrincipalCollection principals) {
     checkNotNull(principals);
 
-    return dao().findApiKeysForUser(principals.getPrimaryPrincipal().toString()).stream()
+    return dao().findApiKeysForUser(principals.getPrimaryPrincipal().toString())
+        .stream()
         .filter(principalMatcher(principals));
   }
 
@@ -249,7 +253,7 @@ public class ApiKeyStoreV2Impl
 
   @VisibleForTesting
   static String accessKey(final char[] apiKey) {
-    return new String(apiKey,  0, apiKey.length / 2);
+    return new String(apiKey, 0, apiKey.length / 2);
   }
 
   @VisibleForTesting

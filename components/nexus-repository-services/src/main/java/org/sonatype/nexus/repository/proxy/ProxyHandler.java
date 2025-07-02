@@ -17,7 +17,7 @@ import java.io.UncheckedIOException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.io.CooperationException;
@@ -31,6 +31,11 @@ import org.sonatype.nexus.repository.view.Payload;
 import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.repository.view.Status;
 
+import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import static java.lang.Boolean.TRUE;
 import static org.sonatype.nexus.repository.http.HttpMethods.GET;
 import static org.sonatype.nexus.repository.http.HttpMethods.HEAD;
@@ -42,6 +47,9 @@ import static org.sonatype.nexus.repository.proxy.ThrottlerInterceptor.PAYMENT_R
  *
  * @since 3.0
  */
+@Primary
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ProxyHandler
     extends ComponentSupport
     implements Handler
@@ -105,7 +113,7 @@ public class ProxyHandler
     return HttpResponses.notFound();
   }
 
-  protected Response buildPaymentRequiredResponse(Context context) {
+  protected Response buildPaymentRequiredResponse(final Context context) {
     if (context.getRepository().getFormat().getValue().equals("nuget")) {
       return HttpResponses.conflict(PAYMENT_REQUIRED_MESSAGE.concat(nodeAccess.getId()));
     }

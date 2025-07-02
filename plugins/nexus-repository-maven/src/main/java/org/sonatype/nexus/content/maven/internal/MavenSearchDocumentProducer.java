@@ -14,9 +14,8 @@ package org.sonatype.nexus.content.maven.internal;
 
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.content.fluent.FluentComponent;
 import org.sonatype.nexus.repository.content.search.elasticsearch.DefaultSearchDocumentProducer;
@@ -25,6 +24,8 @@ import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.repository.maven.internal.search.MavenVersionNormalizer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Maven implementation of {@link DefaultSearchDocumentProducer}
@@ -32,7 +33,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 3.26
  */
 @Singleton
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 public class MavenSearchDocumentProducer
     extends DefaultSearchDocumentProducer
 {

@@ -113,6 +113,18 @@
       </dependency>
 
       <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-spring</artifactId>
+        <version>${apache-shiro.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk15to18</artifactId>
         <version>${bouncycastle.version}</version>

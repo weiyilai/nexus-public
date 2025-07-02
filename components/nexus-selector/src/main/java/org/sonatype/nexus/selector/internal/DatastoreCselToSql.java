@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.selector.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.selector.CselToSql;
 import org.sonatype.nexus.selector.ParserVisitorSupport;
@@ -33,13 +32,16 @@ import org.apache.commons.jexl3.parser.ASTReferenceExpression;
 import org.apache.commons.jexl3.parser.ASTSWNode;
 import org.apache.commons.jexl3.parser.ASTStringLiteral;
 import org.apache.commons.jexl3.parser.JexlNode;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Walks the script, transforming CSEL expressions into data store appropriate SQL clauses.
  *
  * @since 3.24
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 public class DatastoreCselToSql
     extends ParserVisitorSupport
@@ -54,7 +56,8 @@ public class DatastoreCselToSql
 
   @Override
   protected Object doVisit(final JexlNode node, final Object data) {
-    throw new JexlException(node, "Expression not supported in CSEL selector, failing node is " + node.jexlInfo().toString());
+    throw new JexlException(node,
+        "Expression not supported in CSEL selector, failing node is " + node.jexlInfo().toString());
   }
 
   /**

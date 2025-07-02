@@ -30,9 +30,8 @@ import javax.cache.Cache;
 import javax.cache.configuration.MutableConfiguration;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.common.Time;
 import org.sonatype.nexus.blobstore.MemoryBlobSession;
@@ -57,6 +56,7 @@ import org.sonatype.nexus.blobstore.group.internal.BlobStoreGroupMetrics;
 import org.sonatype.nexus.blobstore.group.internal.WriteToFirstMemberFillPolicy;
 import org.sonatype.nexus.blobstore.metrics.MonitoringBlobStoreMetrics;
 import org.sonatype.nexus.cache.CacheHelper;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.common.stateguard.Transitions;
@@ -79,13 +79,19 @@ import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.St
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.SHUTDOWN;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STOPPED;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * A {@link BlobStore} consisting of other blob stores.
  *
  * @since 3.14
  */
-@Named(BlobStoreGroup.TYPE)
+@Component
+@Qualifier(BlobStoreGroup.TYPE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BlobStoreGroup
     extends StateGuardLifecycleSupport
     implements BlobStore
@@ -125,12 +131,12 @@ public class BlobStoreGroup
   @Inject
   public BlobStoreGroup(
       final BlobStoreManager blobStoreManager,
-      final Map<String, Provider<FillPolicy>> fillPolicyProviders,
+      final List<Provider<FillPolicy>> fillPolicyProvidersList,
       final Provider<CacheHelper> cacheHelperProvider,
-      @Named("${nexus.blobstore.group.blobId.cache.timeToLive:-2d}") @Value("${nexus.blobstore.group.blobId.cache.timeToLive:2d}") final Time blobIdCacheTimeout)
+      @Value("${nexus.blobstore.group.blobId.cache.timeToLive:2d}") final Time blobIdCacheTimeout)
   {
     this.blobStoreManager = checkNotNull(blobStoreManager);
-    this.fillPolicyProviders = checkNotNull(fillPolicyProviders);
+    this.fillPolicyProviders = checkNotNull(QualifierUtil.buildQualifierBeanMap(fillPolicyProvidersList));
     this.cacheHelperProvider = checkNotNull(cacheHelperProvider);
     this.blobIdCacheTimeout = checkNotNull(blobIdCacheTimeout);
   }

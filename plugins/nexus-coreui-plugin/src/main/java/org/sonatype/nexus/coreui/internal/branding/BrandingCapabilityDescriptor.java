@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -31,6 +30,8 @@ import org.sonatype.nexus.formfields.FormField;
 import org.sonatype.nexus.formfields.TextAreaFormField;
 
 import com.google.common.collect.Lists;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * {@link BrandingCapability} descriptor.
@@ -38,7 +39,8 @@ import com.google.common.collect.Lists;
  * @since 3.0
  */
 @AvailabilityVersion(from = "1.0")
-@Named(BrandingCapabilityDescriptor.TYPE_ID)
+@Component
+@Qualifier(BrandingCapabilityDescriptor.TYPE_ID)
 @Singleton
 public class BrandingCapabilityDescriptor
     extends CapabilityDescriptorSupport<BrandingCapabilityConfiguration>

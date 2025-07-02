@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.maven.tasks;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
@@ -30,13 +29,18 @@ import static org.sonatype.nexus.repository.maven.tasks.RebuildMaven2MetadataTas
 import static org.sonatype.nexus.repository.maven.tasks.RebuildMaven2MetadataTaskDescriptor.CASCADE_REBUILD;
 import static org.sonatype.nexus.repository.maven.tasks.RebuildMaven2MetadataTaskDescriptor.GROUPID_FIELD_ID;
 import static org.sonatype.nexus.repository.maven.tasks.RebuildMaven2MetadataTaskDescriptor.REBUILD_CHECKSUMS;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Maven 2 metadata rebuild task.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RebuildMaven2MetadataTask
     extends RepositoryTaskSupport
     implements Cancelable
@@ -47,13 +51,13 @@ public class RebuildMaven2MetadataTask
   private final Format maven2Format;
 
   @Inject
-  public RebuildMaven2MetadataTask(@Named(HostedType.NAME) final Type hostedType,
-                                   @Named(Maven2Format.NAME) final Format maven2Format)
+  public RebuildMaven2MetadataTask(
+      @Qualifier(HostedType.NAME) final Type hostedType,
+      @Qualifier(Maven2Format.NAME) final Format maven2Format)
   {
     this.hostedType = checkNotNull(hostedType);
     this.maven2Format = checkNotNull(maven2Format);
   }
-
 
   @Override
   protected void execute(final Repository repository) {
@@ -64,8 +68,7 @@ public class RebuildMaven2MetadataTask
         getConfiguration().getString(BASEVERSION_FIELD_ID),
         getConfiguration().getBoolean(REBUILD_CHECKSUMS, false),
         getConfiguration().getBoolean(CASCADE_REBUILD, true),
-        false
-    );
+        false);
   }
 
   @Override

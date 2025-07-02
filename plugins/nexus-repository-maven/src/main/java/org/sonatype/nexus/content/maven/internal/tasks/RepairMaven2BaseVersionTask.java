@@ -12,8 +12,6 @@
  */
 package org.sonatype.nexus.content.maven.internal.tasks;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.content.maven.MavenContentFacet;
 import org.sonatype.nexus.content.maven.store.Maven2ComponentData;
@@ -22,8 +20,12 @@ import org.sonatype.nexus.repository.RepositoryTaskSupport;
 import org.sonatype.nexus.repository.content.fluent.FluentComponent;
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.scheduling.Cancelable;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RepairMaven2BaseVersionTask
     extends RepositoryTaskSupport
     implements Cancelable

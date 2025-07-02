@@ -14,7 +14,7 @@ package org.sonatype.nexus.internal.security.apikey;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
 import org.sonatype.goodies.testsupport.TestSupport;
@@ -77,7 +77,7 @@ public class ApiKeyServiceImplTest
   private UserPrincipalsHelper principalsHelper;
 
   @Mock
-  private Map<String, ApiKeyFactory> apiKeyFactories;
+  private List<ApiKeyFactory> apiKeyFactories;
 
   @Mock
   private DefaultApiKeyFactory defaultApiKeyFactory;

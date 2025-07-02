@@ -20,9 +20,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.config.internal.ConfigurationData;
 import org.sonatype.nexus.repository.routing.RoutingRule;
@@ -36,13 +35,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Write/Read {@link Configuration} and {@link RoutingRule} data to/from a JSON file.
  *
  * @since 3.29
  */
-@Named("configurationExport")
+@Component
+@Qualifier("configurationExport")
 @Singleton
 public class ConfigurationExport
     extends JsonExporter

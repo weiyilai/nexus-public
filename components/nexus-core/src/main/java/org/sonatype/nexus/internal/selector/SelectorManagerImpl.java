@@ -27,9 +27,8 @@ import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.Time;
 import org.sonatype.nexus.cache.CacheHelper;
@@ -82,13 +81,14 @@ import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.St
 import static org.sonatype.nexus.repository.security.RepositoryContentSelectorPrivilegeDescriptor.P_CONTENT_SELECTOR;
 import static org.sonatype.nexus.repository.security.RepositoryContentSelectorPrivilegeDescriptor.P_REPOSITORY;
 import static org.sonatype.nexus.security.user.UserManager.DEFAULT_SOURCE;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link SelectorManager} implementation.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = SERVICES)
 public class SelectorManagerImpl
@@ -122,7 +122,7 @@ public class SelectorManagerImpl
       final SecuritySystem securitySystem,
       final SelectorFactory selectorFactory,
       final CacheHelper cacheHelper,
-      @Named("${nexus.shiro.cache.defaultTimeToLive:-2m}") @Value("${nexus.shiro.cache.defaultTimeToLive:2m}") final Time userCacheTimeout)
+      @Value("${nexus.shiro.cache.defaultTimeToLive:2m}") final Time userCacheTimeout)
   {
     this.store = checkNotNull(store);
     this.securitySystem = checkNotNull(securitySystem);

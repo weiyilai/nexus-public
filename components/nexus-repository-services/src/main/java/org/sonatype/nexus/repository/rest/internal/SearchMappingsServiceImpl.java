@@ -13,13 +13,14 @@
 package org.sonatype.nexus.repository.rest.internal;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.rest.SearchMapping;
 import org.sonatype.nexus.repository.rest.SearchMappings;
 import org.sonatype.nexus.repository.rest.SearchMappingsService;
@@ -28,8 +29,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class SearchMappingsServiceImpl
     extends ComponentSupport
@@ -40,8 +42,8 @@ public class SearchMappingsServiceImpl
   private final Collection<SearchMapping> searchMappings;
 
   @Inject
-  public SearchMappingsServiceImpl(final Map<String, SearchMappings> searchMappings) {
-    this.searchMappings = collectMappings(checkNotNull(searchMappings));
+  public SearchMappingsServiceImpl(final List<SearchMappings> searchMappingsList) {
+    this.searchMappings = collectMappings(QualifierUtil.buildQualifierBeanMap(checkNotNull(searchMappingsList)));
   }
 
   private static Collection<SearchMapping> collectMappings(final Map<String, SearchMappings> searchMappings) {
@@ -54,7 +56,8 @@ public class SearchMappingsServiceImpl
     }
 
     // add the rest of the mappings
-    searchMappings.keySet().stream()
+    searchMappings.keySet()
+        .stream()
         .filter(key -> !DEFAULT.equals(key))
         .sorted()
         .forEach(key -> builder.addAll(searchMappings.get(key).get()));

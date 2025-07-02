@@ -12,11 +12,11 @@
  */
 package org.sonatype.nexus.security;
 
-import javax.inject.Provider;
 import javax.servlet.Filter;
 
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+import jakarta.inject.Provider;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -25,8 +25,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 2.8
  */
+@Deprecated(since = "4/1/2025", forRemoval = true)
 public class FilterProviderSupport
-  implements Provider<Filter>
+    implements Provider<Filter>
 {
   private final Filter filter;
 

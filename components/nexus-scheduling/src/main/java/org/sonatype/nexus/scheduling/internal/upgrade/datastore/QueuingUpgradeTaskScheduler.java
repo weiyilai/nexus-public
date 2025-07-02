@@ -16,9 +16,8 @@ import java.time.Duration;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.cooperation2.Cooperation2;
@@ -43,11 +42,13 @@ import org.sonatype.nexus.scheduling.events.TaskEventStoppedDone;
 import org.sonatype.nexus.scheduling.events.TaskEventStoppedFailed;
 
 import com.google.common.eventbus.Subscribe;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
+import org.springframework.stereotype.Component;
 
 /**
  * An implementation of {@link UpgradeTaskScheduler} which attempts to run tasks scheduled through it in the order which
@@ -56,7 +57,7 @@ import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.St
  * When a task fails, or is canceled the queue will stop until a Nexus node restarts at which point it will resume the
  * executing the queue. Uses events to identify when a task changes state.
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = TASKS)
 public class QueuingUpgradeTaskScheduler
@@ -80,10 +81,10 @@ public class QueuingUpgradeTaskScheduler
       final PeriodicJobService periodicJobService,
       final TaskScheduler taskScheduler,
       final UpgradeTaskStore upgradeTaskStore,
-      @Named("${nexus.upgrade.tasks.checkOnStartup:-true}") @Value("${nexus.upgrade.tasks.checkOnStartup:true}") final boolean checkRequiresMigration,
-      @Named("${nexus.upgrade.tasks.delay:-10s}") @Value("${nexus.upgrade.tasks.delay:10s}") final Duration delayOnStart,
+      @Value("${nexus.upgrade.tasks.checkOnStartup:true}") final boolean checkRequiresMigration,
+      @Value("${nexus.upgrade.tasks.delay:10s}") final Duration delayOnStart,
       final Cooperation2Selector cooperation2Selector,
-      @Named("distributed") @Nullable final Cooperation2Selector distributedCooperationSelector)
+      @Qualifier("distributed") @Nullable final Cooperation2Selector distributedCooperationSelector)
   {
     this.periodicJobService = checkNotNull(periodicJobService);
     this.taskScheduler = checkNotNull(taskScheduler);

@@ -13,9 +13,8 @@
 package org.sonatype.nexus.repository.maven.internal;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.mime.MimeRule;
@@ -24,13 +23,16 @@ import org.sonatype.nexus.repository.maven.MavenPath;
 import org.sonatype.nexus.repository.view.ContentTypes;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Maven 2 specific {@link MimeRulesSource} that specifies known and format specific file MIME types.
  *
  * @since 3.0
  */
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 @Singleton
 public class MavenMimeRulesSource
     extends ComponentSupport

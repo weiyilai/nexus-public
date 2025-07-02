@@ -14,16 +14,16 @@ package org.sonatype.nexus.repository.internal.datastore;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.node.NodeAccess;
 import org.sonatype.nexus.repository.HighAvailabilitySupportChecker;
 
 import com.google.common.collect.ImmutableList;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class DatastoreHighAvailabilitySupportChecker
     extends HighAvailabilitySupportChecker

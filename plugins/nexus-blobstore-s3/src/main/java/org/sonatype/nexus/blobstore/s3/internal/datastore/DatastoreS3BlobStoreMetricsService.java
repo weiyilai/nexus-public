@@ -13,8 +13,7 @@
 package org.sonatype.nexus.blobstore.s3.internal.datastore;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.AccumulatingBlobStoreMetrics;
 import org.sonatype.nexus.blobstore.api.BlobStoreMetrics;
@@ -25,10 +24,19 @@ import org.sonatype.nexus.blobstore.s3.internal.S3BlobStore;
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
-@Named(S3BlobStore.TYPE)
+@Component
+@Qualifier(S3BlobStore.TYPE)
 @Priority(Integer.MAX_VALUE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DatastoreS3BlobStoreMetricsService
     extends DatastoreBlobStoreMetricsServiceSupport<S3BlobStore>
 {
@@ -36,7 +44,7 @@ public class DatastoreS3BlobStoreMetricsService
 
   @Inject
   public DatastoreS3BlobStoreMetricsService(
-      @Named("${nexus.blobstore.metrics.flushInterval:-2}") @Value("${nexus.blobstore.metrics.flushInterval:2}") final int metricsFlushPeriodSeconds,
+      @Value("${nexus.blobstore.metrics.flushInterval:2}") final int metricsFlushPeriodSeconds,
       final BlobStoreMetricsStore blobStoreMetricsStore,
       final PeriodicJobService jobService)
   {

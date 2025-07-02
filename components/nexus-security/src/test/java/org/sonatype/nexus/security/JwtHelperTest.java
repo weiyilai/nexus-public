@@ -26,7 +26,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.google.inject.Provider;
+import jakarta.inject.Provider;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.junit.Before;
@@ -138,6 +138,7 @@ public class JwtHelperTest
    * Verify behavior when nexus.jwt.cookieSecure is set to false and the request occurs in an HTTPS environment.
    * This combination should result in the JWT returning false for {@link Cookie#getSecure()}, as the feature flag
    * takes precedence.
+   * 
    * @throws Exception
    */
   @Test

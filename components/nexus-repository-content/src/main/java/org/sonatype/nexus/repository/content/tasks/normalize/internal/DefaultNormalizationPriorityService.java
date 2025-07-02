@@ -15,32 +15,41 @@ package org.sonatype.nexus.repository.content.tasks.normalize.internal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
+import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.content.store.FormatStoreManager;
 import org.sonatype.nexus.repository.content.tasks.normalize.NormalizationPriorityService;
 
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
 /**
  * OSS implementation which does no prioritization of formats for normalization
  */
-@Named
+@Primary
+@Component
 @Singleton
-public class DefaultNormalizationPriorityService implements NormalizationPriorityService
+public class DefaultNormalizationPriorityService
+    extends ComponentSupport
+    implements NormalizationPriorityService
 {
 
   private final Map<Format, FormatStoreManager> prioritizedFormats;
 
   @Inject
   public DefaultNormalizationPriorityService(
-      final Map<String, FormatStoreManager> managersByFormat,
+      final List<FormatStoreManager> formatStoreManagerList,
       final List<Format> formats)
   {
+    final Map<String, FormatStoreManager> managersByFormat =
+        QualifierUtil.buildQualifierBeanMap(formatStoreManagerList);
     this.prioritizedFormats = formats.stream()
-        .collect(Collectors.toMap(format -> format, format -> managersByFormat.get(format.getValue())));
+        .collect(Collectors.toMap(format -> format,
+            format -> managersByFormat.get(format.getValue())));
   }
 
   @Override

@@ -14,20 +14,20 @@ package org.sonatype.nexus.repository.content.store;
 
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import javax.inject.Inject;
 
 import org.sonatype.nexus.datastore.api.ContentDataAccess;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import jakarta.inject.Inject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Manages content stores for a particular format. To get the {@link FormatStoreManager} for format "example", inject
  * <p>
- * {@code @Named("example") FormatStoreManager}
+ * {@code @Qualifier("example") FormatStoreManager}
  * <p>
  * Content stores can exist in different datastores (unlike config stores that only exist in the config datastore)
  * so you need to pass in the datastore name. The manager knows which DAO and store classes to use for the format.
@@ -43,7 +43,7 @@ public class FormatStoreManager
 
   private Map<String, FormatStoreFactory> formatStoreFactories;
 
-  FormatStoreManager(final String formatClassPrefix) {
+  protected FormatStoreManager(final String formatClassPrefix) {
     this.formatClassPrefix = checkNotNull(formatClassPrefix);
   }
 

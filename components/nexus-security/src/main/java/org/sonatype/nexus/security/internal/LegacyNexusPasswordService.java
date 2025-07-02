@@ -12,20 +12,22 @@
  */
 package org.sonatype.nexus.security.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.shiro.authc.credential.DefaultPasswordService;
 import org.apache.shiro.authc.credential.PasswordService;
 import org.apache.shiro.crypto.hash.DefaultHashService;
 import org.apache.shiro.crypto.hash.format.HexFormat;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Legacy {@link PasswordService}.
  *
  * PasswordService for handling legacy passwords (SHA-1 and MD5).
  */
-@Named("legacy")
+@Component
+@Qualifier("legacy")
 @Singleton
 public class LegacyNexusPasswordService
     implements PasswordService
@@ -35,7 +37,7 @@ public class LegacyNexusPasswordService
   private final DefaultPasswordService md5PasswordService;
 
   public LegacyNexusPasswordService() {
-    //Initialize and configure sha1 password service
+    // Initialize and configure sha1 password service
     this.sha1PasswordService = new DefaultPasswordService();
     DefaultHashService sha1HashService = new DefaultHashService();
     sha1HashService.setHashAlgorithmName("SHA-1");
@@ -44,7 +46,7 @@ public class LegacyNexusPasswordService
     this.sha1PasswordService.setHashService(sha1HashService);
     this.sha1PasswordService.setHashFormat(new HexFormat());
 
-    //Initialize and configure md5 password service
+    // Initialize and configure md5 password service
     this.md5PasswordService = new DefaultPasswordService();
     DefaultHashService md5HashService = new DefaultHashService();
     md5HashService.setHashAlgorithmName("MD5");
@@ -61,7 +63,7 @@ public class LegacyNexusPasswordService
 
   @Override
   public boolean passwordsMatch(final Object submittedPlaintext, final String encrypted) {
-    //Legacy passwords can be hashed with sha-1 or md5, check both
+    // Legacy passwords can be hashed with sha-1 or md5, check both
 
     return sha1PasswordService.passwordsMatch(submittedPlaintext, encrypted) ||
         md5PasswordService.passwordsMatch(submittedPlaintext, encrypted);

@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.security.anonymous;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.goodies.testsupport.TestSupport;

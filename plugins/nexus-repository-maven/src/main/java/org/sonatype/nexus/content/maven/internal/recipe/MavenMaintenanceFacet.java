@@ -14,19 +14,25 @@ package org.sonatype.nexus.content.maven.internal.recipe;
 
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.inject.Named;
 
 import org.sonatype.nexus.content.maven.MavenContentFacet;
 import org.sonatype.nexus.repository.content.Component;
 import org.sonatype.nexus.repository.content.fluent.FluentComponent;
 import org.sonatype.nexus.repository.content.maintenance.LastAssetMaintenanceFacet;
+import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 
 import com.google.common.collect.Sets;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Scope;
+
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
 /**
  * @since 3.29
  */
-@Named
+@Qualifier(Maven2Format.NAME)
+@Scope(SCOPE_PROTOTYPE)
+@org.springframework.stereotype.Component
 public class MavenMaintenanceFacet
     extends LastAssetMaintenanceFacet
 {

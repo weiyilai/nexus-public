@@ -20,9 +20,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.metrics.BlobStoreMetricsEntity;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -36,6 +35,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.UPGRADE;
+import org.springframework.stereotype.Component;
 
 /**
  * Migration step to move metrics from properties files in the blob store to the DB.
@@ -43,7 +43,7 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.UPGRADE;
  * For historical reasons we need to verify whether it was previously migrated.
  */
 @ManagedLifecycle(phase = UPGRADE)
-@Named
+@Component
 @Singleton
 public class S3BlobStoreMetricsMigrationStep
     extends BlobStoreMetricsDatabaseMigrationStepSupport
@@ -79,19 +79,19 @@ public class S3BlobStoreMetricsMigrationStep
     // system might write to the DB.
     // Cooperation is used to avoid a race where a secondary node overwrites the first values
     cooperation.on(() -> {
-        namesToMigrate = load();
+      namesToMigrate = load();
 
-        if (namesToMigrate == null) {
-          Collection<String> s3BlobStores = compute();
+      if (namesToMigrate == null) {
+        Collection<String> s3BlobStores = compute();
 
-          kv.setKey(new NexusKeyValue(NAME, ValueType.OBJECT, s3BlobStores));
-        }
+        kv.setKey(new NexusKeyValue(NAME, ValueType.OBJECT, s3BlobStores));
+      }
 
-        return namesToMigrate;
-      })
-      // Always check when the remote did the work just in case
-      .checkFunction(() -> Optional.ofNullable(load()))
-      .cooperate(NAME);
+      return namesToMigrate;
+    })
+        // Always check when the remote did the work just in case
+        .checkFunction(() -> Optional.ofNullable(load()))
+        .cooperate(NAME);
   }
 
   @Override
@@ -115,15 +115,15 @@ public class S3BlobStoreMetricsMigrationStep
 
   private Set<String> load() {
     return kv.getKey(NAME)
-      .map(val -> val.getAsObjectList(objectMapper, String.class))
-      .map(HashSet::new)
-      .orElse(null);
+        .map(val -> val.getAsObjectList(objectMapper, String.class))
+        .map(HashSet::new)
+        .orElse(null);
   }
 
   private Set<String> compute() {
     return getBlobStoreConfigurations()
-      .filter(this::emptyOrWrong)
-      .collect(Collectors.toSet());
+        .filter(this::emptyOrWrong)
+        .collect(Collectors.toSet());
   }
 
   private boolean emptyOrWrong(final String blobStoreName) {

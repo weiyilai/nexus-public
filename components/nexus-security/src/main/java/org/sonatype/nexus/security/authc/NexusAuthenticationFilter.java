@@ -14,16 +14,19 @@ package org.sonatype.nexus.security.authc;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
+
+import org.sonatype.nexus.common.app.WebFilterPriority;
 
 import com.google.common.collect.Lists;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.core.annotation.Order;
+import org.springframework.lang.Nullable;
 
 // FIXME: Rename this class, unsure what but its confusing asis
 // FIXME: Also like api-key filter, this isn't basic-auth, but is extending from that base
@@ -36,6 +39,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 2.7
  */
+@WebFilter(filterName = NexusAuthenticationFilter.NAME)
+@Order(WebFilterPriority.AUTHENTICATION)
 public class NexusAuthenticationFilter
     extends NexusBasicHttpAuthenticationFilter
 {
@@ -44,8 +49,8 @@ public class NexusAuthenticationFilter
   private List<AuthenticationTokenFactory> factories = Lists.newArrayList();
 
   @Inject
-  public void install(List<AuthenticationTokenFactory> factories) {
-    this.factories = checkNotNull(factories);
+  public void install(@Nullable final List<AuthenticationTokenFactory> factories) {
+    this.factories = factories == null ? List.of() : factories;
   }
 
   /**
@@ -54,7 +59,7 @@ public class NexusAuthenticationFilter
    * Otherwise will fallback to {@link BasicHttpAuthenticationFilter#isLoginAttempt(ServletRequest, ServletResponse)}
    */
   @Override
-  protected boolean isLoginAttempt(ServletRequest request, ServletResponse response) {
+  protected boolean isLoginAttempt(final ServletRequest request, final ServletResponse response) {
     AuthenticationToken token = createAuthenticationToken(request, response);
     return token != null || super.isLoginAttempt(request, response);
   }
@@ -65,7 +70,7 @@ public class NexusAuthenticationFilter
    * {@link BasicHttpAuthenticationFilter#createToken(ServletRequest, ServletResponse)}
    */
   @Override
-  protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) {
+  protected AuthenticationToken createToken(final ServletRequest request, final ServletResponse response) {
     AuthenticationToken token = createAuthenticationToken(request, response);
     if (token != null) {
       return token;
@@ -73,7 +78,7 @@ public class NexusAuthenticationFilter
     return super.createToken(request, response);
   }
 
-  private AuthenticationToken createAuthenticationToken(ServletRequest request, ServletResponse response) {
+  private AuthenticationToken createAuthenticationToken(final ServletRequest request, final ServletResponse response) {
     for (AuthenticationTokenFactory factory : factories) {
       try {
         AuthenticationToken token = factory.createToken(request, response);
@@ -86,8 +91,7 @@ public class NexusAuthenticationFilter
         log.warn(
             "Factory {} failed to create an authentication token {}/{}",
             factory, e.getClass().getName(), e.getMessage(),
-            log.isDebugEnabled() ? e : null
-        );
+            log.isDebugEnabled() ? e : null);
       }
     }
     return null;

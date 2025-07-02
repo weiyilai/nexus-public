@@ -159,18 +159,14 @@ public class StateGuardTest
 
   @Test
   public void testTransition_withMethodInvocationFailingWithException() {
-    SimpleMethodInvocation invocation = invocation(FailureException::new);
-    TransitionsInterceptor interceptor = new TransitionsInterceptor();
-    assertThrows(FailureException.class, () -> interceptor.invoke(invocation));
+    assertThrows(FailureException.class, () -> new Target(FailureException::new).transition());
 
     assertThat(underTest.getCurrent(), is(FAILED));
   }
 
   @Test
   public void testTransition_withMethodInvocationFailingWithError() {
-    SimpleMethodInvocation invocation = invocation(FailureError::new);
-    TransitionsInterceptor interceptor = new TransitionsInterceptor();
-    assertThrows(FailureError.class, () -> interceptor.invoke(invocation));
+    assertThrows(FailureError.class, () -> new Target(FailureError::new).transition());
 
     assertThat(underTest.getCurrent(), is(FAILED));
   }
@@ -198,29 +194,16 @@ public class StateGuardTest
 
   @Test
   public void testGuard_withMethodInvocationFailingWithException() {
-    SimpleMethodInvocation invocation = invocation(FailureException::new);
-    GuardedInterceptor interceptor = new GuardedInterceptor();
-    assertThrows(FailureException.class, () -> interceptor.invoke(invocation));
+    assertThrows(FailureException.class, () -> new Target(FailureException::new).guarded());
 
     assertThat(underTest.getCurrent(), is(NEW));
   }
 
   @Test
   public void testGuard_withMethodInvocationFailingWithError() {
-    SimpleMethodInvocation invocation = invocation(FailureError::new);
-    GuardedInterceptor interceptor = new GuardedInterceptor();
-    assertThrows(FailureError.class, () -> interceptor.invoke(invocation));
+    assertThrows(FailureError.class, () -> new Target(FailureError::new).guarded());
 
     assertThat(underTest.getCurrent(), is(NEW));
-  }
-
-  private SimpleMethodInvocation invocation(final Supplier<? extends Throwable> supplier) {
-    try {
-      return new SimpleMethodInvocation(new Target(supplier), Target.class.getMethod("go"), new Object[0]);
-    }
-    catch (NoSuchMethodException | SecurityException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   static class State
@@ -273,9 +256,15 @@ public class StateGuardTest
       return underTest;
     }
 
-    @Guarded(by = NEW)
     @Transitions(from = NEW, to = INITIALISED)
-    public void go() throws Throwable {
+    public void transition() throws Throwable {
+      if (failureType != null) {
+        throw failureType.get();
+      }
+    }
+
+    @Guarded(by = NEW)
+    public void guarded() throws Throwable {
       if (failureType != null) {
         throw failureType.get();
       }

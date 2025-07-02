@@ -21,9 +21,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.sql.DataSource;
 
 import org.sonatype.goodies.common.ComponentSupport;
@@ -47,13 +46,14 @@ import org.flywaydb.core.api.migration.JavaMigration;
 import org.flywaydb.core.api.output.MigrateResult;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Support class for upgrade managers.
  *
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 public class UpgradeManagerImpl
     extends ComponentSupport
@@ -63,7 +63,7 @@ public class UpgradeManagerImpl
 
   private final PostStartupUpgradeAuditor auditor;
 
-  private final DataSource dataSource;
+  private final DataStoreManager dataStoreManager;
 
   @Inject
   public UpgradeManagerImpl(
@@ -71,15 +71,13 @@ public class UpgradeManagerImpl
       final PostStartupUpgradeAuditor auditor,
       final List<DatabaseMigrationStep> migrations)
   {
-    this.dataSource = checkNotNull(dataStoreManager).get(DataStoreManager.DEFAULT_DATASTORE_NAME)
-        .orElseThrow(() -> new IllegalStateException("Missing DataStore named: " + DataStoreManager.DEFAULT_DATASTORE_NAME)).getDataSource();
+    this.dataStoreManager = checkNotNull(dataStoreManager);
     this.migrations = checkVersionedMigrations(migrations);
     this.auditor = checkNotNull(auditor);
   }
 
   @Override
-  public void migrate(@Nullable final String user, final Collection<String> nodeIds) throws UpgradeException
-  {
+  public void migrate(@Nullable final String user, final Collection<String> nodeIds) throws UpgradeException {
     Flyway flyway = createFlyway();
 
     // Compute current state
@@ -110,7 +108,7 @@ public class UpgradeManagerImpl
         .map(DatabaseMigrationStep::version)
         .filter(Optional::isPresent)
         .count())
-        .intValue();
+            .intValue();
 
     if (result.migrationsExecuted > repeatableMigrations) {
       result.migrations.forEach(m -> log.info("{} migrated to v{} in {}ms", m.description, m.version, m.executionTime));
@@ -150,7 +148,7 @@ public class UpgradeManagerImpl
    * <p>
    * <b>IF</b> Target is 2.0 and
    * <br>
-   * <b>Previous versions</b>  are : [1.1 , 1.2 , 1.3 , 1.4 , 1.5]
+   * <b>Previous versions</b> are : [1.1 , 1.2 , 1.3 , 1.4 , 1.5]
    * This method will return 1.5 , which is the minimum version allowed to start using 2.0
    * </p>
    *
@@ -260,7 +258,7 @@ public class UpgradeManagerImpl
     }
 
     return Flyway.configure()
-        .dataSource(dataSource)
+        .dataSource(dataSource())
         .javaMigrations(flywayMigrations)
         .callbacks(log.isTraceEnabled() ? new Callback[]{new TraceLoggingCallback()} : new Callback[0])
         .cleanDisabled(true) // don't empty the database
@@ -273,7 +271,8 @@ public class UpgradeManagerImpl
   }
 
   private JavaMigration[] getMigrations() {
-    return new SimpleDependencyResolver(migrations).resolve().stream()
+    return new SimpleDependencyResolver(migrations).resolve()
+        .stream()
         .toArray(JavaMigration[]::new);
   }
 
@@ -282,5 +281,12 @@ public class UpgradeManagerImpl
     return Arrays.stream(createFlyway().info().applied())
         .map(MigrationInfo::getDescription)
         .anyMatch(NexusJavaMigration.nameMatcher(step));
+  }
+
+  private DataSource dataSource() {
+    return dataStoreManager.get(DataStoreManager.DEFAULT_DATASTORE_NAME)
+        .orElseThrow(
+            () -> new IllegalStateException("Missing DataStore named: " + DataStoreManager.DEFAULT_DATASTORE_NAME))
+        .getDataSource();
   }
 }

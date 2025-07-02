@@ -26,8 +26,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.blobstore.api.BlobAttributes;
@@ -36,6 +35,7 @@ import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.blobstore.api.BlobStoreUsageChecker;
 import org.sonatype.nexus.blobstore.restore.RestoreBlobStrategy;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.log.DryRunPrefix;
 import org.sonatype.nexus.logging.task.ProgressLogIntervalHelper;
 import org.sonatype.nexus.repository.Repository;
@@ -51,6 +51,9 @@ import org.sonatype.nexus.scheduling.TaskUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -71,7 +74,8 @@ import static org.sonatype.nexus.logging.task.TaskLoggingMarkers.TASK_LOG_ONLY;
 /**
  * @since 3.29
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RestoreMetadataTask
     extends TaskSupport
     implements Cancelable
@@ -105,10 +109,10 @@ public class RestoreMetadataTask
       final BlobStoreManager blobStoreManager,
       @Nullable final ChangeRepositoryBlobStoreStore changeBlobstoreStore,
       final RepositoryManager repositoryManager,
-      final Map<String, RestoreBlobStrategy> restoreBlobStrategies,
+      final List<RestoreBlobStrategy> restoreBlobStrategiesList,
       final BlobStoreUsageChecker blobStoreUsageChecker,
       final DryRunPrefix dryRunPrefix,
-      final Map<String, IntegrityCheckStrategy> integrityCheckStrategies,
+      final List<IntegrityCheckStrategy> integrityCheckStrategiesList,
       final MaintenanceService maintenanceService,
       final AssetBlobRefFormatCheck assetBlobRefFormatCheck,
       final TaskUtils taskUtils)
@@ -116,11 +120,11 @@ public class RestoreMetadataTask
     this.blobStoreManager = checkNotNull(blobStoreManager);
     this.changeBlobstoreStore = Optional.ofNullable(changeBlobstoreStore);
     this.repositoryManager = checkNotNull(repositoryManager);
-    this.restoreBlobStrategies = checkNotNull(restoreBlobStrategies);
+    this.restoreBlobStrategies = QualifierUtil.buildQualifierBeanMap(checkNotNull(restoreBlobStrategiesList));
     this.blobStoreUsageChecker = checkNotNull(blobStoreUsageChecker);
     this.dryRunPrefix = checkNotNull(dryRunPrefix);
-    this.defaultIntegrityCheckStrategy = checkNotNull(integrityCheckStrategies.get(DEFAULT_NAME));
-    this.integrityCheckStrategies = checkNotNull(integrityCheckStrategies);
+    this.integrityCheckStrategies = QualifierUtil.buildQualifierBeanMap(checkNotNull(integrityCheckStrategiesList));
+    this.defaultIntegrityCheckStrategy = checkNotNull(this.integrityCheckStrategies.get(DEFAULT_NAME));
     this.maintenanceService = checkNotNull(maintenanceService);
     this.assetBlobRefFormatCheck = checkNotNull(assetBlobRefFormatCheck);
     this.taskUtils = checkNotNull(taskUtils);
@@ -301,12 +305,10 @@ public class RestoreMetadataTask
         .filter(Objects::nonNull)
         .filter(repository -> !(repository.getType() instanceof GroupType))
         .filter(Repository::isStarted)
-        .forEach(repository ->
-            integrityCheckStrategies
-                .getOrDefault(repository.getFormat().getValue(), defaultIntegrityCheckStrategy)
-                .check(repository, blobStore, this::isCanceled, sinceDays,
-                    a -> this.integrityCheckFailedHandler(repository, a, dryRun))
-        );
+        .forEach(repository -> integrityCheckStrategies
+            .getOrDefault(repository.getFormat().getValue(), defaultIntegrityCheckStrategy)
+            .check(repository, blobStore, this::isCanceled, sinceDays,
+                a -> this.integrityCheckFailedHandler(repository, a, dryRun)));
   }
 
   protected void integrityCheckFailedHandler(final Repository repository, final Asset asset, final boolean isDryRun) {
@@ -318,8 +320,7 @@ public class RestoreMetadataTask
     }
   }
 
-  private Optional<Context> buildContext(final BlobStore blobStore, final BlobId blobId)
-  {
+  private Optional<Context> buildContext(final BlobStore blobStore, final BlobId blobId) {
     return Optional.of(new Context(blobStore, blobId))
         .map(c -> c.blob(c.blobStore.get(c.blobId, true)))
         .map(c -> c.blobAttributes(c.blobStore.getBlobAttributes(c.blobId)))

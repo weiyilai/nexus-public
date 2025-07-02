@@ -12,11 +12,10 @@
  */
 package org.sonatype.nexus.security.privilege.rest;
 
-import java.util.Map;
+import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.rest.APIConstants;
@@ -27,13 +26,14 @@ import org.sonatype.nexus.security.privilege.PrivilegeDescriptor;
 import io.swagger.annotations.Api;
 
 import static org.sonatype.nexus.security.privilege.rest.PrivilegeApiResourceBeta.RESOURCE_URI;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  * @deprecated beta prefix is being phased out, prefer starting new APIs with {@link APIConstants#V1_API_PREFIX} instead
  */
 @Api(hidden = true)
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 @Deprecated
@@ -45,8 +45,8 @@ public class PrivilegeApiResourceBeta
   @Inject
   public PrivilegeApiResourceBeta(
       final SecuritySystem securitySystem,
-      final Map<String, PrivilegeDescriptor> privilegeDescriptors)
+      final List<PrivilegeDescriptor> privilegeDescriptorsList)
   {
-    super(securitySystem, privilegeDescriptors);
+    super(securitySystem, privilegeDescriptorsList);
   }
 }

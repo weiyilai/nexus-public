@@ -16,17 +16,17 @@ import java.sql.Connection;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.internal.capability.storage.CapabilityStorage;
 import org.sonatype.nexus.internal.capability.storage.CapabilityStorageItem;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class SettingsCapabilityMigrationStep_1_28
     implements DatabaseMigrationStep
@@ -45,7 +45,9 @@ public class SettingsCapabilityMigrationStep_1_28
 
   @Override
   public void migrate(final Connection connection) throws Exception {
-    capabilityStorage.getAll().entrySet().stream()
+    capabilityStorage.getAll()
+        .entrySet()
+        .stream()
         .filter(e -> e.getValue().getType().equals("rapture.settings"))
         .findFirst()
         .ifPresent(entry -> {

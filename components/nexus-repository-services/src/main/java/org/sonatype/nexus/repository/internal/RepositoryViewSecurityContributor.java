@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityConfiguration;
@@ -28,13 +27,14 @@ import static org.sonatype.nexus.repository.security.RepositoryViewPrivilegeDesc
 import static org.sonatype.nexus.repository.security.RepositoryViewPrivilegeDescriptor.P_REPOSITORY;
 import static org.sonatype.nexus.repository.security.RepositoryViewPrivilegeDescriptor.TYPE;
 import static org.sonatype.nexus.security.privilege.PrivilegeDescriptorSupport.ALL;
+import org.springframework.stereotype.Component;
 
 /**
  * Repository view security configuration.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class RepositoryViewSecurityContributor
     extends SecurityContributorSupport
@@ -82,6 +82,7 @@ public class RepositoryViewSecurityContributor
         .description(description)
         .property(P_FORMAT, ALL)
         .property(P_REPOSITORY, ALL)
-        .property(P_ACTIONS, action).build();
+        .property(P_ACTIONS, action)
+        .build();
   }
 }

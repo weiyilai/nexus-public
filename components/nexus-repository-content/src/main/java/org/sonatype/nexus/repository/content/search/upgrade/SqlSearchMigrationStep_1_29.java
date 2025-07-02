@@ -15,18 +15,20 @@ package org.sonatype.nexus.repository.content.search.upgrade;
 import java.sql.Connection;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.springframework.beans.factory.annotation.Value;
 
-import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_TABLE_SEARCH_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_TABLE_SEARCH_NAMED_VALUE;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * For SQL Search, change the column created to last_updated and trigger a re-index
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SqlSearchMigrationStep_1_29
     extends SearchIndexUpgrade
 {
@@ -44,7 +46,7 @@ public class SqlSearchMigrationStep_1_29
 
   @Inject
   public SqlSearchMigrationStep_1_29(
-      @Named(DATASTORE_TABLE_SEARCH_NAMED) @Value(DATASTORE_TABLE_SEARCH_NAMED_VALUE) final boolean sqlSearchEnabled)
+      @Value(DATASTORE_TABLE_SEARCH_NAMED_VALUE) final boolean sqlSearchEnabled)
   {
     this.sqlSearchEnabled = sqlSearchEnabled;
   }

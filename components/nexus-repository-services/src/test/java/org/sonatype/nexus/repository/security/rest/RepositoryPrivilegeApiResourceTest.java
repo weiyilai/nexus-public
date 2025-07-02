@@ -14,9 +14,7 @@ package org.sonatype.nexus.repository.security.rest;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.ws.rs.core.MediaType;
@@ -101,15 +99,10 @@ public class RepositoryPrivilegeApiResourceTest
     when(format2.getValue()).thenReturn("format2");
 
     List<Format> formats = Arrays.asList(format1, format2);
-
-    Map<String, PrivilegeDescriptor> privilegeDescriptors = new HashMap<>();
-    privilegeDescriptors.put(ApplicationPrivilegeDescriptor.TYPE, new ApplicationPrivilegeDescriptor(false));
-    privilegeDescriptors.put(WildcardPrivilegeDescriptor.TYPE, new WildcardPrivilegeDescriptor());
-    privilegeDescriptors.put(RepositoryAdminPrivilegeDescriptor.TYPE,
-        new RepositoryAdminPrivilegeDescriptor(repositoryManager, formats, false));
-    privilegeDescriptors
-        .put(RepositoryViewPrivilegeDescriptor.TYPE, new RepositoryViewPrivilegeDescriptor(repositoryManager, formats, false));
-    privilegeDescriptors.put(RepositoryContentSelectorPrivilegeDescriptor.TYPE,
+    List<PrivilegeDescriptor> privilegeDescriptors = List.of(new ApplicationPrivilegeDescriptor(false),
+    new WildcardPrivilegeDescriptor(),
+    new RepositoryAdminPrivilegeDescriptor(repositoryManager, formats, false), new RepositoryViewPrivilegeDescriptor(
+        repositoryManager, formats, false),
         new RepositoryContentSelectorPrivilegeDescriptor(repositoryManager, selectorManager, formats, false));
 
     underTest = new RepositoryPrivilegeApiResource(securitySystem, privilegeDescriptors);
@@ -294,8 +287,9 @@ public class RepositoryPrivilegeApiResourceTest
 
   @Test
   public void testUpdatePrivilege_repositoryView() {
-    Privilege priv = createPrivilege("repository-view", "priv", "privdesc", false, FORMAT_KEY, "format1", REPOSITORY_KEY,
-        "repository1", ACTIONS_KEY, "read,delete");
+    Privilege priv =
+        createPrivilege("repository-view", "priv", "privdesc", false, FORMAT_KEY, "format1", REPOSITORY_KEY,
+            "repository1", ACTIONS_KEY, "read,delete");
     when(authorizationManager.getPrivilegeByName("priv")).thenReturn(priv);
 
     ApiPrivilegeRepositoryViewRequest apiPrivilege = new ApiPrivilegeRepositoryViewRequest("priv", "newdescription",
@@ -311,8 +305,9 @@ public class RepositoryPrivilegeApiResourceTest
 
   @Test
   public void testUpdatePrivilege_repositoryViewInvalidRepository() {
-    Privilege priv = createPrivilege("repository-view", "priv", "privdesc", false, FORMAT_KEY, "format1", REPOSITORY_KEY,
-        "repository1", ACTIONS_KEY, "read,delete");
+    Privilege priv =
+        createPrivilege("repository-view", "priv", "privdesc", false, FORMAT_KEY, "format1", REPOSITORY_KEY,
+            "repository1", ACTIONS_KEY, "read,delete");
     when(authorizationManager.getPrivilege("priv")).thenReturn(priv);
 
     ApiPrivilegeRepositoryViewRequest apiPrivilege = new ApiPrivilegeRepositoryViewRequest("priv", "newdescription",
@@ -326,7 +321,7 @@ public class RepositoryPrivilegeApiResourceTest
       assertThat(e.getResponse().getStatus(), is(400));
       assertThat(e.getResponse().getMediaType(), is(MediaType.APPLICATION_JSON_TYPE));
       assertThat(e.getResponse().getEntity().toString(),
-              is("ValidationErrorXO{id='*', message='\"Invalid repository 'invalid' supplied.\"'}"));
+          is("ValidationErrorXO{id='*', message='\"Invalid repository 'invalid' supplied.\"'}"));
     }
   }
 
@@ -349,8 +344,9 @@ public class RepositoryPrivilegeApiResourceTest
 
   @Test
   public void testUpdatePrivilege_repositoryAdminInvalidRepository() {
-    Privilege priv = createPrivilege("repository-view", "priv", "privdesc", false, FORMAT_KEY, "format1", REPOSITORY_KEY,
-        "repository1", ACTIONS_KEY, "read,delete");
+    Privilege priv =
+        createPrivilege("repository-view", "priv", "privdesc", false, FORMAT_KEY, "format1", REPOSITORY_KEY,
+            "repository1", ACTIONS_KEY, "read,delete");
     when(authorizationManager.getPrivilege("priv")).thenReturn(priv);
 
     ApiPrivilegeRepositoryAdminRequest apiPrivilege = new ApiPrivilegeRepositoryAdminRequest("priv", "newdescription",
@@ -364,7 +360,7 @@ public class RepositoryPrivilegeApiResourceTest
       assertThat(e.getResponse().getStatus(), is(400));
       assertThat(e.getResponse().getMediaType(), is(MediaType.APPLICATION_JSON_TYPE));
       assertThat(e.getResponse().getEntity().toString(),
-              is("ValidationErrorXO{id='*', message='\"Invalid repository 'invalid' supplied.\"'}"));
+          is("ValidationErrorXO{id='*', message='\"Invalid repository 'invalid' supplied.\"'}"));
     }
   }
 
@@ -388,12 +384,14 @@ public class RepositoryPrivilegeApiResourceTest
 
   @Test
   public void testUpdatePrivilege_repositoryContentSelectorInvalidRepository() {
-    Privilege priv = createPrivilege("repository-view", "priv", "privdesc", false, FORMAT_KEY, "format1", REPOSITORY_KEY,
-        "repository1", CSEL_KEY, "contentSelector", ACTIONS_KEY, "read,delete");
+    Privilege priv =
+        createPrivilege("repository-view", "priv", "privdesc", false, FORMAT_KEY, "format1", REPOSITORY_KEY,
+            "repository1", CSEL_KEY, "contentSelector", ACTIONS_KEY, "read,delete");
     when(authorizationManager.getPrivilege("priv")).thenReturn(priv);
 
-    ApiPrivilegeRepositoryContentSelectorRequest apiPrivilege = new ApiPrivilegeRepositoryContentSelectorRequest("priv", "newdescription",
-        "format2", "invalid", "newContentSelector", Collections.singletonList(PrivilegeAction.DELETE));
+    ApiPrivilegeRepositoryContentSelectorRequest apiPrivilege =
+        new ApiPrivilegeRepositoryContentSelectorRequest("priv", "newdescription",
+            "format2", "invalid", "newContentSelector", Collections.singletonList(PrivilegeAction.DELETE));
 
     try {
       underTest.updatePrivilege("priv", apiPrivilege);
@@ -403,18 +401,20 @@ public class RepositoryPrivilegeApiResourceTest
       assertThat(e.getResponse().getStatus(), is(400));
       assertThat(e.getResponse().getMediaType(), is(MediaType.APPLICATION_JSON_TYPE));
       assertThat(e.getResponse().getEntity().toString(),
-              is("ValidationErrorXO{id='*', message='\"Invalid repository 'invalid' supplied.\"'}"));
+          is("ValidationErrorXO{id='*', message='\"Invalid repository 'invalid' supplied.\"'}"));
     }
   }
 
   @Test
   public void testUpdatePrivilege_repositoryContentSelectorInvalidContentSelector() {
-    Privilege priv = createPrivilege("repository-view", "priv", "privdesc", false, FORMAT_KEY, "format1", REPOSITORY_KEY,
-        "repository1", CSEL_KEY, "contentSelector", ACTIONS_KEY, "read,delete");
+    Privilege priv =
+        createPrivilege("repository-view", "priv", "privdesc", false, FORMAT_KEY, "format1", REPOSITORY_KEY,
+            "repository1", CSEL_KEY, "contentSelector", ACTIONS_KEY, "read,delete");
     when(authorizationManager.getPrivilege("priv")).thenReturn(priv);
 
-    ApiPrivilegeRepositoryContentSelectorRequest apiPrivilege = new ApiPrivilegeRepositoryContentSelectorRequest("priv", "newdescription",
-        "format2", "repository2", "invalid", Collections.singletonList(PrivilegeAction.DELETE));
+    ApiPrivilegeRepositoryContentSelectorRequest apiPrivilege =
+        new ApiPrivilegeRepositoryContentSelectorRequest("priv", "newdescription",
+            "format2", "repository2", "invalid", Collections.singletonList(PrivilegeAction.DELETE));
 
     try {
       underTest.updatePrivilege("priv", apiPrivilege);
@@ -424,14 +424,15 @@ public class RepositoryPrivilegeApiResourceTest
       assertThat(e.getResponse().getStatus(), is(400));
       assertThat(e.getResponse().getMediaType(), is(MediaType.APPLICATION_JSON_TYPE));
       assertThat(e.getResponse().getEntity().toString(),
-              is("ValidationErrorXO{id='*', message='\"Invalid selector 'invalid' supplied.\"'}"));
+          is("ValidationErrorXO{id='*', message='\"Invalid selector 'invalid' supplied.\"'}"));
     }
   }
 
-  private void assertPrivilege(Privilege privilege,
-                               String name,
-                               String description,
-                               String... properties)
+  private void assertPrivilege(
+      Privilege privilege,
+      String name,
+      String description,
+      String... properties)
   {
     assertThat(privilege, notNullValue());
     assertThat(privilege.getName(), is(name));
@@ -444,11 +445,12 @@ public class RepositoryPrivilegeApiResourceTest
     }
   }
 
-  private Privilege createPrivilege(String type,
-                                    String name,
-                                    String description,
-                                    boolean readOnly,
-                                    String... properties)
+  private Privilege createPrivilege(
+      String type,
+      String name,
+      String description,
+      boolean readOnly,
+      String... properties)
   {
     Privilege privilege = new Privilege();
     privilege.setType(type);

@@ -12,15 +12,8 @@
  */
 package org.sonatype.nexus.blobstore.internal.metrics;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
 
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
@@ -34,13 +27,22 @@ import org.sonatype.nexus.blobstore.common.BlobStoreTaskSupport;
 import org.sonatype.nexus.blobstore.group.BlobStoreGroup;
 import org.sonatype.nexus.logging.task.TaskLogging;
 
+import jakarta.inject.Inject;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.beans.factory.annotation.BeanFactoryAnnotationUtils;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.blobstore.api.OperationType.DOWNLOAD;
 import static org.sonatype.nexus.blobstore.api.OperationType.UPLOAD;
 import static org.sonatype.nexus.logging.task.TaskLogType.NEXUS_LOG_ONLY;
 
-@Named
+@Component
 @TaskLogging(NEXUS_LOG_ONLY)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BlobStoreMetricsMigrationTask
     extends BlobStoreTaskSupport
 {
@@ -48,17 +50,17 @@ public class BlobStoreMetricsMigrationTask
 
   private final BlobStoreMetricsStore metricsStore;
 
-  private final Map<String, Provider<BlobStoreMetricsPropertiesReader<?>>> metricsPropertiesReaders;
+  private final ApplicationContext context;
 
   @Inject
   public BlobStoreMetricsMigrationTask(
       final BlobStoreManager blobStoreManager,
       final BlobStoreMetricsStore metricsStore,
-      final Map<String, Provider<BlobStoreMetricsPropertiesReader<?>>> metricsPropertiesReaders)
+      final ApplicationContext context)
   {
     super(blobStoreManager);
     this.metricsStore = checkNotNull(metricsStore);
-    this.metricsPropertiesReaders = checkNotNull(metricsPropertiesReaders);
+    this.context = checkNotNull(context);
   }
 
   @Override
@@ -82,14 +84,14 @@ public class BlobStoreMetricsMigrationTask
     }
 
     try {
-      Optional<BlobStoreMetricsPropertiesReader<?>> optPropertiesReader = reader(blobStoreType);
+      Optional<BlobStoreMetricsPropertiesReader<BlobStore>> optPropertiesReader = reader(blobStoreType);
       if (optPropertiesReader.isEmpty()) {
         log.error("Properties reader not found for {}:{}", blobStoreType, blobStoreName);
         return;
       }
 
-      BlobStoreMetricsPropertiesReader<?> propertiesReader = optPropertiesReader.get();
-      init(propertiesReader, blobStore);
+      BlobStoreMetricsPropertiesReader<BlobStore> propertiesReader = optPropertiesReader.get();
+      propertiesReader.init(blobStore);
       BlobStoreMetrics metricsFromFile = propertiesReader.getMetrics();
       Map<OperationType, OperationMetrics> operationMetrics = propertiesReader.getOperationMetrics();
 
@@ -107,33 +109,21 @@ public class BlobStoreMetricsMigrationTask
       }
     }
     catch (Exception e) {
-      log.error("Exception during migrating metrics from properties to DB for {}:{}", blobStoreType, blobStoreName);
+      log.error("Exception during migrating metrics from properties to DB for {}:{}", blobStoreType, blobStoreName, e);
     }
   }
 
-  private Optional<BlobStoreMetricsPropertiesReader<?>> reader(final String blobStoreType) {
-    return Optional.ofNullable(metricsPropertiesReaders.get(blobStoreType))
-        .map(Provider::get);
-  }
-
-  private static void init(
-      final BlobStoreMetricsPropertiesReader<?> propertiesReader,
-      final BlobStore blobstore)
-  {
-    Method method = Stream.of(BlobStoreMetricsPropertiesReader.class.getDeclaredMethods())
-        .filter(m -> m.getName().equals("init"))
-        .findFirst()
-        .orElseThrow(() -> new IllegalStateException("Missing method"));
-
+  private Optional<BlobStoreMetricsPropertiesReader<BlobStore>> reader(final String blobStoreType) {
     try {
-      method.invoke(propertiesReader, blobstore);
+      return Optional.of(BeanFactoryAnnotationUtils.qualifiedBeanOfType(context, BlobStoreMetricsPropertiesReader.class,
+          blobStoreType));
     }
-    catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      throw new IllegalStateException(e);
+    catch (NoSuchBeanDefinitionException e) {
+      return Optional.empty();
     }
   }
 
-  private BlobStoreMetricsEntity toBlobStoreMetricsEntity(
+  private static BlobStoreMetricsEntity toBlobStoreMetricsEntity(
       final String blobStoreName,
       final BlobStoreMetrics blobStoreMetrics,
       final Map<OperationType, OperationMetrics> operationMetrics)

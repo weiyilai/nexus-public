@@ -13,8 +13,7 @@
 package org.sonatype.nexus.content.raw.internal.recipe;
 
 import javax.annotation.Nonnull;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.content.raw.RawContentFacet;
@@ -31,13 +30,14 @@ import static org.sonatype.nexus.repository.http.HttpMethods.DELETE;
 import static org.sonatype.nexus.repository.http.HttpMethods.GET;
 import static org.sonatype.nexus.repository.http.HttpMethods.HEAD;
 import static org.sonatype.nexus.repository.http.HttpMethods.PUT;
+import org.springframework.stereotype.Component;
 
 /**
  * Raw content hosted handler.
  *
  * @since 3.24
  */
-@Named
+@Component
 @Singleton
 public class RawContentHandler
     extends ComponentSupport
@@ -57,7 +57,8 @@ public class RawContentHandler
     switch (method) {
       case HEAD:
       case GET: {
-        return storage.get(path).map(HttpResponses::ok)
+        return storage.get(path)
+            .map(HttpResponses::ok)
             .orElseGet(() -> HttpResponses.notFound(path));
       }
 

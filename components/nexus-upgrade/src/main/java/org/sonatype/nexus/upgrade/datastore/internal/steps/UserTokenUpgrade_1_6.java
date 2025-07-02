@@ -15,15 +15,15 @@ package org.sonatype.nexus.upgrade.datastore.internal.steps;
 import java.sql.Connection;
 import java.util.Optional;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.stereotype.Component;
 
 /**
  * This is a placeholder for a removed migration step
  */
-@Named
+@Component
 @Singleton
 public class UserTokenUpgrade_1_6
     implements DatabaseMigrationStep

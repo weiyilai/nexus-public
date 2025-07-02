@@ -13,16 +13,21 @@
 package org.sonatype.nexus.onboarding.capability;
 
 import java.util.Map;
+
 import javax.annotation.Nullable;
-import javax.inject.Named;
 
 import org.sonatype.nexus.capability.CapabilitySupport;
 import org.sonatype.nexus.capability.CapabilityType;
 import org.sonatype.nexus.capability.Condition;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import static org.sonatype.nexus.onboarding.capability.OnboardingCapabilityDescriptor.messages;
 
-@Named(OnboardingCapability.TYPE_ID)
+@Component(OnboardingCapability.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class OnboardingCapability
     extends CapabilitySupport<OnboardingCapabilityConfiguration>
 

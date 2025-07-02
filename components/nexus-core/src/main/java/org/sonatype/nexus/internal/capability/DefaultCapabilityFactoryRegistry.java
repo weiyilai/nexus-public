@@ -12,11 +12,10 @@
  */
 package org.sonatype.nexus.internal.capability;
 
+import java.util.List;
 import java.util.Map;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.capability.Capability;
@@ -25,27 +24,29 @@ import org.sonatype.nexus.capability.CapabilityDescriptorRegistry;
 import org.sonatype.nexus.capability.CapabilityFactory;
 import org.sonatype.nexus.capability.CapabilityFactoryRegistry;
 import org.sonatype.nexus.capability.CapabilityType;
+import org.sonatype.nexus.common.QualifierUtil;
 
 import com.google.common.collect.Maps;
-import com.google.inject.ConfigurationException;
-import com.google.inject.Key;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.inject.BeanLocator;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.inject.name.Names.named;
 
 /**
  * Default {@link CapabilityFactoryRegistry} implementation.
  *
  * @since capabilities 2.0
  */
-@Named
+@Primary
+@Component
 @Singleton
 class DefaultCapabilityFactoryRegistry
     extends ComponentSupport
-    implements CapabilityFactoryRegistry
+    implements CapabilityFactoryRegistry, ApplicationContextAware
 {
 
   private final Map<String, CapabilityFactory> factories;
@@ -54,16 +55,17 @@ class DefaultCapabilityFactoryRegistry
 
   private final CapabilityDescriptorRegistry capabilityDescriptorRegistry;
 
-  private final BeanLocator beanLocator;
+  private ApplicationContext context;
+
+  private Map<String, String> capabilityByQualifier;
 
   @Inject
-  DefaultCapabilityFactoryRegistry(final Map<String, CapabilityFactory> factories,
-                                   final CapabilityDescriptorRegistry capabilityDescriptorRegistry,
-                                   final BeanLocator beanLocator)
+  DefaultCapabilityFactoryRegistry(
+      final List<CapabilityFactory> factoriesList,
+      final CapabilityDescriptorRegistry capabilityDescriptorRegistry)
   {
-    this.beanLocator = checkNotNull(beanLocator);
     this.capabilityDescriptorRegistry = checkNotNull(capabilityDescriptorRegistry);
-    this.factories = checkNotNull(factories);
+    this.factories = QualifierUtil.buildQualifierBeanMap(checkNotNull(factoriesList));
     this.dynamicFactories = Maps.newConcurrentMap();
   }
 
@@ -101,26 +103,14 @@ class DefaultCapabilityFactoryRegistry
         factory = (CapabilityFactory) descriptor;
       }
       if (factory == null) {
-        try {
-          final Iterable<? extends BeanEntry<?, Capability>> entries = beanLocator.locate(
-              Key.get(Capability.class, named(type.toString()))
-          );
-          if (entries != null && entries.iterator().hasNext()) {
-            factory = new CapabilityFactory()
-            {
-              @Override
-              public Capability create() {
-                return entries.iterator().next().getValue();
-              }
-            };
-          }
-        }
-        catch (ConfigurationException ignore) {
-          // ignore
-        }
+        factory = () -> context.getBean(type.toString(), Capability.class);
       }
     }
     return factory;
   }
 
+  @Override
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    this.context = applicationContext;
+  }
 }

@@ -12,29 +12,36 @@
  */
 package org.sonatype.nexus.swagger.internal;
 
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
+import org.sonatype.nexus.common.MediatorSupport;
 import org.sonatype.nexus.rest.Resource;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.Mediator;
+import org.springframework.stereotype.Component;
 
 /**
  * Mediator between Sisu-managed JAX-RS resources and Swagger.
- * 
+ *
  * @since 3.3
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class SwaggerMediator
-    implements Mediator<Named, Resource, SwaggerModel>
+    extends MediatorSupport<Resource>
 {
-  @Override
-  public void add(final BeanEntry<Named, Resource> resource, final SwaggerModel swagger) {
-    swagger.scan(resource.getImplementationClass());
+  private final SwaggerModel swagger;
+
+  @Inject
+  public SwaggerMediator(final SwaggerModel swagger) {
+    super(Resource.class);
+    this.swagger = swagger;
   }
 
   @Override
-  public void remove(final BeanEntry<Named, Resource> resource, final SwaggerModel swagger) {
-    // nothing to do
+  public void add(final Resource resource) {
+    Class clazz = resource.getClass();
+    swagger.scan(clazz);
   }
 }

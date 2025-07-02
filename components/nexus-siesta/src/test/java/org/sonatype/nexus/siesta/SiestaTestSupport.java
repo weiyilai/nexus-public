@@ -12,49 +12,60 @@
  */
 package org.sonatype.nexus.siesta;
 
-import java.util.EnumSet;
+import java.util.Map;
 
-import javax.servlet.DispatcherType;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 
 import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.bootstrap.siesta.SiestaConfiguration;
+import org.sonatype.nexus.siesta.SiestaTestSupport.SiestaTestSupportConfiguration;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.servlet.GuiceFilter;
-import com.google.inject.servlet.GuiceServletContextListener;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.ee8.servlet.ServletTester;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.test.context.ContextConfiguration;
 
 /**
  * Support for Siesta tests.
  */
-public class SiestaTestSupport
+@SpringBootTest
+@ContextConfiguration(classes = {SiestaTestSupportConfiguration.class, SiestaConfiguration.class})
+public abstract class SiestaTestSupport
     extends Test5Support
 {
+  public static final String MOUNT_POINT = "/siesta";
+
   private ServletTester servletTester;
 
   private String url;
 
   private Client client;
 
+  @Autowired
+  protected ApplicationContext context;
+
+  @ComponentScan({"org.sonatype.nexus.siesta"})
+  static class SiestaTestSupportConfiguration
+  {
+  }
+
   @BeforeEach
   void startJetty() throws Exception {
     servletTester = new ServletTester();
-    servletTester.getContext().addEventListener(new GuiceServletContextListener()
-    {
-      final Injector injector = Guice.createInjector(new TestModule());
+    servletTester.getContext();
 
-      @Override
-      protected Injector getInjector() {
-        return injector;
-      }
-    });
+    url = servletTester.createConnector(true) + MOUNT_POINT;
 
-    url = servletTester.createConnector(true) + TestModule.MOUNT_POINT;
-    servletTester.addFilter(GuiceFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+    ServletHolder holder = new ServletHolder(context.getBean(SiestaServlet.class));
+    holder.setInitParameters(Map.of("resteasy.servlet.mapping.prefix", MOUNT_POINT));
+    servletTester.addServlet(holder, MOUNT_POINT + "/*");
+
     servletTester.addServlet(DummyServlet.class, "/*");
     servletTester.start();
 

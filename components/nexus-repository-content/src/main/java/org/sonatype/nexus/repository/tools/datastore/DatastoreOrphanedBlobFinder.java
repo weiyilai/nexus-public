@@ -16,8 +16,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.BlobAttributes;
@@ -39,13 +38,17 @@ import static org.sonatype.nexus.blobstore.api.BlobStore.BLOB_NAME_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.REPO_NAME_HEADER;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.BLOB_STORE_NAME;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STORAGE;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Detects orphaned blobs (i.e. nn-deleted blobs that exist in the blobstore but not the asset table)
  *
  * @since 3.25
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DatastoreOrphanedBlobFinder
     extends ComponentSupport
     implements OrphanedBlobFinder
@@ -55,7 +58,10 @@ public class DatastoreOrphanedBlobFinder
   private final BlobStoreManager blobStoreManager;
 
   @Inject
-  public DatastoreOrphanedBlobFinder(final RepositoryManager repositoryManager, final BlobStoreManager blobStoreManager) {
+  public DatastoreOrphanedBlobFinder(
+      final RepositoryManager repositoryManager,
+      final BlobStoreManager blobStoreManager)
+  {
     this.repositoryManager = checkNotNull(repositoryManager);
     this.blobStoreManager = checkNotNull(blobStoreManager);
   }
@@ -98,7 +104,7 @@ public class DatastoreOrphanedBlobFinder
    * Look for orphaned blobs in a given repository and callback for each blobId found
    *
    * @param repository - where to look for orphaned blobs
-   * @param handler    - callback to handle an orphaned blob
+   * @param handler - callback to handle an orphaned blob
    */
   @Override
   public void detect(final Repository repository, final Consumer<BlobId> handler) {
@@ -115,7 +121,7 @@ public class DatastoreOrphanedBlobFinder
       if (attributes != null) {
         checkIfOrphaned(handler, id, attributes);
       }
-      else{
+      else {
         log.warn("Skipping cleanup for blob {} because blob properties not found", id);
       }
     });
@@ -152,7 +158,9 @@ public class DatastoreOrphanedBlobFinder
   }
 
   private BlobStore getBlobStoreForRepository(final Repository repository) {
-    String blobStoreName = (String) repository.getConfiguration().getAttributes().get(STORAGE)
+    String blobStoreName = (String) repository.getConfiguration()
+        .getAttributes()
+        .get(STORAGE)
         .get(BLOB_STORE_NAME);
 
     return blobStoreManager.get(blobStoreName);

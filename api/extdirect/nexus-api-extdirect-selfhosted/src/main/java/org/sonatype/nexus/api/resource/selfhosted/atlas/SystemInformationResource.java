@@ -13,9 +13,8 @@
 package org.sonatype.nexus.api.resource.selfhosted.atlas;
 
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -26,6 +25,7 @@ import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.atlas.SystemInformationGenerator;
 import org.sonatype.nexus.rest.Resource;
 
+import org.springframework.stereotype.Component;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -34,7 +34,7 @@ import static org.sonatype.nexus.api.resource.selfhosted.atlas.SystemInformation
 /**
  * Renders system information. This is required for download of the report from the UI.
  */
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 public class SystemInformationResource

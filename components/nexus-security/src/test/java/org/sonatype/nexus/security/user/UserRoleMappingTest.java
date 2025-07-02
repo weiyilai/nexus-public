@@ -18,62 +18,74 @@ import java.util.Set;
 import org.sonatype.nexus.security.AbstractSecurityTest;
 import org.sonatype.nexus.security.config.CUser;
 import org.sonatype.nexus.security.config.CUserRoleMapping;
-import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
+import org.sonatype.nexus.security.config.PreconfiguredSecurityConfigurationSource;
 import org.sonatype.nexus.security.config.SecurityConfigurationManager;
+import org.sonatype.nexus.security.config.SecurityConfigurationSource;
 import org.sonatype.nexus.security.internal.SecurityConfigurationManagerImpl;
+import org.sonatype.nexus.security.user.UserRoleMappingTest.UserRoleMappingTestConfiguration;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
-public class UserRoleMappingTest
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@Import(UserRoleMappingTestConfiguration.class)
+class UserRoleMappingTest
     extends AbstractSecurityTest
 {
-  @Override
-  protected MemorySecurityConfiguration initialSecurityConfiguration() {
-    return UserRoleMappingTestSecurity.securityModel();
+  static class UserRoleMappingTestConfiguration
+  {
+    @Bean
+    @Primary
+    SecurityConfigurationSource securityConfigurationSource() {
+      return new PreconfiguredSecurityConfigurationSource(UserRoleMappingTestSecurity.securityModel());
+    }
   }
 
-  public SecurityConfigurationManager getConfigManager() throws Exception {
+  SecurityConfigurationManager getConfigManager() throws Exception {
     return this.lookup(SecurityConfigurationManagerImpl.class);
   }
 
   @Test
-  public void testGetUser() throws Exception {
+  void testGetUser() throws Exception {
     SecurityConfigurationManager config = this.getConfigManager();
 
     CUser user = config.readUser("test-user");
-    Assert.assertEquals(user.getId(), "test-user");
-    Assert.assertEquals(user.getEmail(), "test-user@example.org");
-    Assert.assertEquals(user.getFirstName(), "Test");
-    Assert.assertEquals(user.getLastName(), "User");
-    Assert.assertEquals(user.getPassword(), "b2a0e378437817cebdf753d7dff3dd75483af9e0");
-    Assert.assertEquals(user.getStatus(), "active");
+    assertEquals(user.getId(), "test-user");
+    assertEquals(user.getEmail(), "test-user@example.org");
+    assertEquals(user.getFirstName(), "Test");
+    assertEquals(user.getLastName(), "User");
+    assertEquals(user.getPassword(), "b2a0e378437817cebdf753d7dff3dd75483af9e0");
+    assertEquals(user.getStatus(), "active");
 
     CUserRoleMapping mapping = config.readUserRoleMapping("test-user", "default");
 
-    Assert.assertTrue(mapping.getRoles().contains("role1"));
-    Assert.assertTrue(mapping.getRoles().contains("role2"));
-    Assert.assertEquals(2, mapping.getRoles().size());
+    assertTrue(mapping.getRoles().contains("role1"));
+    assertTrue(mapping.getRoles().contains("role2"));
+    assertEquals(2, mapping.getRoles().size());
   }
 
   @Test
-  public void testGetUserWithEmptyRole() throws Exception {
+  void testGetUserWithEmptyRole() throws Exception {
     SecurityConfigurationManager config = this.getConfigManager();
 
     CUser user = config.readUser("test-user-with-empty-role");
-    Assert.assertEquals(user.getId(), "test-user-with-empty-role");
-    Assert.assertEquals(user.getEmail(), "test-user-with-empty-role@example.org");
-    Assert.assertEquals(user.getFirstName(), "Test");
-    Assert.assertEquals(user.getLastName(), "User With Empty Role");
-    Assert.assertEquals(user.getPassword(), "b2a0e378437817cebdf753d7dff3dd75483af9e0");
-    Assert.assertEquals(user.getStatus(), "active");
+    assertEquals(user.getId(), "test-user-with-empty-role");
+    assertEquals(user.getEmail(), "test-user-with-empty-role@example.org");
+    assertEquals(user.getFirstName(), "Test");
+    assertEquals(user.getLastName(), "User With Empty Role");
+    assertEquals(user.getPassword(), "b2a0e378437817cebdf753d7dff3dd75483af9e0");
+    assertEquals(user.getStatus(), "active");
 
     CUserRoleMapping mapping = config.readUserRoleMapping("test-user-with-empty-role", "default");
 
-    Assert.assertTrue(mapping.getRoles().contains("empty-role"));
-    Assert.assertTrue(mapping.getRoles().contains("role1"));
-    Assert.assertTrue(mapping.getRoles().contains("role2"));
-    Assert.assertEquals(3, mapping.getRoles().size());
+    assertTrue(mapping.getRoles().contains("empty-role"));
+    assertTrue(mapping.getRoles().contains("role1"));
+    assertTrue(mapping.getRoles().contains("role2"));
+    assertEquals(3, mapping.getRoles().size());
 
     // try to update empty role
     config.updateUserRoleMapping(mapping);
@@ -81,18 +93,18 @@ public class UserRoleMappingTest
     // make sure we still have the role mappings
     mapping = config.readUserRoleMapping("test-user-with-empty-role", "default");
 
-    Assert.assertTrue(mapping.getRoles().contains("empty-role"));
-    Assert.assertTrue(mapping.getRoles().contains("role1"));
-    Assert.assertTrue(mapping.getRoles().contains("role2"));
-    Assert.assertEquals(3, mapping.getRoles().size());
+    assertTrue(mapping.getRoles().contains("empty-role"));
+    assertTrue(mapping.getRoles().contains("role1"));
+    assertTrue(mapping.getRoles().contains("role2"));
+    assertEquals(3, mapping.getRoles().size());
   }
 
   @Test
-  public void testUpdateUsersRoles() throws Exception {
+  void testUpdateUsersRoles() throws Exception {
     SecurityConfigurationManager config = this.getConfigManager();
 
     // make sure we have exactly 4 user role mappings
-    Assert.assertEquals(5, config.listUserRoleMappings().size());
+    assertEquals(5, config.listUserRoleMappings().size());
 
     // get the test-user and add a role
     CUser user = config.readUser("test-user");
@@ -105,6 +117,6 @@ public class UserRoleMappingTest
     config.updateUser(user, new HashSet<String>(roles));
 
     // make sure we have exactly 4 user role mappings
-    Assert.assertEquals(5, config.listUserRoleMappings().size());
+    assertEquals(5, config.listUserRoleMappings().size());
   }
 }

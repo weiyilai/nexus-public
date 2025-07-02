@@ -12,15 +12,15 @@
  */
 package org.sonatype.nexus.blobstore.s3.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FeatureFlags;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class BucketOwnershipCheckFeatureFlag
 {
@@ -28,7 +28,7 @@ public class BucketOwnershipCheckFeatureFlag
 
   @Inject
   public BucketOwnershipCheckFeatureFlag(
-      @Named(FeatureFlags.BLOBSTORE_OWNERSHIP_CHECK_DISABLED_NAMED) @Value(FeatureFlags.BLOBSTORE_OWNERSHIP_CHECK_DISABLED_NAMED_VALUE) final Boolean isDisabled)
+      @Value(FeatureFlags.BLOBSTORE_OWNERSHIP_CHECK_DISABLED_NAMED_VALUE) final Boolean isDisabled)
   {
     this.isDisabled = Boolean.TRUE.equals(isDisabled);
   }

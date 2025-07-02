@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.siesta.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -23,13 +22,14 @@ import org.sonatype.nexus.rest.ExceptionMapperSupport;
 import org.sonatype.nexus.rest.ValidationErrorXO;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.stereotype.Component;
 
 /**
  * Maps {@link JsonProcessingExceptionMapper} to {@link Status#BAD_REQUEST} in case there is a deserialization error.
  *
  * @since 3.19
  */
-@Named
+@Component
 @Singleton
 public class JsonProcessingExceptionMapper
     extends ExceptionMapperSupport<JsonProcessingException>

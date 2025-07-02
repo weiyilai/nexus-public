@@ -15,9 +15,8 @@ package org.sonatype.nexus.extdirect.internal;
 import java.io.File;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.webresources.FileWebResource;
@@ -28,13 +27,14 @@ import com.google.common.collect.ImmutableList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.webresources.WebResource.JAVASCRIPT;
+import org.springframework.stereotype.Component;
 
 /**
  * Ext.Direct web-resources.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class ExtDirectWebResources
     implements WebResourceBundle
@@ -58,7 +58,6 @@ public class ExtDirectWebResources
   public List<WebResource> getResources() {
     return ImmutableList.of(
         create("nexus-extdirect/api.js", "/static/rapture/extdirect-prod.js"),
-        create("nexus-extdirect/api-debug.js", "/static/rapture/extdirect-debug.js")
-    );
+        create("nexus-extdirect/api-debug.js", "/static/rapture/extdirect-debug.js"));
   }
 }

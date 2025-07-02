@@ -12,13 +12,14 @@
  */
 package org.sonatype.nexus.internal.scheduling;
 
+import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.event.EventAware;
 import org.sonatype.nexus.common.event.EventAware.Asynchronous;
 import org.sonatype.nexus.email.EmailManager;
@@ -35,12 +36,13 @@ import org.apache.commons.mail.Email;
 import org.apache.commons.mail.SimpleEmail;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link EventAware} that will send notification email (if necessary) in case of a completed or failed {@link Task}.
  */
 @Singleton
-@Named
+@Component
 public class NexusTaskNotificationEmailSender
     extends ComponentSupport
     implements EventAware, Asynchronous
@@ -52,10 +54,11 @@ public class NexusTaskNotificationEmailSender
   @Inject
   public NexusTaskNotificationEmailSender(
       final Provider<EmailManager> emailManager,
-      final Map<String, TaskNotificationMessageGenerator> taskNotificationMessageGenerators)
+      final List<TaskNotificationMessageGenerator> taskNotificationMessageGeneratorsList)
   {
     this.emailManager = checkNotNull(emailManager);
-    this.taskNotificationMessageGenerators = checkNotNull(taskNotificationMessageGenerators);
+    this.taskNotificationMessageGenerators =
+        QualifierUtil.buildQualifierBeanMap(checkNotNull(taskNotificationMessageGeneratorsList));
   }
 
   /**

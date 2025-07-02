@@ -14,10 +14,9 @@ package org.sonatype.nexus.rest.client.internal;
 
 import java.net.URI;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 
@@ -36,6 +35,9 @@ import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.ProxyBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.cache.CacheLoader.from;
@@ -45,7 +47,9 @@ import static com.google.common.cache.CacheLoader.from;
  *
  * @since 3.0
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @Singleton
 public class RestClientFactoryImpl
     extends ComponentSupport

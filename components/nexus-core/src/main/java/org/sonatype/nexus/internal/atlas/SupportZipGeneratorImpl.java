@@ -32,9 +32,8 @@ import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ByteSize;
 import org.sonatype.goodies.common.ComponentSupport;
@@ -52,13 +51,14 @@ import org.springframework.beans.factory.annotation.Value;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.*;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link SupportZipGenerator}.
  *
  * @since 2.7
  */
-@Named
+@Component
 @Singleton
 public class SupportZipGeneratorImpl
     extends ComponentSupport
@@ -84,8 +84,8 @@ public class SupportZipGeneratorImpl
   SupportZipGeneratorImpl(
       final DownloadService downloadService,
       final List<SupportBundleCustomizer> bundleCustomizers,
-      final @Named("${atlas.supportZipGenerator.maxFileSize:-30mb}") @Value("${atlas.supportZipGenerator.maxFileSize:30mb}") ByteSize maxFileSize,
-      final @Named("${atlas.supportZipGenerator.maxZipFileSize:-50mb}") @Value("${atlas.supportZipGenerator.maxZipFileSize:50mb}") ByteSize maxZipFileSize)
+      final @Value("${atlas.supportZipGenerator.maxFileSize:30mb}") ByteSize maxFileSize,
+      final @Value("${atlas.supportZipGenerator.maxZipFileSize:50mb}") ByteSize maxZipFileSize)
   {
     this.bundleCustomizers = checkNotNull(bundleCustomizers);
     this.downloadService = checkNotNull(downloadService);

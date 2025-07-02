@@ -14,22 +14,26 @@ package org.sonatype.nexus.security;
 
 import java.util.List;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.security.jwt.JwtVerificationException;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.web.servlet.AdviceFilter;
 import org.apache.shiro.web.util.WebUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.stream;
+import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
 import static org.sonatype.nexus.security.JwtHelper.JWT_COOKIE_NAME;
 
 /**
@@ -37,7 +41,9 @@ import static org.sonatype.nexus.security.JwtHelper.JWT_COOKIE_NAME;
  *
  * @since 3.38
  */
-@Named
+@ConditionalOnProperty(name = JWT_ENABLED, havingValue = "true")
+@WebFilter(filterName = JwtFilter.NAME)
+@Component
 @Singleton
 public class JwtFilter
     extends AdviceFilter
@@ -49,8 +55,10 @@ public class JwtFilter
   private final List<JwtRefreshExemption> jwtExemptPaths;
 
   @Inject
-  public JwtFilter(final JwtHelper jwtHelper,
-                   final List<JwtRefreshExemption> jwtExemptPaths) {
+  public JwtFilter(
+      final JwtHelper jwtHelper,
+      final List<JwtRefreshExemption> jwtExemptPaths)
+  {
     this.jwtHelper = checkNotNull(jwtHelper);
     this.jwtExemptPaths = jwtExemptPaths;
   }

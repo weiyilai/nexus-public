@@ -19,9 +19,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -37,6 +36,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.DetachedEntityId;
 import org.sonatype.nexus.repository.IllegalOperationException;
 import org.sonatype.nexus.repository.Repository;
@@ -69,11 +69,12 @@ import static org.sonatype.nexus.repository.http.HttpStatus.NOT_FOUND;
 import static org.sonatype.nexus.repository.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.sonatype.nexus.repository.rest.api.RepositoryItemIDXO.fromString;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.24
  */
-@Named
+@Component
 @Singleton
 @Path(ComponentsResource.RESOURCE_URI)
 @Produces(APPLICATION_JSON)
@@ -107,7 +108,7 @@ public class ComponentsResource
       final ComponentXOFactory componentXOFactory,
       final ContentAuthHelper contentAuthHelper,
       final Set<ComponentsResourceExtension> componentsResourceExtensions,
-      @Nullable final Map<String, AssetXODescriptor> assetDescriptors)
+      @Nullable final List<AssetXODescriptor> assetDescriptorsList)
   {
     super(contentAuthHelper, repositoryManagerRESTAdapter);
     this.repositoryManagerRESTAdapter = checkNotNull(repositoryManagerRESTAdapter);
@@ -116,7 +117,7 @@ public class ComponentsResource
     this.uploadConfiguration = checkNotNull(uploadConfiguration);
     this.componentXOFactory = checkNotNull(componentXOFactory);
     this.componentsResourceExtensions = checkNotNull(componentsResourceExtensions);
-    this.assetDescriptors = assetDescriptors;
+    this.assetDescriptors = QualifierUtil.buildQualifierBeanMap(assetDescriptorsList);
   }
 
   /**

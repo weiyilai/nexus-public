@@ -12,16 +12,18 @@
  */
 package org.sonatype.nexus.blobstore;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.db.DatabaseCheck;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class BlobStoreDescriptorProvider
 {
@@ -32,10 +34,10 @@ public class BlobStoreDescriptorProvider
   @Inject
   public BlobStoreDescriptorProvider(
       final DatabaseCheck databaseCheck,
-      final Map<String, BlobStoreDescriptor> blobStoreDescriptors)
+      final List<BlobStoreDescriptor> blobStoreDescriptorsList)
   {
     this.databaseCheck = databaseCheck;
-    this.blobStoreDescriptors = blobStoreDescriptors;
+    this.blobStoreDescriptors = QualifierUtil.buildQualifierBeanMap(blobStoreDescriptorsList);
   }
 
   public Map<String, BlobStoreDescriptor> get() {

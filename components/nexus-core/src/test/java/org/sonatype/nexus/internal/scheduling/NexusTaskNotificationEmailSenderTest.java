@@ -13,11 +13,15 @@
 package org.sonatype.nexus.internal.scheduling;
 
 import org.apache.commons.mail.EmailException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.MockedStatic;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
+
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.email.EmailManager;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskInfo;
@@ -26,8 +30,7 @@ import org.sonatype.nexus.scheduling.TaskNotificationMessageGenerator;
 import org.sonatype.nexus.scheduling.events.TaskEventStoppedDone;
 import org.sonatype.nexus.scheduling.events.TaskEventStoppedFailed;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.isNotNull;
 import static org.mockito.Mockito.*;
@@ -50,19 +53,25 @@ public class NexusTaskNotificationEmailSenderTest
 
   private NexusTaskNotificationEmailSender underTest;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setup() {
-    MockitoAnnotations.initMocks(this);
-    Map<String, TaskNotificationMessageGenerator> taskNotificationMessageGenerators = new HashMap<>();
-    taskNotificationMessageGenerators.put("DEFAULT", defaultTaskNotificationMessageGenerator);
-    taskNotificationMessageGenerators.put("CUSTOM", customTaskNotificationMessageGenerator);
-
+    mockedStatic = mockStatic(QualifierUtil.class);
     when(defaultTaskNotificationMessageGenerator.completed(isNotNull())).thenReturn("completed message");
     when(defaultTaskNotificationMessageGenerator.failed(isNotNull(), isNotNull())).thenReturn("failure message");
     when(emailManager.constructMessage("completed message")).thenReturn("completed message");
     when(emailManager.constructMessage("failure message")).thenReturn("failure message");
+    when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(
+        ImmutableMap.of("DEFAULT", defaultTaskNotificationMessageGenerator, "CUSTOM",
+            customTaskNotificationMessageGenerator));
+    underTest = new NexusTaskNotificationEmailSender(() -> emailManager,
+        List.of(defaultTaskNotificationMessageGenerator, customTaskNotificationMessageGenerator));
+  }
 
-    underTest = new NexusTaskNotificationEmailSender(() -> emailManager, taskNotificationMessageGenerators);
+  @After
+  public void teardown() {
+    mockedStatic.close();
   }
 
   @Test

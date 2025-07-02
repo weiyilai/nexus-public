@@ -18,9 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 
@@ -39,22 +38,29 @@ import com.softwarementors.extjs.djn.config.annotations.DirectAction;
 import com.softwarementors.extjs.djn.config.annotations.DirectMethod;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.context.annotation.Lazy;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.ssl.CertificateUtil.calculateFingerprint;
+import org.springframework.stereotype.Component;
 
 /**
  * SSL TrustStore {@link DirectComponent}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "ssl_TrustStore")
-class TrustStoreComponent
+public class TrustStoreComponent
     extends DirectComponentSupport
 {
+  private final TrustStore trustStore;
+
   @Inject
-  TrustStore trustStore;
+  public TrustStoreComponent(@Lazy final TrustStore trustStore) {
+    this.trustStore = checkNotNull(trustStore);
+  }
 
   /**
    * Retrieves certificates.
@@ -65,7 +71,7 @@ class TrustStoreComponent
   @Timed
   @ExceptionMetered
   @RequiresPermissions("nexus:ssl-truststore:read")
-  List<CertificateXO> read() throws Exception {
+  public List<CertificateXO> read() throws Exception {
     List<CertificateXO> list = new ArrayList<>();
     for (Certificate certificate : trustStore.getTrustedCertificates()) {
       list.add(asCertificateXO(certificate, true));
@@ -85,7 +91,7 @@ class TrustStoreComponent
   @RequiresAuthentication
   @RequiresPermissions("nexus:ssl-truststore:create")
   @Validate
-  CertificateXO create(final @NotBlank @PemCertificate String pem) throws Exception {
+  public CertificateXO create(final @NotBlank @PemCertificate String pem) throws Exception {
     Certificate certificate = CertificateUtil.decodePEMFormattedCertificate(pem);
     trustStore.importTrustCertificate(certificate, calculateFingerprint(certificate));
     return asCertificateXO(certificate, true);
@@ -102,7 +108,7 @@ class TrustStoreComponent
   @RequiresAuthentication
   @RequiresPermissions("nexus:ssl-truststore:delete")
   @Validate
-  void remove(final @NotEmpty String id) throws KeystoreException {
+  public void remove(final @NotEmpty String id) throws KeystoreException {
     trustStore.removeTrustCertificate(id);
   }
 
@@ -120,8 +126,6 @@ class TrustStoreComponent
           subjectRdns.get("OU"), issuerRdns.get("CN"), issuerRdns.get("O"), issuerRdns.get("OU"),
           x509Certificate.getNotBefore().getTime(), x509Certificate.getNotAfter().getTime(), inTrustStore);
     }
-    else {
-      return new CertificateXO(fingerprint, fingerprint, CertificateUtil.serializeCertificateInPEM(certificate));
-    }
+    return new CertificateXO(fingerprint, fingerprint, CertificateUtil.serializeCertificateInPEM(certificate));
   }
 }

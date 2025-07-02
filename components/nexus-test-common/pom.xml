@@ -48,8 +48,19 @@
     </dependency>
 
     <dependency>
+      <groupId>org.sonatype.nexus</groupId>
+      <artifactId>nexus-validation</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.sonatype.goodies</groupId>
       <artifactId>goodies-httpfixture</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -63,4 +74,20 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>dev.aspectj</groupId>
+        <artifactId>aspectj-maven-plugin</artifactId>
+        <configuration>
+          <aspectLibraries combine.self="override">
+            <aspectLibrary>
+              <groupId>org.sonatype.nexus</groupId>
+              <artifactId>nexus-common</artifactId>
+            </aspectLibrary>
+          </aspectLibraries>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

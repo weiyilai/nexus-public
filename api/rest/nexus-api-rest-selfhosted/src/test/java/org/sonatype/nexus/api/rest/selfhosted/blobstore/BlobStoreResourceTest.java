@@ -13,6 +13,8 @@
 package org.sonatype.nexus.api.rest.selfhosted.blobstore;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
@@ -51,7 +53,7 @@ public class BlobStoreResourceTest
   @Mock
   BlobStoreQuotaService quotaService;
 
-  @Mock
+  @Mock(name = "azure cloud storage")
   ConnectionChecker connectionChecker;
 
   @Mock
@@ -75,8 +77,8 @@ public class BlobStoreResourceTest
     Mockito.when(manager.get(ArgumentMatchers.eq("noQuota"))).thenReturn(noQuota);
     Mockito.when(manager.get(ArgumentMatchers.eq("failing"))).thenReturn(failing);
 
-    Map<String, ConnectionChecker> connectionCheckers = new HashMap<>();
-    connectionCheckers.put("azure cloud storage", connectionChecker);
+    List<ConnectionChecker> connectionCheckers = new LinkedList<>();
+    connectionCheckers.add(connectionChecker);
 
     resource = new BlobStoreResource(manager, store, quotaService, connectionCheckers);
   }

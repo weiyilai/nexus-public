@@ -12,25 +12,6 @@
  */
 package org.sonatype.nexus.blobstore.group;
 
-import com.google.common.hash.HashCode;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-
-import org.sonatype.goodies.common.Time;
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.blobstore.MockBlobStoreConfiguration;
-import org.sonatype.nexus.blobstore.api.Blob;
-import org.sonatype.nexus.blobstore.api.BlobId;
-import org.sonatype.nexus.blobstore.api.BlobStore;
-import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
-import org.sonatype.nexus.blobstore.api.BlobStoreManager;
-import org.sonatype.nexus.blobstore.group.internal.WriteToFirstMemberFillPolicy;
-import org.sonatype.nexus.cache.CacheHelper;
-
-import javax.cache.Cache;
-import javax.cache.configuration.MutableConfiguration;
-import javax.inject.Provider;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.file.Path;
@@ -43,17 +24,55 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.cache.Cache;
+import javax.cache.configuration.MutableConfiguration;
+
+import org.sonatype.goodies.common.Time;
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.blobstore.MockBlobStoreConfiguration;
+import org.sonatype.nexus.blobstore.api.Blob;
+import org.sonatype.nexus.blobstore.api.BlobId;
+import org.sonatype.nexus.blobstore.api.BlobStore;
+import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
+import org.sonatype.nexus.blobstore.api.BlobStoreManager;
+import org.sonatype.nexus.blobstore.api.OperationMetrics;
+import org.sonatype.nexus.blobstore.api.OperationType;
+import org.sonatype.nexus.blobstore.group.internal.WriteToFirstMemberFillPolicy;
+import org.sonatype.nexus.cache.CacheHelper;
+import org.sonatype.nexus.common.QualifierUtil;
+
+import com.google.common.hash.HashCode;
+import jakarta.inject.Provider;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+
 import static java.util.Collections.emptyList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.sonatype.nexus.blobstore.api.OperationType.DOWNLOAD;
+import static org.sonatype.nexus.blobstore.api.OperationType.UPLOAD;
 
 public class BlobStoreGroupTest
     extends TestSupport
 {
   @Mock
   private BlobStoreManager blobStoreManager;
+
+  @Mock
+  private OperationMetrics operationMetrics;
 
   @Mock
   private FillPolicy testFillPolicy;
@@ -79,6 +98,8 @@ public class BlobStoreGroupTest
   @Mock
   private BlobStore two;
 
+  MockedStatic<QualifierUtil> mockedStatic;
+
   private BlobStoreGroup blobStore;
 
   private final BlobStoreConfiguration config = new MockBlobStoreConfiguration();
@@ -87,6 +108,8 @@ public class BlobStoreGroupTest
 
   @Before
   public void setUp() {
+    mockedStatic = mockStatic(QualifierUtil.class);
+
     when(cacheHelperProvider.get()).thenReturn(cacheHelper);
     when(cacheHelper.maybeCreateCache(anyString(), any(MutableConfiguration.class))).thenReturn(cache);
     when(one.getBlobStoreConfiguration()).thenReturn(mock(BlobStoreConfiguration.class));
@@ -97,12 +120,25 @@ public class BlobStoreGroupTest
     Map<String, Provider<FillPolicy>> fillPolicyFactories = new HashMap<>();
     fillPolicyFactories.put("writeToFirst", () -> writeToFirstMemberFillPolicy);
     fillPolicyFactories.put("test", () -> testFillPolicy);
-
+    when(QualifierUtil.buildQualifierBeanMap(Mockito.<List<Provider<FillPolicy>>>any()))
+        .thenReturn(fillPolicyFactories);
     blobStore =
-        new BlobStoreGroup(blobStoreManager, fillPolicyFactories, cacheHelperProvider, new Time(2, TimeUnit.DAYS));
+        new BlobStoreGroup(blobStoreManager, List.of(), cacheHelperProvider, new Time(2, TimeUnit.DAYS));
+
+    Map<OperationType, OperationMetrics> operationMetricsMap =
+        Map.of(DOWNLOAD, operationMetrics, UPLOAD, operationMetrics);
+    when(one.getOperationMetricsDelta()).thenReturn(operationMetricsMap);
   }
 
-  private Map<String, Map<String, Object>> buildAttributes(List<String> memberNames, String fillPolicyName) {
+  @After
+  public void tearDown() {
+    mockedStatic.close();
+  }
+
+  private Map<String, Map<String, Object>> buildAttributes(
+      final List<String> memberNames,
+      final String fillPolicyName)
+  {
     Map<String, Map<String, Object>> attributes = new HashMap<>();
     Map<String, Object> group = new HashMap<>();
     group.put("members", memberNames);
@@ -115,7 +151,7 @@ public class BlobStoreGroupTest
   public void getWithNoMembers() throws Exception {
     config.setAttributes(buildAttributes(emptyList(), "test"));
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
 
     Blob foundBlob = blobStore.get(new BlobId("doesntexist"));
 
@@ -126,7 +162,7 @@ public class BlobStoreGroupTest
   public void getWithTwoMembers() throws Exception {
     config.setAttributes(buildAttributes(Arrays.asList("one", "two"), "test"));
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     when(blobStoreManager.get("one")).thenReturn(one);
     when(blobStoreManager.get("two")).thenReturn(two);
     when(one.exists(any())).thenAnswer(invocation -> invocation.getArgument(0).equals(new BlobId("in_one")));
@@ -148,7 +184,7 @@ public class BlobStoreGroupTest
   public void twoParamGet() throws Exception {
     config.setAttributes(buildAttributes(Arrays.asList("one", "two"), "test"));
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     when(blobStoreManager.get("one")).thenReturn(one);
     when(blobStoreManager.get("two")).thenReturn(two);
     when(one.exists(any())).thenAnswer(invocation -> invocation.getArgument(0).equals(new BlobId("in_one")));
@@ -166,7 +202,7 @@ public class BlobStoreGroupTest
   public void twoParamGetIncludeDeleted() throws Exception {
     config.setAttributes(buildAttributes(Arrays.asList("one", "two"), "test"));
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     when(blobStoreManager.get("one")).thenReturn(one);
     when(blobStoreManager.get("two")).thenReturn(two);
     when(one.exists(any())).thenAnswer(invocation -> invocation.getArgument(0).equals(new BlobId("in_one")));
@@ -190,7 +226,7 @@ public class BlobStoreGroupTest
     assertBlobStoreGet("deleted_in_two", true, blobTwo);
   }
 
-  private void assertBlobStoreGet(String blobId, boolean includeDeleted, Blob expectedBlob) {
+  private void assertBlobStoreGet(final String blobId, final boolean includeDeleted, final Blob expectedBlob) {
     Blob foundBlob = blobStore.get(new BlobId(blobId), includeDeleted);
     assertThat(foundBlob, is(expectedBlob));
   }
@@ -199,7 +235,7 @@ public class BlobStoreGroupTest
   public void createWithStreamDelegatesToMemberChosenByFillPolicy() throws Exception {
     config.setAttributes(buildAttributes(Arrays.asList("one", "two"), "test"));
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     when(blobStoreManager.get("one")).thenReturn(one);
     when(blobStoreManager.get("two")).thenReturn(two);
     ByteArrayInputStream byteStream = new ByteArrayInputStream("".getBytes());
@@ -220,7 +256,7 @@ public class BlobStoreGroupTest
   public void createWithPathDelegatesToMemberChosenByFillPolicy() throws Exception {
     config.setAttributes(buildAttributes(Arrays.asList("one", "two"), "test"));
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     when(blobStoreManager.get("one")).thenReturn(one);
     when(blobStoreManager.get("two")).thenReturn(two);
     Path path = new File(".").toPath();
@@ -243,14 +279,11 @@ public class BlobStoreGroupTest
   public void getBlobStreamIdWithTwoBlobstores() throws Exception {
     config.setAttributes(buildAttributes(Arrays.asList("one", "two"), "test"));
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     when(blobStoreManager.get("one")).thenReturn(one);
     when(blobStoreManager.get("two")).thenReturn(two);
     when(one.getBlobIdStream()).thenReturn(Stream.of(new BlobId("a"), new BlobId("b"), new BlobId("c")));
     when(two.getBlobIdStream()).thenReturn(Stream.of(new BlobId("d"), new BlobId("e"), new BlobId("f")));
-
-    blobStore.init(config);
-    blobStore.doStart();
 
     Stream<BlobId> stream = blobStore.getBlobIdStream();
 
@@ -262,7 +295,7 @@ public class BlobStoreGroupTest
   public void deleteWithTwoMembers() throws Exception {
     config.setAttributes(buildAttributes(Arrays.asList("one", "two"), "test"));
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     when(blobStoreManager.get("one")).thenReturn(one);
     when(blobStoreManager.get("two")).thenReturn(two);
     when(one.exists(any())).thenAnswer(invocation -> {
@@ -288,7 +321,7 @@ public class BlobStoreGroupTest
   public void deleteHardWithTwoMembers() throws Exception {
     config.setAttributes(buildAttributes(Arrays.asList("one", "two"), "test"));
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     when(blobStoreManager.get("one")).thenReturn(one);
     when(blobStoreManager.get("two")).thenReturn(two);
     when(one.exists(any())).thenAnswer(invocation -> {
@@ -310,12 +343,12 @@ public class BlobStoreGroupTest
     assertBlobStoreDeleteHard("in_both", false);
   }
 
-  private void assertBlobStoreDeleteHard(String blobId, boolean expectedDeleted) {
+  private void assertBlobStoreDeleteHard(final String blobId, final boolean expectedDeleted) {
     boolean deleted = blobStore.deleteHard(new BlobId(blobId));
     assertThat(deleted, is(expectedDeleted));
   }
 
-  private void assertBlobStoreDelete(String blobId, boolean expectedDeleted) {
+  private void assertBlobStoreDelete(final String blobId, final boolean expectedDeleted) {
     boolean deleted = blobStore.delete(new BlobId(blobId), "just because");
     assertThat(deleted, is(expectedDeleted));
   }
@@ -333,7 +366,7 @@ public class BlobStoreGroupTest
   public void itWillSearchWritableBlobStoresFirst() throws Exception {
     config.setAttributes(buildAttributes(Arrays.asList("writableMember", "nonWritableMember"), "test"));
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     when(blobStoreManager.get("writableMember")).thenReturn(one);
     when(blobStoreManager.get("nonWritableMember")).thenReturn(two);
     when(one.isWritable()).thenReturn(true);
@@ -355,7 +388,7 @@ public class BlobStoreGroupTest
   public void itWillOnlyCacheBlobIdsOfWritableBlobStores() throws Exception {
     config.setAttributes(buildAttributes(Arrays.asList("writableMember", "nonWritableMember"), "test"));
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     when(blobStoreManager.get("writableMember")).thenReturn(one);
     when(blobStoreManager.get("nonWritableMember")).thenReturn(two);
     when(one.isWritable()).thenReturn(true);

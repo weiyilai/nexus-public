@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.coreui.internal.wonderland;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -27,13 +26,14 @@ import org.sonatype.nexus.rest.Resource;
 import org.apache.shiro.authz.annotation.RequiresUser;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Status resource.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @Path(StatusResource.RESOURCE_URI)
 public class StatusResource

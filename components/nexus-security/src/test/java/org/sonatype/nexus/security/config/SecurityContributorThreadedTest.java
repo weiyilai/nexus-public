@@ -14,22 +14,72 @@ package org.sonatype.nexus.security.config;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.security.AbstractSecurityTest;
+import org.sonatype.nexus.security.config.SecurityContributorThreadedTest.SecurityContributorThreadedTestConfiguration;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
-import com.google.inject.name.Names;
 import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
-import org.junit.Assert;
-import org.junit.Test;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@Import(SecurityContributorThreadedTestConfiguration.class)
 public class SecurityContributorThreadedTest
     extends AbstractSecurityTest
 {
+  static class SecurityContributorThreadedTestConfiguration
+  {
+    @Qualifier("default")
+    @Primary
+    @Bean
+    SecurityConfigurationSource securityConfigurationSource() {
+      return new PreconfiguredSecurityConfigurationSource(InitialSecurityConfiguration.getConfiguration());
+    }
+
+    @Qualifier("static-default")
+    @Bean
+    SecurityContributor testSecurityContributor2() {
+      return new TestSecurityContributor2();
+    }
+
+    @Qualifier("dynamic-default")
+    @Bean
+    MutableTestSecurityContributor mutableTestSecurityContributor() {
+      return new MutableTestSecurityContributor();
+    }
+
+    @Bean
+    static BeanFactoryPostProcessor additionalContributorsRegistrar() {
+      return beanFactory -> {
+        DefaultListableBeanFactory factory = (DefaultListableBeanFactory) beanFactory;
+        // Register 99 more static contributors
+        for (int i = 0; i < 99; i++) {
+          String name = "static-" + i;
+          SecurityContributor contributor = new TestSecurityContributor3();
+          factory.registerSingleton(name, contributor);
+        }
+
+        // Register 99 more dynamic contributors
+        for (int i = 0; i < 99; i++) {
+          String name = "dynamic-" + i;
+          MutableTestSecurityContributor contributor = new MutableTestSecurityContributor();
+          factory.registerSingleton(name, contributor);
+        }
+      };
+    }
+  }
+
   private SecurityConfigurationManager manager;
 
   private int expectedPrivilegeCount = 0;
@@ -43,43 +93,7 @@ public class SecurityContributorThreadedTest
   @Inject
   private EventManager eventManager;
 
-  @Override
-  protected MemorySecurityConfiguration initialSecurityConfiguration() {
-    return InitialSecurityConfiguration.getConfiguration();
-  }
-
-  @Override
-  protected void customizeModules(final List<Module> modules) {
-    super.customizeModules(modules);
-    modules.add(new AbstractModule()
-    {
-      @Override
-      protected void configure() {
-        bindStaticContributor("static-default", new TestSecurityContributor2());
-        bindDynamicContributor("dynamic-default", new MutableTestSecurityContributor());
-
-        int staticResourceCount = 100;
-        for (int ii = 0; ii < staticResourceCount - 1; ii++) { // 99 more
-          bindStaticContributor("static-" + ii, new TestSecurityContributor3());
-        }
-
-        int dynamicResourceCount = 100;
-        for (int ii = 0; ii < dynamicResourceCount - 1; ii++) { // 99 more
-          bindDynamicContributor("dynamic-" + ii, new MutableTestSecurityContributor());
-        }
-      }
-
-      private void bindStaticContributor(final String name, final SecurityContributor instance) {
-        bind(SecurityContributor.class).annotatedWith(Names.named(name)).toInstance(instance);
-      }
-
-      private void bindDynamicContributor(final String name, final MutableTestSecurityContributor instance) {
-        bind(MutableTestSecurityContributor.class).annotatedWith(Names.named(name)).toInstance(instance);
-        bind(SecurityContributor.class).annotatedWith(Names.named(name)).toInstance(instance);
-      }
-    });
-  }
-
+  @BeforeEach
   @Override
   protected void setUp() throws Exception {
     super.setUp();
@@ -89,17 +103,31 @@ public class SecurityContributorThreadedTest
     // mimic EventManager auto-registration
     eventManager.register(manager);
 
+    initializeInjectedContributors();
+
     // test the lookup, make sure we have 200
-    Assert.assertEquals(200, testContributors.size());
+    assertEquals(200, testContributors.size());
 
     this.expectedPrivilegeCount = this.manager.listPrivileges().size();
 
     // 100 static items with 3 privs each + 100 dynamic items + 2 from default config
-    Assert.assertEquals((100 * 3) + 100 + 2, expectedPrivilegeCount);
+    assertEquals((100 * 3) + 100 + 2, expectedPrivilegeCount);
+  }
+
+  private void initializeInjectedContributors() {
+    // Initialize all programmatically injected dynamic contributors
+    for (MutableTestSecurityContributor contributor : mutableTestContributors) {
+      try {
+        contributor.initialize(eventManager, manager);
+      }
+      catch (IllegalStateException e) {
+        // Already initialized, ignore
+      }
+    }
   }
 
   @Test
-  public void testThreading() throws Throwable {
+  void testThreading() throws Throwable {
     TestFramework.runOnce(new MultithreadedTestCase()
     {
       // public void initialize()
@@ -109,34 +137,32 @@ public class SecurityContributorThreadedTest
 
       public void thread1() {
         mutableTestContributors.get(1).setDirty(true);
-        Assert.assertEquals(expectedPrivilegeCount, manager.listPrivileges().size());
+        Assertions.assertEquals(expectedPrivilegeCount, manager.listPrivileges().size());
       }
 
       public void thread2() {
-        Assert.assertEquals(expectedPrivilegeCount, manager.listPrivileges().size());
+        assertEquals(expectedPrivilegeCount, manager.listPrivileges().size());
       }
 
       public void thread3() {
         mutableTestContributors.get(3).setDirty(true);
-        Assert.assertEquals(expectedPrivilegeCount, manager.listPrivileges().size());
+        assertEquals(expectedPrivilegeCount, manager.listPrivileges().size());
       }
 
       public void thread4() {
-        Assert.assertEquals(expectedPrivilegeCount, manager.listPrivileges().size());
+        assertEquals(expectedPrivilegeCount, manager.listPrivileges().size());
       }
 
       public void thread5() {
         mutableTestContributors.get(5).setDirty(true);
-        Assert.assertEquals(expectedPrivilegeCount, manager.listPrivileges().size());
+        assertEquals(expectedPrivilegeCount, manager.listPrivileges().size());
       }
-
     });// , Integer.MAX_VALUE, Integer.MAX_VALUE ); // uncomment this for debugging, if you don't the framework
     // will timeout and close your debug session
 
     for (MutableTestSecurityContributor contributor : mutableTestContributors) {
-      Assert.assertTrue(
-          "Get config should be called on each contributor after any changed: " + contributor.getId(),
-          contributor.wasConfigRequested());
+      assertTrue(contributor.wasConfigRequested(),
+          "Get config should be called on each contributor after any changed: " + contributor.getId());
     }
   }
 }

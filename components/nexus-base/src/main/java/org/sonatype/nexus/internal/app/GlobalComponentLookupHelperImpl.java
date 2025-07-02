@@ -12,54 +12,42 @@
  */
 package org.sonatype.nexus.internal.app;
 
-import java.util.Iterator;
-
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.GlobalComponentLookupHelper;
 
-import com.google.inject.Key;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.inject.BeanLocator;
+import org.springframework.beans.BeansException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.inject.name.Names.named;
+import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link GlobalComponentLookupHelper}.
- *
- * @since 3.0
  */
-@Named
-@Singleton
+@Component
+@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
+@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class GlobalComponentLookupHelperImpl
     extends ComponentSupport
-    implements GlobalComponentLookupHelper
+    implements ApplicationContextAware, GlobalComponentLookupHelper
 {
-  private final ClassLoader classLoader;
-
-  private final BeanLocator beanLocator;
-
-  @Inject
-  public GlobalComponentLookupHelperImpl(
-      @Named("nexus-uber") final ClassLoader classLoader,
-      final BeanLocator beanLocator)
-  {
-    this.classLoader = checkNotNull(classLoader);
-    this.beanLocator = checkNotNull(beanLocator);
-  }
+  private ApplicationContext applicationContext;
 
   @Override
   @Nullable
   public Object lookup(final String className) {
     checkNotNull(className);
+    checkNotNull(applicationContext);
     try {
       log.trace("Looking up component by class-name: {}", className);
-      Class<?> type = classLoader.loadClass(className);
+      Class<?> type = getClass().getClassLoader().loadClass(className);
       return lookup(type);
     }
     catch (Exception e) {
@@ -70,40 +58,19 @@ public class GlobalComponentLookupHelperImpl
 
   @Override
   @Nullable
-  @SuppressWarnings("unchecked")
   public <T> T lookup(final Class<T> clazz) {
     checkNotNull(clazz);
-    return (T) lookup(Key.get(clazz));
+
+    return applicationContext.getBean(clazz);
   }
 
   @Override
   @Nullable
-  @SuppressWarnings("unchecked")
   public <T> T lookup(final Class<T> clazz, final String name) {
     checkNotNull(clazz);
     checkNotNull(name);
-    return (T) lookup(Key.get(clazz, named(name)));
-  }
 
-  @Override
-  @Nullable
-  public Object lookup(final Key key) {
-    checkNotNull(key);
-    try {
-      log.trace("Looking up component by key: {}", key);
-      @SuppressWarnings("unchecked")
-      Iterator<BeanEntry> iter = beanLocator.locate(key).iterator();
-      if (iter.hasNext()) {
-        return iter.next().getValue();
-      }
-      else {
-        log.trace("Component not found for key: {}", key);
-      }
-    }
-    catch (Exception e) {
-      log.trace("Unable to lookup component by key: {}; ignoring", key, e);
-    }
-    return null;
+    return applicationContext.getBean(name, clazz);
   }
 
   @Override
@@ -112,11 +79,16 @@ public class GlobalComponentLookupHelperImpl
     checkNotNull(className);
     try {
       log.trace("Looking up type: {}", className);
-      return classLoader.loadClass(className);
+      return getClass().getClassLoader().loadClass(className);
     }
     catch (Exception e) {
       log.trace("Unable to lookup type: {}; ignoring", className, e);
     }
     return null;
+  }
+
+  @Override
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    this.applicationContext = applicationContext;
   }
 }

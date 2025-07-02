@@ -13,9 +13,8 @@
 package org.sonatype.nexus.content.example.internal.recipe;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
@@ -32,13 +31,16 @@ import org.sonatype.nexus.repository.view.matchers.SuffixMatcher;
 import org.sonatype.nexus.repository.view.matchers.token.TokenMatcher;
 
 import static org.sonatype.nexus.repository.view.matchers.logic.LogicMatchers.and;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Example hosted recipe.
  *
  * @since 3.24
  */
-@Named(ExampleHostedRecipe.NAME)
+@Component
+@Qualifier(ExampleHostedRecipe.NAME)
 @Singleton
 public class ExampleHostedRecipe
     extends ExampleRecipeSupport
@@ -47,8 +49,8 @@ public class ExampleHostedRecipe
 
   @Inject
   public ExampleHostedRecipe(
-      @Named(HostedType.NAME) final Type type,
-      @Named(ExampleFormat.NAME) final Format format)
+      @Qualifier(HostedType.NAME) final Type type,
+      @Qualifier(ExampleFormat.NAME) final Format format)
   {
     super(type, format);
   }

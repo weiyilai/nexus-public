@@ -12,25 +12,26 @@
  */
 package org.sonatype.nexus.repository.maven.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.search.elasticsearch.index.IndexSettingsContributorSupport;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Contributor to ES index settings for Maven 2 repositories.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class MavenIndexSettingsContributor
     extends IndexSettingsContributorSupport
 {
   @Inject
-  public MavenIndexSettingsContributor(@Named(Maven2Format.NAME) final Format format) {
+  public MavenIndexSettingsContributor(@Qualifier(Maven2Format.NAME) final Format format) {
     super(format);
   }
 }

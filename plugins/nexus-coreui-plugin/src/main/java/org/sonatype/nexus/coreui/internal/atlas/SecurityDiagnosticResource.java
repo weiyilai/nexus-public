@@ -14,9 +14,8 @@ package org.sonatype.nexus.coreui.internal.atlas;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
@@ -40,11 +39,12 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.coreui.internal.atlas.SecurityDiagnosticResource.RESOURCE_URI;
+import org.springframework.stereotype.Component;
 
 /**
  * Renders security diagnostic information.
  */
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 @Produces(MediaType.APPLICATION_JSON)

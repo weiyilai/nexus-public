@@ -18,8 +18,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.common.text.Strings2;
@@ -30,13 +29,17 @@ import org.sonatype.nexus.security.internal.AuthorizationManagerImpl;
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link RoleNotContainSelf} validator.
  *
  * @since 3.10
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RoleNotContainSelfValidator
     extends ConstraintValidatorSupport<RoleNotContainSelf, Object> // Collection<String> expected
 {
@@ -65,7 +68,7 @@ public class RoleNotContainSelfValidator
     log.trace("Validating role doesn't contain itself: {}", value);
 
     String id = getId(value);
-    //this must be a create if there is no id
+    // this must be a create if there is no id
     if (Strings2.isEmpty(id)) {
       return true;
     }
@@ -128,7 +131,7 @@ public class RoleNotContainSelfValidator
     }
     catch (NoSuchRoleException ignored) {
       log.trace("Missing role {}", childRoleId);
-      //just ignore, other validator deals with this
+      // just ignore, other validator deals with this
     }
 
     return false;

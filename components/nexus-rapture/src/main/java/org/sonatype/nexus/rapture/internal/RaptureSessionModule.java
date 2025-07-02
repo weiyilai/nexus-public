@@ -12,18 +12,16 @@
  */
 package org.sonatype.nexus.rapture.internal;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.rapture.internal.security.SessionAuthenticationFilter;
-import org.sonatype.nexus.rapture.internal.security.SessionServlet;
-import org.sonatype.nexus.security.CookieFilter;
-import org.sonatype.nexus.security.FilterChainModule;
-import org.sonatype.nexus.security.SecurityFilter;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.servlet.ServletModule;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
+import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.sonatype.nexus.common.app.FeatureFlags.SESSION_ENABLED;
 import static org.sonatype.nexus.security.FilterProviderSupport.filterKey;
 
@@ -32,35 +30,16 @@ import static org.sonatype.nexus.security.FilterProviderSupport.filterKey;
  *
  * @since 3.0
  */
-@Named
+@ConditionalOnExpression("!${" + FEATURE_SPRING_ONLY + ":true} and ${" + SESSION_ENABLED + ":true}")
+@Deprecated(since = "4/1/2025", forRemoval = true)
+@Component
 @FeatureFlag(name = SESSION_ENABLED)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RaptureSessionModule
     extends AbstractModule
 {
-  private static final String MOUNT_POINT = "/service/rapture";
-
-  private static final String SESSION_MP = MOUNT_POINT + "/session";
-
   @Override
   protected void configure() {
     bind(filterKey(SessionAuthenticationFilter.NAME)).to(SessionAuthenticationFilter.class);
-
-    install(new ServletModule()
-    {
-      @Override
-      protected void configureServlets() {
-        serve(SESSION_MP).with(SessionServlet.class);
-        filter(SESSION_MP).through(SecurityFilter.class);
-        filter(SESSION_MP).through(CookieFilter.class);
-      }
-    });
-
-    install(new FilterChainModule()
-    {
-      @Override
-      protected void configure() {
-        addFilterChain(SESSION_MP, SessionAuthenticationFilter.NAME);
-      }
-    });
   }
 }

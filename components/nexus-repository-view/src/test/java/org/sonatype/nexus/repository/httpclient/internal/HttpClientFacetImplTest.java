@@ -12,10 +12,11 @@
  */
 package org.sonatype.nexus.repository.httpclient.internal;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.httpclient.HttpClientManager;
@@ -31,21 +32,24 @@ import org.sonatype.nexus.repository.httpclient.ContentCompressionStrategy;
 import org.sonatype.nexus.repository.httpclient.NormalizationStrategy;
 import org.sonatype.nexus.repository.httpclient.internal.HttpClientFacetImpl.Config;
 
-import com.google.common.collect.ImmutableMap;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
-import static com.google.common.collect.Maps.newHashMap;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.repository.httpclient.internal.HttpClientFacetImpl.CONFIG_KEY;
@@ -53,8 +57,8 @@ import static org.sonatype.nexus.repository.httpclient.internal.HttpClientFacetI
 /**
  * Tests for {@link HttpClientFacetImpl}.
  */
-public class HttpClientFacetImplTest
-    extends TestSupport
+class HttpClientFacetImplTest
+    extends Test5Support
 {
   private static final String DEFAULT = "default";
 
@@ -65,8 +69,6 @@ public class HttpClientFacetImplTest
   private static final String YUM = "yum";
 
   private static final String TEST_REPOSITORY_NAME = "test-repository";
-
-  private HttpClientFacetImpl underTest;
 
   @Mock
   private HttpClientManager httpClientManager;
@@ -87,13 +89,7 @@ public class HttpClientFacetImplTest
   private AutoBlockConfiguration npmAutoBlockConfiguration;
 
   @Mock
-  private Format npmFormat;
-
-  @Mock
-  private Format yumFormat;
-
-  @Mock
-  private Format unknownFormat;
+  private Format format;
 
   @Mock
   private CloseableHttpClient closeableHttpClient;
@@ -106,9 +102,9 @@ public class HttpClientFacetImplTest
 
   private HttpClientFacetImpl.Config config = new HttpClientFacetImpl.Config();
 
-  private UsernameAuthenticationConfiguration usernameAuthentication = new UsernameAuthenticationConfiguration();
-
   private NtlmAuthenticationConfiguration ntlmAuthentication = new NtlmAuthenticationConfiguration();
+
+  private MockedStatic<QualifierUtil> mockedStatic;
 
   // Value generated using: http://www.blitter.se/utils/basic-authentication-header-generator/
   private static final String BASIC_AUTH_ENCODED = "Basic dXNlcm5hbWU6cGFzc3dvcmQ=";
@@ -119,39 +115,30 @@ public class HttpClientFacetImplTest
 
   private boolean disableCompression;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
-    Map<String, AutoBlockConfiguration> autoBlockConfiguration = new HashMap<>();
-    autoBlockConfiguration.put(DEFAULT, defaultAutoBlockConfiguration);
-    autoBlockConfiguration.put(NPM, npmAutoBlockConfiguration);
+    mockedStatic = mockStatic(QualifierUtil.class);
 
-    Map<String, NormalizationStrategy> normalizationStrategies = ImmutableMap.of(DOCKER, () -> true);
-
-    Map<String, ContentCompressionStrategy> contentCompressionStrategiesMap =
-        ImmutableMap.of(YUM, (r) -> disableCompression);
-
-    underTest =
-        new HttpClientFacetImpl(httpClientManager, autoBlockConfiguration, newHashMap(), normalizationStrategies,
-            contentCompressionStrategiesMap, newHashMap(), config);
-    underTest.attach(repository);
-    underTest.installDependencies(eventManager);
     when(configurationFacet.readSection(configuration, CONFIG_KEY, Config.class)).thenReturn(config);
 
     when(repository.getName()).thenReturn(TEST_REPOSITORY_NAME);
+    when(repository.facet(ConfigurationFacet.class)).thenReturn(configurationFacet);
+    when(repository.getConfiguration()).thenReturn(configuration);
 
-    when(npmFormat.getValue()).thenReturn(NPM);
-    when(yumFormat.getValue()).thenReturn(YUM);
-    when(unknownFormat.getValue()).thenReturn("unknown");
+    when(repository.getFormat()).thenReturn(format);
 
-    usernameAuthentication.setUsername(USERNAME);
-    final Secret secret = mock(Secret.class);
-    when(secret.decrypt()).thenReturn(PASSWORD.toCharArray());
-    usernameAuthentication.setPassword(secret);
+    when(httpClientManager.create(any())).thenReturn(closeableHttpClient);
+    when(httpClientManager.newConfiguration()).thenReturn(httpClientConfiguration);
+  }
+
+  @AfterEach
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test
   public void createBasicAuthHeaderWithoutAuthConfiguredThrowsException() throws Exception {
-    Header basicAuth = underTest.createBasicAuthHeader();
+    Header basicAuth = createFacet(NPM).createBasicAuthHeader();
 
     assertThat(basicAuth, is(nullValue()));
   }
@@ -160,16 +147,22 @@ public class HttpClientFacetImplTest
   public void createBasicAuthHeaderWithoutUsernameAuthThrowsException() throws Exception {
     config.authentication = ntlmAuthentication;
 
-    Header basicAuth = underTest.createBasicAuthHeader();
+    Header basicAuth = createFacet(NPM).createBasicAuthHeader();
 
     assertThat(basicAuth, is(nullValue()));
   }
 
   @Test
   public void createBasicAuthWithUsernameAuthConfigWorks() throws Exception {
+    UsernameAuthenticationConfiguration usernameAuthentication = new UsernameAuthenticationConfiguration();
+    usernameAuthentication.setUsername(USERNAME);
+    final Secret secret = mock(Secret.class);
+    when(secret.decrypt()).thenReturn(PASSWORD.toCharArray());
+    usernameAuthentication.setPassword(secret);
+
     config.authentication = usernameAuthentication;
 
-    Header basicAuth = underTest.createBasicAuthHeader();
+    Header basicAuth = createFacet(NPM).createBasicAuthHeader();
 
     assertThat(basicAuth.getName(), is(equalTo(HttpHeaders.AUTHORIZATION)));
     assertThat(basicAuth.getValue(), is(equalTo(BASIC_AUTH_ENCODED)));
@@ -177,52 +170,68 @@ public class HttpClientFacetImplTest
 
   @Test
   public void passFormatSpecificConfigurationToBlockingHttpClient() throws Exception {
-    assertConfigurationPassedToBlockingClient(npmFormat, npmAutoBlockConfiguration);
+    assertConfigurationPassedToBlockingClient(NPM, npmAutoBlockConfiguration);
   }
 
   @Test
   public void passDefaultConfigurationWhenFormatNotFound() throws Exception {
-    assertConfigurationPassedToBlockingClient(unknownFormat, defaultAutoBlockConfiguration);
+    assertConfigurationPassedToBlockingClient("unknown", defaultAutoBlockConfiguration);
   }
 
   @Test
   public void passDisableCompression() throws Exception {
-    assertDisableCompressionPassedToCustomizer(yumFormat, true);
-    assertDisableCompressionPassedToCustomizer(yumFormat, false);
-    assertDisableCompressionPassedToCustomizer(npmFormat, false);
+    assertDisableCompressionPassedToCustomizer(YUM, true);
+    assertDisableCompressionPassedToCustomizer("unknown", false);
+    assertDisableCompressionPassedToCustomizer(NPM, false);
   }
 
-  private void assertConfigurationPassedToBlockingClient(final Format format,
-                                                         final AutoBlockConfiguration autoBlockConfiguration)
-      throws Exception
+  private void assertConfigurationPassedToBlockingClient(
+      final String format,
+      final AutoBlockConfiguration autoBlockConfiguration) throws Exception
   {
-    when(httpClientManager.create(any())).thenReturn(closeableHttpClient);
-    when(httpClientManager.newConfiguration()).thenReturn(httpClientConfiguration);
-    when(repository.facet(ConfigurationFacet.class)).thenReturn(configurationFacet);
-
-    when(repository.getConfiguration()).thenReturn(configuration);
-    when(repository.getFormat()).thenReturn(format);
-
+    HttpClientFacetImpl underTest = createFacet(format);
     underTest.doConfigure(configuration);
 
     assertThat(underTest.httpClient.autoBlockConfiguration, is(equalTo(autoBlockConfiguration)));
   }
 
-  private void assertDisableCompressionPassedToCustomizer(final Format format,
-                                                          final Boolean disableCompression)
-      throws Exception
+  private void assertDisableCompressionPassedToCustomizer(
+      final String format,
+      final Boolean disableCompression) throws Exception
   {
+    reset(httpClientConfiguration);
+
     this.disableCompression = disableCompression;
 
-    when(httpClientManager.create(any())).thenReturn(closeableHttpClient);
-    when(httpClientManager.newConfiguration()).thenReturn(httpClientConfiguration);
-    when(repository.facet(ConfigurationFacet.class)).thenReturn(configurationFacet);
+    createFacet(format);
 
-    when(repository.getConfiguration()).thenReturn(configuration);
-    when(repository.getFormat()).thenReturn(format);
+    if (disableCompression) {
+      verify(httpClientConfiguration).setDisableContentCompression(disableCompression);
+    }
+    else {
+      verify(httpClientConfiguration, never()).setDisableContentCompression(any());
+    }
+  }
 
-    underTest.doConfigure(configuration);
+  private HttpClientFacetImpl createFacet(final String formatName) throws Exception {
+    when(QualifierUtil.buildQualifierBeanMap(any())).thenReturn(
+        Map.of(DEFAULT, defaultAutoBlockConfiguration, NPM, npmAutoBlockConfiguration),
+        Map.of(),
+        Map.of(DOCKER, (NormalizationStrategy) () -> true),
+        Map.of(YUM, (ContentCompressionStrategy) (r) -> disableCompression),
+        Map.of());
 
-    verify(httpClientConfiguration).setDisableContentCompression(disableCompression);
+    when(format.getValue()).thenReturn(formatName);
+
+    HttpClientFacetImpl underTest =
+        new HttpClientFacetImpl(httpClientManager, List.of(defaultAutoBlockConfiguration, npmAutoBlockConfiguration),
+            List.of(), List.of(), List.of(), List.of(), config);
+    underTest.attach(repository);
+    underTest.installDependencies(eventManager);
+
+    underTest.init();
+    underTest.start();
+
+    return underTest;
   }
 }

@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.lifecycle;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -34,6 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * REST implementation to manage the Nexus application lifecycle. (also exposed as JMX)
@@ -41,7 +41,7 @@ import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
  * @since 3.16
  */
 @Path(ManagedLifecycleResource.RESOURCE_URI)
-@Named
+@Component
 @Singleton
 public class ManagedLifecycleResource
     extends ComponentSupport

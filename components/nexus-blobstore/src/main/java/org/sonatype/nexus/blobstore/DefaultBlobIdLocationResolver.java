@@ -15,10 +15,13 @@ package org.sonatype.nexus.blobstore;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.blobstore.api.BlobId;
 import org.sonatype.nexus.common.time.UTC;
+
+import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static java.util.UUID.randomUUID;
 import static org.sonatype.nexus.blobstore.api.BlobStore.BLOB_NAME_HEADER;
@@ -30,7 +33,9 @@ import static org.sonatype.nexus.blobstore.api.BlobStore.TEMPORARY_BLOB_HEADER;
  *
  * @since 3.8
  */
-@Named
+@Primary
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DefaultBlobIdLocationResolver
     implements BlobIdLocationResolver
 {

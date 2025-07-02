@@ -19,17 +19,17 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Set;
+
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.crypto.CryptoHelper;
 import org.sonatype.nexus.security.authc.AuthenticationFailureReason;
 import org.sonatype.nexus.security.authc.NexusAuthenticationException;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.authc.credential.DefaultPasswordService;
 import org.apache.shiro.authc.credential.HashingPasswordService;
 import org.apache.shiro.authc.credential.PasswordService;
@@ -38,7 +38,10 @@ import org.apache.shiro.crypto.hash.Hash;
 import org.bouncycastle.crypto.fips.FipsUnapprovedOperationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -53,7 +56,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * This class is just a wrapper around DefaultPasswordService to apply the default password policy,
  * and provide backward compatibility with legacy SHA1 and MD5 based passwords.
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @Singleton
 public class DefaultSecurityPasswordService
     implements HashingPasswordService
@@ -94,8 +99,8 @@ public class DefaultSecurityPasswordService
 
   @Inject
   public DefaultSecurityPasswordService(
-      @Named("legacy") final PasswordService legacyPasswordService,
-      @Named(FeatureFlags.NEXUS_SECURITY_PASSWORD_ALGORITHM_NAMED) @Value(FeatureFlags.NEXUS_SECURITY_PASSWORD_ALGORITHM_NAMED_VALUE) final String nexusPasswordAlgorithm,
+      @Qualifier("legacy") final PasswordService legacyPasswordService,
+      @Value(FeatureFlags.NEXUS_SECURITY_PASSWORD_ALGORITHM_NAMED_VALUE) final String nexusPasswordAlgorithm,
       final CryptoHelper crypto)
   {
     this.passwordService = new DefaultPasswordService();
@@ -157,6 +162,7 @@ public class DefaultSecurityPasswordService
   }
 
   @Override
+
   public boolean passwordsMatch(final Object submittedPlaintextPassword, final String storedHash) {
     if (storedHash == null || submittedPlaintextPassword == null) {
       return false;

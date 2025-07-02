@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.content.maven.internal.tasks;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.FormField;
@@ -23,9 +22,10 @@ import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
 import static org.sonatype.nexus.repository.RepositoryTaskSupport.REPOSITORY_NAME_FIELD_ID;
+import org.springframework.stereotype.Component;
 
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class RepairMaven2BaseVersionTaskDescriptor
     extends TaskDescriptorSupport
@@ -34,8 +34,7 @@ public class RepairMaven2BaseVersionTaskDescriptor
 
   public static final String TYPE_ID = "repository.maven.repair-base-version";
 
-  public RepairMaven2BaseVersionTaskDescriptor()
-  {
+  public RepairMaven2BaseVersionTaskDescriptor() {
     super(TYPE_ID,
         RepairMaven2BaseVersionTask.class,
         TASK_NAME,
@@ -45,9 +44,8 @@ public class RepairMaven2BaseVersionTaskDescriptor
             REPOSITORY_NAME_FIELD_ID,
             "Repository",
             "Select the repository to repair base version in",
-            FormField.MANDATORY
-        ).includingAnyOfFormats(Maven2Format.NAME).includingAnyOfTypes(HostedType.NAME)
-            .includeAnEntryForAllRepositories()
-    );
+            FormField.MANDATORY).includingAnyOfFormats(Maven2Format.NAME)
+                .includingAnyOfTypes(HostedType.NAME)
+                .includeAnEntryForAllRepositories());
   }
 }

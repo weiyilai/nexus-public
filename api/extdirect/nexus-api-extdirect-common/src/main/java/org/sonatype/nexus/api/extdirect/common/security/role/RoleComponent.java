@@ -14,9 +14,8 @@ package org.sonatype.nexus.api.extdirect.common.security.role;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -44,11 +43,12 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.security.user.UserManager.DEFAULT_SOURCE;
+import org.springframework.stereotype.Component;
 
 /**
  * Role {@link DirectComponent}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Role")
 public class RoleComponent

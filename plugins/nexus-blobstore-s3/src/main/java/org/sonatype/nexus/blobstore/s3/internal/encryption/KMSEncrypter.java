@@ -14,8 +14,6 @@ package org.sonatype.nexus.blobstore.s3.internal.encryption;
 
 import java.util.Optional;
 
-import javax.inject.Named;
-
 import com.amazonaws.services.s3.model.AbstractPutObjectRequest;
 import com.amazonaws.services.s3.model.CopyObjectRequest;
 import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
@@ -24,6 +22,10 @@ import com.google.common.annotations.VisibleForTesting;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Optional.empty;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Adds KMS encryption to S3 requests.
@@ -31,7 +33,9 @@ import static java.util.Optional.empty;
  *
  * @since 3.19
  */
-@Named(KMSEncrypter.ID)
+@Component
+@Qualifier(KMSEncrypter.ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class KMSEncrypter
     implements S3Encrypter
 {

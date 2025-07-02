@@ -37,20 +37,16 @@ public abstract class NexusEditionSupport
 
   private final int priority;
 
-  private final NexusEditionMarkerFile nexusEditionMarkerFile;
-
   public NexusEditionSupport(
       final String id,
       final String name,
       final String shortName,
-      final int priority,
-      final NexusEditionMarkerFile nexusEditionMarkerFile)
+      final int priority)
   {
     this.id = id;
     this.name = name;
     this.shortName = shortName;
     this.priority = priority;
-    this.nexusEditionMarkerFile = nexusEditionMarkerFile;
   }
 
   @Override
@@ -94,13 +90,5 @@ public abstract class NexusEditionSupport
     }
 
     return modules;
-  }
-
-  protected boolean markerFileExists() {
-    return nexusEditionMarkerFile.exists(this);
-  }
-
-  protected boolean writeMarkerFile() {
-    return nexusEditionMarkerFile.write(this);
   }
 }

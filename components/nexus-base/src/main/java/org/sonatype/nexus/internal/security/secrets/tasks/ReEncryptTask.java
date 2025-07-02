@@ -15,8 +15,7 @@ package org.sonatype.nexus.internal.security.secrets.tasks;
 import java.time.Duration;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.entity.Continuations;
 import org.sonatype.nexus.crypto.secrets.SecretData;
@@ -32,9 +31,15 @@ import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
-@Named(ReEncryptTaskDescriptor.TYPE_ID)
+@Component
+@Qualifier(ReEncryptTaskDescriptor.TYPE_ID)
 @TaskLogging(TaskLogType.TASK_LOG_ONLY)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ReEncryptTask
     extends TaskSupport
     implements Cancelable
@@ -49,7 +54,7 @@ public class ReEncryptTask
   public ReEncryptTask(
       final SecretsService secretsService,
       final SecretsStore secretsStore,
-      @Named("${nexus.distributed.events.fetch.interval.seconds:-5}") @Value("${nexus.distributed.events.fetch.interval.seconds:5}") final int pollInterval)
+      @Value("${nexus.distributed.events.fetch.interval.seconds:5}") final int pollInterval)
   {
     this.secretsService = checkNotNull(secretsService);
     this.secretsStore = checkNotNull(secretsStore);

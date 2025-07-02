@@ -13,14 +13,20 @@
 package org.sonatype.nexus.repository.maven.internal;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.template.TemplateHelper;
 import org.sonatype.nexus.common.template.TemplateParameters;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.8
  */
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenPomGenerator
 {
   private final TemplateHelper templateHelper;
@@ -30,10 +36,11 @@ public class MavenPomGenerator
     this.templateHelper = templateHelper;
   }
 
-  public String generatePom(final String groupId,
-                            final String artifactId,
-                            final String version,
-                            @Nullable final String packaging)
+  public String generatePom(
+      final String groupId,
+      final String artifactId,
+      final String version,
+      @Nullable final String packaging)
   {
     TemplateParameters params = templateHelper.parameters();
     params.set("groupId", groupId);

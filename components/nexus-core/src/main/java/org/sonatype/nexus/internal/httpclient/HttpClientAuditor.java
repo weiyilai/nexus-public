@@ -15,8 +15,7 @@ package org.sonatype.nexus.internal.httpclient;
 import java.util.Arrays;
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -32,13 +31,14 @@ import org.sonatype.nexus.httpclient.config.UsernameAuthenticationConfiguration;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * HttpClient auditor.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class HttpClientAuditor
     extends AuditorSupport
@@ -101,12 +101,12 @@ public class HttpClientAuditor
     if (auth != null) {
       attributes.put(key(prefix, "authentication.type"), auth.getType());
       if (auth instanceof UsernameAuthenticationConfiguration) {
-        UsernameAuthenticationConfiguration username = (UsernameAuthenticationConfiguration)auth;
+        UsernameAuthenticationConfiguration username = (UsernameAuthenticationConfiguration) auth;
         attributes.put(key(prefix, "authentication.username"), username.getUsername());
         // omit password
       }
       else if (auth instanceof NtlmAuthenticationConfiguration) {
-        NtlmAuthenticationConfiguration nrlm = (NtlmAuthenticationConfiguration)auth;
+        NtlmAuthenticationConfiguration nrlm = (NtlmAuthenticationConfiguration) auth;
         attributes.put(key(prefix, "authentication.username"), nrlm.getUsername());
         attributes.put(key(prefix, "authentication.host"), nrlm.getHost());
         attributes.put(key(prefix, "authentication.domain"), nrlm.getDomain());

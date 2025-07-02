@@ -166,7 +166,7 @@ Ext.define('NX.app.Application', {
       return NX.State.getValue('debug') === true;
     },
     bundleActive: function (symbolicName) {
-      return NX.State.getValue('activeBundles').indexOf(symbolicName) > -1;
+      return NX.State.getValue('activeBundles').findIndex(function (item) { return item.includes(symbolicName) }) > -1;
     },
     capabilityActive: function (typeName) {
       return Ext.Array.contains(NX.State.getValue('capabilityActiveTypes'), typeName);

@@ -16,9 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.datastore.api.DataStoreManager;
@@ -37,11 +36,12 @@ import com.softwarementors.extjs.djn.config.annotations.DirectMethod;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.sonatype.nexus.security.BreadActions.READ;
+import org.springframework.stereotype.Component;
 
 /**
  * DataStore {@link org.sonatype.nexus.extdirect.DirectComponent}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Datastore")
 public class DataStoreComponent

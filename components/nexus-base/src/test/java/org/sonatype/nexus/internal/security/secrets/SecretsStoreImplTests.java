@@ -18,13 +18,9 @@ import java.util.Optional;
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.crypto.secrets.SecretData;
-import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.testdb.DataSessionRule;
-import org.sonatype.nexus.transaction.TransactionModule;
 
-import com.google.inject.Guice;
-import com.google.inject.Provides;
 import org.assertj.db.type.Table;
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,18 +60,8 @@ public class SecretsStoreImplTests
 
   @Before
   public void setUp() {
-    underTest = Guice.createInjector(new TransactionModule()
-    {
-      @Provides
-      DataSessionSupplier getDataSessionSupplier() {
-        return sessionRule;
-      }
-
-      @Provides
-      EventManager getEventManager() {
-        return eventManager;
-      }
-    }).getInstance(SecretsStoreImpl.class);
+    underTest = new SecretsStoreImpl(sessionRule);
+    underTest.setDependencies(eventManager);
   }
 
   @Test

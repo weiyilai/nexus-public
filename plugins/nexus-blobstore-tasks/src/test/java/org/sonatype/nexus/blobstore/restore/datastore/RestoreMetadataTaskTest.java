@@ -33,6 +33,7 @@ import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.blobstore.api.BlobStoreUsageChecker;
 import org.sonatype.nexus.blobstore.file.FileBlobAttributes;
 import org.sonatype.nexus.blobstore.restore.RestoreBlobStrategy;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.log.DryRunPrefix;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
@@ -44,12 +45,13 @@ import org.sonatype.nexus.repository.types.GroupType;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskUtils;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -130,16 +132,27 @@ public class RestoreMetadataTaskTest
 
   TaskConfiguration configuration;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
+  List<RestoreBlobStrategy> restoreBlobStrategies;
+
+  List<IntegrityCheckStrategy> integrityCheckStrategyList;
+
   @Before
   public void setup() throws Exception {
+    mockedStatic = mockStatic(QualifierUtil.class);
     integrityCheckStrategies = spy(new HashMap<>());
     integrityCheckStrategies.put(MAVEN_2, testIntegrityCheckStrategy);
     integrityCheckStrategies.put(DEFAULT_NAME, defaultIntegrityCheckStrategy);
-
+    restoreBlobStrategies = List.of(restoreBlobStrategy);
+    when(QualifierUtil.buildQualifierBeanMap(restoreBlobStrategies)).thenReturn(Map.of(MAVEN_2, restoreBlobStrategy));
+    integrityCheckStrategyList = List.of(testIntegrityCheckStrategy, defaultIntegrityCheckStrategy);
+    when(QualifierUtil.buildQualifierBeanMap(integrityCheckStrategyList)).thenReturn(integrityCheckStrategies);
     underTest =
         new RestoreMetadataTask(blobStoreManager, changeBlobstoreStore, repositoryManager,
-            ImmutableMap.of(MAVEN_2, restoreBlobStrategy),
-            blobstoreUsageChecker, dryRunPrefix, integrityCheckStrategies, maintenanceService, assetBlobRefFormatCheck,
+            restoreBlobStrategies,
+            blobstoreUsageChecker, dryRunPrefix, integrityCheckStrategyList, maintenanceService,
+            assetBlobRefFormatCheck,
             taskUtils);
 
     reset(integrityCheckStrategies); // reset this mock so we more easily verify calls
@@ -170,12 +183,18 @@ public class RestoreMetadataTaskTest
     when(dryRunPrefix.get()).thenReturn("");
   }
 
+  @After
+  public void tearDown() {
+    mockedStatic.close();
+  }
+
   @Test
   public void checkForConflictsThrowsExceptionIfConflictingTaskIsRunning() {
     underTest.configure(configuration);
 
     doThrow(new IllegalStateException("conflicting task"))
-        .when(taskUtils).checkForConflictingTasks(anyString(), anyString(), any(List.class), any(Map.class));
+        .when(taskUtils)
+        .checkForConflictingTasks(anyString(), anyString(), any(List.class), any(Map.class));
     when(changeBlobstoreStore.findByBlobStoreName(anyString())).thenReturn(Collections.emptyList());
 
     IllegalStateException exception = assertThrows(IllegalStateException.class, underTest::checkForConflicts);
@@ -186,17 +205,20 @@ public class RestoreMetadataTaskTest
 
   @Test
   public void checkForConflictsThrowsExceptionIfMoveTaskIsUnfinished() {
-    ChangeRepositoryBlobStoreConfiguration record = getRecord("test" , BLOBSTORE_NAME, "target-blobstore");
+    ChangeRepositoryBlobStoreConfiguration record = getRecord("test", BLOBSTORE_NAME, "target-blobstore");
 
     underTest.configure(configuration);
 
     doNothing()
-        .when(taskUtils).checkForConflictingTasks(anyString(), anyString(), any(List.class), any(Map.class));
+        .when(taskUtils)
+        .checkForConflictingTasks(anyString(), anyString(), any(List.class), any(Map.class));
     when(changeBlobstoreStore.findByBlobStoreName(anyString())).thenReturn(Collections.singletonList(record));
 
     IllegalStateException exception = assertThrows(IllegalStateException.class, underTest::checkForConflicts);
 
-    assertEquals(String.format("found unfinished move task using blobstore '%s', task can't be executed", BLOBSTORE_NAME), exception.getMessage());
+    assertEquals(
+        String.format("found unfinished move task using blobstore '%s', task can't be executed", BLOBSTORE_NAME),
+        exception.getMessage());
     verify(taskUtils, times(1)).checkForConflictingTasks(anyString(), anyString(), any(List.class), any(Map.class));
     verify(changeBlobstoreStore, times(1)).findByBlobStoreName(eq(BLOBSTORE_NAME));
   }
@@ -213,7 +235,11 @@ public class RestoreMetadataTaskTest
     verify(taskUtils, times(1)).checkForConflictingTasks(anyString(), anyString(), any(List.class), any(Map.class));
   }
 
-  private ChangeRepositoryBlobStoreConfiguration getRecord(final String name , final String sourceBlobStoreName , final String targetBlobStoreName) {
+  private ChangeRepositoryBlobStoreConfiguration getRecord(
+      final String name,
+      final String sourceBlobStoreName,
+      final String targetBlobStoreName)
+  {
     return new ChangeRepositoryBlobStoreConfiguration()
     {
       @Override
@@ -501,8 +527,9 @@ public class RestoreMetadataTaskTest
 
     RestoreMetadataTask underTest =
         new RestoreMetadataTask(blobStoreManager, changeBlobstoreStore, repositoryManager,
-            ImmutableMap.of(MAVEN_2, restoreBlobStrategy),
-            blobstoreUsageChecker, dryRunPrefix, integrityCheckStrategies, maintenanceService, assetBlobRefFormatCheck,
+            restoreBlobStrategies,
+            blobstoreUsageChecker, dryRunPrefix, integrityCheckStrategyList, maintenanceService,
+            assetBlobRefFormatCheck,
             taskUtils)
         {
           @Override

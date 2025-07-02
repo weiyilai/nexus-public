@@ -16,15 +16,18 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Objects;
 import java.util.Optional;
-import javax.inject.Named;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Migration step to create an index for idx_soft_deleted_blobs_by_source_blob_store_name_record_id
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SoftDeletedBlobsByBlobStoreIndexMigrationStep_2_7
     extends ComponentSupport
     implements DatabaseMigrationStep
@@ -48,7 +51,7 @@ public class SoftDeletedBlobsByBlobStoreIndexMigrationStep_2_7
     long startTime = System.currentTimeMillis();
     log.info("Creating index idx_soft_deleted_blobs_by_source_blob_store_name_record_id");
 
-    try(Statement statement = connection.createStatement()) {
+    try (Statement statement = connection.createStatement()) {
       statement.execute(ADD_INDEX_STATEMENT);
     }
 

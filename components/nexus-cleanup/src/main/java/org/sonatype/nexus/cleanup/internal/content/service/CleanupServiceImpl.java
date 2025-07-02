@@ -23,9 +23,8 @@ import java.util.function.BooleanSupplier;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.cleanup.content.search.CleanupBrowseServiceFactory;
@@ -48,11 +47,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.nonNull;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.RETAIN_KEY;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.RETAIN_SORT_BY_KEY;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 public class CleanupServiceImpl
     extends ComponentSupport
@@ -86,7 +86,7 @@ public class CleanupServiceImpl
       final CleanupPolicyStorage cleanupPolicyStorage,
       final CleanupMethod cleanupMethod,
       final GroupType groupType,
-      @Named("${nexus.cleanup.retries:-3}") @Value("${nexus.cleanup.retries:3}") final int cleanupRetryLimit,
+      @Value("${nexus.cleanup.retries:3}") final int cleanupRetryLimit,
       final CleanupBrowseServiceFactory browseServiceFactory,
       @Nullable final CleanupFeatureCheck cleanupFeatureCheck)
   {

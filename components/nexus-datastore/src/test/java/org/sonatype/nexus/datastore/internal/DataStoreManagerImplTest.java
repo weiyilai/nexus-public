@@ -12,16 +12,15 @@
  */
 package org.sonatype.nexus.datastore.internal;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import org.eclipse.sisu.inject.BeanLocator;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InOrder;
-import org.mockito.Mock;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.datastore.DataStoreConfigurationManager;
 import org.sonatype.nexus.datastore.DataStoreDescriptor;
@@ -31,13 +30,18 @@ import org.sonatype.nexus.datastore.DataStoreUsageChecker;
 import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.datastore.api.DataStoreConfiguration;
 
-import java.io.IOException;
-import java.util.Optional;
-import javax.inject.Provider;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InOrder;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.springframework.context.ApplicationContext;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class DataStoreManagerImplTest
@@ -48,9 +52,6 @@ public class DataStoreManagerImplTest
 
   @Mock
   private DataStoreDescriptor descriptorJdbc;
-
-  @Mock
-  private Provider<DataStore<?>> prototypeTest;
 
   @Mock
   private Provider<DataStore<?>> prototypeJdbc;
@@ -65,42 +66,44 @@ public class DataStoreManagerImplTest
   private DataStoreRestorer restorer;
 
   @Mock
-  private BeanLocator beanLocator;
+  private EventManager eventManager;
 
   @Mock
-  private EventManager eventManager;
+  private ApplicationContext applicationContext;
+
+  private MockedStatic<QualifierUtil> mockedStatic;
 
   private DataStoreManagerImpl underTest;
 
   @Before
   public void setup() throws Exception {
+    mockedStatic = mockStatic(QualifierUtil.class);
+    List<DataStoreDescriptor> descriptorList = mock(List.class);
+    when(QualifierUtil.buildQualifierBeanMap(descriptorList))
+        .thenReturn(Map.of("jdbc", descriptorJdbc));
+
     when(descriptorTest.isEnabled()).thenReturn(true);
     when(descriptorJdbc.isEnabled()).thenReturn(true);
 
-    when(prototypeTest.get()).thenAnswer(invocation -> mockDataStore());
     when(prototypeJdbc.get()).thenAnswer(invocation -> mockDataStore());
 
-    when(configurationManager.load()).thenReturn(ImmutableList.of());
+    when(configurationManager.load()).thenReturn(List.of());
 
-    underTest = new DataStoreManagerImpl(
-        eventManager,
-        ImmutableMap.of("test", descriptorTest, "jdbc", descriptorJdbc),
-        ImmutableMap.of("test", prototypeTest, "jdbc", prototypeJdbc),
-        configurationManager,
-        () -> dataStoreUsageChecker,
-        restorer,
-        beanLocator);
+    underTest = new DataStoreManagerImpl(eventManager, descriptorList, prototypeJdbc, configurationManager,
+        () -> dataStoreUsageChecker, restorer);
     underTest.start();
+    underTest.setApplicationContext(applicationContext);
   }
 
   @After
   public void tearDown() throws Exception {
+    mockedStatic.close();
     underTest.stop();
   }
 
   @Test
   public void dataStoreNotCreatedForInvalidConfiguration() {
-    doThrow(IllegalArgumentException.class).when(descriptorTest).validate(any());
+    doThrow(IllegalArgumentException.class).when(descriptorJdbc).validate(any());
     DataStoreConfiguration config = newDataStoreConfiguration("testStore");
     assertThrows(IllegalArgumentException.class, () -> underTest.create(config));
     verify(configurationManager, never()).save(any());
@@ -167,7 +170,7 @@ public class DataStoreManagerImplTest
     DataStoreConfiguration testConfig = newDataStoreConfiguration("test");
     DataStoreConfiguration exampleConfig = newDataStoreConfiguration("example");
 
-    when(configurationManager.load()).thenReturn(ImmutableList.of(testConfig, exampleConfig));
+    when(configurationManager.load()).thenReturn(List.of(testConfig, exampleConfig));
 
     underTest.start();
     testStore = underTest.get("test");
@@ -184,7 +187,7 @@ public class DataStoreManagerImplTest
     verify(configurationManager, never()).delete(exampleConfig);
     verify(exampleStore.get()).shutdown();
 
-    when(configurationManager.load()).thenReturn(ImmutableList.of(exampleConfig));
+    when(configurationManager.load()).thenReturn(List.of(exampleConfig));
 
     underTest.start();
     testStore = underTest.get("test");
@@ -198,7 +201,7 @@ public class DataStoreManagerImplTest
     verify(configurationManager, never()).delete(exampleConfig);
     verify(exampleStore.get()).shutdown();
 
-    when(configurationManager.load()).thenReturn(ImmutableList.of());
+    when(configurationManager.load()).thenReturn(List.of());
 
     underTest.start();
     testStore = underTest.get("test");
@@ -207,14 +210,17 @@ public class DataStoreManagerImplTest
 
     assertThat(testStore.isPresent(), is(false));
     assertThat(exampleStore.isPresent(), is(false));
+
+    // leave the manager in a started state so that it can be reused in other tests
+    underTest.start();
   }
 
   @Test
   public void testUpdatingConfigurationRestartsDataStore() throws Exception {
     DataStoreConfiguration firstConfig = newDataStoreConfiguration("test");
-    firstConfig.setAttributes(ImmutableMap.of("version", "first"));
+    firstConfig.setAttributes(Map.of("version", "first"));
     DataStoreConfiguration secondConfig = newDataStoreConfiguration("test");
-    secondConfig.setAttributes(ImmutableMap.of("version", "second"));
+    secondConfig.setAttributes(Map.of("version", "second"));
 
     DataStore<?> store = underTest.create(firstConfig);
 
@@ -238,11 +244,11 @@ public class DataStoreManagerImplTest
   @Test
   public void testInvalidConfigurationUpdateIsNotUsed() throws Exception {
     DataStoreConfiguration goodConfig = newDataStoreConfiguration("test");
-    goodConfig.setAttributes(ImmutableMap.of("version", "first"));
+    goodConfig.setAttributes(Map.of("version", "first"));
     DataStoreConfiguration invalidConfig = newDataStoreConfiguration("test");
-    invalidConfig.setAttributes(ImmutableMap.of("version", "invalid"));
+    invalidConfig.setAttributes(Map.of("version", "invalid"));
 
-    doThrow(IllegalArgumentException.class).when(descriptorTest).validate(invalidConfig);
+    doThrow(IllegalArgumentException.class).when(descriptorJdbc).validate(invalidConfig);
 
     DataStore<?> store = underTest.create(goodConfig);
 
@@ -261,9 +267,9 @@ public class DataStoreManagerImplTest
   @Test
   public void testValidButProblematicConfigurationUpdateIsReverted() throws Exception {
     DataStoreConfiguration goodConfig = newDataStoreConfiguration("test");
-    goodConfig.setAttributes(ImmutableMap.of("version", "first"));
+    goodConfig.setAttributes(Map.of("version", "first"));
     DataStoreConfiguration badConfig = newDataStoreConfiguration("test");
-    badConfig.setAttributes(ImmutableMap.of("version", "bad"));
+    badConfig.setAttributes(Map.of("version", "bad"));
 
     DataStore<?> store = underTest.create(goodConfig);
 
@@ -290,19 +296,19 @@ public class DataStoreManagerImplTest
     expected.verifyNoMoreInteractions();
   }
 
-  private DataStoreSupport<?> mockDataStore() {
+  private static DataStoreSupport<?> mockDataStore() {
     DataStoreSupport<?> dataStoreSupport = mock(DataStoreSupport.class);
     when(dataStoreSupport.getConfiguration()).thenAnswer(CALLS_REAL_METHODS);
     doAnswer(CALLS_REAL_METHODS).when(dataStoreSupport).setConfiguration(any());
     return dataStoreSupport;
   }
 
-  private DataStoreConfiguration newDataStoreConfiguration(final String name) {
+  private static DataStoreConfiguration newDataStoreConfiguration(final String name) {
     DataStoreConfiguration config = new DataStoreConfiguration();
     config.setName(name);
-    config.setType("test");
+    config.setType("jdbc");
     config.setSource("local");
-    config.setAttributes(ImmutableMap.of());
+    config.setAttributes(Map.of());
     return config;
   }
 }

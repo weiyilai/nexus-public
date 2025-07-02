@@ -16,9 +16,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.common.entity.EntityUUID;
@@ -42,13 +41,16 @@ import com.google.common.collect.ImmutableList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.UUID.fromString;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * MyBatis {@link RoutingRuleStore} implementation.
  *
  * @since 3.21
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 public class RoutingRuleStoreImpl
     extends ConfigStoreSupport<RoutingRuleDAO>

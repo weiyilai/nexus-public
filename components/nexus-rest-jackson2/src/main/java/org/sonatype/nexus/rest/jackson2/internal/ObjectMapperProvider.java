@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.rest.jackson2.internal;
 
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 
@@ -23,17 +22,21 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Jackson {@link ObjectMapper} provider for use with Siesta.
  *
  * @since 3.0
  */
-@Named("siesta")
+@Component
+@Qualifier("siesta")
 @Singleton
 public class ObjectMapperProvider
     extends ComponentSupport
-    implements Provider<ObjectMapper>
+    implements Provider<ObjectMapper>, FactoryBean<ObjectMapper>
 {
   private final ObjectMapper mapper;
 
@@ -43,11 +46,21 @@ public class ObjectMapperProvider
         .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    mapper.registerModule(new JavaTimeModule());
   }
 
   @Override
   public ObjectMapper get() {
-    mapper.registerModule(new JavaTimeModule());
     return mapper;
+  }
+
+  @Override
+  public ObjectMapper getObject() throws Exception {
+    return mapper;
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return ObjectMapper.class;
   }
 }

@@ -109,7 +109,7 @@ describe('SettingsSidebar', () => {
           givenPermissions({ 'nexus:*': true });
           givenActiveBundles({
             ...getDefaultActiveBundleState(),
-            'com.sonatype.nexus.plugins.nexus-pro-datastore-plugin': true,
+            'nexus-pro-datastore-plugin': true,
           });
           renderComponent();
           await assertLinkVisible('Data Store', '/#admin/repository/datastore', 'Repository');
@@ -119,7 +119,7 @@ describe('SettingsSidebar', () => {
           givenUserLoggedIn();
           givenActiveBundles({
             ...getDefaultActiveBundleState(),
-            'com.sonatype.nexus.plugins.nexus-pro-datastore-plugin': true,
+            'nexus-pro-datastore-plugin': true,
           });
           renderComponent();
           await assertLinkNotVisible('Data Store', 'Repository');
@@ -374,7 +374,7 @@ describe('SettingsSidebar', () => {
         it('should render if user has permission, valid bundle and valid license', async () => {
           givenUserLoggedIn();
           givenPermissions({ 'nexus:crowd:read': true });
-          givenActiveBundles({ 'com.sonatype.nexus.plugins.nexus-crowd-plugin': true });
+          givenActiveBundles({ 'nexus-crowd-plugin': true });
           givenStateValues({
             ...getDefaultStateValues(),
             crowd: { licenseValid: true },
@@ -389,7 +389,7 @@ describe('SettingsSidebar', () => {
             ...getDefaultStateValues(),
             crowd: { licenseValid: true },
           });
-          givenActiveBundles({ 'com.sonatype.nexus.plugins.nexus-crowd-plugin': true });
+          givenActiveBundles({ 'nexus-crowd-plugin': true });
           renderComponent();
           await assertLinkNotVisible('Atlassian Crowd', 'Security');
         });
@@ -409,7 +409,7 @@ describe('SettingsSidebar', () => {
         it('should not render if user has no valid license', async () => {
           givenUserLoggedIn();
           givenPermissions({ 'nexus:crowd:read': true });
-          givenActiveBundles({ 'com.sonatype.nexus.plugins.nexus-crowd-plugin': true });
+          givenActiveBundles({ 'nexus-crowd-plugin': true });
           givenStateValues({ ...getDefaultStateValues(), crowd: { licenseValue: true} })
           renderComponent();
           await assertLinkNotVisible('Atlassian Crowd', 'Security');
@@ -423,7 +423,7 @@ describe('SettingsSidebar', () => {
           givenProEdition();
           givenActiveBundles({
             ...getDefaultActiveBundleState(),
-            'com.sonatype.nexus.plugins.nexus-saml-plugin': true,
+            'nexus-saml-plugin': true,
           });
           renderComponent();
           await assertLinkVisible('SAML', '/#admin/security/saml', 'Security');
@@ -434,7 +434,7 @@ describe('SettingsSidebar', () => {
           givenProEdition();
           givenActiveBundles({
             ...getDefaultActiveBundleState(),
-            'com.sonatype.nexus.plugins.nexus-saml-plugin': true,
+            'nexus-saml-plugin': true,
           });
           renderComponent();
           await assertLinkNotVisible('SAML', 'Security');
@@ -454,7 +454,7 @@ describe('SettingsSidebar', () => {
           givenPermissions({ 'nexus:*': true });
           givenActiveBundles({
             ...getDefaultActiveBundleState(),
-            'com.sonatype.nexus.plugins.nexus-saml-plugin': true,
+            'nexus-saml-plugin': true,
           });
           givenCommunityEdition();
           renderComponent();

@@ -12,22 +12,25 @@
  */
 package org.sonatype.nexus.script.plugin.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.script.ScriptManager;
 
 import com.codahale.metrics.health.HealthCheck;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Gives an unhealthy response if scripting is enabled in the instance.
  * 
  * @since 3.31
  */
-@Named("Scripting")
+@Component
+@Qualifier("Scripting")
 @Singleton
-public class ScriptPluginHealthCheck extends HealthCheck
+public class ScriptPluginHealthCheck
+    extends HealthCheck
 {
   public static final String SCRIPTING_DISABLED_MESSAGE = "Scripting is disabled.";
 
@@ -45,6 +48,8 @@ public class ScriptPluginHealthCheck extends HealthCheck
 
   @Override
   protected Result check() {
-    return scriptManager.isEnabled() ? Result.unhealthy(SCRIPTING_ENABLED_ERROR) : Result.healthy(SCRIPTING_DISABLED_MESSAGE);
+    return scriptManager.isEnabled()
+        ? Result.unhealthy(SCRIPTING_ENABLED_ERROR)
+        : Result.healthy(SCRIPTING_DISABLED_MESSAGE);
   }
 }

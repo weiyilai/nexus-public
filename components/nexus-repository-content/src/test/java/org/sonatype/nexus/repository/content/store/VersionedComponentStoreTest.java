@@ -12,24 +12,26 @@
  */
 package org.sonatype.nexus.repository.content.store;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class VersionedComponentStoreTest
+class VersionedComponentStoreTest
     extends ComponentStoreTestSupport
 {
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     initialiseStores(true);
   }
 
+  @Override
   @Test
-  public void testPurge_byComponentIds() {
+  protected void testPurge_byComponentIds() {
     super.testPurge_byComponentIds();
   }
 
+  @Override
   @Test
-  public void testPurge_byComponent() {
+  protected void testPurge_byComponent() {
     super.testPurge_byComponent();
   }
 }

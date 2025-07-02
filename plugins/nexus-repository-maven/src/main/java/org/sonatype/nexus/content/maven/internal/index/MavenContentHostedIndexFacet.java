@@ -14,8 +14,7 @@ package org.sonatype.nexus.content.maven.internal.index;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.maven.MavenIndexFacet;
 import org.sonatype.nexus.repository.maven.internal.MavenIndexPublisher;
@@ -26,13 +25,17 @@ import org.sonatype.nexus.repository.maven.internal.hosted.MavenHostedIndexFacet
 import org.apache.maven.index.reader.Record;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Hosted implementation of {@link MavenIndexFacet}.
  *
  * @since 3.26
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenContentHostedIndexFacet
     extends MavenContentIndexFacetSupport
     implements MavenHostedIndexFacet
@@ -50,7 +53,7 @@ public class MavenContentHostedIndexFacet
 
   @Override
   public void publishIndex() throws IOException {
-    try (DuplicateDetectionStrategy<Record> strategy = duplicateDetectionStrategyProvider.get()) {
+    try (DuplicateDetectionStrategy<Record> strategy = duplicateDetectionStrategyProvider.getObject()) {
       mavenIndexPublisher.publishHostedIndex(getRepository(), strategy);
     }
   }

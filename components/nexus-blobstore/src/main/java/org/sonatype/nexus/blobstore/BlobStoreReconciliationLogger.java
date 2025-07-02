@@ -28,8 +28,8 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobId;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
@@ -40,6 +40,7 @@ import org.slf4j.MDC;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.blobstore.DefaultBlobIdLocationResolver.TEMPORARY_BLOB_ID_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * Helper class for storing and retrieving reconciliation log for newly created blob store. Configuration is stored in
@@ -47,6 +48,7 @@ import static org.sonatype.nexus.blobstore.DefaultBlobIdLocationResolver.TEMPORA
  * that sets the context properties, so each blob store has its own reconciliation log file. Reconciliation logs are
  * stored at &lt;blobstore root&gt;/reconciliation/%date.log
  */
+@Component
 @Singleton
 public class BlobStoreReconciliationLogger
 {

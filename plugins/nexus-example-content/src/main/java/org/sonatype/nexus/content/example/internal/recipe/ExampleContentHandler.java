@@ -14,8 +14,7 @@ package org.sonatype.nexus.content.example.internal.recipe;
 
 import java.util.Optional;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.content.example.ExampleContentFacet;
@@ -33,13 +32,14 @@ import static org.sonatype.nexus.repository.http.HttpMethods.DELETE;
 import static org.sonatype.nexus.repository.http.HttpMethods.GET;
 import static org.sonatype.nexus.repository.http.HttpMethods.HEAD;
 import static org.sonatype.nexus.repository.http.HttpMethods.PUT;
+import org.springframework.stereotype.Component;
 
 /**
  * Example format content handler.
  *
  * @since 3.24
  */
-@Named
+@Component
 @Singleton
 public class ExampleContentHandler
     extends ComponentSupport

@@ -13,10 +13,9 @@
 package org.sonatype.nexus.content.raw.internal.recipe;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.repository.Format;
@@ -33,6 +32,8 @@ import org.sonatype.nexus.repository.view.Router;
 import org.sonatype.nexus.repository.view.ViewFacet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Raw group repository recipe.
@@ -40,7 +41,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 3.24
  */
 @AvailabilityVersion(from = "1.0")
-@Named(RawGroupRecipe.NAME)
+@Component
+@Qualifier(RawGroupRecipe.NAME)
 @Singleton
 public class RawGroupRecipe
     extends RawRecipeSupport
@@ -53,10 +55,10 @@ public class RawGroupRecipe
 
   @Inject
   public RawGroupRecipe(
-      @Named(GroupType.NAME) final Type type,
-      @Named(RawFormat.NAME) final Format format,
-      @Named("default") final Provider<GroupFacet> groupFacet,
-      @Named("default") final GroupHandler groupHandler)
+      @Qualifier(GroupType.NAME) final Type type,
+      @Qualifier(RawFormat.NAME) final Format format,
+      @Qualifier("default") final Provider<GroupFacet> groupFacet,
+      @Qualifier("default") final GroupHandler groupHandler)
   {
     super(type, format);
     this.groupFacet = checkNotNull(groupFacet);

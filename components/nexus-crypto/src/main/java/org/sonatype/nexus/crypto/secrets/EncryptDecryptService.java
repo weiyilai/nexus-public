@@ -13,9 +13,8 @@
 package org.sonatype.nexus.crypto.secrets;
 
 import java.util.Base64;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.internal.PbeCipherFactory;
@@ -24,10 +23,12 @@ import org.sonatype.nexus.crypto.secrets.internal.EncryptionKeyList.SecretEncryp
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
-public class EncryptDecryptService extends ComponentSupport
+public class EncryptDecryptService
+    extends ComponentSupport
     implements EncryptDecrypt<String, String, String>
 {
   private PbeCipher pbeCipher;
@@ -53,8 +54,7 @@ public class EncryptDecryptService extends ComponentSupport
   }
 
   @Override
-  public String encrypt(String stringToEncrypt)
-  {
+  public String encrypt(String stringToEncrypt) {
     return pbeCipher.encrypt(stringToEncrypt.getBytes(UTF_8)).toPhcString();
   }
 

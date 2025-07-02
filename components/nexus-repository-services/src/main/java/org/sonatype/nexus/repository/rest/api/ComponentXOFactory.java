@@ -14,11 +14,11 @@ package org.sonatype.nexus.repository.rest.api;
 
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Factory for creating {@link ComponentXO} instances.
@@ -26,7 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 3.8
  */
 @Singleton
-@Named
+@Component
 public class ComponentXOFactory
 {
   private final Set<ComponentXODecorator> componentXODecorators;

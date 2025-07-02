@@ -12,21 +12,21 @@
  */
 package org.sonatype.nexus.capability.condition.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.capability.Condition;
 import org.sonatype.nexus.capability.condition.NexusConditions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Default implementation of {@link NexusConditions}.
  *
  * @since capabilities 2.0
  */
-@Named
+@Component
 @Singleton
 public class NexusConditionsImpl
     implements NexusConditions

@@ -19,16 +19,20 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.lang.annotation.Annotation;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
+import javax.servlet.annotation.WebInitParam;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
@@ -40,12 +44,9 @@ import org.sonatype.nexus.extdirect.DirectComponent;
 import org.sonatype.nexus.security.authc.AntiCsrfHelper;
 import org.sonatype.nexus.servlet.XFrameOptions;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Maps.EntryTransformer;
-import com.google.inject.Key;
 import com.softwarementors.extjs.djn.EncodingUtils;
 import com.softwarementors.extjs.djn.api.Registry;
 import com.softwarementors.extjs.djn.config.ApiConfiguration;
@@ -56,17 +57,20 @@ import com.softwarementors.extjs.djn.router.processor.poll.PollRequestProcessor;
 import com.softwarementors.extjs.djn.router.processor.standard.form.FormPostRequestData;
 import com.softwarementors.extjs.djn.router.processor.standard.form.upload.FileUploadException;
 import com.softwarementors.extjs.djn.servlet.DirectJNgineServlet;
+import com.softwarementors.extjs.djn.servlet.DirectJNgineServlet.GlobalParameters;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.inject.BeanLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.net.HttpHeaders.X_FRAME_OPTIONS;
@@ -81,18 +85,32 @@ import static org.sonatype.nexus.servlet.XFrameOptions.DENY;
  *
  * @since 3.0
  */
-@Named
+@WebServlet(urlPatterns = ExtDirectServlet.PREFIXED_MOUNT_POINT,
+    initParams = {@WebInitParam(name = GlobalParameters.PROVIDERS_URL, value = ExtDirectServlet.MOUNT_POINT),
+        @WebInitParam(name = "minify", value = "false"),
+        @WebInitParam(name = GlobalParameters.DEBUG, value = "false"),
+        @WebInitParam(name = GlobalParameters.JSON_REQUEST_PROCESSOR_THREAD_CLASS,
+            value = "org.sonatype.nexus.extdirect.internal.ExtDirectJsonRequestProcessorThread"),
+        @WebInitParam(name = GlobalParameters.GSON_BUILDER_CONFIGURATOR_CLASS,
+            value = "org.sonatype.nexus.extdirect.internal.ExtDirectGsonBuilderConfigurator"),})
+@Component
 @ManagedLifecycle(phase = SERVICES)
 @Singleton
 public class ExtDirectServlet
     extends DirectJNgineServlet
-    implements Lifecycle
+    implements Lifecycle, ApplicationContextAware
 {
+  public static final String PREFIXED_MOUNT_POINT = "/service/extdirect/*";
+
+  public static final String MOUNT_POINT = "service/extdirect";
+
   private static final Logger log = LoggerFactory.getLogger(ExtDirectServlet.class);
+
+  private final Set<Class<?>> loaded = new HashSet<>();
 
   private final ApplicationDirectories directories;
 
-  private final BeanLocator beanLocator;
+  private ApplicationContext applicationContext;
 
   private final ExtDirectDispatcher extDirectDispatcher;
 
@@ -101,14 +119,12 @@ public class ExtDirectServlet
   @Inject
   public ExtDirectServlet(
       final ApplicationDirectories directories,
-      final BeanLocator beanLocator,
       final ExtDirectDispatcher extDirectDispatcher,
       final XFrameOptions xFrameOptions,
-      @Named("${nexus.security.anticsrftoken.enabled:-true}") @Value("${nexus.security.anticsrftoken.enabled:true}") final boolean antiCsrfTokenEnabled)
+      @Value("${nexus.security.anticsrftoken.enabled:true}") final boolean antiCsrfTokenEnabled) throws ServletException
   {
     super(antiCsrfTokenEnabled, AntiCsrfHelper.ANTI_CSRF_TOKEN_NAME, -1);
     this.directories = checkNotNull(directories);
-    this.beanLocator = checkNotNull(beanLocator);
     this.extDirectDispatcher = checkNotNull(extDirectDispatcher);
     this.xFrameOptions = checkNotNull(xFrameOptions);
   }
@@ -199,20 +215,15 @@ public class ExtDirectServlet
   protected List<ApiConfiguration> createApiConfigurationsFromServletConfigurationApi(
       final ServletConfig configuration)
   {
-    Iterable<? extends BeanEntry<Annotation, DirectComponent>> entries =
-        beanLocator.locate(Key.get(DirectComponent.class));
+    List<Class<?>> apiClasses = applicationContext.getBeansOfType(DirectComponent.class)
+        .values()
+        .stream()
+        .map(component -> (Class<?>) component.getClass())
+        .filter(clazz -> !loaded.contains(clazz))
+        .collect(Collectors.toList());
 
-    List<Class<?>> apiClasses = Lists.newArrayList(
-        Iterables.transform(entries, new Function<BeanEntry<Annotation, DirectComponent>, Class<?>>()
-        {
-          @Nullable
-          @Override
-          public Class<?> apply(final BeanEntry<Annotation, DirectComponent> input) {
-            Class<DirectComponent> implementationClass = input.getImplementationClass();
-            log.debug("Registering Ext.Direct component '{}'", implementationClass);
-            return implementationClass;
-          }
-        }));
+    loaded.addAll(apiClasses);
+
     File apiFile = new File(directories.getTemporaryDirectory(), "nexus-extdirect/api.js");
     return Lists.newArrayList(
         new ApiConfiguration(
@@ -281,5 +292,10 @@ public class ExtDirectServlet
     private ServletRequest getRequest() {
       return request;
     }
+  }
+
+  @Override
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    this.applicationContext = applicationContext;
   }
 }

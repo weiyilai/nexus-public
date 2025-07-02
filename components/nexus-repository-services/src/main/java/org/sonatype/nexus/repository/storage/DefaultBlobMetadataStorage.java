@@ -14,19 +14,22 @@ package org.sonatype.nexus.repository.storage;
 
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobId;
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
+
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 /**
  * Default implementation of {@link BlobMetadataStorage} that doesn't store metadata in the blob store.
  *
  * @since 3.31
  */
-@Named
+@Primary
+@Component
 @Singleton
 public class DefaultBlobMetadataStorage
     implements BlobMetadataStorage
@@ -36,7 +39,9 @@ public class DefaultBlobMetadataStorage
       final BlobStore blobStore,
       final BlobId blobId,
       final NestedAttributesMap componentAttributes,
-      final NestedAttributesMap assetAttributes, final Map<String, String> checksums) {
+      final NestedAttributesMap assetAttributes,
+      final Map<String, String> checksums)
+  {
     // no-op
   }
 }

@@ -14,9 +14,8 @@ package org.sonatype.nexus.audit.internal;
 
 import java.util.Date;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.audit.AuditData;
@@ -32,13 +31,14 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.logging.task.TaskLoggingMarkers.AUDIT_LOG_ONLY;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link AuditRecorder} implementation.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class AuditRecorderImpl
     extends ComponentSupport

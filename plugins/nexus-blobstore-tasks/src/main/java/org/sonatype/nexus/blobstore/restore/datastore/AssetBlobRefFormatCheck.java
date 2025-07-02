@@ -12,14 +12,15 @@
  */
 package org.sonatype.nexus.blobstore.restore.datastore;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.store.AssetBlobStore;
 import org.sonatype.nexus.repository.content.store.FormatStoreManager;
@@ -29,13 +30,14 @@ import static java.util.Optional.ofNullable;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.DATA_STORE_NAME;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STORAGE;
+import org.springframework.stereotype.Component;
 
 /**
  * Utility class which checks whether asset blob refs no longer contain node ids.
  *
  * @see RestoreMetadataTask
  */
-@Named
+@Component
 @Singleton
 public class AssetBlobRefFormatCheck
     extends ComponentSupport
@@ -43,8 +45,8 @@ public class AssetBlobRefFormatCheck
   private final Map<String, FormatStoreManager> formatStoreManagers;
 
   @Inject
-  public AssetBlobRefFormatCheck(final Map<String, FormatStoreManager> formatStoreManagers) {
-    this.formatStoreManagers = checkNotNull(formatStoreManagers);
+  public AssetBlobRefFormatCheck(final List<FormatStoreManager> formatStoreManagersList) {
+    this.formatStoreManagers = QualifierUtil.buildQualifierBeanMap(checkNotNull(formatStoreManagersList));
   }
 
   /**

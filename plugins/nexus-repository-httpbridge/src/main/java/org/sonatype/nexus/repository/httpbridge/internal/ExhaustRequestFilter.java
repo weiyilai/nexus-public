@@ -16,24 +16,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.regex.Pattern;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.app.WebFilterPriority;
 import org.sonatype.nexus.repository.http.HttpMethods;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.net.HttpHeaders;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link Filter} which exhausts request bodies for specific user-agents when errors occur.
@@ -46,7 +49,15 @@ import org.springframework.beans.factory.annotation.Value;
  *
  * @since 3.2
  */
-@Named
+@Order(WebFilterPriority.LEGACY_HTTP_BRIDGE)
+@WebFilter(urlPatterns = {
+    ViewServlet.MOUNT_POINT,
+    "/content/groups/*",
+    "/content/repositories/*",
+    "/content/sites/*",
+    "/service/local/*"
+})
+@Component
 @Singleton
 public class ExhaustRequestFilter
     extends ComponentSupport
@@ -56,7 +67,7 @@ public class ExhaustRequestFilter
 
   @Inject
   public ExhaustRequestFilter(
-      @Named("${nexus.view.exhaustForAgents:-Apache-Maven.*|Apache Ivy.*}") @Value("${nexus.view.exhaustForAgents:Apache-Maven.*|Apache Ivy.*}") final String exhaustForAgents)
+      @Value("${nexus.view.exhaustForAgents:Apache-Maven.*|Apache Ivy.*}") final String exhaustForAgents)
   {
     /*
      * NOTE: An exhaustForAgents pattern delimited by "\\s,\\s" is supported for backwards-compatibility reasons but

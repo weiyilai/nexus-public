@@ -15,9 +15,8 @@ package org.apache.shiro.nexus;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.common.Time;
 import org.sonatype.nexus.cache.CacheHelper;
@@ -55,7 +54,7 @@ public class NexusWebSecurityManager
   public NexusWebSecurityManager(
       final Provider<EventManager> eventManager,
       final Provider<CacheHelper> cacheHelper,
-      @Named("${nexus.shiro.cache.defaultTimeToLive:-2m}") @Value("${nexus.shiro.cache.defaultTimeToLive:2m}") final Provider<Time> defaultTimeToLive)
+      @Value("${nexus.shiro.cache.defaultTimeToLive:2m}") final Provider<Time> defaultTimeToLive)
   {
     this.eventManager = checkNotNull(eventManager);
     setCacheManager(new ShiroJCacheManagerAdapter(cacheHelper, defaultTimeToLive));

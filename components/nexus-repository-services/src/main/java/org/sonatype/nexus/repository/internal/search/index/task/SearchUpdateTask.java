@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.internal.search.index.task;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
@@ -29,13 +28,17 @@ import com.google.common.collect.ImmutableMap;
 import static java.util.Objects.requireNonNull;
 import static org.sonatype.nexus.repository.RepositoryTaskSupport.ALL_REPOSITORIES;
 import static org.sonatype.nexus.repository.internal.search.index.task.SearchUpdateTaskDescriptor.REPOSITORY_NAMES_FIELD_ID;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Task that updates repository search indexes that are out of date.
  *
  * @since 3.37
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SearchUpdateTask
     extends TaskSupport
     implements Cancelable

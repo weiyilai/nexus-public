@@ -15,9 +15,6 @@ package org.sonatype.nexus.siesta.internal.resteasy;
 import java.io.IOException;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -25,16 +22,19 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.sonatype.nexus.rest.Component;
 import org.sonatype.nexus.rest.Resource;
 import org.sonatype.nexus.siesta.ComponentContainer;
 import org.sonatype.nexus.siesta.SiestaResourceMethodFinder;
 
-import org.eclipse.sisu.BeanEntry;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
+@org.springframework.stereotype.Component
 @Singleton
 public class ComponentContainerImpl
     extends HttpServletDispatcher
@@ -53,11 +53,14 @@ public class ComponentContainerImpl
 
   private final transient ResteasyDeployment deployment;
 
+  private final ApplicationContext context;
+
   @Inject
-  public ComponentContainerImpl(final ResteasyDeployment deployment) {
+  public ComponentContainerImpl(final ResteasyDeployment deployment, final ApplicationContext context) {
     this.deployment = deployment;
     // Register RESTEasy with JAX-RS as early as possible
     RuntimeDelegate.setInstance(checkNotNull(deployment.getProviderFactory()));
+    this.context = context;
   }
 
   @Override
@@ -70,6 +73,9 @@ public class ComponentContainerImpl
     finally {
       Thread.currentThread().setContextClassLoader(cl);
     }
+    // register components
+    context.getBeansOfType(Component.class)
+        .forEach(this::addComponent);
   }
 
   private void doInit(final ServletConfig servletConfig) throws ServletException {
@@ -107,6 +113,7 @@ public class ComponentContainerImpl
     super.destroy();
 
     deployment.stop();
+    RuntimeDelegate.setInstance(null);
   }
 
   /**
@@ -133,11 +140,10 @@ public class ComponentContainerImpl
     return null;
   }
 
-  @Override
-  public void addComponent(final BeanEntry<?, ?> entry) throws Exception {
-    Class<?> type = entry.getImplementationClass();
+  private void addComponent(final String beanName, final Component component) {
+    Class<?> type = component.getClass();
     if (isResource(type)) {
-      getDispatcher().getRegistry().addResourceFactory(new SisuResourceFactory(entry));
+      getDispatcher().getRegistry().addResourceFactory(new SpringResourceFactory(context, beanName));
       String path = resourcePath(type);
       if (path == null) {
         log.warn("Found resource implementation missing @Path: {}", type.getName());
@@ -148,28 +154,8 @@ public class ComponentContainerImpl
     }
     else {
       // TODO: Doesn't seem to be a late-biding/factory here so we create the object early
-      getDispatcher().getProviderFactory().register(entry.getValue());
+      getDispatcher().getProviderFactory().register(component);
       log.debug("Added component: {}", type.getName());
-    }
-  }
-
-  @Override
-  public void removeComponent(final BeanEntry<?, ?> entry) throws Exception {
-    Class<?> type = entry.getImplementationClass();
-    if (isResource(type)) {
-      getDispatcher().getRegistry().removeRegistrations(type);
-      String path = resourcePath(type);
-      log.debug("Removed resource: {} with path: {}", type.getName(), path);
-    }
-    else {
-      ResteasyProviderFactory providerFactory = getDispatcher().getProviderFactory();
-      if (providerFactory instanceof SisuResteasyProviderFactory) {
-        ((SisuResteasyProviderFactory) providerFactory).removeRegistrations(type);
-        log.debug("Removed component: {}", type.getName());
-      }
-      else {
-        log.warn("Component removal not supported; Unable to remove component: {}", type.getName());
-      }
     }
   }
 }

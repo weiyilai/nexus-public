@@ -12,20 +12,20 @@
  */
 package org.sonatype.nexus.common.log;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Prefix for use when logging actions while in dry-run mode (i.e. log actions, but make no changes).
  *
  * @since 3.6
  */
-@Named
+@Component
 @Singleton
 public class DryRunPrefix
 {
@@ -33,7 +33,7 @@ public class DryRunPrefix
 
   @Inject
   public DryRunPrefix(
-      @Named("${nexus.log.dryrun.prefix:-::DRY RUN:: }") @Value("${nexus.log.dryrun.prefix:::DRY RUN:: }") final String prefix)
+      @Value("${nexus.log.dryrun.prefix:::DRY RUN:: }") final String prefix)
   {
     this.prefix = checkNotNull(prefix);
   }

@@ -12,22 +12,22 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.email;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.email.EmailManager;
 
 import static org.sonatype.nexus.api.rest.selfhosted.email.EmailConfigurationApiResourceV1.RESOURCE_URI;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * v1 endpoint for email configuration REST API
  *
  * @since 3.25
  */
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 public class EmailConfigurationApiResourceV1

@@ -15,25 +15,28 @@ package org.sonatype.nexus.internal.webresources;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.sonatype.goodies.common.Time;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
+import org.sonatype.nexus.common.app.WebFilterPriority;
 import org.sonatype.nexus.servlet.ServletHelper;
 import org.sonatype.nexus.servlet.XFrameOptions;
 import org.sonatype.nexus.webresources.WebResource;
 import org.sonatype.nexus.webresources.WebResource.Prepareable;
 import org.sonatype.nexus.webresources.WebResourceService;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -52,8 +55,10 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED;
  *
  * @since 2.8
  */
+@Order(WebFilterPriority.WEB_RESOURCES)
+@WebServlet("/*")
 @Singleton
-@Named
+@Component
 public class WebResourceServlet
     extends HttpServlet
 {
@@ -71,7 +76,7 @@ public class WebResourceServlet
   public WebResourceServlet(
       final WebResourceService webResources,
       final XFrameOptions xframeOptions,
-      @Named("${nexus.webresources.maxAge:-30days}") @Value("${nexus.webresources.maxAge:30days}") final Time maxAge)
+      @Value("${nexus.webresources.maxAge:30days}") final Time maxAge)
   {
     this.webResources = checkNotNull(webResources);
     this.maxAgeSeconds = checkNotNull(maxAge.toSeconds());
@@ -95,7 +100,7 @@ public class WebResourceServlet
     }
     else if (INDEX_PATH.equals(path)) {
       response.sendRedirect(BaseUrlHolder.getRelativePath()); // prevent browser from sending XHRs to incorrect URL -
-                                                              // NEXUS-14593
+      // NEXUS-14593
       return;
     }
 

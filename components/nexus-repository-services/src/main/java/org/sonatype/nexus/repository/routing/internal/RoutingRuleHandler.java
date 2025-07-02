@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.routing.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.Repository;
@@ -26,13 +25,14 @@ import org.sonatype.nexus.repository.view.Request;
 import org.sonatype.nexus.repository.view.Response;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * A handler which validates that the request is allowed by the RoutingRule assigned to the repository.
  *
  * @since 3.16
  */
-@Named
+@Component
 @Singleton
 public class RoutingRuleHandler
     extends ComponentSupport

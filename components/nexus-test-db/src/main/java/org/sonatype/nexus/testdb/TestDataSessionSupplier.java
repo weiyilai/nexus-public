@@ -17,12 +17,14 @@ import java.sql.SQLException;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
 import org.sonatype.nexus.datastore.api.DataAccess;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
+import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.datastore.mybatis.MyBatisDataStore;
 import org.sonatype.nexus.transaction.TransactionIsolation;
 
@@ -105,5 +107,15 @@ public class TestDataSessionSupplier
       throw new IllegalArgumentException(
           "Requested store %s does not match created store %s".formatted(suppliedName, storeName));
     }
+  }
+
+  @SafeVarargs
+  public final void register(final Class<? extends DataAccess>... daoClazz) {
+    Stream.of(daoClazz).forEach(store::register);
+  }
+
+  public DataStore<?> getDataStore(final String storeName) {
+    checkName(storeName);
+    return store;
   }
 }

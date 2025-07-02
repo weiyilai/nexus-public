@@ -12,22 +12,24 @@
  */
 package org.sonatype.nexus.repository.types;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Type;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Virtual repository type.
  *
  * @since 3.0
  */
-@Named(VirtualType.NAME)
+@Component
+@Qualifier(VirtualType.NAME)
 @Singleton
 public class VirtualType
-  extends Type
+    extends Type
 {
   public static final String NAME = "virtual";
 
@@ -41,7 +43,8 @@ public class VirtualType
     return ValidationGroup.class;
   }
 
-  public interface ValidationGroup {
+  public interface ValidationGroup
+  {
     // empty
   }
 }

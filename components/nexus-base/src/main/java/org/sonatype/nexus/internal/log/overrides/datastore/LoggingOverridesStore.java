@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.internal.log.overrides.datastore;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
@@ -27,11 +26,14 @@ import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENA
 import static org.sonatype.nexus.internal.log.overrides.datastore.LoggerOverridesEvent.Action.CHANGE;
 import static org.sonatype.nexus.internal.log.overrides.datastore.LoggerOverridesEvent.Action.RESET;
 import static org.sonatype.nexus.internal.log.overrides.datastore.LoggerOverridesEvent.Action.RESET_ALL;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Store for accessing the logging-overrides related data
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 @ConditionalOnProperty(name = DATASTORE_CLUSTERED_ENABLED, havingValue = "true")
 public class LoggingOverridesStore

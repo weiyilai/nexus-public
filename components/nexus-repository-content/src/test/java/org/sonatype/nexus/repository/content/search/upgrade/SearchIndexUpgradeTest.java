@@ -13,10 +13,12 @@
 package org.sonatype.nexus.repository.content.search.upgrade;
 
 import java.sql.Connection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.datastore.api.DataSession;
@@ -34,15 +36,19 @@ import org.sonatype.nexus.repository.types.ProxyType;
 import org.sonatype.nexus.testdb.DataSessionRule;
 
 import com.google.common.collect.ImmutableMap;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
 import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.repository.search.index.SearchUpdateService.SEARCH_INDEX_OUTDATED;
@@ -78,9 +84,14 @@ public class SearchIndexUpgradeTest
 
   private ConfigurationData groupConfig;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setup() {
-    Format testFormat = new Format("test") { };
+    mockedStatic = mockStatic(QualifierUtil.class);
+    Format testFormat = new Format("test")
+    {
+    };
 
     when(testHostedRecipe.getFormat()).thenReturn(testFormat);
     when(testHostedRecipe.getType()).thenReturn(new HostedType());
@@ -91,11 +102,12 @@ public class SearchIndexUpgradeTest
     when(testGroupRecipe.getFormat()).thenReturn(testFormat);
     when(testGroupRecipe.getType()).thenReturn(new GroupType());
 
-    underTest = new TestSearchIndexUpgrade();
-    underTest.inject(ImmutableMap.of(
+    when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(ImmutableMap.of(
         "test-hosted", testHostedRecipe,
         "test-proxy", testProxyRecipe,
         "test-group", testGroupRecipe));
+    underTest = new TestSearchIndexUpgrade();
+    underTest.inject(List.of(testHostedRecipe, testProxyRecipe, testGroupRecipe));
 
     store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).get();
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
@@ -116,6 +128,11 @@ public class SearchIndexUpgradeTest
 
       session.getTransaction().commit();
     }
+  }
+
+  @After
+  public void teardown() {
+    mockedStatic.close();
   }
 
   @Test

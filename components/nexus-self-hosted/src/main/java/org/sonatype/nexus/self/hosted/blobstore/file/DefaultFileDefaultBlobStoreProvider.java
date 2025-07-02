@@ -14,11 +14,14 @@ package org.sonatype.nexus.self.hosted.blobstore.file;
 
 import java.util.function.Supplier;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.DefaultBlobStoreProvider;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.blobstore.api.BlobStoreManager.DEFAULT_BLOBSTORE_NAME;
 
@@ -27,7 +30,9 @@ import static org.sonatype.nexus.blobstore.api.BlobStoreManager.DEFAULT_BLOBSTOR
  *
  * @since 3.37
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @Singleton
 public class DefaultFileDefaultBlobStoreProvider
     implements DefaultBlobStoreProvider

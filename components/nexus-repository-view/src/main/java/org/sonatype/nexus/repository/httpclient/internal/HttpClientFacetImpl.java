@@ -14,13 +14,14 @@ package org.sonatype.nexus.repository.httpclient.internal;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.Valid;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.event.EventHelper;
 import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.distributed.event.service.api.common.RepositoryRemoteConnectionStatusEvent;
@@ -61,13 +62,17 @@ import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.sonatype.nexus.repository.FacetSupport.State.STARTED;
 import static org.sonatype.nexus.repository.httpclient.RemoteConnectionStatusType.AUTO_BLOCKED_UNAVAILABLE;
 import static org.sonatype.nexus.repository.httpclient.RemoteConnectionStatusType.UNINITIALISED;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link HttpClientFacet} implementation.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class HttpClientFacetImpl
     extends FacetSupport
     implements HttpClientFacet, RemoteConnectionStatusObserver
@@ -117,34 +122,35 @@ public class HttpClientFacetImpl
   @Inject
   public HttpClientFacetImpl(
       final HttpClientManager httpClientManager,
-      final Map<String, AutoBlockConfiguration> autoBlockConfiguration,
-      final Map<String, RedirectStrategy> redirectStrategy,
-      final Map<String, NormalizationStrategy> normalizationStrategies,
-      final Map<String, ContentCompressionStrategy> contentCompressionStrategies,
-      final Map<String, TargetAuthenticationStrategy> authenticationStrategies)
+      final List<AutoBlockConfiguration> autoBlockConfigurationList,
+      final List<RedirectStrategy> redirectStrategyList,
+      final List<NormalizationStrategy> normalizationStrategiesList,
+      final List<ContentCompressionStrategy> contentCompressionStrategiesList,
+      final List<TargetAuthenticationStrategy> authenticationStrategiesList)
   {
     this.httpClientManager = checkNotNull(httpClientManager);
-    this.autoBlockConfiguration = checkNotNull(autoBlockConfiguration);
-    this.redirectStrategy = checkNotNull(redirectStrategy);
-    this.normalizationStrategies = checkNotNull(normalizationStrategies);
-    this.contentCompressionStrategies = checkNotNull(contentCompressionStrategies);
-    this.authenticationStrategies = checkNotNull(authenticationStrategies);
+    this.autoBlockConfiguration = QualifierUtil.buildQualifierBeanMap(checkNotNull(autoBlockConfigurationList));
+    this.redirectStrategy = QualifierUtil.buildQualifierBeanMap(checkNotNull(redirectStrategyList));
+    this.normalizationStrategies = QualifierUtil.buildQualifierBeanMap(checkNotNull(normalizationStrategiesList));
+    this.contentCompressionStrategies =
+        QualifierUtil.buildQualifierBeanMap(checkNotNull(contentCompressionStrategiesList));
+    this.authenticationStrategies = QualifierUtil.buildQualifierBeanMap(checkNotNull(authenticationStrategiesList));
   }
 
   @VisibleForTesting
   HttpClientFacetImpl(
       final HttpClientManager httpClientManager,
-      final Map<String, AutoBlockConfiguration> autoBlockConfiguration,
-      final Map<String, RedirectStrategy> redirectStrategy,
-      final Map<String, NormalizationStrategy> normalizationStrategy,
-      final Map<String, ContentCompressionStrategy> contentCompressionStrategies,
-      final Map<String, TargetAuthenticationStrategy> authenticationStrategies,
+      final List<AutoBlockConfiguration> autoBlockConfiguration,
+      final List<RedirectStrategy> redirectStrategy,
+      final List<NormalizationStrategy> normalizationStrategy,
+      final List<ContentCompressionStrategy> contentCompressionStrategies,
+      final List<TargetAuthenticationStrategy> authenticationStrategies,
       final Config config)
   {
     this(httpClientManager, autoBlockConfiguration, redirectStrategy, normalizationStrategy,
         contentCompressionStrategies, authenticationStrategies);
     this.config = checkNotNull(config);
-    checkNotNull(autoBlockConfiguration.get(DEFAULT));
+    checkNotNull(this.autoBlockConfiguration.get(DEFAULT));
   }
 
   @Override

@@ -12,8 +12,6 @@
  */
 package org.sonatype.nexus.repository.rest.api;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.rest.api.model.HostedRepositoryApiRequest;
 
@@ -27,11 +25,15 @@ import static org.sonatype.nexus.repository.config.ConfigurationConstants.STRICT
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.WRITE_POLICY;
 import static org.sonatype.nexus.repository.manager.internal.BaseRepositoryManager.CLEANUP_ATTRIBUTES_KEY;
 import static org.sonatype.nexus.repository.manager.internal.BaseRepositoryManager.CLEANUP_NAME_KEY;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.20
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class HostedRepositoryApiRequestToConfigurationConverter<T extends HostedRepositoryApiRequest>
     extends AbstractRepositoryApiRequestToConfigurationConverter<T>
 {

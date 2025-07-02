@@ -16,20 +16,24 @@ import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Change node_id and parent_id to BIGINT to mitigate sequence exhaustion
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BrowseNodeMigrationStep_1_33
-    extends ComponentSupport implements DatabaseMigrationStep
+    extends ComponentSupport
+    implements DatabaseMigrationStep
 {
   private final List<Format> formats;
 
@@ -40,7 +44,8 @@ public class BrowseNodeMigrationStep_1_33
 
   private static final String ALTER_NODE_ID = "ALTER TABLE %s_browse_node ALTER COLUMN node_id SET DATA TYPE BIGINT;";
 
-  private static final String ALTER_PARENT_ID = "ALTER TABLE %s_browse_node ALTER COLUMN parent_id SET DATA TYPE BIGINT;";
+  private static final String ALTER_PARENT_ID =
+      "ALTER TABLE %s_browse_node ALTER COLUMN parent_id SET DATA TYPE BIGINT;";
 
   @Override
   public Optional<String> version() {

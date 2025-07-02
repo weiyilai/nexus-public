@@ -17,9 +17,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
@@ -37,12 +37,14 @@ import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.springframework.context.annotation.Lazy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.quartz.TriggerKey.triggerKey;
 import static org.sonatype.nexus.quartz.internal.task.QuartzTaskUtils.updateJobData;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class TaskResultStateStoreImpl
     extends ConfigStoreSupport<QuartzDAO>
@@ -51,7 +53,7 @@ public class TaskResultStateStoreImpl
   protected Scheduler scheduler;
 
   @Inject
-  public TaskResultStateStoreImpl(final DataSessionSupplier sessionSupplier, final Scheduler scheduler) {
+  public TaskResultStateStoreImpl(final DataSessionSupplier sessionSupplier, @Lazy final Scheduler scheduler) {
     super(sessionSupplier);
     this.scheduler = checkNotNull(scheduler);
   }

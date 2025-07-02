@@ -15,12 +15,12 @@ package org.sonatype.nexus.repository.content.search.capability;
 import java.sql.Connection;
 import java.util.Optional;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class SearchCapabilityStep_2_1
     implements DatabaseMigrationStep

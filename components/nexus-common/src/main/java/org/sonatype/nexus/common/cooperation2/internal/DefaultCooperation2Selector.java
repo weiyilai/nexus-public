@@ -12,17 +12,20 @@
  */
 package org.sonatype.nexus.common.cooperation2.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.cooperation2.Cooperation2Factory;
 import org.sonatype.nexus.common.cooperation2.Cooperation2Selector;
 
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
 /**
  * Cooperation2Selector implementation that simply returns the default impl from the dependency injector.
  */
-@Named
+@Primary
+@Component
 @Singleton
 public class DefaultCooperation2Selector
     implements Cooperation2Selector

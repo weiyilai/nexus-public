@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.21
  */
-// not @Named because we register this manually
+// not @Component
 public class PasswordCharacterArrayTypeHandler
     extends BaseTypeHandler<char[]>
 {

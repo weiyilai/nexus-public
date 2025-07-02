@@ -178,7 +178,7 @@ describe('GlobalHeader', () => {
       });
 
       givenBundleActiveStates({
-        'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
+        'nexus-coreui-plugin': true
       });
 
       givenPermissions({
@@ -209,7 +209,7 @@ describe('GlobalHeader', () => {
       });
 
       givenBundleActiveStates({
-        'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
+        'nexus-coreui-plugin': true
       });
 
       givenPermissions({
@@ -239,7 +239,7 @@ describe('GlobalHeader', () => {
       });
 
       givenBundleActiveStates({
-        'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
+        'nexus-coreui-plugin': true
       });
 
       givenPermissions({
@@ -265,7 +265,7 @@ describe('GlobalHeader', () => {
     //   1. user must be logged in
     //   2. the user must have nexus:usertoken-current:read permissions
     //   3. statesEnabled must include usertoken
-    //   4. 'com.sonatype.nexus.plugins.nexus-usertoken-plugin' must be an active bundle
+    //   4. 'nexus-usertoken-plugin' must be an active bundle
     //   5. the edition must be pro
     it('renders correctly given user is logged in and user tokens are enabled', async () => {
       givenAllRequirementsMetForUserTokenPageAccess();
@@ -332,7 +332,7 @@ describe('GlobalHeader', () => {
 
       // given the bundle is not active
       givenBundleActiveStates({
-        'com.sonatype.nexus.plugins.nexus-usertoken-plugin': false
+        'nexus-usertoken-plugin': false
       });
 
       renderComponent();
@@ -509,7 +509,7 @@ describe('GlobalHeader', () => {
       });
 
       givenBundleActiveStates({
-        'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
+        'nexus-coreui-plugin': true
       });
 
       renderComponent();
@@ -548,7 +548,7 @@ describe('GlobalHeader', () => {
       });
 
       givenBundleActiveStates({
-        'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
+        'nexus-coreui-plugin': true
       });
 
       renderComponent();
@@ -718,8 +718,8 @@ describe('GlobalHeader', () => {
 
     // given the bundle is active
     givenBundleActiveStates({
-      'com.sonatype.nexus.plugins.nexus-usertoken-plugin': true,
-      'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
+      'nexus-usertoken-plugin': true,
+      'nexus-coreui-plugin': true
     });
 
     jest.spyOn(ExtJS, 'useUser').mockReturnValue(true);

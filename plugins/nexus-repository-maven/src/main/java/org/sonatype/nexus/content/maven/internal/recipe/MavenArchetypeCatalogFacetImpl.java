@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.hash.HashAlgorithm;
@@ -53,13 +52,17 @@ import static org.sonatype.nexus.repository.maven.internal.MavenModels.writeArch
 import static org.sonatype.nexus.repository.maven.internal.utils.MavenIOUtils.createStreamPayload;
 import static org.sonatype.nexus.repository.maven.internal.utils.MavenIOUtils.hashesToPayloads;
 import static org.sonatype.nexus.repository.view.ContentTypes.APPLICATION_XML;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Rebuilds the maven archetype catalog for a given repository.
  *
  * @since 3.25
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenArchetypeCatalogFacetImpl
     extends FacetSupport
     implements MavenArchetypeCatalogFacet
@@ -80,7 +83,7 @@ public class MavenArchetypeCatalogFacetImpl
 
   @Inject
   public MavenArchetypeCatalogFacetImpl(
-      @Named("${maven.archetypes.page.size:-10}") @Value("${maven.archetypes.page.size:10}") final int componentPageSize)
+      @Value("${maven.archetypes.page.size:10}") final int componentPageSize)
   {
     this.componentPageSize = componentPageSize;
   }

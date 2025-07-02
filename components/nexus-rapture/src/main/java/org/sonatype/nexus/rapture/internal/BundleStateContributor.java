@@ -12,12 +12,10 @@
  */
 package org.sonatype.nexus.rapture.internal;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionSelector;
 import org.sonatype.nexus.rapture.StateContributor;
@@ -26,8 +24,9 @@ import com.google.common.collect.ImmutableMap;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 public class BundleStateContributor
@@ -35,7 +34,7 @@ public class BundleStateContributor
 {
   public static final String STATE_ID = "activeBundles";
 
-  private List<String> modules = new ArrayList<>();
+  private List<String> modules;
 
   private final NexusEditionSelector nexusEditionSelector;
 

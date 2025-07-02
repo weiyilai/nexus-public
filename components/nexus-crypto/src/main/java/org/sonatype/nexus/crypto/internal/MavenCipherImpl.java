@@ -17,9 +17,8 @@ import java.nio.CharBuffer;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.crypto.CryptoHelper;
 import org.sonatype.nexus.crypto.maven.MavenCipher;
@@ -29,13 +28,14 @@ import com.google.common.base.CharMatcher;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import org.springframework.stereotype.Component;
 
 /**
  * Default implementation of {@link MavenCipher}.
  * 
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class MavenCipherImpl
     implements MavenCipher

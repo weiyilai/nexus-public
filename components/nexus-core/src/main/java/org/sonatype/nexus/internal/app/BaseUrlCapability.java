@@ -14,11 +14,14 @@ package org.sonatype.nexus.internal.app;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.capability.CapabilitySupport;
 import org.sonatype.nexus.common.app.BaseUrlManager;
+
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -27,7 +30,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named(BaseUrlCapabilityDescriptor.TYPE_ID)
+@Component(BaseUrlCapabilityDescriptor.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BaseUrlCapability
     extends CapabilitySupport<BaseUrlCapabilityConfiguration>
 {

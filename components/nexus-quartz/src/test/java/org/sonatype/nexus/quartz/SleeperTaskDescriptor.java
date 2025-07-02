@@ -12,25 +12,24 @@
  */
 package org.sonatype.nexus.quartz;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * Descriptor for {@link SleeperTask}.
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class SleeperTaskDescriptor
     extends TaskDescriptorSupport
 {
   static final String TYPE_ID = "sleeper";
 
-  public SleeperTaskDescriptor()
-  {
+  public SleeperTaskDescriptor() {
     super(TYPE_ID, SleeperTask.class, "Sleeper test", VISIBLE, EXPOSED);
   }
 }

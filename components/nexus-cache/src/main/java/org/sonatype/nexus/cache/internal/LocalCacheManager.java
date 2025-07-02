@@ -14,15 +14,15 @@ package org.sonatype.nexus.cache.internal;
 
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.cache.CacheHelper;
 import org.sonatype.nexus.cache.CacheManager;
 import org.sonatype.nexus.cache.NexusCache;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * The cache manager which creates the {@link LocalCache}.
@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @param <K> the type of key
  * @param <V> the type of value
  */
-@Named
+@Component
 @Singleton
 public class LocalCacheManager<K, V>
     implements CacheManager<K, V>

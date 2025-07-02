@@ -30,7 +30,7 @@ Ext.define('NX.onboarding.app.PluginConfig', {
     {
       id: 'NX.onboarding.controller.Onboarding',
       active: function () {
-        return NX.app.Application.bundleActive('org.sonatype.nexus.plugins.nexus-onboarding-plugin');
+        return NX.app.Application.bundleActive('nexus-onboarding-plugin');
       }
     }
   ]

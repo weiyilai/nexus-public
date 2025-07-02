@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.onboarding.capability;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.capability.CapabilityBooterSupport;
 import org.sonatype.nexus.capability.CapabilityRegistry;
@@ -26,8 +25,9 @@ import static org.sonatype.nexus.onboarding.capability.OnboardingCapabilityConfi
 import static org.sonatype.nexus.onboarding.capability.OnboardingCapabilityConfiguration.PRO_STARTER_INFO_PAGE_COMPLETED;
 import static org.sonatype.nexus.onboarding.capability.OnboardingCapabilityConfiguration.REGISTRATION_COMPLETED;
 import static org.sonatype.nexus.onboarding.capability.OnboardingCapabilityConfiguration.REGISTRATION_STARTED;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class OnboardingCapabilityBooter
     extends CapabilityBooterSupport
@@ -42,8 +42,6 @@ public class OnboardingCapabilityBooter
         ImmutableMap.of(
             PRO_STARTER_INFO_PAGE_COMPLETED, String.valueOf(DEFAULT_PRO_STARTER_INFO_PAGE_COMPLETED),
             REGISTRATION_STARTED, String.valueOf(DEFAULT_REGISTRATION_STARTED),
-            REGISTRATION_COMPLETED, String.valueOf(DEFAULT_REGISTRATION_COMPLETED)
-        )
-    );
+            REGISTRATION_COMPLETED, String.valueOf(DEFAULT_REGISTRATION_COMPLETED)));
   }
 }

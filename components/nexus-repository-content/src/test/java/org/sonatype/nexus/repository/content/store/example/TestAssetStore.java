@@ -13,7 +13,7 @@
 package org.sonatype.nexus.repository.content.store.example;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
@@ -30,8 +30,9 @@ public class TestAssetStore
     extends AssetStore<TestAssetDAO>
 {
   @Inject
-  public TestAssetStore(final DataSessionSupplier sessionSupplier,
-                        @Assisted final String storeName)
+  public TestAssetStore(
+      final DataSessionSupplier sessionSupplier,
+      @Assisted final String storeName)
   {
     super(sessionSupplier, false, storeName, TestAssetDAO.class);
   }
@@ -47,9 +48,10 @@ public class TestAssetStore
    * @see Continuation#nextContinuationToken()
    */
   @Transactional
-  public Continuation<Asset> browseFlaggedAssets(final int repositoryId,
-                                                 final int limit,
-                                                 @Nullable final String continuationToken)
+  public Continuation<Asset> browseFlaggedAssets(
+      final int repositoryId,
+      final int limit,
+      @Nullable final String continuationToken)
   {
     return dao().browseFlaggedAssets(repositoryId, limit, continuationToken);
   }

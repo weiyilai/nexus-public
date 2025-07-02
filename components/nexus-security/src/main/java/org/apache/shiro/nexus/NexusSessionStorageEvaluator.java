@@ -12,8 +12,7 @@
  */
 package org.apache.shiro.nexus;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.security.anonymous.AnonymousHelper;
 
@@ -31,7 +30,6 @@ public class NexusSessionStorageEvaluator
     extends DefaultWebSessionStorageEvaluator
 {
   @Inject
-  @Named("${nexus.session.enabled:-true}")
   @Value("${nexus.session.enabled:true}")
   private boolean sessionsEnabled;
 

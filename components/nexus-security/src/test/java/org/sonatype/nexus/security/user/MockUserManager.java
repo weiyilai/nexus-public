@@ -18,10 +18,13 @@ import java.util.Set;
 import org.sonatype.nexus.security.role.ExternalRoleMappedTest;
 import org.sonatype.nexus.security.role.RoleIdentifier;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+
 /**
  * @see ExternalRoleMappedTest
  * @see UserManagementTest
  */
+@Qualifier("Mock")
 public class MockUserManager
     extends AbstractReadOnlyUserManager
 {

@@ -17,9 +17,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.http.Cookie;
 
 import org.sonatype.nexus.common.app.FeatureFlag;
@@ -34,7 +33,7 @@ import org.sonatype.nexus.security.jwt.SecretStore;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Provider;
+import jakarta.inject.Provider;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -42,16 +41,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
-import static org.sonatype.nexus.common.app.FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED_VALUE;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SECURITY;
+import org.springframework.stereotype.Component;
 
 /**
  * Helper to create, decode, verify and refresh JWT cookie
  *
  * @since 3.38
  */
-@Named
+@Component
 @ManagedLifecycle(phase = SECURITY)
 @Singleton
 @FeatureFlag(name = JWT_ENABLED)
@@ -86,10 +85,10 @@ public class JwtHelper
 
   @Inject
   public JwtHelper(
-      @Named("${nexus.jwt.expiry:-1800}") @Value("${nexus.jwt.expiry:1800}") final int expirySeconds,
-      @Named("${nexus-context-path}") final String contextPath,
+      @Value("${nexus.jwt.expiry:1800}") final int expirySeconds,
+      @Value("${nexus-context-path:#{null}}") final String contextPath,
       final Provider<SecretStore> secretStoreProvider,
-      @Named(NXSESSIONID_SECURE_COOKIE_NAMED) @Value(NXSESSIONID_SECURE_COOKIE_NAMED_VALUE) final boolean cookieSecure)
+      @Value(NXSESSIONID_SECURE_COOKIE_NAMED_VALUE) final boolean cookieSecure)
   {
     checkState(expirySeconds >= 0, "JWT expiration period should be positive");
     this.expirySeconds = expirySeconds;

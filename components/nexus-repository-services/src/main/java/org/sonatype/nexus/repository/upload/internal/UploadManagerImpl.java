@@ -20,12 +20,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.repository.Repository;
@@ -50,13 +50,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link UploadManager} implementation.
  *
  * @since 3.24
  */
-@Named
+@Component
 @Singleton
 public class UploadManagerImpl
     extends ComponentSupport
@@ -76,13 +77,13 @@ public class UploadManagerImpl
 
   @Inject
   public UploadManagerImpl(
-      final Map<String, UploadHandler> uploadHandlers,
+      final List<UploadHandler> uploadHandlersList,
       final UploadComponentMultipartHelper multipartHelper,
       final UploadProcessor uploadComponentProcessor,
       final EventManager eventManager,
       final Set<ComponentUploadExtension> componentsUploadExtensions)
   {
-    this.uploadHandlers = checkNotNull(uploadHandlers);
+    this.uploadHandlers = QualifierUtil.buildQualifierBeanMap(checkNotNull(uploadHandlersList));
     this.uploadDefinitions = Collections
         .unmodifiableList(uploadHandlers.values()
             .stream()

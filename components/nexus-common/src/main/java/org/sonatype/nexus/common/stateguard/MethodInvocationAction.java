@@ -17,12 +17,17 @@ import java.lang.reflect.InvocationTargetException;
 import javax.annotation.Nullable;
 
 import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
+import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 
 /**
  * Adapts {@link MethodInvocation} to {@link Action}.
  *
  * @since 3.0
  */
+@Deprecated(since = "4/1/2025", forRemoval = true)
+@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "false", matchIfMissing = true)
 class MethodInvocationAction
     implements Action<Object>
 {

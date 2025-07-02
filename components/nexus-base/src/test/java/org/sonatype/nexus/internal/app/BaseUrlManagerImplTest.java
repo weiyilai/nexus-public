@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 
-import com.google.inject.Provider;
+import jakarta.inject.Provider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

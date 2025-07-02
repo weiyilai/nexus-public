@@ -15,9 +15,8 @@ package org.sonatype.nexus.repository.rest.internal.api;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.ValidationException;
 
 import org.sonatype.nexus.repository.Repository;
@@ -42,13 +41,14 @@ import static org.sonatype.nexus.security.BreadActions.ADD;
 import static org.sonatype.nexus.security.BreadActions.DELETE;
 import static org.sonatype.nexus.security.BreadActions.EDIT;
 import static org.sonatype.nexus.security.BreadActions.READ;
+import org.springframework.stereotype.Component;
 
 /**
  * A repository manager which limits access to repositories based on the current user's permissions.
  *
  * @since 3.20
  */
-@Named
+@Component
 @Singleton
 public class AuthorizingRepositoryManagerImpl
     implements AuthorizingRepositoryManager
@@ -119,7 +119,8 @@ public class AuthorizingRepositoryManagerImpl
   @Override
   public Optional<Repository> getRepositoryWithAdmin(final String repositoryName) {
     return Optional.ofNullable(repositoryManager.get(repositoryName))
-        .flatMap(repo -> repositoryPermissionChecker.userHasRepositoryAdminPermission(singletonList(repo), READ).stream()
+        .flatMap(repo -> repositoryPermissionChecker.userHasRepositoryAdminPermission(singletonList(repo), READ)
+            .stream()
             .findFirst());
   }
 
@@ -133,12 +134,12 @@ public class AuthorizingRepositoryManagerImpl
   /**
    * Trigger rebuild index task for given repository.
    *
-   * @throws RepositoryNotFoundException     if repository does not exists
+   * @throws RepositoryNotFoundException if repository does not exists
    * @throws IncompatibleRepositoryException if is not hosted or proxy type
    */
   @SuppressWarnings("squid:S1160") // suppress warning about two checked exceptions
-  public void rebuildSearchIndex(@Nonnull final String name)
-      throws RepositoryNotFoundException, IncompatibleRepositoryException
+  public void rebuildSearchIndex(
+      @Nonnull final String name) throws RepositoryNotFoundException, IncompatibleRepositoryException
   {
     Repository repository = getEditableRepositoryOrThrow(name);
     ensureHostedOrProxy(repository);
@@ -152,11 +153,11 @@ public class AuthorizingRepositoryManagerImpl
    * Invalidate cache of a given repository.
    *
    * @throws RepositoryNotFoundException if repository does not exists
-   * @throws IllegalStateException       if is not proxy or group type
+   * @throws IllegalStateException if is not proxy or group type
    */
   @SuppressWarnings("squid:S1160") // suppress warning about two checked exceptions
-  public void invalidateCache(@Nonnull final String name)
-      throws RepositoryNotFoundException, IncompatibleRepositoryException
+  public void invalidateCache(
+      @Nonnull final String name) throws RepositoryNotFoundException, IncompatibleRepositoryException
   {
     Repository repository = getEditableRepositoryOrThrow(name);
     ensureProxyOrGroup(repository);
@@ -170,9 +171,7 @@ public class AuthorizingRepositoryManagerImpl
     }
   }
 
-  private Repository getEditableRepositoryOrThrow(@Nonnull final String name)
-      throws RepositoryNotFoundException
-  {
+  private Repository getEditableRepositoryOrThrow(@Nonnull final String name) throws RepositoryNotFoundException {
     Repository repository = repositoryManager.get(name);
     if (repository == null) {
       throw new RepositoryNotFoundException();

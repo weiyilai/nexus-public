@@ -12,15 +12,16 @@
  */
 package org.sonatype.nexus.onboarding;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.17
  */
+@Component
 @Singleton
 public class OnboardingConfiguration
 {
@@ -28,7 +29,7 @@ public class OnboardingConfiguration
 
   @Inject
   public OnboardingConfiguration(
-      @Named("${nexus.onboarding.enabled:-true}") @Value("${nexus.onboarding.enabled:true}") final boolean enabled)
+      @Value("${nexus.onboarding.enabled:true}") final boolean enabled)
   {
     this.enabled = enabled;
   }

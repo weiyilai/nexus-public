@@ -22,9 +22,8 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.CryptoHelper;
@@ -34,6 +33,7 @@ import org.sonatype.nexus.crypto.internal.error.CipherException;
 import com.google.common.base.Throwables;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Default implementation of {@link LegacyCipherFactory} interface to provide password-based-encryption.
@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 3.0
  * @deprecated
  */
-@Named
+@Component
 @Singleton
 @Deprecated
 public class LegacyCipherFactoryImpl
@@ -51,8 +51,7 @@ public class LegacyCipherFactoryImpl
   private final CryptoHelper cryptoHelper;
 
   @Inject
-  public LegacyCipherFactoryImpl(final CryptoHelper cryptoHelper)
-  {
+  public LegacyCipherFactoryImpl(final CryptoHelper cryptoHelper) {
     this.cryptoHelper = checkNotNull(cryptoHelper);
   }
 
@@ -82,7 +81,7 @@ public class LegacyCipherFactoryImpl
       this.cryptoHelper = cryptoHelper;
 
       try {
-        this.paramSpec = new IvParameterSpec(iv.getBytes()); //NOSONAR
+        this.paramSpec = new IvParameterSpec(iv.getBytes()); // NOSONAR
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 1024, 128);
         SecretKeyFactory factory = cryptoHelper.createSecretKeyFactory("PBKDF2WithHmacSHA1");
         SecretKey tmp = factory.generateSecret(spec);

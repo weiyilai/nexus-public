@@ -20,9 +20,8 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.db.DatabaseCheck;
@@ -52,11 +51,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.time.OffsetDateTime.now;
 import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
 import static org.sonatype.nexus.security.BreadActions.DELETE;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 public class DeleteFolderServiceImpl
     extends ComponentSupport
@@ -199,9 +199,9 @@ public class DeleteFolderServiceImpl
       // I'm going to transform the treePath to a request path
       String requestPath = transformTreePathToRequestPath(nodePath);
 
-      browseFacet.getByRequestPath(requestPath).ifPresent(
-          node -> browseFacet.deleteByNodeId(((BrowseNodeData) node).getNodeId())
-      );
+      browseFacet.getByRequestPath(requestPath)
+          .ifPresent(
+              node -> browseFacet.deleteByNodeId(((BrowseNodeData) node).getNodeId()));
     }
     else {
       // This folder has children. I'm going to push the parent to the stack
@@ -230,8 +230,10 @@ public class DeleteFolderServiceImpl
       final BrowseNode node)
   {
     if (canDeleteComponent && node.getAssetId() == null && node.getComponentId() != null) {
-      contentFacet.components().find(node.getComponentId()).ifPresent(
-          component -> deleteComponent(component, timestamp, contentMaintenance));
+      contentFacet.components()
+          .find(node.getComponentId())
+          .ifPresent(
+              component -> deleteComponent(component, timestamp, contentMaintenance));
     }
   }
 
@@ -243,8 +245,10 @@ public class DeleteFolderServiceImpl
       final BrowseNode node)
   {
     if (node.getAssetId() != null) {
-      contentFacet.assets().find(node.getAssetId()).ifPresent(
-          asset -> deleteAsset(repository, asset, timestamp, contentMaintenance));
+      contentFacet.assets()
+          .find(node.getAssetId())
+          .ifPresent(
+              asset -> deleteAsset(repository, asset, timestamp, contentMaintenance));
     }
   }
 

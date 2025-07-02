@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.sonatype.nexus.security.AbstractSecurityTest;
+import org.sonatype.nexus.security.AbstractSecurityTest.BaseSecurityConfiguration;
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.authz.AuthorizationManager;
 import org.sonatype.nexus.security.config.CPrivilege;
@@ -32,21 +33,24 @@ import org.sonatype.nexus.security.user.UserStatus;
 import com.google.common.collect.ImmutableList;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Import;
 
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Tests adding, updating, searching, authc, and authz a user that has an empty role (a role that does not contain any
  * other role or permission).
  */
-public class EmptyRoleTest
+@Import(BaseSecurityConfiguration.class)
+class EmptyRoleTest
     extends AbstractSecurityTest
 {
   @Test
-  public void testCreateEmptyRole() throws Exception {
+  void testCreateEmptyRole() throws Exception {
     SecuritySystem securitySystem = this.lookup(SecuritySystem.class);
     AuthorizationManager authManager = securitySystem.getAuthorizationManager("default");
 
@@ -76,7 +80,7 @@ public class EmptyRoleTest
    * you need to toss it away and ask another instance from Guice, we cannot reload security currently.
    */
   @Test
-  public void testReloadSecurityWithEmptyRole() throws Exception {
+  void testReloadSecurityWithEmptyRole() throws Exception {
     SecuritySystem securitySystem = this.lookup(SecuritySystem.class);
     AuthorizationManager authManager = securitySystem.getAuthorizationManager("default");
 
@@ -86,11 +90,11 @@ public class EmptyRoleTest
     authManager.addRole(emptyRole);
 
     // make sure the role is still there
-    Assert.assertNotNull(authManager.getRole(emptyRole.getRoleId()));
+    assertNotNull(authManager.getRole(emptyRole.getRoleId()));
   }
 
   @Test
-  public void testAuthorizeUserWithEmptyRole() throws Exception {
+  void testAuthorizeUserWithEmptyRole() throws Exception {
     SecuritySystem securitySystem = this.lookup(SecuritySystem.class);
 
     RealmManager realmManager = lookup(RealmManager.class);
@@ -105,7 +109,7 @@ public class EmptyRoleTest
     authManager.addRole(emptyRole);
 
     Role normalRole = new Role("normalRole-" + Math.random(), "NormalRole", "Normal Role", "default", false,
-            new HashSet<String>(), new HashSet<String>());
+        new HashSet<String>(), new HashSet<String>());
 
     normalRole.addPrivilege(this.createTestPriv());
     authManager.addRole(normalRole);
@@ -126,7 +130,7 @@ public class EmptyRoleTest
   }
 
   @Test
-  public void testSearchForUserWithEmptyRole() throws Exception {
+  void testSearchForUserWithEmptyRole() throws Exception {
     SecuritySystem securitySystem = this.lookup(SecuritySystem.class);
     AuthorizationManager authManager = securitySystem.getAuthorizationManager("default");
 
@@ -146,8 +150,8 @@ public class EmptyRoleTest
     Set<User> userSearchResult = securitySystem.searchUsers(
         new UserSearchCriteria(null, Collections.singleton(emptyRole.getRoleId()), null));
     // this should contain a single result
-    Assert.assertEquals(1, userSearchResult.size());
-    Assert.assertEquals(user.getUserId(), userSearchResult.iterator().next().getUserId());
+    assertEquals(1, userSearchResult.size());
+    assertEquals(user.getUserId(), userSearchResult.iterator().next().getUserId());
 
   }
 

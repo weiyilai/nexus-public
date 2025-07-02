@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.Repository;
@@ -30,8 +29,13 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RepositoryMemberGraph
     extends ComponentSupport
 {
@@ -40,7 +44,7 @@ public class RepositoryMemberGraph
   private final Type groupType;
 
   @Inject
-  public RepositoryMemberGraph(final RepositoryManager repositoryManager, @Named(GroupType.NAME) final Type type) {
+  public RepositoryMemberGraph(final RepositoryManager repositoryManager, @Qualifier(GroupType.NAME) final Type type) {
     this.repositoryManager = checkNotNull(repositoryManager);
     this.groupType = checkNotNull(type);
   }

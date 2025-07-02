@@ -14,9 +14,8 @@ package org.sonatype.nexus.repository.httpbridge.internal.describe;
 
 import java.net.URL;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.template.EscapeHelper;
 import org.sonatype.nexus.common.template.TemplateHelper;
@@ -27,13 +26,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link DescriptionRenderer}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class DescriptionRendererImpl
     implements DescriptionRenderer

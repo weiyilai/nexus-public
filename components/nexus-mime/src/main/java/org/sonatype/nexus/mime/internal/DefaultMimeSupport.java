@@ -20,9 +20,8 @@ import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.mime.MimeRule;
 import org.sonatype.nexus.mime.MimeRulesSource;
@@ -40,6 +39,8 @@ import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.mime.MimeTypes;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -48,7 +49,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 2.0
  */
-@Named
+@Primary
+@Component
 @Singleton
 public class DefaultMimeSupport
     implements MimeSupport
@@ -80,9 +82,7 @@ public class DefaultMimeSupport
         CacheBuilder.newBuilder().maximumSize(500).build(new CacheLoader<String, List<String>>()
         {
           @Override
-          public List<String> load(final String key)
-              throws Exception
-          {
+          public List<String> load(final String key) throws Exception {
             final List<String> detected = Lists.newArrayList();
             final MimeRule mimeType = nexusMimeTypes.getMimeRuleForExtension(key);
             if (mimeType != null) {

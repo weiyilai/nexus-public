@@ -17,16 +17,16 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.11
  */
-@Named
+@Component
 @Singleton
 public class XFrameOptions
     implements Serializable
@@ -55,7 +55,7 @@ public class XFrameOptions
 
   @Inject
   public XFrameOptions(
-      @Named("${nexus.http.denyframe.enabled:-true}") @Value("${nexus.http.denyframe.enabled:true}") final boolean defaultDeny)
+      @Value("${nexus.http.denyframe.enabled:true}") final boolean defaultDeny)
   {
     this.defaultDeny = defaultDeny;
     frameablePaths = new HashSet<>();

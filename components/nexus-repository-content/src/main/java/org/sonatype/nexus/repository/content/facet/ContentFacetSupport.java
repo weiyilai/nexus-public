@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintViolation;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -133,8 +133,7 @@ public abstract class ContentFacetSupport
   @Override
   protected void doValidate(final Configuration configuration) throws Exception {
     facet(ConfigurationFacet.class).validateSection(configuration, STORAGE, Config.class,
-        Default.class, getRepository().getType().getValidationGroup()
-    );
+        Default.class, getRepository().getType().getValidationGroup());
 
     Config configToValidate = facet(ConfigurationFacet.class).readSection(configuration, STORAGE, Config.class);
 
@@ -144,11 +143,12 @@ public abstract class ContentFacetSupport
   }
 
   private ConstraintViolation<?> validateBlobStoreNotInGroup(final String blobStoreName) {
-    return dependencies.getBlobStoreManager().getParent(blobStoreName)
-        .map(groupName -> dependencies.getConstraintViolationFactory().
-            createViolation(format("%s.blobStoreName", STORAGE),
-            format("Blob Store '%s' is a member of Blob Store Group '%s' and cannot be set as storage",
-                blobStoreName, groupName)))
+    return dependencies.getBlobStoreManager()
+        .getParent(blobStoreName)
+        .map(groupName -> dependencies.getConstraintViolationFactory()
+            .createViolation(format("%s.blobStoreName", STORAGE),
+                format("Blob Store '%s' is a member of Blob Store Group '%s' and cannot be set as storage",
+                    blobStoreName, groupName)))
         .orElse(null);
   }
 
@@ -175,7 +175,8 @@ public abstract class ContentFacetSupport
 
     // get or create the associated content repository
     contentRepositoryId = stores.contentRepositoryStore.readContentRepository(configRepositoryId)
-        .orElseGet(this::createContentRepository).contentRepositoryId();
+        .orElseGet(this::createContentRepository)
+        .contentRepositoryId();
 
     checkState(contentRepositoryId != null, "Missing contentRepositoryId");
 

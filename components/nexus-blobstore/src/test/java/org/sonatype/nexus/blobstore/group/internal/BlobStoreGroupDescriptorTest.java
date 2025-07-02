@@ -12,9 +12,13 @@
  */
 package org.sonatype.nexus.blobstore.group.internal;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.BlobStoreUtil;
@@ -25,24 +29,25 @@ import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.blobstore.group.BlobStoreGroup;
 import org.sonatype.nexus.blobstore.group.BlobStoreGroupService;
-import org.sonatype.nexus.blobstore.group.FillPolicy;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaService;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.springframework.beans.factory.ObjectProvider;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class BlobStoreGroupDescriptorTest
     extends TestSupport
@@ -56,6 +61,9 @@ public class BlobStoreGroupDescriptorTest
   private BlobStoreUtil blobStoreUtil;
 
   @Mock
+  private ObjectProvider<BlobStoreGroupService> provider;
+
+  @Mock
   private BlobStoreGroupService blobStoreGroupService;
 
   @Mock
@@ -67,16 +75,13 @@ public class BlobStoreGroupDescriptorTest
 
   @Before
   public void setup() {
-    Map<String, FillPolicy> fillPolicies = new HashMap<>();
-    fillPolicies.put(RoundRobinFillPolicy.TYPE, new RoundRobinFillPolicy());
-    fillPolicies.put(WriteToFirstMemberFillPolicy.TYPE, new WriteToFirstMemberFillPolicy());
-
+    when(provider.getIfAvailable()).thenReturn(blobStoreGroupService);
     blobStoreGroupDescriptor = new BlobStoreGroupDescriptor(
         blobStoreManager,
         blobStoreUtil,
-        () -> blobStoreGroupService,
+        provider,
         quotaService,
-        fillPolicies);
+        List.of(new RoundRobinFillPolicy(),  new WriteToFirstMemberFillPolicy()));
 
     blobStores = new HashMap<>();
 
@@ -206,9 +211,9 @@ public class BlobStoreGroupDescriptorTest
   }
 
   private BlobStoreConfiguration buildBlobStoreConfiguration(
-      String name,
-      List<String> memberNames,
-      String fillPolicyName)
+      final String name,
+      final List<String> memberNames,
+      final String fillPolicyName)
   {
     MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();
     Map<String, Map<String, Object>> attributes = new HashMap<>();
@@ -251,8 +256,8 @@ public class BlobStoreGroupDescriptorTest
   private BlobStore mockBlobStore(
       final String name,
       final String type,
-      Map<String, Map<String, Object>> attributes,
-      Boolean groupable)
+      final Map<String, Map<String, Object>> attributes,
+      final Boolean groupable)
   {
     BlobStore blobStore = mock(BlobStore.class);
     MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();

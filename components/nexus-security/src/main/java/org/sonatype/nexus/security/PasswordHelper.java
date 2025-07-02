@@ -15,21 +15,21 @@ package org.sonatype.nexus.security;
 import java.nio.CharBuffer;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.PhraseService;
 import org.sonatype.nexus.crypto.maven.MavenCipher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Password encryption helper.
  */
 @Singleton
-@Named
+@Component
 public class PasswordHelper
     extends ComponentSupport
 {

@@ -19,8 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.BlobRef;
 import org.sonatype.nexus.blobstore.api.ExternalMetadata;
@@ -38,7 +37,6 @@ import org.apache.ibatis.annotations.Param;
  *
  * @since 3.21
  */
-@Named
 public class AssetBlobStore<T extends AssetBlobDAO>
     extends ContentStoreSupport<T>
 {

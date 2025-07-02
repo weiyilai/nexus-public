@@ -32,7 +32,6 @@ import org.sonatype.nexus.blobstore.file.FileBlobStore;
 import org.sonatype.nexus.repository.blobstore.BlobStoreConfigurationStore;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 
-import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -81,7 +80,7 @@ public class BlobStoreInternalResourceTest
     when(blobStoreConfigurationStore.list()).thenReturn(configurations);
 
     underTest = new BlobStoreInternalResource(
-        blobStoreManager, blobStoreConfigurationStore, blobStoreDescriptorProvider, ImmutableMap.of(), repositoryManager);
+        blobStoreManager, blobStoreConfigurationStore, blobStoreDescriptorProvider, List.of(), repositoryManager);
   }
 
   @Test

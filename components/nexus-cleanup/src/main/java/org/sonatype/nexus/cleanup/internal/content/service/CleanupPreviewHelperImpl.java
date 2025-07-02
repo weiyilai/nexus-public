@@ -22,9 +22,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
@@ -59,7 +58,7 @@ import static org.sonatype.nexus.common.time.DateHelper.optionalOffsetToDate;
  *
  * @since 3.29
  */
-@Named
+@org.springframework.stereotype.Component
 @Singleton
 public class CleanupPreviewHelperImpl
     extends ComponentSupport
@@ -75,7 +74,7 @@ public class CleanupPreviewHelperImpl
   @Inject
   public CleanupPreviewHelperImpl(
       final CleanupPolicyStorage cleanupPolicyStorage,
-      @Named("${nexus.cleanup.preview.timeout:-60s}") @Value("${nexus.cleanup.preview.timeout:60s}") final Duration previewTimeout,
+      @Value("${nexus.cleanup.preview.timeout:60s}") final Duration previewTimeout,
       final CleanupBrowseServiceFactory browseServiceFactory)
   {
     this.cleanupPolicyStorage = checkNotNull(cleanupPolicyStorage);

@@ -17,20 +17,24 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Remove duplicate, unnecessary index
  * Add additional index for asset querying (similar to component)
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BrowseNodeMigrationStep_1_34
-    extends ComponentSupport implements DatabaseMigrationStep
+    extends ComponentSupport
+    implements DatabaseMigrationStep
 {
   private final List<Format> formats;
 
@@ -55,9 +59,9 @@ public class BrowseNodeMigrationStep_1_34
   }
 
   private void migrateFormat(final Connection connection, final Format format) {
-      String formatName = format.getValue();
-      executeStatement(connection, String.format(DROP_INDEX, formatName));
-      executeStatement(connection, String.format(CREATE_ASSET_INDEX, formatName, formatName));
+    String formatName = format.getValue();
+    executeStatement(connection, String.format(DROP_INDEX, formatName));
+    executeStatement(connection, String.format(CREATE_ASSET_INDEX, formatName, formatName));
   }
 
   private void executeStatement(final Connection connection, final String sqlStatement) {

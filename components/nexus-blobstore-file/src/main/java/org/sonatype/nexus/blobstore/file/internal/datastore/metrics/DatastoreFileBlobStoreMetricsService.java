@@ -18,8 +18,7 @@ import java.nio.file.FileStore;
 import java.nio.file.Files;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.AccumulatingBlobStoreMetrics;
 import org.sonatype.nexus.blobstore.api.BlobStoreMetrics;
@@ -30,16 +29,25 @@ import org.sonatype.nexus.blobstore.metrics.DatastoreBlobStoreMetricsServiceSupp
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
-@Named(FileBlobStore.TYPE)
+@Component
+@Qualifier(FileBlobStore.TYPE)
 @Priority(Integer.MAX_VALUE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DatastoreFileBlobStoreMetricsService
     extends DatastoreBlobStoreMetricsServiceSupport<FileBlobStore>
 {
   @Inject
   public DatastoreFileBlobStoreMetricsService(
-      @Named("${nexus.blobstore.metrics.flushInterval:-2}") @Value("${nexus.blobstore.metrics.flushInterval:2}") final int metricsFlushPeriodSeconds,
+      @Value("${nexus.blobstore.metrics.flushInterval:2}") final int metricsFlushPeriodSeconds,
       final BlobStoreMetricsStore blobStoreMetricsStore,
       final PeriodicJobService jobService)
   {

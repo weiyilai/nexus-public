@@ -14,18 +14,18 @@ package org.sonatype.nexus.internal.capability.node;
 
 import java.util.Collections;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.capability.CapabilityBooterSupport;
 import org.sonatype.nexus.capability.CapabilityRegistry;
+import org.springframework.stereotype.Component;
 
 /**
  * Node capability booter.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class NodeCapabilitiesBooter
     extends CapabilityBooterSupport

@@ -12,18 +12,18 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.security.realm;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.rest.APIConstants;
 import org.sonatype.nexus.security.realm.RealmManager;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 @Path(RealmApiResourceV1.RESOURCE_URL)
 public class RealmApiResourceV1

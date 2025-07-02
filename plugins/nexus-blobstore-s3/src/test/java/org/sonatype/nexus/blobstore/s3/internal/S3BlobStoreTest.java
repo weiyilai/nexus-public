@@ -73,16 +73,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.endsWith;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.sonatype.nexus.blobstore.api.BlobStore.BLOB_NAME_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.CONTENT_TYPE_HEADER;
 import static org.sonatype.nexus.blobstore.api.BlobStore.CREATED_BY_HEADER;
@@ -157,7 +148,7 @@ public class S3BlobStoreTest
     MockBlobStoreConfiguration cfg = new MockBlobStoreConfiguration();
     cfg.setAttributes(new HashMap<>(Map.of("s3", new HashMap<>(Map.of("bucket", "mybucket", "prefix", "myPrefix")))));
     blobStore.init(cfg);
-    blobStore.doStart();
+    blobStore.start();
 
     when(s3.listObjects(ArgumentMatchers.any(ListObjectsRequest.class))).thenAnswer(invocation -> {
       ListObjectsRequest request = invocation.getArgument(0);
@@ -185,7 +176,7 @@ public class S3BlobStoreTest
   @Test
   public void testGetBlobIdUpdatedSinceStreamFiltersOutOfDateContent() throws Exception {
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
 
     when(s3.listObjects(ArgumentMatchers.any(ListObjectsRequest.class))).thenAnswer(invocation -> {
       ObjectListing listing = new ObjectListing();
@@ -240,7 +231,7 @@ public class S3BlobStoreTest
   @Test(expected = IllegalArgumentException.class)
   public void testGetBlobIdUpdatedSinceStreamThrowsExceptionIfNegativeSinceDaysIsPassedIn() throws Exception {
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     blobStore.getBlobIdUpdatedSinceStream(Duration.ofDays(-1L));
   }
 
@@ -259,7 +250,7 @@ public class S3BlobStoreTest
     when(s3.getObject("mybucket", "prefix/" + bytesLocation(blobId))).thenReturn(contentS3Object);
 
     blobStore.init(cfg);
-    blobStore.doStart();
+    blobStore.start();
     Blob blob = blobStore.get(blobId);
 
     assertThat(blob, notNullValue());
@@ -279,7 +270,7 @@ public class S3BlobStoreTest
     MockBlobStoreConfiguration cfg = new MockBlobStoreConfiguration();
     cfg.setAttributes(new HashMap<>(Map.of("s3", new HashMap<>(Map.of("bucket", "mybucket", "prefix", "prefix")))));
     blobStore.init(cfg);
-    blobStore.doStart();
+    blobStore.start();
     when(s3.doesObjectExist("mybucket", "prefix/" + propertiesLocation(blobId))).thenReturn(true);
     S3Object attributesS3Object = mockS3Object(attributesContents);
     when(s3.getObject("mybucket", "prefix/" + propertiesLocation(blobId))).thenReturn(attributesS3Object);
@@ -292,7 +283,7 @@ public class S3BlobStoreTest
   @Test
   public void testSoftDeleteReturnsFalseWhenBlobDoesNotExist() throws Exception {
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     mockPropertiesException();
     boolean deleted = blobStore.delete(new BlobId("soft-delete-fail"), "test");
     assertThat(deleted, is(false));
@@ -309,7 +300,7 @@ public class S3BlobStoreTest
     BlobStoreUsageChecker usageChecker = mock(BlobStoreUsageChecker.class);
     when(usageChecker.test(any(), any(), any())).thenReturn(true);
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
 
     boolean restored = blobStore.undelete(usageChecker, new BlobId("restore-succeed"), blobAttributes, true);
     assertThat(restored, is(true));
@@ -331,7 +322,7 @@ public class S3BlobStoreTest
     S3Object s3Object = mockS3Object("type=file/1");
     when(s3.getObject("mybucket", "myPrefix/metadata.properties")).thenReturn(s3Object);
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     verify(amazonS3Factory).create(any());
   }
 
@@ -341,14 +332,14 @@ public class S3BlobStoreTest
     S3Object s3Object = mockS3Object("type=other/12");
     when(s3.getObject(anyString(), anyString())).thenReturn(s3Object);
     blobStore.init(config);
-    assertThrows(IllegalStateException.class, () -> blobStore.doStart());
+    assertThrows(IllegalStateException.class, () -> blobStore.start());
   }
 
   @Test
   public void testRemoveBucketErrorThrowsException() throws Exception {
     when(s3.listObjects("mybucket", "myPrefix/content/")).thenReturn(new ObjectListing());
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     AmazonS3Exception s3Exception = new AmazonS3Exception("error");
     s3Exception.setErrorCode("UnknownError");
     doThrow(s3Exception).when(bucketManager).deleteStorageLocation(config);
@@ -361,7 +352,7 @@ public class S3BlobStoreTest
   public void testRemoveNonEmptyBucketGeneratesWarningOnly() throws Exception {
     when(s3.listObjects("mybucket", "myPrefix/content/")).thenReturn(new ObjectListing());
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     AmazonS3Exception s3Exception = new AmazonS3Exception("error");
     s3Exception.setErrorCode("BucketNotEmpty");
     doThrow(s3Exception).when(bucketManager).deleteStorageLocation(any());
@@ -376,7 +367,7 @@ public class S3BlobStoreTest
     when(objectListing.getObjectSummaries()).thenReturn(List.of(new S3ObjectSummary()));
     when(s3.listObjects("mybucket", "myPrefix/content/")).thenReturn(objectListing);
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     blobStore.remove();
     verify(s3, never()).deleteObject("mybucket", "myPrefix/metadata.properties");
     verify(bucketManager, never()).deleteStorageLocation(config);
@@ -411,7 +402,7 @@ public class S3BlobStoreTest
     String expectedBytesPath = "myPrefix/content/directpath/foo/bar/myblob.bytes";
     String expectedPropertiesPath = "myPrefix/content/directpath/foo/bar/myblob.properties";
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
 
     mockPropertiesException();
     BlobId blobId = blobStore.create(new ByteArrayInputStream("hello world".getBytes()), Map.of("BlobStore.direct-path",
@@ -439,7 +430,7 @@ public class S3BlobStoreTest
   public void testS3BlobStoreIsWritableWhenClientCanVerifyBucketExists() throws Exception {
     when(s3.doesBucketExistV2("mybucket")).thenReturn(true);
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
     assertThat(blobStore.isStorageAvailable(), is(true));
 
     when(s3.doesBucketExistV2("mybucket")).thenReturn(false);
@@ -461,7 +452,7 @@ public class S3BlobStoreTest
     when(s3.getObject("mybucket", bytesLocation(blobId))).thenReturn(contentS3Object);
 
     blobStore.init(cfg);
-    blobStore.doStart();
+    blobStore.start();
 
     ExecutorService executorService = Executors.newFixedThreadPool(2);
     Callable<Blob> callable = () -> blobStore.get(blobId);
@@ -475,7 +466,7 @@ public class S3BlobStoreTest
   @Test
   public void testCreateDoesNotCreateTempBlobsWithTmpBlobId() throws Exception {
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
 
     Map<String, String> headers = new HashMap<>(Map.of(CREATED_BY_HEADER, "test", CREATED_BY_IP_HEADER, "127.0.0.1",
         BLOB_NAME_HEADER, "temp", TEMPORARY_BLOB_HEADER, ""));
@@ -501,7 +492,7 @@ public class S3BlobStoreTest
   @Test
   public void testMakeBlobPermanentThrowsExceptionIfTempBlobHeaderIsPassedIn() throws Exception {
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
 
     Map<String, String> headers =
         Map.of(CREATED_BY_HEADER, "test", CREATED_BY_IP_HEADER, "127.0.0.1", BLOB_NAME_HEADER, "temp",
@@ -517,7 +508,7 @@ public class S3BlobStoreTest
     when(blobId.asUniqueString()).thenReturn("test");
 
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
 
     S3BlobStore spy = spy(blobStore);
 
@@ -555,7 +546,7 @@ public class S3BlobStoreTest
     when(blobId.asUniqueString()).thenReturn("test");
 
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
 
     S3BlobStore spy = spy(blobStore);
     Map<String, String> headers = new HashMap<>();
@@ -583,7 +574,7 @@ public class S3BlobStoreTest
   @Test
   public void testDeleteIfTempDeletesBlobWhenTempBlobHeaderIsPresent() throws Exception {
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
 
     Map<String, String> headers =
         Map.of(CREATED_BY_HEADER, "test", CREATED_BY_IP_HEADER, "127.0.0.1", BLOB_NAME_HEADER, "temp",
@@ -608,7 +599,7 @@ public class S3BlobStoreTest
   @Test
   public void testDeleteIfTempDoesNotDeleteBlobWhenTempBlobHeaderIsAbsent() throws Exception {
     blobStore.init(config);
-    blobStore.doStart();
+    blobStore.start();
 
     Map<String, String> headers =
         Map.of(CREATED_BY_HEADER, "test", CREATED_BY_IP_HEADER, "127.0.0.1", BLOB_NAME_HEADER, "file.txt",

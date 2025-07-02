@@ -15,24 +15,40 @@ package org.sonatype.nexus.bootstrap.entrypoint.jetty;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
+import java.util.EventListener;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import javax.servlet.DispatcherType;
+import javax.servlet.Filter;
+import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebFilter;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
 
 import org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusProperties;
 import org.sonatype.nexus.bootstrap.entrypoint.configuration.PropertyMap;
 import org.sonatype.nexus.bootstrap.entrypoint.jvm.ShutdownDelegate;
 import org.sonatype.nexus.bootstrap.jetty.ConnectorConfiguration;
 import org.sonatype.nexus.bootstrap.jetty.ConnectorManager;
+import org.sonatype.nexus.common.QualifierUtil;
+import org.sonatype.nexus.common.text.Strings2;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
@@ -40,19 +56,25 @@ import org.eclipse.jetty.xml.XmlConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.lang.Nullable;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
+import static org.eclipse.jetty.http.HttpStatus.Code.SERVICE_UNAVAILABLE;
+import static org.eclipse.jetty.http.HttpStatus.Code.UNAUTHORIZED;
 import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 
 /**
  * Jetty server.
  */
 @Singleton
-@Named
+@Component
 @ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 public class JettyServer
 {
+
   private static final Logger LOG = LoggerFactory.getLogger(JettyServer.class);
+
+  public static final String ERROR_PAGE_PATH = "/error.html";
 
   private final NexusProperties nexusProperties;
 
@@ -63,7 +85,10 @@ public class JettyServer
   private ConnectorManager connectorManager;
 
   @Inject
-  public JettyServer(final NexusProperties nexusPropeties, final ShutdownDelegate shutdownDelegate) {
+  public JettyServer(
+      final NexusProperties nexusPropeties,
+      final ShutdownDelegate shutdownDelegate)
+  {
     this.nexusProperties = nexusPropeties;
     this.shutdownDelegate = shutdownDelegate;
   }
@@ -100,9 +125,12 @@ public class JettyServer
    *          immediately.
    * @param callback optional, callback executed immediately after Jetty is fully started up.
    */
-  public synchronized void start(final boolean waitForServer, @Nullable final Runnable callback) throws Exception {
+  public synchronized void start(
+      final ApplicationContext applicationContextfinal,
+      final boolean waitForServer) throws Exception
+  {
     try {
-      doStart(waitForServer, callback);
+      doStart(applicationContextfinal, waitForServer);
     }
     catch (Exception e) {
       LOG.error("Start failed", e);
@@ -110,7 +138,10 @@ public class JettyServer
     }
   }
 
-  private void doStart(boolean waitForServer, @Nullable final Runnable callback) throws Exception { // NOSONAR
+  private void doStart(
+      final ApplicationContext applicationContext,
+      final boolean waitForServer) throws Exception
+  { // NOSONAR
     if (thread != null) {
       throw new IllegalStateException("Already started");
     }
@@ -167,7 +198,9 @@ public class JettyServer
 
     connectorManager = new ConnectorManager(server, last.getIdMap());
 
-    thread = new JettyMainThread(components, shutdownDelegate, callback);
+    registerServlets(applicationContext, server);
+
+    thread = new JettyMainThread(components, shutdownDelegate);
     thread.startComponents(waitForServer);
   }
 
@@ -179,6 +212,93 @@ public class JettyServer
       LOG.error("Stop failed", e);
       throw propagateThrowable(e);
     }
+  }
+
+  private void registerServlets(final ApplicationContext context, final Server server) {
+    ContextHandlerCollection handler = ((ContextHandlerCollection) server.getHandler());
+    ServletContextHandler servletContext = new ServletContextHandler(handler, null);
+    context.getBeansOfType(HttpServlet.class)
+        .values()
+        .stream()
+        .sorted(QualifierUtil::compareByOrder)
+        .forEach(createRegistration(servletContext));
+    context.getBeansOfType(Filter.class)
+        .values()
+        .stream()
+        .sorted(QualifierUtil::compareByOrder)
+        .forEach(createFilterRegistration(servletContext));
+
+    context.getBeansOfType(ServletContextListener.class)
+        .values()
+        .stream()
+        .filter(EventListener.class::isInstance)
+        .map(EventListener.class::cast)
+        .forEach(servletContext::addEventListener);
+
+    handler.addHandler(servletContext);
+
+    setErrorPage(servletContext);
+  }
+
+  private static void setErrorPage(final ServletContextHandler servletContext) {
+    ErrorPageErrorHandler errorHandler = new ErrorPageErrorHandler();
+    errorHandler.addErrorPage(UNAUTHORIZED.getCode(), SERVICE_UNAVAILABLE.getCode(), ERROR_PAGE_PATH);
+    servletContext.setErrorHandler(errorHandler);
+  }
+
+  private static Consumer<HttpServlet> createRegistration(final ServletContextHandler servletContext) {
+    return servlet -> {
+      WebServlet annotation = servlet.getClass().getAnnotation(WebServlet.class);
+      if (annotation == null) {
+        LOG.debug("Skipping servlet {}", servlet);
+        return;
+      }
+      LOG.debug("Registering servlet {}", servlet);
+      ServletHolder holder = new ServletHolder(servlet);
+
+      Stream.of(annotation.initParams()).forEach(param -> holder.setInitParameter(param.name(), param.value()));
+
+      holder.setAsyncSupported(annotation.asyncSupported());
+      if (!Strings2.isBlank(annotation.displayName())) {
+        holder.setDisplayName(annotation.displayName());
+      }
+      holder.setClassName(servlet.getClass().getName());
+
+      for (String pattern : annotation.urlPatterns()) {
+        LOG.debug("Adding pattern {}", pattern);
+        servletContext.addServlet(holder, pattern);
+      }
+      for (String pattern : annotation.value()) {
+        LOG.debug("Adding pattern {}", pattern);
+        servletContext.addServlet(holder, pattern);
+      }
+    };
+  }
+
+  private static Consumer<Filter> createFilterRegistration(final ServletContextHandler servletContext) {
+    return filter -> {
+      WebFilter annotation = filter.getClass().getAnnotation(WebFilter.class);
+      if (annotation == null) {
+        LOG.debug("Skipping filter {}", filter);
+        return;
+      }
+      LOG.debug("Registering filter {}", filter);
+      FilterHolder holder = new FilterHolder(filter);
+      if (!Strings2.isBlank(annotation.filterName())) {
+        holder.setName(annotation.filterName());
+      }
+      holder.setClassName(filter.getClass().getName());
+
+      EnumSet<DispatcherType> dispatcherTypes = EnumSet.copyOf(List.of(annotation.dispatcherTypes()));
+      for (String pattern : annotation.urlPatterns()) {
+        LOG.debug("Adding pattern {}", pattern);
+        servletContext.addFilter(holder, pattern, dispatcherTypes);
+      }
+      for (String pattern : annotation.value()) {
+        LOG.debug("Adding pattern {}", pattern);
+        servletContext.addFilter(holder, pattern, dispatcherTypes);
+      }
+    };
   }
 
   /**
@@ -225,8 +345,6 @@ public class JettyServer
 
     private final List<LifeCycle> components;
 
-    private final Runnable callback;
-
     private final CountDownLatch started;
 
     private final CountDownLatch stopped;
@@ -237,13 +355,11 @@ public class JettyServer
 
     public JettyMainThread(
         final List<LifeCycle> components,
-        final ShutdownDelegate shutdownDelegate,
-        @Nullable final Runnable callback)
+        final ShutdownDelegate shutdownDelegate)
     {
       super("jetty-main-" + INSTANCE_COUNTER.getAndIncrement());
       this.components = components;
       this.shutdownDelegate = shutdownDelegate;
-      this.callback = callback;
       this.started = new CountDownLatch(1);
       this.stopped = new CountDownLatch(1);
     }
@@ -274,9 +390,6 @@ public class JettyServer
 
         if (server != null) {
           logStartupBanner(server);
-          if (callback != null) {
-            callback.run();
-          }
           server.join();
         }
       }
@@ -294,7 +407,7 @@ public class JettyServer
       }
     }
 
-    public void startComponents(boolean waitForServer) throws Exception {
+    public void startComponents(final boolean waitForServer) throws Exception {
       start();
 
       if (waitForServer) {

@@ -27,20 +27,20 @@ import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class BrowseNodeMigrationStep_2_3Test
+class BrowseNodeMigrationStep_2_3Test
     extends ExampleContentTestSupport
 {
   @Mock
@@ -56,20 +56,17 @@ public class BrowseNodeMigrationStep_2_3Test
 
   private BrowseNodeMigrationStep_2_3 underTest;
 
-  public BrowseNodeMigrationStep_2_3Test() {
-    super(ConanContentRepositoryDAO.class);
-  }
-
-  @Before
-  public void setup() {
-    when(taskScheduler.createTaskConfigurationInstance(RebuildBrowseNodesTaskDescriptor.TYPE_ID))
+  @BeforeEach
+  void setup() {
+    sessionRule.register(ConanContentRepositoryDAO.class);
+    lenient().when(taskScheduler.createTaskConfigurationInstance(RebuildBrowseNodesTaskDescriptor.TYPE_ID))
         .thenReturn(configuration);
     underTest = new BrowseNodeMigrationStep_2_3(taskScheduler, upgradeTaskScheduler);
-    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).get();
+    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME);
   }
 
   @Test
-  public void testMigrationEmptyRepository() throws Exception {
+  void testMigrationEmptyRepository() throws Exception {
 
     try (Connection conn = store.openConnection()) {
       underTest.migrate(conn);
@@ -78,7 +75,7 @@ public class BrowseNodeMigrationStep_2_3Test
   }
 
   @Test
-  public void testMigration() throws Exception {
+  void testMigration() throws Exception {
     ContentRepositoryData contentRepositoryData = randomContentRepository();
     createRepository(contentRepositoryData);
 
@@ -91,7 +88,7 @@ public class BrowseNodeMigrationStep_2_3Test
   }
 
   @Test
-  public void testMigrationWithNonExistingTable() throws Exception {
+  void testMigrationWithNonExistingTable() throws Exception {
     OssBrowseNodeMigrationStep_2_3 ossUnderTest =
         spy(new OssBrowseNodeMigrationStep_2_3(taskScheduler, upgradeTaskScheduler));
     try (Connection conn = store.openConnection()) {
@@ -143,7 +140,7 @@ public class BrowseNodeMigrationStep_2_3Test
   private class OssBrowseNodeMigrationStep_2_3
       extends BrowseNodeMigrationStep_2_3
   {
-    public OssBrowseNodeMigrationStep_2_3(TaskScheduler taskScheduler, UpgradeTaskScheduler upgradeTaskScheduler) {
+    OssBrowseNodeMigrationStep_2_3(final TaskScheduler taskScheduler, final UpgradeTaskScheduler upgradeTaskScheduler) {
       super(taskScheduler, upgradeTaskScheduler);
     }
 

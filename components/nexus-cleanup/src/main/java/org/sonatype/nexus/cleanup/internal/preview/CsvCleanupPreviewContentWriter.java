@@ -21,8 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.entity.Continuations;
@@ -32,25 +31,29 @@ import org.sonatype.nexus.repository.rest.api.ComponentXO;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class CsvCleanupPreviewContentWriter
     extends ComponentSupport
 {
-  public void write(final Repository repository, final Stream<ComponentXO> components, final OutputStream outputStream)
-      throws IOException
+  public void write(
+      final Repository repository,
+      final Stream<ComponentXO> components,
+      final OutputStream outputStream) throws IOException
   {
     log.debug("Creating CSV content for the repository {}.", repository.getName());
 
     CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
-        .setHeader("Namespace", "Name", "Version", "Path", "Blob Store Name", "Asset Size", "Downloaded Date ISO-8601", "Published Date ISO-8601")
+        .setHeader("Namespace", "Name", "Version", "Path", "Blob Store Name", "Asset Size", "Downloaded Date ISO-8601",
+            "Published Date ISO-8601")
         .build();
 
     AtomicInteger flushCount = new AtomicInteger();
     AtomicInteger totalCount = new AtomicInteger();
     try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream);
-         CSVPrinter printer = new CSVPrinter(outputStreamWriter, csvFormat)) {
+        CSVPrinter printer = new CSVPrinter(outputStreamWriter, csvFormat)) {
 
       printer.flush();
       components
@@ -78,8 +81,7 @@ public class CsvCleanupPreviewContentWriter
     }
     catch (UncheckedIOException e) {
       log.error("Unable to finish writing CSV content for the repository {}. {}.",
-          repository.getName(), e.getMessage(), log.isDebugEnabled() ? e : null
-      );
+          repository.getName(), e.getMessage(), log.isDebugEnabled() ? e : null);
       throw new IOException(e);
     }
 

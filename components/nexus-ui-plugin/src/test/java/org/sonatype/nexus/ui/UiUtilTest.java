@@ -13,16 +13,15 @@
 package org.sonatype.nexus.ui;
 
 import java.net.URL;
-import java.util.Enumeration;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 
-import org.eclipse.sisu.space.ClassSpace;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.Resource;
 
-import static java.util.Collections.enumeration;
-import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
@@ -33,14 +32,20 @@ public class UiUtilTest
   private static final String TEST_URL = "https://someurl/nexus-frontend-bundle.js";
 
   @Mock
-  private ClassSpace space;
+  private Resource resource;
+
+  @Mock
+  private ApplicationContext context;
+
+  @InjectMocks
+  private UiUtil undertest;
 
   @Test
   public void getHashedFilename() throws Exception {
-    Enumeration<URL> mockedResponse = enumeration(singletonList(new URL(TEST_URL)));
-    when(space.findEntries("static", "nexus-frontend-bundle.js", true)).thenReturn(mockedResponse);
+    when(resource.getURL()).thenReturn(new URL(TEST_URL));
+    when(context.getResources("classpath*:/static/**/nexus-frontend-bundle.js")).thenReturn(new Resource[]{resource});
 
-    String hashedFilename = UiUtil.getPathForFile("nexus-frontend-bundle.js", space);
+    String hashedFilename = undertest.getPathForFile("nexus-frontend-bundle.js");
 
     assertThat(hashedFilename, is("/nexus-frontend-bundle.js"));
   }

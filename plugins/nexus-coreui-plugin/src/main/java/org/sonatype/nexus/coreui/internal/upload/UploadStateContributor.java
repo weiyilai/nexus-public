@@ -14,17 +14,17 @@ package org.sonatype.nexus.coreui.internal.upload;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class UploadStateContributor
     extends ComponentSupport
@@ -34,7 +34,7 @@ public class UploadStateContributor
 
   @Inject
   public UploadStateContributor(
-      @Named("${nexus.react.upload:-true}") @Value("${nexus.react.upload:true}") final boolean featureFlag)
+      @Value("${nexus.react.upload:true}") final boolean featureFlag)
   {
     state = ImmutableMap.of("nexus.react.upload", featureFlag);
   }

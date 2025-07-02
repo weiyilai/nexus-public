@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.validation.constraints.NotBlank;
 
 import org.sonatype.nexus.blobstore.SelectOption;
@@ -38,7 +38,9 @@ public class CustomS3RegionCapabilityConfiguration
     this.customRegions = properties.get(REGIONS);
   }
 
-  public String getRegions() { return customRegions; }
+  public String getRegions() {
+    return customRegions;
+  }
 
   public List<SelectOption> getRegionsList() {
     return Arrays.stream(customRegions.split(","))

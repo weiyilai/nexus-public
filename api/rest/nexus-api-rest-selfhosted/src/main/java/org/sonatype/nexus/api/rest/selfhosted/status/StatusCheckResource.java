@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.status;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import java.util.SortedMap;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -25,16 +24,18 @@ import org.sonatype.nexus.rest.Resource;
 import com.codahale.metrics.annotation.Timed;
 import com.codahale.metrics.health.HealthCheck.Result;
 import com.codahale.metrics.health.HealthCheckRegistry;
-import java.util.SortedMap;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.sonatype.nexus.api.rest.selfhosted.status.StatusCheckResource.RESOURCE_PATH;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 
-@Named
+@Component
 @Singleton
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)

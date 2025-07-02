@@ -15,9 +15,8 @@ package org.sonatype.nexus.repository.content.internal;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.Blob;
@@ -33,11 +32,12 @@ import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.content.handlers.LastDownloadedAttributeHandler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Update the asset last downloaded time in corresponding blob's '.properties' file.
  */
-@Named
+@Component
 @Singleton
 public class LastDownloadedAttributePropertyFileHandler
     extends ComponentSupport

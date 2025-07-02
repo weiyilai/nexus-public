@@ -14,9 +14,8 @@ package org.sonatype.nexus.repository.security;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.view.Context;
@@ -24,13 +23,15 @@ import org.sonatype.nexus.repository.view.Handler;
 import org.sonatype.nexus.repository.view.Response;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 /**
  * Security handler.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class SecurityHandler
     extends ComponentSupport
@@ -42,7 +43,9 @@ public class SecurityHandler
   private final Handler loginsCounterHandler;
 
   @Inject
-  public SecurityHandler(@Named("nexus.analytics.loginsCounterHandler") @Nullable final Handler loginsCounterHandler) {
+  public SecurityHandler(
+      @Qualifier("nexus.analytics.loginsCounterHandler") @Nullable final Handler loginsCounterHandler)
+  {
     this.loginsCounterHandler = loginsCounterHandler;
   }
 
@@ -51,8 +54,8 @@ public class SecurityHandler
   public Response handle(@Nonnull final Context context) throws Exception {
     SecurityFacet securityFacet = context.getRepository().facet(SecurityFacet.class);
 
-    //we employ the model that one security check per request is all that is necessary, if this handler is in a nested
-    //repository (because this is a group repository), there is no need to check authz again
+    // we employ the model that one security check per request is all that is necessary, if this handler is in a nested
+    // repository (because this is a group repository), there is no need to check authz again
     if (context.getAttributes().get(AUTHORIZED_KEY) == null) {
       securityFacet.ensurePermitted(context.getRequest());
       context.getAttributes().set(AUTHORIZED_KEY, true);

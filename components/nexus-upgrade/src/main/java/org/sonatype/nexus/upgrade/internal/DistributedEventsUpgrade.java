@@ -14,21 +14,21 @@ package org.sonatype.nexus.upgrade.internal;
 
 import java.sql.Connection;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.upgrade.datastore.RepeatableDatabaseMigrationStep;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * An upgrade that manages the events table
  *
  * @since 3.38
  */
-@Named
+@Component
 @Singleton
 public class DistributedEventsUpgrade
     extends ComponentSupport
@@ -38,7 +38,7 @@ public class DistributedEventsUpgrade
 
   @Inject
   public DistributedEventsUpgrade(
-      @Named("${nexus.datastore.clustered.enabled:-false}") @Value("${nexus.datastore.clustered.enabled:false}") final boolean clusterEnabled)
+      @Value("${nexus.datastore.clustered.enabled:false}") final boolean clusterEnabled)
   {
     this.clusterEnabled = clusterEnabled;
   }

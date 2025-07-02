@@ -14,14 +14,16 @@ package org.sonatype.nexus.elasticsearch.internal.repository.contributions;
 
 import java.util.function.Consumer;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.elasticsearch.ElasticSearchContribution;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 
@@ -30,13 +32,15 @@ import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
  *
  * @since 3.15
  */
-@Named(DefaultElasticSearchContribution.NAME)
+@Primary
+@Component
+@Qualifier(DefaultElasticSearchContribution.NAME)
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class DefaultElasticSearchContribution
     extends ElasticSearchContributionSupport
 {
-  public static final String NAME = "default";
+  public static final String NAME = "DefaultElasticSearchContribution";
 
   @Override
   public void contribute(final Consumer<QueryBuilder> query, final String type, final String value) {

@@ -19,9 +19,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.security.Roles;
 import org.sonatype.nexus.security.config.memory.MemoryCUser;
@@ -30,7 +29,11 @@ import org.sonatype.nexus.security.config.memory.MemoryCUserRoleMapping;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authc.credential.PasswordService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 // FIXME: Perhaps this would be better in nexus-core internal.security?
 
@@ -39,9 +42,11 @@ import org.springframework.beans.factory.annotation.Value;
  *
  * @since 3.0
  */
-@Named("static")
+@Component
+@Qualifier("static")
 @Singleton
 @Priority(Integer.MIN_VALUE)
+@Order(Ordered.LOWEST_PRECEDENCE)
 public class StaticSecurityConfigurationSource
     implements SecurityConfigurationSource
 {
@@ -61,7 +66,7 @@ public class StaticSecurityConfigurationSource
   public StaticSecurityConfigurationSource(
       final PasswordService passwordService,
       @Nullable final AdminPasswordSource adminPasswordSource,
-      @Named("${nexus.security.randompassword:-true}") @Value("${nexus.security.randompassword:true}") final boolean randomPassword)
+      @Value("${nexus.security.randompassword:true}") final boolean randomPassword)
   {
     this(passwordService, adminPasswordSource, randomPassword, System.getenv(NEXUS_SECURITY_INITIAL_PASSWORD));
   }

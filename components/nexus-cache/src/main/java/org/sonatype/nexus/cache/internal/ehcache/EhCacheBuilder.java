@@ -18,9 +18,9 @@ import java.util.function.Supplier;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
-import javax.inject.Named;
 
 import org.sonatype.nexus.cache.AbstractCacheBuilder;
+import org.sonatype.nexus.cache.CacheBuilder;
 
 import org.ehcache.config.CacheRuntimeConfiguration;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
@@ -31,6 +31,10 @@ import org.ehcache.event.EventOrdering;
 import org.ehcache.event.EventType;
 import org.ehcache.expiry.ExpiryPolicy;
 import org.ehcache.jsr107.Eh107Configuration;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -39,7 +43,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.14
  */
-@Named("ehcache")
+@Component
+@Qualifier("ehcache")
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class EhCacheBuilder<K, V>
     extends AbstractCacheBuilder<K, V>
 {

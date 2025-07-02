@@ -25,9 +25,8 @@ import javax.cache.configuration.MutableConfiguration;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
 import org.sonatype.nexus.cache.CacheHelper;
@@ -40,12 +39,13 @@ import org.springframework.beans.factory.annotation.Value;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link SystemInformationManager}
  */
 @ManagedLifecycle(phase = SERVICES)
-@Named
+@Component
 @Singleton
 public class SystemInformationManagerImpl
     extends LifecycleSupport
@@ -67,7 +67,7 @@ public class SystemInformationManagerImpl
   public SystemInformationManagerImpl(
       final SystemInformationGenerator systemInformationGenerator,
       final CacheHelper cacheHelper,
-      @Named("${nexus.system.info.cache.duration:-3600}") @Value("${nexus.system.info.cache.duration:3600}") final int cacheDurationSec)
+      @Value("${nexus.system.info.cache.duration:3600}") final int cacheDurationSec)
   {
     this.systemInformationGenerator = checkNotNull(systemInformationGenerator);
     this.cacheHelper = checkNotNull(cacheHelper);

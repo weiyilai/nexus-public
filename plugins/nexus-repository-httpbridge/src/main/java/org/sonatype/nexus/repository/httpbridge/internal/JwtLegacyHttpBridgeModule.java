@@ -12,14 +12,8 @@
  */
 package org.sonatype.nexus.repository.httpbridge.internal;
 
-import org.sonatype.nexus.security.FilterChainModule;
-import org.sonatype.nexus.security.JwtFilter;
 import org.sonatype.nexus.security.JwtHelper;
 import org.sonatype.nexus.security.JwtSecurityFilter;
-import org.sonatype.nexus.security.anonymous.AnonymousFilter;
-import org.sonatype.nexus.security.authc.AntiCsrfFilter;
-import org.sonatype.nexus.security.authc.NexusAuthenticationFilter;
-import org.sonatype.nexus.security.authc.apikey.ApiKeyAuthenticationFilter;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
@@ -38,8 +32,6 @@ public class JwtLegacyHttpBridgeModule
 {
   @Override
   protected void configure() {
-    bind(LegacyViewServlet.class);
-
     bind(ExhaustRequestFilter.class);
 
     requireBinding(WebSecurityManager.class);
@@ -52,27 +44,7 @@ public class JwtLegacyHttpBridgeModule
     {
       @Override
       protected void bindSecurityFilter(final FilterKeyBindingBuilder filter) {
-        filter.through(JwtSecurityFilter.class);
-      }
-    });
-
-    highPriorityBinder.install(new FilterChainModule()
-    {
-      @Override
-      protected void configure() {
-        addFilterChain("/content/**",
-            NexusAuthenticationFilter.NAME,
-            JwtFilter.NAME,
-            ApiKeyAuthenticationFilter.NAME,
-            AnonymousFilter.NAME,
-            AntiCsrfFilter.NAME);
-
-        addFilterChain("/service/local/**",
-            NexusAuthenticationFilter.NAME,
-            JwtFilter.NAME,
-            ApiKeyAuthenticationFilter.NAME,
-            AnonymousFilter.NAME,
-            AntiCsrfFilter.NAME);
+        // filter verified
       }
     });
   }

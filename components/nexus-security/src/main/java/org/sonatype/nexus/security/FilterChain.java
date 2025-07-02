@@ -12,6 +12,9 @@
  */
 package org.sonatype.nexus.security;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -25,9 +28,10 @@ public class FilterChain
 
   private final String filterExpression;
 
-  public FilterChain(final String pathPattern, final String filterExpression) {
+  public FilterChain(final String pathPattern, final String... filterExpressions) {
     this.pathPattern = checkNotNull(pathPattern);
-    this.filterExpression = checkNotNull(filterExpression);
+    this.filterExpression = Stream.of(checkNotNull(filterExpressions))
+        .collect(Collectors.joining(","));
   }
 
   public String getPathPattern() {

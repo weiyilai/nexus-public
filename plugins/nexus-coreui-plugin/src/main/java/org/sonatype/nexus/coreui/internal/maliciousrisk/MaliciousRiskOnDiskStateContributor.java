@@ -14,9 +14,8 @@ package org.sonatype.nexus.coreui.internal.maliciousrisk;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.rapture.StateContributor;
 
@@ -24,13 +23,12 @@ import com.google.common.collect.ImmutableMap;
 import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.MALWARE_RISK_ON_DISK_ENABLED;
-import static org.sonatype.nexus.common.app.FeatureFlags.MALWARE_RISK_ON_DISK_ENABLED_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.MALWARE_RISK_ON_DISK_ENABLED_NAMED_VALUE;
 import static org.sonatype.nexus.common.app.FeatureFlags.MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED;
-import static org.sonatype.nexus.common.app.FeatureFlags.MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED_NAMED_VALUE;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class MaliciousRiskOnDiskStateContributor
     implements StateContributor
@@ -39,8 +37,8 @@ public class MaliciousRiskOnDiskStateContributor
 
   @Inject
   public MaliciousRiskOnDiskStateContributor(
-      @Named(MALWARE_RISK_ON_DISK_ENABLED_NAMED) @Value(MALWARE_RISK_ON_DISK_ENABLED_NAMED_VALUE) final boolean maliciousRiskOnDiskEnabled,
-      @Named(MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED_NAMED) @Value(MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED_NAMED_VALUE) final boolean maliciousRiskOnDiskNoneAdminOverrideEnabled)
+      @Value(MALWARE_RISK_ON_DISK_ENABLED_NAMED_VALUE) final boolean maliciousRiskOnDiskEnabled,
+      @Value(MALWARE_RISK_ON_DISK_NONADMIN_OVERRIDE_ENABLED_NAMED_VALUE) final boolean maliciousRiskOnDiskNoneAdminOverrideEnabled)
   {
     this.state = ImmutableMap.of(
         MALWARE_RISK_ON_DISK_ENABLED, maliciousRiskOnDiskEnabled,

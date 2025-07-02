@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.selector;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.ConstraintViolationException;
 
 import org.sonatype.goodies.common.ComponentSupport;
@@ -28,13 +27,14 @@ import static java.lang.String.format;
 import static org.sonatype.nexus.common.text.Strings2.upper;
 import static org.sonatype.nexus.selector.CselValidator.validateCselExpression;
 import static org.sonatype.nexus.selector.JexlEngine.expandExceptionDetail;
+import org.springframework.stereotype.Component;
 
 /**
  * Factory for validating and creating selectors.
  *
  * @since 3.16
  */
-@Named
+@Component
 @Singleton
 public class SelectorFactory
     extends ComponentSupport

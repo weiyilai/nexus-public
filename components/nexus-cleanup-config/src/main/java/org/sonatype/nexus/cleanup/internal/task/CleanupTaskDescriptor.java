@@ -12,11 +12,11 @@
  */
 package org.sonatype.nexus.cleanup.internal.task;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * Task descriptor for {@link CleanupTask}.
@@ -24,7 +24,7 @@ import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
  * @since 3.14
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class CleanupTaskDescriptor
     extends TaskDescriptorSupport
@@ -36,7 +36,6 @@ public class CleanupTaskDescriptor
         CleanupTask.class,
         "Admin - Cleanup repositories using their associated policies",
         VISIBLE,
-        NOT_EXPOSED
-    );
+        NOT_EXPOSED);
   }
 }

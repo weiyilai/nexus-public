@@ -14,19 +14,19 @@ package org.sonatype.nexus.internal.capability.storage.datastore.cleanup;
 
 import java.sql.Connection;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Cleanup duplicate capabilities migration step. - do cleanup capabilities duplicates (if they exist) - create unique
  * index on capability_storage_item table
  */
-@Named
+@Component
 @Singleton
 public class CleanupCapabilityDuplicatesMigrationStep_1_27
     implements DatabaseMigrationStep

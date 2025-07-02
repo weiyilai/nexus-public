@@ -14,10 +14,9 @@ package org.sonatype.nexus.security.privilege.rest;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -54,10 +53,11 @@ public class PrivilegeApiResource
     implements Resource, PrivilegeApiResourceDoc
 {
   @Inject
-  public PrivilegeApiResource(final SecuritySystem securitySystem,
-                              final Map<String, PrivilegeDescriptor> privilegeDescriptors)
+  public PrivilegeApiResource(
+      final SecuritySystem securitySystem,
+      final List<PrivilegeDescriptor> privilegeDescriptorsList)
   {
-    super(securitySystem, privilegeDescriptors);
+    super(securitySystem, privilegeDescriptorsList);
   }
 
   @Override
@@ -65,8 +65,11 @@ public class PrivilegeApiResource
   @RequiresAuthentication
   @RequiresPermissions("nexus:privileges:read")
   public List<ApiPrivilege> getPrivileges() {
-    return getSecuritySystem().listPrivileges().stream().map(this::toApiPrivilege)
-        .sorted(Comparator.comparing(ApiPrivilege::getName)).collect(Collectors.toList());
+    return getSecuritySystem().listPrivileges()
+        .stream()
+        .map(this::toApiPrivilege)
+        .sorted(Comparator.comparing(ApiPrivilege::getName))
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -120,8 +123,9 @@ public class PrivilegeApiResource
   @RequiresAuthentication
   @RequiresPermissions("nexus:privileges:update")
   @Path("application/{privilegeName}")
-  public void updatePrivilege(@PathParam("privilegeName") final String privilegeName,
-                              final ApiPrivilegeApplicationRequest privilege)
+  public void updatePrivilege(
+      @PathParam("privilegeName") final String privilegeName,
+      final ApiPrivilegeApplicationRequest privilege)
   {
     doUpdate(privilegeName, ApplicationPrivilegeDescriptor.TYPE, privilege);
   }
@@ -140,8 +144,9 @@ public class PrivilegeApiResource
   @RequiresAuthentication
   @RequiresPermissions("nexus:privileges:update")
   @Path("wildcard/{privilegeName}")
-  public void updatePrivilege(@PathParam("privilegeName") final String privilegeName,
-                              final ApiPrivilegeWildcardRequest privilege)
+  public void updatePrivilege(
+      @PathParam("privilegeName") final String privilegeName,
+      final ApiPrivilegeWildcardRequest privilege)
   {
     doUpdate(privilegeName, WildcardPrivilegeDescriptor.TYPE, privilege);
   }

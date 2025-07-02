@@ -13,9 +13,11 @@
 package org.sonatype.nexus.blobstore.restore.datastore;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.config.Configuration;
@@ -24,12 +26,16 @@ import org.sonatype.nexus.repository.content.store.AssetBlobStore;
 import org.sonatype.nexus.repository.content.store.FormatStoreManager;
 
 import com.google.common.collect.ImmutableMap;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.DATA_STORE_NAME;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STORAGE;
@@ -55,12 +61,18 @@ public class AssetBlobRefFormatCheckTest
 
   private AssetBlobRefFormatCheck underTest;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setup() {
-    Map<String, FormatStoreManager> formatStoreManagers = new HashMap<>();
-    formatStoreManagers.put(MAVEN_2, formatStoreManager);
+    mockedStatic = mockStatic(QualifierUtil.class);
+    when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(Map.of(MAVEN_2, formatStoreManager));
+    underTest = new AssetBlobRefFormatCheck(List.of(formatStoreManager));
+  }
 
-    underTest = new AssetBlobRefFormatCheck(formatStoreManagers);
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test

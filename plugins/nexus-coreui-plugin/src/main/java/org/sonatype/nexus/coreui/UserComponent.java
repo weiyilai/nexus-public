@@ -12,20 +12,18 @@
  */
 package org.sonatype.nexus.coreui;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
-import org.apache.shiro.authz.annotation.RequiresUser;
-import org.apache.shiro.subject.Subject;
-
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.common.wonderland.AuthTicketService;
 import org.sonatype.nexus.extdirect.DirectComponent;
@@ -47,28 +45,31 @@ import org.sonatype.nexus.validation.group.Update;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import com.google.inject.Key;
 import com.softwarementors.extjs.djn.config.annotations.DirectAction;
 import com.softwarementors.extjs.djn.config.annotations.DirectMethod;
-import org.eclipse.sisu.inject.BeanLocator;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.apache.shiro.authz.annotation.RequiresUser;
+import org.apache.shiro.subject.Subject;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.stream.StreamSupport.stream;
 import static org.sonatype.nexus.security.user.UserManager.DEFAULT_SOURCE;
 
 /**
  * User {@link DirectComponent}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_User")
 public class UserComponent
     extends DirectComponentSupport
+    implements ApplicationContextAware
 {
   private final SecuritySystem securitySystem;
 
@@ -76,19 +77,17 @@ public class UserComponent
 
   private final AuthTicketService authTickets;
 
-  private final BeanLocator beanLocator;
+  private ApplicationContext applicationContext;
 
   @Inject
   public UserComponent(
       final SecuritySystem securitySystem,
       final AnonymousManager anonymousManager,
-      final AuthTicketService authTickets,
-      final BeanLocator beanLocator)
+      final AuthTicketService authTickets)
   {
     this.securitySystem = checkNotNull(securitySystem);
     this.anonymousManager = checkNotNull(anonymousManager);
     this.authTickets = checkNotNull(authTickets);
-    this.beanLocator = checkNotNull(beanLocator);
   }
 
   /**
@@ -146,10 +145,19 @@ public class UserComponent
   @ExceptionMetered
   @RequiresPermissions("nexus:users:read")
   public List<ReferenceXO> readSources() {
-    return stream(beanLocator.locate(Key.get(UserManager.class, Named.class)).spliterator(), false)
-        .map(entry -> new ReferenceXO(((Named) entry.getKey()).value(),
-            Strings2.isBlank(entry.getDescription()) ? ((Named) entry.getKey()).value() : entry.getDescription()))
-        .collect(Collectors.toList()); // NOSONAR
+    return applicationContext.getBeansOfType(UserManager.class)
+        .values()
+        .stream()
+        .map(entry -> {
+          String id = QualifierUtil.value(entry).orElseGet(entry.getClass()::getName);
+          return new ReferenceXO(id, description(entry, id));
+        })
+        .toList();
+  }
+
+  private static String description(final UserManager manager, final String defaultValue) {
+    String description = QualifierUtil.description(manager);
+    return Strings2.isBlank(description) ? defaultValue : description;
   }
 
   /**
@@ -313,12 +321,12 @@ public class UserComponent
     return userXO;
   }
 
-  private boolean isAnonymousUser(String userId) {
+  private boolean isAnonymousUser(final String userId) {
     AnonymousConfiguration config = anonymousManager.getConfiguration();
     return config.isEnabled() && config.getUserId().equals(userId);
   }
 
-  private boolean isCurrentUser(String userId) {
+  private boolean isCurrentUser(final String userId) {
     Subject subject = securitySystem.getSubject();
     if (subject == null || subject.getPrincipal() == null) {
       return false;
@@ -326,7 +334,7 @@ public class UserComponent
     return subject.getPrincipal().equals(userId);
   }
 
-  private Set<RoleIdentifier> getRoles(UserXO userXO) {
+  private Set<RoleIdentifier> getRoles(final UserXO userXO) {
     if (userXO.getRoles() == null) {
       return null;
     }
@@ -334,5 +342,10 @@ public class UserComponent
         .stream()
         .map(id -> new RoleIdentifier(DEFAULT_SOURCE, id))
         .collect(Collectors.toSet());
+  }
+
+  @Override
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    this.applicationContext = applicationContext;
   }
 }

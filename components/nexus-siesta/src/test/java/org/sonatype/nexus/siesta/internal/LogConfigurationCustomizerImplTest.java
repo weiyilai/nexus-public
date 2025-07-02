@@ -12,8 +12,8 @@
  */
 package org.sonatype.nexus.siesta.internal;
 
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.log.LogConfigurationCustomizer.Configuration;
-import org.sonatype.nexus.siesta.SiestaTestSupport;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.sonatype.nexus.common.log.LoggerLevel.DEFAULT;
 
 class LogConfigurationCustomizerImplTest
-    extends SiestaTestSupport
+    extends Test5Support
 {
   private LogConfigurationCustomizerImpl customizer;
 

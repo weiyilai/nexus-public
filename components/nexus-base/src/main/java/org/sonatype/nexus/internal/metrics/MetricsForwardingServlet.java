@@ -21,11 +21,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.sonatype.nexus.common.app.WebFilterPriority;
+
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
 import static javax.servlet.http.HttpServletResponse.SC_MOVED_PERMANENTLY;
 
 /**
  * Forwards requests to the moved metrics resources
  */
+@Order(WebFilterPriority.WEB)
+@Component
 @WebServlet(MetricsForwardingServlet.PATH)
 public class MetricsForwardingServlet
     extends HttpServlet

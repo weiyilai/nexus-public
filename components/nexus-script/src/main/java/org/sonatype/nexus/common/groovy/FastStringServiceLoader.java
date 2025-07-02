@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.common.groovy;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
@@ -23,11 +22,12 @@ import org.apache.groovy.json.FastStringService;
 import org.apache.groovy.json.internal.FastStringUtils;
 
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
+import org.springframework.stereotype.Component;
 
 /**
  * Sets the FastStringService context-class-loader to the current thread class-loader
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = SERVICES)
 public class FastStringServiceLoader

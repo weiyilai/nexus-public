@@ -15,8 +15,7 @@ package org.sonatype.nexus.internal.capability.secrets.migration;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.capability.CapabilityReference;
 import org.sonatype.nexus.capability.CapabilityRegistry;
@@ -25,11 +24,15 @@ import org.sonatype.nexus.scheduling.CancelableHelper;
 import org.sonatype.nexus.security.secrets.SecretsMigrator;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Migrates existing records from the legacy secret format to the new secret format.
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class CapabilitySecretsMigrator
     implements SecretsMigrator
 {

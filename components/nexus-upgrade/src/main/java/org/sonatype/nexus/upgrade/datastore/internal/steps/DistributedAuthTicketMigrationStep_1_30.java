@@ -15,16 +15,16 @@ package org.sonatype.nexus.upgrade.datastore.internal.steps;
 import java.sql.Connection;
 import java.util.Optional;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.stereotype.Component;
 
 /**
  * Delete all tokens from the {@code distributed_auth_ticket_cache} table
  */
-@Named
+@Component
 @Singleton
 public class DistributedAuthTicketMigrationStep_1_30
     extends ComponentSupport

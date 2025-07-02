@@ -19,21 +19,22 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.search.ComponentSearchResult;
 import org.sonatype.nexus.repository.search.SearchResponse;
 import org.sonatype.nexus.repository.search.query.SearchResultComponentGenerator;
 import org.sonatype.nexus.repository.search.query.SearchResultsGenerator;
+import org.springframework.stereotype.Component;
 
 /**
  * Generates search results consumable by the UI
  *
  * @since 3.14
  */
-@Named
+@Component
 @Singleton
 public class SearchResultsGeneratorImpl
     implements SearchResultsGenerator
@@ -45,10 +46,10 @@ public class SearchResultsGeneratorImpl
 
   @Inject
   SearchResultsGeneratorImpl(
-      final Map<String, SearchResultComponentGenerator> searchResultComponentGeneratorMap)
+      final List<SearchResultComponentGenerator> searchResultComponentGeneratorList)
   {
-    this.searchResultComponentGeneratorMap = searchResultComponentGeneratorMap;
-    this.defaultSearchResultComponentGenerator = searchResultComponentGeneratorMap
+    this.searchResultComponentGeneratorMap = QualifierUtil.buildQualifierBeanMap(searchResultComponentGeneratorList);
+    this.defaultSearchResultComponentGenerator = this.searchResultComponentGeneratorMap
         .get(DefaultSearchResultComponentGenerator.DEFAULT_SEARCH_RESULT_COMPONENT_GENERATOR_KEY);
   }
 

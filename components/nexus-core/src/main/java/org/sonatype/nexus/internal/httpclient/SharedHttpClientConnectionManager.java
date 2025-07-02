@@ -15,9 +15,8 @@ package org.sonatype.nexus.internal.httpclient;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.Time;
 import org.sonatype.goodies.lifecycle.Lifecycle;
@@ -38,6 +37,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycleManager.isShuttingDown;
 import static org.sonatype.nexus.httpclient.HttpSchemes.HTTP;
 import static org.sonatype.nexus.httpclient.HttpSchemes.HTTPS;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 // TODO: Restore JMX support for httpclient bits
 
@@ -46,7 +47,8 @@ import static org.sonatype.nexus.httpclient.HttpSchemes.HTTPS;
  *
  * @since 3.0
  */
-@Named("shared")
+@Component
+@Qualifier("shared")
 @Singleton
 public class SharedHttpClientConnectionManager
     extends PoolingHttpClientConnectionManager
@@ -63,12 +65,12 @@ public class SharedHttpClientConnectionManager
   @Inject
   public SharedHttpClientConnectionManager(
       final List<SSLContextSelector> sslContextSelectors,
-      @Named("${nexus.httpclient.connectionpool.size:-20}") @Value("${nexus.httpclient.connectionpool.size:20}") final int connectionPoolSize,
-      @Named("${nexus.httpclient.connectionpool.maxSize:-200}") @Value("${nexus.httpclient.connectionpool.maxSize:200}") final int connectionPoolMaxSize,
-      @Named("${nexus.httpclient.connectionpool.idleTime:-30s}") @Value("${nexus.httpclient.connectionpool.idleTime:30s}") final Time connectionPoolIdleTime,
-      @Named("${nexus.httpclient.connectionpool.evictingDelayTime:-5s}") @Value("${nexus.httpclient.connectionpool.evictingDelayTime:5s}") final Time connectionPoolEvictingDelayTime,
-      @Named("${nexus.httpclient.connectionpool.validateAfterInactivityTime:-2s}") @Value("${nexus.httpclient.connectionpool.validateAfterInactivityTime:2s}") final Time connectionPoolValidateAfterInactivityTime,
-      @Named("${nexus.httpclient.connectionpool.default.requestTimeout:-20s}") @Value("${nexus.httpclient.connectionpool.default.requestTimeout:20s}") final Time defaultSocketTimeout)
+      @Value("${nexus.httpclient.connectionpool.size:20}") final int connectionPoolSize,
+      @Value("${nexus.httpclient.connectionpool.maxSize:200}") final int connectionPoolMaxSize,
+      @Value("${nexus.httpclient.connectionpool.idleTime:30s}") final Time connectionPoolIdleTime,
+      @Value("${nexus.httpclient.connectionpool.evictingDelayTime:5s}") final Time connectionPoolEvictingDelayTime,
+      @Value("${nexus.httpclient.connectionpool.validateAfterInactivityTime:2s}") final Time connectionPoolValidateAfterInactivityTime,
+      @Value("${nexus.httpclient.connectionpool.default.requestTimeout:20s}") final Time defaultSocketTimeout)
   {
     super(
         new DefaultHttpClientConnectionOperator(createRegistry(sslContextSelectors), null, null),

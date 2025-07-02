@@ -44,6 +44,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import static java.util.Base64.getUrlEncoder;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.empty;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -109,7 +110,7 @@ public class AssetsResourceTest
   public void setup() {
     mockRepository();
     when(contentAuthHelper.checkPathPermissions(ASSET_PATH, A_FORMAT, repository.getName())).thenReturn(true);
-    underTest = new AssetsResource(repositoryManagerRESTAdapter, maintenanceService, contentAuthHelper, emptyMap());
+    underTest = new AssetsResource(repositoryManagerRESTAdapter, maintenanceService, contentAuthHelper, emptyList());
   }
 
   @Test

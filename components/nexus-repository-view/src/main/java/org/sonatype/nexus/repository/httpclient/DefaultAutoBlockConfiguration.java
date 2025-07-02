@@ -12,8 +12,10 @@
  */
 package org.sonatype.nexus.repository.httpclient;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 import static org.sonatype.nexus.repository.http.HttpStatus.PROXY_AUTHENTICATION_REQUIRED;
@@ -23,10 +25,11 @@ import static org.sonatype.nexus.repository.http.HttpStatus.PROXY_AUTHENTICATION
  *
  * @since 3.14
  */
-@Named
+@Qualifier("default")
+@Component
 @Singleton
 public class DefaultAutoBlockConfiguration
-  implements AutoBlockConfiguration
+    implements AutoBlockConfiguration
 {
   @Override
   public boolean shouldBlock(final int statusCode) {

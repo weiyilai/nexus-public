@@ -12,17 +12,17 @@
  */
 package org.sonatype.nexus.audit.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.log.LogConfigurationCustomizer;
 import org.sonatype.nexus.common.log.LoggerLevel;
+import org.springframework.stereotype.Component;
 
 /**
  * Audit {@link LogConfigurationCustomizer}.
  */
-@Named
+@Component
 @Singleton
 public class LogConfigurationCustomizerImpl
     extends ComponentSupport

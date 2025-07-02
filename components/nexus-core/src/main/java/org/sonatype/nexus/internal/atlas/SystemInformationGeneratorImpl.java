@@ -28,13 +28,13 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.eclipse.sisu.Parameters;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Iso8601Date;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.common.app.SystemInformationHelper;
@@ -45,13 +45,14 @@ import org.sonatype.nexus.common.text.Strings2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.text.Strings2.MASK;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link SystemInformationGenerator}.
  *
  * @since 2.7
  */
-@Named
+@Component
 @Singleton
 public class SystemInformationGeneratorImpl
     extends ComponentSupport
@@ -84,14 +85,14 @@ public class SystemInformationGeneratorImpl
       @Parameters Map<String, String> parameters,
       NodeAccess nodeAccess,
       DeploymentAccess deploymentAccess,
-      Map<String, SystemInformationHelper> systemInformationHelpers)
+      List<SystemInformationHelper> systemInformationHelpersList)
   {
     this.applicationDirectories = checkNotNull(applicationDirectories);
     this.applicationVersion = checkNotNull(applicationVersion);
     this.parameters = checkNotNull(parameters);
     this.nodeAccess = checkNotNull(nodeAccess);
     this.deploymentAccess = checkNotNull(deploymentAccess);
-    this.systemInformationHelpers = checkNotNull(systemInformationHelpers);
+    this.systemInformationHelpers = QualifierUtil.buildQualifierBeanMap(checkNotNull(systemInformationHelpersList));
   }
 
   @Override

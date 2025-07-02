@@ -12,15 +12,15 @@
  */
 package org.sonatype.nexus.httpclient.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.httpclient.HttpClientManager;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.eclipse.sisu.Typed;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -29,10 +29,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
+@Component
 @Typed({HttpClient.class, CloseableHttpClient.class})
 public class HttpClientProvider
-    implements Provider<CloseableHttpClient>
+    implements FactoryBean<CloseableHttpClient>
 {
   private final HttpClientManager httpClientManager;
 
@@ -42,7 +42,17 @@ public class HttpClientProvider
   }
 
   @Override
-  public CloseableHttpClient get() {
+  public CloseableHttpClient getObject() {
     return httpClientManager.create();
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return CloseableHttpClient.class;
+  }
+
+  @Override
+  public boolean isSingleton() {
+    return false;
   }
 }

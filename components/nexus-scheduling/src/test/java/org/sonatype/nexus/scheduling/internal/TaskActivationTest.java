@@ -15,13 +15,10 @@ package org.sonatype.nexus.scheduling.internal;
 import java.util.concurrent.Future;
 
 import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.common.stateguard.StateGuardModule;
 import org.sonatype.nexus.scheduling.CurrentState;
 import org.sonatype.nexus.scheduling.TaskInfo;
 import org.sonatype.nexus.scheduling.spi.SchedulerSPI;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -69,13 +66,7 @@ public class TaskActivationTest
     doReturn(null).when(waitingTaskCurrentState).getFuture();
 
     when(schedulerSpi.listsTasks()).thenReturn(asList(runningTask, waitingTask));
-    underTest = Guice.createInjector(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(SchedulerSPI.class).toInstance(schedulerSpi);
-          }
-        }, new StateGuardModule()).getInstance(TaskActivation.class);
+    underTest = new TaskActivation(schedulerSpi);
     underTest.start();
   }
 

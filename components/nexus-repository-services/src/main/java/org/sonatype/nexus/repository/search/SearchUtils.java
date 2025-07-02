@@ -17,17 +17,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.core.UriInfo;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.rest.SearchMapping;
 import org.sonatype.nexus.repository.rest.SearchMappings;
 import org.sonatype.nexus.repository.rest.api.RepositoryManagerRESTAdapter;
 import org.sonatype.nexus.repository.search.query.SearchFilter;
+
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
@@ -37,7 +39,7 @@ import static java.util.stream.StreamSupport.stream;
 /**
  * @since 3.38
  */
-@Named
+@Component
 @Singleton
 public class SearchUtils
     extends ComponentSupport
@@ -59,13 +61,16 @@ public class SearchUtils
   @Inject
   public SearchUtils(
       final RepositoryManagerRESTAdapter repoAdapter,
-      final Map<String, SearchMappings> searchMappings)
+      final List<SearchMappings> searchMappingsList)
   {
     this.repoAdapter = checkNotNull(repoAdapter);
-    this.searchParams = checkNotNull(searchMappings).entrySet().stream()
+    this.searchParams = QualifierUtil.buildQualifierBeanMap(checkNotNull(searchMappingsList))
+        .entrySet()
+        .stream()
         .flatMap(e -> stream(e.getValue().get().spliterator(), true))
         .collect(toMap(SearchMapping::getAlias, SearchMapping::getAttribute));
-    this.assetSearchParams = searchParams.entrySet().stream()
+    this.assetSearchParams = searchParams.entrySet()
+        .stream()
         .filter(e -> e.getValue().startsWith(ASSET_PREFIX))
         .collect(toMap(Entry::getKey, Entry::getValue));
   }
@@ -93,12 +98,15 @@ public class SearchUtils
   }
 
   private List<SearchFilter> convertParameters(final UriInfo uriInfo, final List<String> keys) {
-    return uriInfo.getQueryParameters().entrySet().stream()
+    return uriInfo.getQueryParameters()
+        .entrySet()
+        .stream()
         .filter(entry -> !keys.contains(entry.getKey()))
-        .flatMap(entry -> entry.getValue().stream()
+        .flatMap(entry -> entry.getValue()
+            .stream()
             .map(value -> {
-                String key = searchParams.getOrDefault(entry.getKey(), entry.getKey());
-                return new SearchFilter(key, value);
+              String key = searchParams.getOrDefault(entry.getKey(), entry.getKey());
+              return new SearchFilter(key, value);
             }))
         .collect(toList());
   }

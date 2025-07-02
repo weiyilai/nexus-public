@@ -14,23 +14,25 @@ package org.sonatype.nexus.security;
 
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
+import javax.servlet.annotation.WebFilter;
 
 import org.sonatype.goodies.common.Loggers;
+import org.sonatype.nexus.common.QualifierUtil;
+import org.sonatype.nexus.common.text.Strings2;
 
-import com.google.inject.Key;
 import org.apache.shiro.web.filter.mgt.DefaultFilterChainManager;
 import org.apache.shiro.web.filter.mgt.FilterChainManager;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.Mediator;
-import org.eclipse.sisu.inject.BeanLocator;
 import org.slf4j.Logger;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -39,6 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
+@Component
 @Singleton
 class DynamicFilterChainManager
     extends DefaultFilterChainManager
@@ -50,15 +53,36 @@ class DynamicFilterChainManager
   private volatile boolean refreshChains;
 
   @Inject
-  public DynamicFilterChainManager(@Named("SHIRO") final ServletContext servletContext,
-      final List<FilterChain> filterChains, final BeanLocator locator)
+  public DynamicFilterChainManager(
+      // @Qualifier("SHIRO") final ServletContext servletContext,
+      final List<FilterChain> filterChains)
   {
-    super(new DelegatingFilterConfig("SHIRO", checkNotNull(servletContext)));
+    // super(new DelegatingFilterConfig("SHIRO", checkNotNull(servletContext)));
     this.filterChains = checkNotNull(filterChains);
+  }
 
+  @EventListener
+  public void on(final ContextRefreshedEvent event) {
     // install the watchers for dynamic components contributed by other bundles
-    locator.watch(Key.get(Filter.class, Named.class), new FilterInstaller(), this);
-    locator.watch(Key.get(FilterChain.class), new FilterChainRefresher(), this);
+    event.getApplicationContext()
+        .getBeansOfType(Filter.class)
+        .values()
+        .stream()
+        .sorted(QualifierUtil::compareByOrder)
+        .forEach(this::addFilter);
+
+    this.refreshChains = true;
+  }
+
+  private void addFilter(final Filter filter) {
+    String name = Optional.ofNullable(filter.getClass().getAnnotation(WebFilter.class))
+        .map(WebFilter::filterName)
+        .filter(Strings2::notBlank)
+        .orElseGet(filter.getClass()::getName);
+
+    // TODO maybe we shouldn't configure filters in JettyServer
+
+    addFilter(name, filter, false);
   }
 
   @Override
@@ -77,14 +101,16 @@ class DynamicFilterChainManager
         if (refreshChains) {
           getChainNames().clear(); // completely replace old chains with latest list
 
-          for (FilterChain filterChain : filterChains) {
-            try {
-              createChain(filterChain.getPathPattern(), filterChain.getFilterExpression());
-            }
-            catch (IllegalArgumentException e) {
-              log.warn("Problem registering: {}", filterChain, e);
-            }
-          }
+          filterChains.stream()
+              .sorted((f1, f2) -> f2.getPathPattern().length() - f1.getPathPattern().length())
+              .forEach(filterChain -> {
+                try {
+                  createChain(filterChain.getPathPattern(), filterChain.getFilterExpression());
+                }
+                catch (IllegalArgumentException e) {
+                  log.warn("Problem registering: {}", filterChain, e);
+                }
+              });
 
           refreshChains = false;
         }
@@ -118,47 +144,13 @@ class DynamicFilterChainManager
     }
 
     @Override
-    public String getInitParameter(String name) {
+    public String getInitParameter(final String name) {
       return servletContext.getInitParameter(name);
     }
 
     @Override
     public Enumeration<String> getInitParameterNames() {
       return servletContext.getInitParameterNames();
-    }
-  }
-
-  /**
-   * Watches for {@link Filter}s and registers them with the manager to be initialized.
-   */
-  private static class FilterInstaller
-      implements Mediator<Named, Filter, DynamicFilterChainManager>
-  {
-    @Override
-    public void add(BeanEntry<Named, Filter> entry, DynamicFilterChainManager manager) {
-      manager.addFilter(entry.getKey().value(), entry.getValue(), true);
-    }
-
-    @Override
-    public void remove(BeanEntry<Named, Filter> entry, DynamicFilterChainManager manager) {
-      manager.getFilters().remove(entry.getKey().value());
-    }
-  }
-
-  /**
-   * Watches for {@link FilterChain}s and flags when the cached data needs refreshing.
-   */
-  private static class FilterChainRefresher
-      implements Mediator<Named, FilterChain, DynamicFilterChainManager>
-  {
-    @Override
-    public void add(BeanEntry<Named, FilterChain> entry, DynamicFilterChainManager manager) {
-      manager.refreshChains = true;
-    }
-
-    @Override
-    public void remove(BeanEntry<Named, FilterChain> entry, DynamicFilterChainManager manager) {
-      manager.refreshChains = true;
     }
   }
 }

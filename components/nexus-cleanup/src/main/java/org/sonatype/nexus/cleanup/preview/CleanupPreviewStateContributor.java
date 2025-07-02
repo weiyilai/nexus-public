@@ -13,19 +13,20 @@
 package org.sonatype.nexus.cleanup.preview;
 
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.CLEANUP_PREVIEW_ENABLED;
-import static org.sonatype.nexus.common.app.FeatureFlags.CLEANUP_PREVIEW_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.CLEANUP_PREVIEW_ENABLED_NAMED_VALUE;
+import org.springframework.stereotype.Component;
 
 @Singleton
-@Named
+@Component
 public class CleanupPreviewStateContributor
     implements StateContributor
 {
@@ -33,7 +34,7 @@ public class CleanupPreviewStateContributor
 
   @Inject
   public CleanupPreviewStateContributor(
-      @Named(CLEANUP_PREVIEW_ENABLED_NAMED) boolean cleanupPreviewEnabled)
+      @Value(CLEANUP_PREVIEW_ENABLED_NAMED_VALUE) final boolean cleanupPreviewEnabled)
   {
     this.cleanupPreviewEnabled = cleanupPreviewEnabled;
   }

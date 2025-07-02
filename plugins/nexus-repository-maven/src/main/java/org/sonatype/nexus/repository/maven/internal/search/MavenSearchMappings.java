@@ -14,8 +14,7 @@ package org.sonatype.nexus.repository.maven.internal.search;
 
 import java.util.List;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.rest.SearchMapping;
@@ -29,11 +28,14 @@ import static org.sonatype.nexus.repository.rest.sql.SearchField.FORMAT_FIELD_3;
 import static org.sonatype.nexus.repository.rest.sql.SearchField.FORMAT_FIELD_4;
 import static org.sonatype.nexus.repository.rest.sql.SearchField.NAME;
 import static org.sonatype.nexus.repository.rest.sql.SearchField.NAMESPACE;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.7
  */
-@Named("maven2")
+@Component
+@Qualifier("maven2")
 @Singleton
 public class MavenSearchMappings
     extends ComponentSupport

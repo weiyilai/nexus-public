@@ -12,10 +12,11 @@
  */
 package org.sonatype.nexus.internal.status;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Health check that indicates if the available JVM reported CPU count is below the recommended threshold.
@@ -26,7 +27,8 @@ import com.google.common.annotations.VisibleForTesting;
  *
  * @since 3.17
  */
-@Named("Available CPUs")
+@Component
+@Qualifier("Available CPUs")
 @Singleton
 public class AvailableCpuHealthCheck
     extends HealthCheckComponentSupport

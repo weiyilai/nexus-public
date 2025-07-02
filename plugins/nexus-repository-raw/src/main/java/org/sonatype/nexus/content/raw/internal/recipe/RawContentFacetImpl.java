@@ -14,8 +14,8 @@ package org.sonatype.nexus.content.raw.internal.recipe;
 
 import java.io.IOException;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
+
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.content.raw.RawContentFacet;
 import org.sonatype.nexus.repository.Repository;
@@ -29,20 +29,28 @@ import org.sonatype.nexus.repository.raw.internal.RawFormat;
 import org.sonatype.nexus.repository.view.Content;
 import org.sonatype.nexus.repository.view.Payload;
 import org.sonatype.nexus.repository.view.payloads.TempBlob;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * A {@link RawContentFacet} that persists to a {@link ContentFacet}.
  *
  * @since 3.24
  */
-@Named(RawFormat.NAME)
+@Component
+@Qualifier(RawFormat.NAME)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RawContentFacetImpl
     extends ContentFacetSupport
     implements RawContentFacet
 {
   @Inject
   public RawContentFacetImpl(
-      @Named(RawFormat.NAME) final FormatStoreManager formatStoreManager)
+      @Qualifier(RawFormat.NAME) final FormatStoreManager formatStoreManager)
   {
     super(formatStoreManager);
   }
@@ -54,7 +62,10 @@ public class RawContentFacetImpl
 
   @Override
   public FluentAsset getOrCreateAsset(
-      final Repository repository, final String componentName, final String componentGroup, final String assetName)
+      final Repository repository,
+      final String componentName,
+      final String componentGroup,
+      final String assetName)
   {
     return assets().path(componentName)
         .component(components()
@@ -66,7 +77,7 @@ public class RawContentFacetImpl
 
   @Override
   public Content put(final String path, final Payload content) throws IOException {
-    try (TempBlob blob = blobs().ingest(content, HASHING)){
+    try (TempBlob blob = blobs().ingest(content, HASHING)) {
       return assets()
           .path(path)
           .component(components()
@@ -82,7 +93,8 @@ public class RawContentFacetImpl
 
   @Override
   public boolean delete(final String path) throws IOException {
-    return assets().path(path).find()
+    return assets().path(path)
+        .find()
         .map(asset -> repository().facet(ContentMaintenanceFacet.class).deleteAsset(asset).contains(path))
         .orElse(false);
   }

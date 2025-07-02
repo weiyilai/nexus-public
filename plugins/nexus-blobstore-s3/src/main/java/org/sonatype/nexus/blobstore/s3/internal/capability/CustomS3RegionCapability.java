@@ -13,11 +13,15 @@
 package org.sonatype.nexus.blobstore.s3.internal.capability;
 
 import java.util.Map;
-import javax.inject.Named;
 
 import org.sonatype.nexus.capability.CapabilitySupport;
 
-@Named(CustomS3RegionCapabilityDescriptor.TYPE_ID)
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component(CustomS3RegionCapabilityDescriptor.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class CustomS3RegionCapability
     extends CapabilitySupport<CustomS3RegionCapabilityConfiguration>
 {

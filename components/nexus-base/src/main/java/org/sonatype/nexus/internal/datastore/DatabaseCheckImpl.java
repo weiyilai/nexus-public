@@ -16,9 +16,8 @@ import java.sql.Connection;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.sql.DataSource;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -43,8 +42,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.STORAGE;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = STORAGE)
 public class DatabaseCheckImpl

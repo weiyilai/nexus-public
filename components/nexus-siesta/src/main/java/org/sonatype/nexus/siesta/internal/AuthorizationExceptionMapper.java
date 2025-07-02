@@ -12,10 +12,9 @@
  */
 package org.sonatype.nexus.siesta.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -25,6 +24,7 @@ import org.sonatype.nexus.rest.ExceptionMapperSupport;
 import org.apache.shiro.authz.AuthorizationException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Maps {@link AuthorizationException} to {@link Status#UNAUTHORIZED} in case that a user is logged in
@@ -32,7 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 2.4
  */
-@Named
+@Component
 @Singleton
 public class AuthorizationExceptionMapper
     extends ExceptionMapperSupport<AuthorizationException>

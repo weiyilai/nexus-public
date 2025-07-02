@@ -12,21 +12,21 @@
  */
 package org.sonatype.nexus.security.internal.rest;
 
-import java.util.Map;
+import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.security.user.UserManager;
 
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 @Path(SecurityApiResourceV1.V1_RESOURCE_URI)
 public class SecurityApiResourceV1
@@ -35,7 +35,7 @@ public class SecurityApiResourceV1
   public static final String V1_RESOURCE_URI = V1_API_PREFIX + "/security/";
 
   @Inject
-  public SecurityApiResourceV1(final Map<String, UserManager> userManagers) {
-    super(userManagers);
+  public SecurityApiResourceV1(final List<UserManager> userManagersList) {
+    super(userManagersList);
   }
 }

@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.content.maven.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.content.Asset;
 import org.sonatype.nexus.repository.content.Component;
@@ -23,11 +22,13 @@ import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_BASE_VERSION;
 import static org.sonatype.nexus.repository.maven.internal.Constants.SNAPSHOT_VERSION_SUFFIX;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.38
  */
-@Named(Maven2Format.NAME)
+@org.springframework.stereotype.Component
+@Qualifier(Maven2Format.NAME)
 @Singleton
 public class MavenPreReleaseEvaluator
     implements PreReleaseEvaluator

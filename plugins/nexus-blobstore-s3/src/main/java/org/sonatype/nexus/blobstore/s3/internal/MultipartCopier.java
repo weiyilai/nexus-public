@@ -15,8 +15,7 @@ package org.sonatype.nexus.blobstore.s3.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
@@ -30,7 +29,12 @@ import com.amazonaws.services.s3.model.CopyPartResult;
 import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Math.min;
@@ -42,7 +46,10 @@ import static java.util.stream.Collectors.toList;
  *
  * @since 3.15
  */
-@Named("multipart-copier")
+@ConditionalOnProperty(name = "nexus.s3.copierName", havingValue = "multipart-copier")
+@Component
+@Qualifier("multipart-copier")
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MultipartCopier
     extends ComponentSupport
     implements S3Copier
@@ -52,7 +59,7 @@ public class MultipartCopier
 
   @Inject
   public MultipartCopier(
-      @Named("${nexus.s3.multipartupload.chunksize:-5242880}") @Value("${nexus.s3.multipartupload.chunksize:5242880}") final int chunkSize)
+      @Value("${nexus.s3.multipartupload.chunksize:5242880}") final int chunkSize)
   {
     this.chunkSize = chunkSize;
   }

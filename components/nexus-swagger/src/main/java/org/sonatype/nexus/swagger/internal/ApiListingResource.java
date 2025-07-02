@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.swagger.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Path;
@@ -27,13 +26,14 @@ import org.sonatype.nexus.rest.Resource;
 import io.swagger.models.Swagger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Siesta-managed {@link io.swagger.jaxrs.listing.ApiListingResource}.
  * 
  * @since 3.3
  */
-@Named
+@Component
 @Singleton
 @Path("/swagger.{type:json|yaml}")
 public class ApiListingResource

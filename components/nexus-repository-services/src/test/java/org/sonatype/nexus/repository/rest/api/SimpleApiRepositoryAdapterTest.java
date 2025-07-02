@@ -14,6 +14,7 @@ package org.sonatype.nexus.repository.rest.api;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -24,6 +25,7 @@ import org.sonatype.goodies.common.Time;
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
+import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.common.entity.EntityUUID;
 import org.sonatype.nexus.common.event.EventManager;
@@ -32,7 +34,6 @@ import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.Type;
 import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.config.ConfigurationConstants;
-import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.repository.manager.internal.RepositoryImpl;
 import org.sonatype.nexus.repository.rest.api.model.AbstractApiRepository;
 import org.sonatype.nexus.repository.rest.api.model.CleanupPolicyAttributes;
@@ -52,10 +53,10 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -85,15 +86,16 @@ public class SimpleApiRepositoryAdapterTest
 
   @Test
   public void testAdapt_groupRepository() throws Exception {
-    Repository repository = createRepository(new GroupType());
-    modifyConfiguration(repository,
+    Repository repository = createRepository(new GroupType(),
         configuration -> configuration.attributes("group").set("memberNames", Arrays.asList("a", "b")));
 
     SimpleApiGroupRepository groupRepository = (SimpleApiGroupRepository) underTest.adapt(repository);
     assertRepository(groupRepository, "group", true);
     assertThat(groupRepository.getGroup().getMemberNames(), contains("a", "b"));
     assertThat(groupRepository.getStorage().getStrictContentTypeValidation(), is(true));
-    setStorageAttributes(repository, "default", /* non-default */ false, null);
+
+    repository = createRepository(new GroupType(), setStorageAttributes("default", /* non-default */ false, null)
+        .andThen(configuration -> configuration.attributes("group").set("memberNames", List.of("a", "b"))));
     groupRepository = (SimpleApiGroupRepository) underTest.adapt(repository);
     assertThat(groupRepository.getStorage().getBlobStoreName(), is("default"));
     assertThat(groupRepository.getStorage().getStrictContentTypeValidation(), is(false));
@@ -111,7 +113,7 @@ public class SimpleApiRepositoryAdapterTest
     assertThat(hostedRepository.getComponent().getProprietaryComponents(), is(true));
 
     // set some values
-    setStorageAttributes(repository, "default", /* non-default */ false, "DENY");
+    repository = createRepository(new HostedType(), setStorageAttributes("default", /* non-default */ false, "DENY"));
     hostedRepository = (SimpleApiHostedRepository) underTest.adapt(repository);
 
     assertThat(hostedRepository.getStorage().getBlobStoreName(), is("default"));
@@ -121,15 +123,12 @@ public class SimpleApiRepositoryAdapterTest
 
   @Test
   public void testAdapt_hostedRepositoryCleanup() throws Exception {
-    Repository repository = createRepository(new HostedType());
-
-    testCleanup(repository, repo -> ((SimpleApiHostedRepository) repo).getCleanup());
+    testCleanup(new HostedType(), repo -> ((SimpleApiHostedRepository) repo).getCleanup());
   }
 
   @Test
   public void testAdapt_proxyRepository() throws Exception {
-    Repository repository = createRepository(new ProxyType());
-    modifyConfiguration(repository, configuration -> {
+    Repository repository = createRepository(new ProxyType(), configuration -> {
       NestedAttributesMap proxy = configuration.attributes("proxy");
       proxy.set("remoteUrl", "https://repo1.maven.org/maven2/");
     });
@@ -144,7 +143,7 @@ public class SimpleApiRepositoryAdapterTest
     assertThat(proxyRepository.getHttpClient().getBlocked(), is(false));
 
     // Test specified values
-    modifyConfiguration(repository, configuration -> {
+    repository = createRepository(new ProxyType(), configuration -> {
       NestedAttributesMap proxy = configuration.attributes("proxy");
       proxy.set("contentMaxAge", 1000.0); // specifically a double here to ensure exceptions not thrown
       proxy.set("metadataMaxAge", 1000.0); // specifically a double here to ensure exceptions not thrown
@@ -171,7 +170,7 @@ public class SimpleApiRepositoryAdapterTest
     assertThat(proxyRepository.getNegativeCache().getTimeToLive(), is(Time.hours(24).toMinutesI()));
 
     // Test specified values
-    modifyConfiguration(repository, configuration -> {
+    repository = createRepository(new ProxyType(), configuration -> {
       NestedAttributesMap negativeCache = configuration.attributes("negativeCache");
       negativeCache.set("enabled", false);
       negativeCache.set("timeToLive", 23.0); // specifically a double here to ensure exceptions not thrown
@@ -184,8 +183,7 @@ public class SimpleApiRepositoryAdapterTest
 
   @Test
   public void testAdapt_proxyRepositoryRoutingRule() throws Exception {
-    Repository repository = createRepository(new ProxyType());
-    modifyConfiguration(repository, configuration -> {
+    Repository repository = createRepository(new ProxyType(), configuration -> {
       EntityId entityId = mock(EntityId.class);
       configuration.setRoutingRuleId(entityId);
     });
@@ -205,8 +203,8 @@ public class SimpleApiRepositoryAdapterTest
 
   @Test
   public void testAdapt_proxyRepositoryStorageAttributes() throws Exception {
-    Repository repository = createRepository(new ProxyType());
-    setStorageAttributes(repository, "default", /* non-default */ false, null);
+    Repository repository =
+        createRepository(new ProxyType(), setStorageAttributes("default", /* non-default */ false, null));
 
     SimpleApiProxyRepository proxyRepository = (SimpleApiProxyRepository) underTest.adapt(repository);
 
@@ -216,9 +214,7 @@ public class SimpleApiRepositoryAdapterTest
 
   @Test
   public void testAdapt_proxyRepositoryCleanup() throws Exception {
-    Repository repository = createRepository(new ProxyType());
-
-    testCleanup(repository, repo -> ((SimpleApiProxyRepository) repo).getCleanup());
+    testCleanup(new ProxyType(), repo -> ((SimpleApiProxyRepository) repo).getCleanup());
   }
 
   @Test
@@ -230,7 +226,7 @@ public class SimpleApiRepositoryAdapterTest
     assertThat(proxyRepository.getHttpClient().getAuthentication(), nullValue());
 
     // username
-    modifyConfiguration(repository, configuration -> {
+    repository = createRepository(new ProxyType(), configuration -> {
       NestedAttributesMap httpclient = configuration.attributes("httpclient").child("authentication");
       httpclient.set("type", "username");
       httpclient.set("username", "jsmith");
@@ -245,7 +241,7 @@ public class SimpleApiRepositoryAdapterTest
     assertThat(proxyRepository.getHttpClient().getAuthentication().getNtlmHost(), nullValue());
 
     // ntlm
-    modifyConfiguration(repository, configuration -> {
+    repository = createRepository(new ProxyType(), configuration -> {
       NestedAttributesMap httpclient = configuration.attributes("httpclient").child("authentication");
       httpclient.set("type", "ntlm");
       httpclient.set("username", "jsmith");
@@ -271,13 +267,14 @@ public class SimpleApiRepositoryAdapterTest
     assertThat(proxyRepository.getHttpClient().getConnection(), nullValue());
 
     // test empty connection
-    modifyConfiguration(repository, configuration -> configuration.attributes("httpclient").child("connection"));
+    repository =
+        createRepository(new ProxyType(), configuration -> configuration.attributes("httpclient").child("connection"));
     proxyRepository = (SimpleApiProxyRepository) underTest.adapt(repository);
     assertConnection(proxyRepository.getHttpClient().getConnection(), /* circular redirects */ false,
         /* cookies */ false, /* retries */ null, /* timeout */ null, null);
 
     // populate values
-    modifyConfiguration(repository, configuration -> {
+    repository = createRepository(new ProxyType(), configuration -> {
       NestedAttributesMap connection = configuration.attributes("httpclient").child("connection");
       connection.set("enableCircularRedirects", true);
       connection.set("enableCookies", true);
@@ -307,10 +304,17 @@ public class SimpleApiRepositoryAdapterTest
   }
 
   private static Repository createRepository(final Type type) throws Exception {
+    return createRepository(type, __ -> {
+    });
+  }
+
+  private static Repository createRepository(final Type type, final Consumer<Configuration> mutator) throws Exception {
     Repository repository = new RepositoryImpl(mock(EventManager.class), type, new Format("test-format")
     {
     });
-    repository.init(config("my-repo"));
+    Configuration configuration = config("my-repo");
+    mutator.accept(configuration);
+    repository.init(configuration);
     return repository;
   }
 
@@ -333,13 +337,12 @@ public class SimpleApiRepositoryAdapterTest
     assertThat(repository.getUrl(), is(BaseUrlHolder.get() + "/repository/my-repo"));
   }
 
-  private static void setStorageAttributes(
-      final Repository repository,
+  private static Consumer<Configuration> setStorageAttributes(
       final String blobStoreName,
       final Boolean strictContentTypeValidation,
-      final String writePolicy) throws Exception
+      final String writePolicy)
   {
-    modifyConfiguration(repository, configuration -> {
+    return configuration -> {
       NestedAttributesMap storage = configuration.attributes(ConfigurationConstants.STORAGE);
       storage.set(ConfigurationConstants.BLOB_STORE_NAME, blobStoreName);
       if (strictContentTypeValidation != null) {
@@ -348,17 +351,18 @@ public class SimpleApiRepositoryAdapterTest
       if (writePolicy != null) {
         storage.set(ConfigurationConstants.WRITE_POLICY, writePolicy);
       }
-    });
+    };
   }
 
   private void testCleanup(
-      final Repository repository,
+      final Type type,
       final Function<AbstractApiRepository, CleanupPolicyAttributes> cleanupFn) throws Exception
   {
+    Repository repository = createRepository(type);
     AbstractApiRepository restRepository = underTest.adapt(repository);
     assertThat(cleanupFn.apply(restRepository), nullValue());
 
-    modifyConfiguration(repository, configuration -> {
+    repository = createRepository(type, configuration -> {
       NestedAttributesMap storage = configuration.attributes("cleanup");
       storage.set("policyName", Collections.singleton("policy-a"));
     });

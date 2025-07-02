@@ -12,22 +12,22 @@
  */
 package org.sonatype.nexus.utils.httpclient;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.capability.CapabilityReference;
 import org.sonatype.nexus.common.app.ApplicationVersion;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Generates the {@code User-Agent} header value.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class UserAgentGenerator
     extends ComponentSupport

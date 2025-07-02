@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -33,6 +32,8 @@ import org.sonatype.nexus.formfields.StringTextFormField;
 import org.sonatype.nexus.rapture.settings.RaptureSettings;
 
 import com.google.common.collect.Lists;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * {@link SettingsCapability} descriptor.
@@ -40,7 +41,8 @@ import com.google.common.collect.Lists;
  * @since 3.0
  */
 @AvailabilityVersion(from = "1.0")
-@Named(SettingsCapabilityDescriptor.TYPE_ID)
+@Component
+@Qualifier(SettingsCapabilityDescriptor.TYPE_ID)
 @Singleton
 public class SettingsCapabilityDescriptor
     extends CapabilityDescriptorSupport<SettingsCapabilityConfiguration>
@@ -77,23 +79,19 @@ public class SettingsCapabilityDescriptor
     @DefaultMessage("Session timeout")
     String sessionTimeoutLabel();
 
-    @DefaultMessage(
-        "Period of inactivity before session times out (minutes). A value of 0 will mean that a session never expires."
-    )
+    @DefaultMessage("Period of inactivity before session times out (minutes). A value of 0 will mean that a session never expires.")
     String sessionTimeoutHelp();
 
     @DefaultMessage("Standard request timeout")
     String requestTimeoutLabel();
 
-    @DefaultMessage(
-        "Period of time to keep the connection alive for requests expected to take a normal period of time (seconds)")
+    @DefaultMessage("Period of time to keep the connection alive for requests expected to take a normal period of time (seconds)")
     String requestTimeoutHelp();
 
     @DefaultMessage("Extended request timeout")
     String longRequestTimeoutLabel();
 
-    @DefaultMessage(
-        "Period of time to keep the connection alive for requests expected to take an extended period of time (seconds)")
+    @DefaultMessage("Period of time to keep the connection alive for requests expected to take an extended period of time (seconds)")
     String longRequestTimeoutHelp();
 
     @DefaultMessage("Title")
@@ -113,47 +111,39 @@ public class SettingsCapabilityDescriptor
             SettingsCapabilityConfiguration.TITLE,
             messages.titleLabel(),
             messages.titleHelp(),
-            FormField.MANDATORY
-        ).withInitialValue(RaptureSettings.DEFAULT_TITLE),
+            FormField.MANDATORY).withInitialValue(RaptureSettings.DEFAULT_TITLE),
         new CheckboxFormField(
             SettingsCapabilityConfiguration.DEBUG_ALLOWED,
             messages.debugAllowedLabel(),
             messages.debugAllowedHelp(),
-            FormField.OPTIONAL
-        ).withInitialValue(RaptureSettings.DEFAULT_DEBUG_ALLOWED),
+            FormField.OPTIONAL).withInitialValue(RaptureSettings.DEFAULT_DEBUG_ALLOWED),
         new NumberTextFormField(
             SettingsCapabilityConfiguration.STATUS_INTERVAL_AUTHENTICATED,
             messages.statusIntervalAuthenticatedLabel(),
             messages.statusIntervalAuthenticatedHelp(),
-            FormField.MANDATORY
-        ).withInitialValue(RaptureSettings.DEFAULT_STATUS_INTERVAL_AUTHENTICATED),
+            FormField.MANDATORY).withInitialValue(RaptureSettings.DEFAULT_STATUS_INTERVAL_AUTHENTICATED),
         new NumberTextFormField(
             SettingsCapabilityConfiguration.STATUS_INTERVAL_ANONYMOUS,
             messages.statusIntervalAnonymousLabel(),
             messages.statusIntervalAnonymousHelp(),
-            FormField.MANDATORY
-        ).withInitialValue(RaptureSettings.DEFAULT_STATUS_INTERVAL_ANONYMOUS),
+            FormField.MANDATORY).withInitialValue(RaptureSettings.DEFAULT_STATUS_INTERVAL_ANONYMOUS),
         new NumberTextFormField(
             SettingsCapabilityConfiguration.SESSION_TIMEOUT,
             messages.sessionTimeoutLabel(),
             messages.sessionTimeoutHelp(),
-            FormField.MANDATORY
-        ).withInitialValue(RaptureSettings.DEFAULT_SESSION_TIMEOUT),
+            FormField.MANDATORY).withInitialValue(RaptureSettings.DEFAULT_SESSION_TIMEOUT),
         new NumberTextFormField(
             SettingsCapabilityConfiguration.REQUEST_TIMEOUT,
             messages.requestTimeoutLabel(),
             messages.requestTimeoutHelp(),
-            FormField.MANDATORY
-        ).withInitialValue(RaptureSettings.DEFAULT_REQUEST_TIMEOUT)
-            .withMinimumValue(RaptureSettings.MIN_REQUEST_TIMEOUT),
+            FormField.MANDATORY).withInitialValue(RaptureSettings.DEFAULT_REQUEST_TIMEOUT)
+                .withMinimumValue(RaptureSettings.MIN_REQUEST_TIMEOUT),
         new NumberTextFormField(
             SettingsCapabilityConfiguration.LONG_REQUEST_TIMEOUT,
             messages.longRequestTimeoutLabel(),
             messages.longRequestTimeoutHelp(),
-            FormField.MANDATORY
-        ).withInitialValue(RaptureSettings.DEFAULT_LONG_REQUEST_TIMEOUT)
-            .withMinimumValue(RaptureSettings.DEFAULT_LONG_REQUEST_TIMEOUT)
-    );
+            FormField.MANDATORY).withInitialValue(RaptureSettings.DEFAULT_LONG_REQUEST_TIMEOUT)
+                .withMinimumValue(RaptureSettings.DEFAULT_LONG_REQUEST_TIMEOUT));
   }
 
   @Override

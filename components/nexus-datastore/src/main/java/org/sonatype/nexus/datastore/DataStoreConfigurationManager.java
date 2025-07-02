@@ -12,6 +12,7 @@
  */
 package org.sonatype.nexus.datastore;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,11 +21,11 @@ import java.util.TreeSet;
 import java.util.function.Function;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.datastore.api.DataStoreConfiguration;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -33,13 +34,14 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Streams.stream;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Comparator.comparingInt;
+import org.springframework.stereotype.Component;
 
 /**
  * Manages {@link DataStoreConfiguration}s supplied by one or more sources.
  *
  * @since 3.19
  */
-@Named
+@Component
 @Singleton
 public class DataStoreConfigurationManager
     extends ComponentSupport
@@ -47,8 +49,8 @@ public class DataStoreConfigurationManager
   private final Map<String, DataStoreConfigurationSource> configurationSources;
 
   @Inject
-  public DataStoreConfigurationManager(final Map<String, DataStoreConfigurationSource> configurationSources) {
-    this.configurationSources = checkNotNull(configurationSources);
+  public DataStoreConfigurationManager(final List<DataStoreConfigurationSource> configurationSourcesList) {
+    this.configurationSources = QualifierUtil.buildQualifierBeanMap(checkNotNull(configurationSourcesList));
   }
 
   /**

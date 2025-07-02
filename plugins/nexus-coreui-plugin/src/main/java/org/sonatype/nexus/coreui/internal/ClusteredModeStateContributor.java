@@ -15,9 +15,8 @@ package org.sonatype.nexus.coreui.internal;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.rapture.StateContributor;
 
@@ -25,14 +24,13 @@ import com.google.common.collect.ImmutableMap;
 import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.CLUSTERED_ZERO_DOWNTIME_ENABLED;
-import static org.sonatype.nexus.common.app.FeatureFlags.CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED_VALUE;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED;
-import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class ClusteredModeStateContributor
     implements StateContributor
@@ -43,8 +41,8 @@ public class ClusteredModeStateContributor
 
   @Inject
   public ClusteredModeStateContributor(
-      @Named(DATASTORE_CLUSTERED_ENABLED_NAMED) @Value(DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean clusteredModeEnabled,
-      @Named(CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED) @Value(CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED_VALUE) final boolean zeroDowntimeEnabled)
+      @Value(DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean clusteredModeEnabled,
+      @Value(CLUSTERED_ZERO_DOWNTIME_ENABLED_NAMED_VALUE) final boolean zeroDowntimeEnabled)
   {
     this.clusteredModeEnabled = clusteredModeEnabled;
     this.zeroDowntimeEnabled = zeroDowntimeEnabled;

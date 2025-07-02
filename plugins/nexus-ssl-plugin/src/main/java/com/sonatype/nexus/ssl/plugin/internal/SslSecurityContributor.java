@@ -12,20 +12,20 @@
  */
 package com.sonatype.nexus.ssl.plugin.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityContributor;
 import org.sonatype.nexus.security.config.SecurityContributorSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * SSL security configuration.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class SslSecurityContributor
     extends SecurityContributorSupport

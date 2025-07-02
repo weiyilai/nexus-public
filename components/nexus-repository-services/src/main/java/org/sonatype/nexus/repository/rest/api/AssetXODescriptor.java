@@ -13,16 +13,19 @@
 package org.sonatype.nexus.repository.rest.api;
 
 import java.util.Set;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 
-import javax.inject.Named;
+import org.springframework.stereotype.Component;
 
 /**
  * Descriptor for the {@link AssetXO} class
  *
  * @since 3.29
  */
-@Named
+@Component
 @FunctionalInterface
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public interface AssetXODescriptor
 {
   Set<String> listExposedAttributeKeys();

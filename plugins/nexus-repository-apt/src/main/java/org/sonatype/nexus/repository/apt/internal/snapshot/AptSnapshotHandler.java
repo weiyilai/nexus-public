@@ -17,8 +17,7 @@ import java.io.InputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.Repository;
@@ -33,11 +32,12 @@ import org.sonatype.nexus.repository.view.Response;
 import static org.sonatype.nexus.repository.http.HttpMethods.DELETE;
 import static org.sonatype.nexus.repository.http.HttpMethods.MKCOL;
 import static org.sonatype.nexus.repository.http.HttpMethods.PUT;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.17
  */
-@Named
+@Component
 @Singleton
 public class AptSnapshotHandler
     extends ComponentSupport
@@ -97,8 +97,10 @@ public class AptSnapshotHandler
     return HttpResponses.created();
   }
 
-  private Response doPut(final Context context, final String id, final AptSnapshotFacet snapshotFacet)
-      throws IOException
+  private Response doPut(
+      final Context context,
+      final String id,
+      final AptSnapshotFacet snapshotFacet) throws IOException
   {
     try (InputStream is = context.getRequest().getPayload().openInputStream()) {
       ControlFile settings = new ControlFileParser().parseControlFile(is);
@@ -112,8 +114,10 @@ public class AptSnapshotHandler
     return HttpResponses.noContent();
   }
 
-  private Response handleSnapshotFetchRequest(final Context context, final String id, final String path)
-      throws Exception
+  private Response handleSnapshotFetchRequest(
+      final Context context,
+      final String id,
+      final String path) throws Exception
   {
     Repository repository = context.getRepository();
     AptSnapshotFacet snapshotFacet = repository.facet(AptSnapshotFacet.class);

@@ -15,10 +15,8 @@ package org.sonatype.nexus.security.privilege.rest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
@@ -68,9 +66,9 @@ public class PrivilegeApiResourceTest
   public void setup() throws Exception {
     when(securitySystem.getAuthorizationManager("default")).thenReturn(authorizationManager);
 
-    Map<String, PrivilegeDescriptor> privilegeDescriptors = new HashMap<>();
-    privilegeDescriptors.put(ApplicationPrivilegeDescriptor.TYPE, new ApplicationPrivilegeDescriptor(false));
-    privilegeDescriptors.put(WildcardPrivilegeDescriptor.TYPE, new WildcardPrivilegeDescriptor());
+    List<PrivilegeDescriptor> privilegeDescriptors = new ArrayList<>();
+    privilegeDescriptors.add(new ApplicationPrivilegeDescriptor(false));
+    privilegeDescriptors.add(new WildcardPrivilegeDescriptor());
 
     underTest = new PrivilegeApiResource(securitySystem, privilegeDescriptors);
   }
@@ -273,8 +271,8 @@ public class PrivilegeApiResourceTest
 
     ApiPrivilegeApplicationRequest apiPrivilege = new ApiPrivilegeApplicationRequest("priv", "newdescription",
         "newdomain", Arrays
-        .asList(PrivilegeAction.ADD, PrivilegeAction.EDIT, PrivilegeAction.READ, PrivilegeAction.DELETE,
-            PrivilegeAction.ASSOCIATE, PrivilegeAction.DISASSOCIATE));
+            .asList(PrivilegeAction.ADD, PrivilegeAction.EDIT, PrivilegeAction.READ, PrivilegeAction.DELETE,
+                PrivilegeAction.ASSOCIATE, PrivilegeAction.DISASSOCIATE));
 
     underTest.updatePrivilege("priv", apiPrivilege);
 
@@ -289,7 +287,8 @@ public class PrivilegeApiResourceTest
     Privilege priv = createPrivilege("wildcard", "priv", "privdesc", false, PATTERN_KEY, "a:pattern");
     when(authorizationManager.getPrivilegeByName("priv")).thenReturn(priv);
 
-    ApiPrivilegeWildcardRequest apiPrivilege = new ApiPrivilegeWildcardRequest("priv", "newdescription", "a:new:pattern");
+    ApiPrivilegeWildcardRequest apiPrivilege =
+        new ApiPrivilegeWildcardRequest("priv", "newdescription", "a:new:pattern");
 
     underTest.updatePrivilege("priv", apiPrivilege);
 
@@ -343,7 +342,8 @@ public class PrivilegeApiResourceTest
     Privilege priv = createPrivilege("wildcard", "priv", "privdesc", true, PATTERN_KEY, "a:pattern");
     when(authorizationManager.getPrivilege("priv")).thenReturn(priv);
 
-    ApiPrivilegeWildcardRequest apiPrivilege = new ApiPrivilegeWildcardRequest("privnotmatching", "privdesc", "new_pattern");
+    ApiPrivilegeWildcardRequest apiPrivilege =
+        new ApiPrivilegeWildcardRequest("privnotmatching", "privdesc", "new_pattern");
 
     try {
       underTest.updatePrivilege("priv", apiPrivilege);
@@ -358,10 +358,11 @@ public class PrivilegeApiResourceTest
     }
   }
 
-  private void assertPrivilege(Privilege privilege,
-                               String name,
-                               String description,
-                               String... properties)
+  private void assertPrivilege(
+      Privilege privilege,
+      String name,
+      String description,
+      String... properties)
   {
     assertThat(privilege, notNullValue());
     assertThat(privilege.getName(), is(name));
@@ -374,33 +375,36 @@ public class PrivilegeApiResourceTest
     }
   }
 
-  private void assertApiPrivilegeApplication(ApiPrivilege apiPrivilege,
-                                             String name,
-                                             String description,
-                                             boolean readOnly,
-                                             String domain,
-                                             PrivilegeAction... actions)
+  private void assertApiPrivilegeApplication(
+      ApiPrivilege apiPrivilege,
+      String name,
+      String description,
+      boolean readOnly,
+      String domain,
+      PrivilegeAction... actions)
   {
     assertApiPrivilege(apiPrivilege, ApplicationPrivilegeDescriptor.TYPE, name, description, readOnly);
     assertThat(((ApiPrivilegeApplication) apiPrivilege).getDomain(), is(domain));
     assertThat(((ApiPrivilegeApplication) apiPrivilege).getActions(), containsInAnyOrder(actions));
   }
 
-  private void assertApiPrivilegeWildcard(ApiPrivilege apiPrivilege,
-                                          String name,
-                                          String description,
-                                          boolean readOnly,
-                                          String pattern)
+  private void assertApiPrivilegeWildcard(
+      ApiPrivilege apiPrivilege,
+      String name,
+      String description,
+      boolean readOnly,
+      String pattern)
   {
     assertApiPrivilege(apiPrivilege, WildcardPrivilegeDescriptor.TYPE, name, description, readOnly);
     assertThat(((ApiPrivilegeWildcard) apiPrivilege).getPattern(), is(pattern));
   }
 
-  private void assertApiPrivilege(ApiPrivilege apiPrivilege,
-                                  String type,
-                                  String name,
-                                  String description,
-                                  boolean readOnly)
+  private void assertApiPrivilege(
+      ApiPrivilege apiPrivilege,
+      String type,
+      String name,
+      String description,
+      boolean readOnly)
   {
     assertThat(apiPrivilege, notNullValue());
     assertThat(apiPrivilege.getType(), is(type));
@@ -409,11 +413,12 @@ public class PrivilegeApiResourceTest
     assertThat(apiPrivilege.isReadOnly(), is(readOnly));
   }
 
-  private Privilege createPrivilege(String type,
-                                    String name,
-                                    String description,
-                                    boolean readOnly,
-                                    String... properties)
+  private Privilege createPrivilege(
+      String type,
+      String name,
+      String description,
+      boolean readOnly,
+      String... properties)
   {
     Privilege privilege = new Privilege();
     privilege.setType(type);

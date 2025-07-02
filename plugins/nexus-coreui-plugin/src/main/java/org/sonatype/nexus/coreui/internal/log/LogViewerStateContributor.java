@@ -16,21 +16,20 @@ import java.util.Collections;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.rapture.StateContributor;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class LogViewerStateContributor
     implements StateContributor
 {
   @Inject
-  @Named("${nexus.datastore.clustered.enabled:-false}")
   @Value("${nexus.datastore.clustered.enabled:false}")
   private boolean enabled;
 

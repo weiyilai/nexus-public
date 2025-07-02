@@ -16,17 +16,17 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.crypto.secrets.SecretData;
 import org.sonatype.nexus.crypto.secrets.SecretsStore;
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.transaction.Transactional;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class SecretsStoreImpl
     extends ConfigStoreSupport<SecretsDAO>

@@ -19,8 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintViolation;
 
 import org.sonatype.nexus.cleanup.storage.CleanupPolicy;
@@ -32,18 +31,24 @@ import org.sonatype.nexus.repository.manager.ConfigurationValidator;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.validation.ConstraintViolationFactory;
 
+import org.springframework.context.annotation.Lazy;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.nonNull;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.CLEANUP_ATTRIBUTES_KEY;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.CLEANUP_NAME_KEY;
 import static org.sonatype.nexus.cleanup.storage.CleanupPolicy.ALL_CLEANUP_POLICY_FORMAT;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Ensures that cleanup configuration is valid
  *
  * @since 3.19
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class CleanupConfigurationValidator
     implements ConfigurationValidator
 {
@@ -54,9 +59,10 @@ public class CleanupConfigurationValidator
   private final CleanupPolicyStorage cleanupPolicyStorage;
 
   @Inject
-  public CleanupConfigurationValidator(final ConstraintViolationFactory constraintViolationFactory,
-                                       final RepositoryManager repositoryManager,
-                                       final CleanupPolicyStorage cleanupPolicyStorage)
+  public CleanupConfigurationValidator(
+      final ConstraintViolationFactory constraintViolationFactory,
+      @Lazy final RepositoryManager repositoryManager,
+      final CleanupPolicyStorage cleanupPolicyStorage)
   {
     this.constraintViolationFactory = checkNotNull(constraintViolationFactory);
     this.repositoryManager = checkNotNull(repositoryManager);
@@ -79,7 +85,8 @@ public class CleanupConfigurationValidator
   }
 
   private Optional<Format> getConfigurationFormat(final Configuration configuration) {
-    return repositoryManager.getAllSupportedRecipes().stream()
+    return repositoryManager.getAllSupportedRecipes()
+        .stream()
         .filter(recipe -> configuration.getRecipeName().equals(recipe.getFormat().getValue() + "-" + recipe.getType()))
         .map(Recipe::getFormat)
         .findFirst();
@@ -96,8 +103,9 @@ public class CleanupConfigurationValidator
     return cleanupPolicies;
   }
 
-  private void addToCleanupPoliciesFromCleanupAttributes(final List<CleanupPolicy> cleanupPolicies,
-                                                         final Map<String, Object> cleanupAttributes)
+  private void addToCleanupPoliciesFromCleanupAttributes(
+      final List<CleanupPolicy> cleanupPolicies,
+      final Map<String, Object> cleanupAttributes)
   {
     if (cleanupAttributes.containsKey(CLEANUP_NAME_KEY)) {
       @SuppressWarnings("unchecked")
@@ -113,7 +121,11 @@ public class CleanupConfigurationValidator
     }
   }
 
-  private ConstraintViolation<?> validCleanupFormat(final String repoName, final String repoFormat, final CleanupPolicy cleanupPolicy) {
+  private ConstraintViolation<?> validCleanupFormat(
+      final String repoName,
+      final String repoFormat,
+      final CleanupPolicy cleanupPolicy)
+  {
     if (!repoFormat.equals(cleanupPolicy.getFormat()) && !ALL_CLEANUP_POLICY_FORMAT.equals(cleanupPolicy.getFormat())) {
       return constraintViolationFactory.createViolation(CLEANUP_ATTRIBUTES_KEY,
           String.format("Repository %s is of format type %s, unable to assign cleanup policy %s of format type %s",

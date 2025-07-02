@@ -26,15 +26,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
 import org.sonatype.nexus.common.app.GlobalComponentLookupHelper;
 import org.sonatype.nexus.common.entity.DetachedEntityId;
@@ -78,8 +78,9 @@ import org.apache.shiro.authz.annotation.RequiresAuthentication;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.coreui.internal.RepositoryCleanupAttributesUtil.initializeCleanupAttributes;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class RepositoryUiService
     extends ComponentSupport
@@ -105,7 +106,7 @@ public class RepositoryUiService
 
   private final RepositoryPermissionChecker repositoryPermissionChecker;
 
-  public final static String INVALID_BLOBSTORENAME_EXCEPTION_MESSAGE =
+  public static final String INVALID_BLOBSTORENAME_EXCEPTION_MESSAGE =
       "Only letters, digits, underscores(_), hyphens(-), and dots(.) are allowed and may not start with underscore or dot.";
 
   @Inject
@@ -115,7 +116,7 @@ public class RepositoryUiService
       @Nullable final RepositoryMetricsService repositoryMetricsService,
       final ConfigurationStore configurationStore,
       final SecurityHelper securityHelper,
-      final Map<String, Recipe> recipes,
+      final List<Recipe> recipesList,
       final TaskScheduler taskScheduler,
       final GlobalComponentLookupHelper typeLookup,
       final List<Format> formats,
@@ -126,7 +127,7 @@ public class RepositoryUiService
     this.repositoryMetricsService = Optional.ofNullable(repositoryMetricsService);
     this.configurationStore = checkNotNull(configurationStore);
     this.securityHelper = checkNotNull(securityHelper);
-    this.recipes = new HashMap<>(checkNotNull(recipes));
+    this.recipes = new HashMap<>(QualifierUtil.buildQualifierBeanMap(checkNotNull(recipesList)));
     this.taskScheduler = checkNotNull(taskScheduler);
     this.typeLookup = checkNotNull(typeLookup);
     this.formats = checkNotNull(formats);

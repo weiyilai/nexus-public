@@ -24,9 +24,9 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -39,6 +39,7 @@ import com.sonatype.nexus.ssl.plugin.internal.keystore.TrustedKeyStoreManager;
 import com.sonatype.nexus.ssl.plugin.internal.keystore.TrustedSSLCertificate;
 import com.sonatype.nexus.ssl.plugin.internal.keystore.TrustedSSLCertificateDataEvent;
 import com.sonatype.nexus.ssl.plugin.internal.keystore.TrustedSSLCertificateStore;
+
 import org.sonatype.nexus.common.app.FreezeService;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.db.DatabaseCheck;
@@ -61,6 +62,9 @@ import org.sonatype.nexus.ssl.TrustStore;
 import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.stream;
@@ -73,8 +77,9 @@ import static org.sonatype.nexus.ssl.CertificateUtil.decodePEMFormattedCertifica
  *
  * @since ssl 1.0
  */
+@Lazy
 @ManagedLifecycle(phase = TASKS)
-@Named
+@Component
 @Singleton
 public class TrustStoreImpl
     extends StateGuardLifecycleSupport
@@ -114,7 +119,7 @@ public class TrustStoreImpl
   public TrustStoreImpl(
       final EventManager eventManager,
       final FreezeService freezeService,
-      @Named("ssl") final KeyStoreManager keyStoreManager,
+      @Lazy @Qualifier("ssl") final KeyStoreManager keyStoreManager,
       final TrustedSSLCertificateStore trustedSSLCertificateStore,
       final TrustedKeyStoreManager trustedKeyStoreManager,
       final DatabaseCheck databaseCheck,

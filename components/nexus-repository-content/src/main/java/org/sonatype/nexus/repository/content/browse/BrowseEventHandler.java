@@ -23,9 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.cooperation2.Cooperation2;
@@ -60,6 +59,7 @@ import static java.lang.Integer.parseInt;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 import static org.sonatype.nexus.repository.content.store.InternalIds.internalAssetId;
 import static org.sonatype.nexus.repository.content.store.InternalIds.toExternalId;
+import org.springframework.stereotype.Component;
 
 /**
  * Event handler that periodically updates the browse tree based on asset events.
@@ -74,7 +74,7 @@ import static org.sonatype.nexus.repository.content.store.InternalIds.toExternal
  * @since 3.26
  */
 @ManagedLifecycle(phase = SERVICES)
-@Named
+@Component
 @Singleton
 public class BrowseEventHandler
     extends BrowseNodeEventHandlerSupport
@@ -124,13 +124,12 @@ public class BrowseEventHandler
       final Cooperation2Factory cooperation2Factory,
       final PeriodicJobService periodicJobService,
       final EventManager eventManager,
-      @Named("${nexus.browse.cooperation.enabled:-true}") @Value("${nexus.browse.cooperation.enabled:true}") final boolean cooperationEnabled,
-      @Named("${nexus.browse.cooperation.majorTimeout:-0s}") @Value("${nexus.browse.cooperation.majorTimeout:0s}") final Duration majorTimeout,
-      @Named("${nexus.browse.cooperation.minorTimeout:-30s}") @Value("${nexus.browse.cooperation.minorTimeout:30s}") final Duration minorTimeout,
-      @Named("${" + FLUSH_ON_COUNT_KEY + ":-100}") @Value("${" + FLUSH_ON_COUNT_KEY + ":100}") final int flushOnCount,
-      @Named("${" + FLUSH_ON_SECONDS_KEY + ":-2}") @Value("${" + FLUSH_ON_SECONDS_KEY + ":2}") final int flushOnSeconds,
-      @Named("${" + NO_PURGE_DELAY_KEY + ":-true}") @Value("${" + NO_PURGE_DELAY_KEY
-          + ":true}") final boolean noPurgeDelay,
+      @Value("${nexus.browse.cooperation.enabled:true}") final boolean cooperationEnabled,
+      @Value("${nexus.browse.cooperation.majorTimeout:0s}") final Duration majorTimeout,
+      @Value("${nexus.browse.cooperation.minorTimeout:30s}") final Duration minorTimeout,
+      @Value("${" + FLUSH_ON_COUNT_KEY + ":100}") final int flushOnCount,
+      @Value("${" + FLUSH_ON_SECONDS_KEY + ":2}") final int flushOnSeconds,
+      @Value("${" + NO_PURGE_DELAY_KEY + ":true}") final boolean noPurgeDelay,
       final DatabaseCheck databaseCheck)
   {
     this.cooperation = checkNotNull(cooperation2Factory).configure()

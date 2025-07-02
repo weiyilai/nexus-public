@@ -15,14 +15,15 @@ package org.sonatype.nexus.internal.datastore;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.supportzip.ExportSecurityData;
 import org.sonatype.nexus.supportzip.GeneratedContentSourceSupport;
 import org.sonatype.nexus.supportzip.SupportBundle;
@@ -30,13 +31,14 @@ import org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type;
 import org.sonatype.nexus.supportzip.SupportBundleCustomizer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Add {@link SupportBundle} to export {@link Type#SECURITY} data to serialized files.
  *
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 public class SecurityDatabase
     extends ComponentSupport
@@ -51,8 +53,8 @@ public class SecurityDatabase
   private final Map<String, ExportSecurityData> exportDataByName;
 
   @Inject
-  public SecurityDatabase(final Map<String, ExportSecurityData> exportDataByName) {
-    this.exportDataByName = checkNotNull(exportDataByName);
+  public SecurityDatabase(final List<ExportSecurityData> exportDataByNameList) {
+    this.exportDataByName = QualifierUtil.buildQualifierBeanMap(checkNotNull(exportDataByNameList));
   }
 
   @Override

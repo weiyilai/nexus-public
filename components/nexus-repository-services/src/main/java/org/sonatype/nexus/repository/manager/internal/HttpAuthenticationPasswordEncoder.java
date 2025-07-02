@@ -16,9 +16,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
@@ -29,13 +28,14 @@ import org.apache.commons.lang3.StringUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Optional.ofNullable;
+import org.springframework.stereotype.Component;
 
 /**
  * Used for management of Repository secrets
  *
  * @see org.sonatype.nexus.repository.manager.RepositoryManager implementation
  */
-@Named
+@Component
 @Singleton
 public class HttpAuthenticationPasswordEncoder
     extends ComponentSupport
@@ -127,15 +127,14 @@ public class HttpAuthenticationPasswordEncoder
       return;
     }
 
-    newAuthentication.ifPresent(newAuth ->
-        getAuthentication(attributesToPrune).ifPresent(oldAuth -> {
-          final String newPassword = (String) newAuth.get(authSecretKey);
-          final String oldPassword = (String) oldAuth.get(authSecretKey);
-          if (!StringUtils.equals(oldPassword, newPassword)) {
-            log.debug("Secret changed. Removing old secret.");
-            removeSecret(attributesToPrune, authSecretKey);
-          }
-        }));
+    newAuthentication.ifPresent(newAuth -> getAuthentication(attributesToPrune).ifPresent(oldAuth -> {
+      final String newPassword = (String) newAuth.get(authSecretKey);
+      final String oldPassword = (String) oldAuth.get(authSecretKey);
+      if (!StringUtils.equals(oldPassword, newPassword)) {
+        log.debug("Secret changed. Removing old secret.");
+        removeSecret(attributesToPrune, authSecretKey);
+      }
+    }));
   }
 
   private void encodeAuthSecret(

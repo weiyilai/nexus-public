@@ -15,13 +15,18 @@ package org.sonatype.nexus.repository.webhooks;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Named;
+
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
 
-@Named
+import jakarta.inject.Inject;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+@Component
 public class RepositoryWebhookTypeValidator
     extends ConstraintValidatorSupport<RepositoryWebhookType, List<String>>
 {

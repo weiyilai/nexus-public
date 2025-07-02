@@ -16,21 +16,23 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.cleanup.internal.storage.CleanupPolicyData;
 import org.sonatype.nexus.supportzip.ExportConfigData;
 import org.sonatype.nexus.supportzip.ImportData;
 import org.sonatype.nexus.supportzip.datastore.JsonExporter;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Write/Read {@link CleanupPolicy} data to/from a JSON file.
  *
  * @since 3.29
  */
-@Named("cleanupPolicyExport")
+@Component
+@Qualifier("cleanupPolicyExport")
 @Singleton
 public class CleanupPolicyExport
     extends JsonExporter

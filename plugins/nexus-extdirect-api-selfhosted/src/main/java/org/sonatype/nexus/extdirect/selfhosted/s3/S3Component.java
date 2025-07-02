@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.s3.internal.AmazonS3Factory;
 import org.sonatype.nexus.blobstore.s3.internal.encryption.KMSEncrypter;
@@ -35,13 +35,14 @@ import com.codahale.metrics.annotation.Timed;
 import com.softwarementors.extjs.djn.config.annotations.DirectAction;
 import com.softwarementors.extjs.djn.config.annotations.DirectMethod;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.stereotype.Component;
 
 /**
  * S3 {@link DirectComponent}.
  *
  * @since 3.12
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "s3_S3")
 public class S3Component

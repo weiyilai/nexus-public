@@ -12,13 +12,15 @@
  */
 package org.sonatype.nexus.httpclient.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.httpclient.HttpClientManager;
 import org.sonatype.nexus.httpclient.config.HttpClientConfiguration;
+
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -27,10 +29,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named("initial")
+@Component
+@Qualifier("initial")
 @Singleton
 public class InitialHttpClientConfigurationProvider
-  implements Provider<HttpClientConfiguration>
+    implements FactoryBean<HttpClientConfiguration>
 {
   private final HttpClientManager clientManager;
 
@@ -40,9 +43,12 @@ public class InitialHttpClientConfigurationProvider
   }
 
   @Override
-  public HttpClientConfiguration get() {
-    HttpClientConfiguration configuration = clientManager.newConfiguration();
-    // TODO:
-    return configuration;
+  public HttpClientConfiguration getObject() throws Exception {
+    return clientManager.newConfiguration();
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return HttpClientConfiguration.class;
   }
 }

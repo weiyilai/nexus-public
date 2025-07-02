@@ -17,8 +17,7 @@ import java.net.URI;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
@@ -41,17 +40,22 @@ import com.google.common.net.HttpHeaders;
 import org.apache.http.client.methods.HttpRequestBase;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Maven specific implementation of {@link ProxyFacetSupport}.
  *
  * @since 3.26
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenProxyFacet
     extends ContentProxyFacetSupport
 {
   private static final String MAVEN_CENTRAL_HOST = "repo1.maven.org";
+
   public static final String P_ATTRIBUTES = "attributes";
 
   final ConstraintViolationFactory constraintViolationFactory;
@@ -158,7 +162,7 @@ public class MavenProxyFacet
   }
 
   private String removePrefixingSlash(final String url) {
-    if(url != null && url.startsWith("/")) {
+    if (url != null && url.startsWith("/")) {
       return url.replaceFirst("/", "");
     }
     return url;

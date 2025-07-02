@@ -12,19 +12,22 @@
  */
 package org.sonatype.nexus.capability;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
- * {@link CapabilityTypeIsExposed} validator.  Note that this validator also validates the CapabilityTypeExists
+ * {@link CapabilityTypeIsExposed} validator. Note that this validator also validates the CapabilityTypeExists
  * so there is no need to utilize both validators for single CapabilityType
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class CapabilityTypeIsExposedValidator
     extends ConstraintValidatorSupport<CapabilityTypeIsExposed, String>
 {
@@ -33,8 +36,9 @@ public class CapabilityTypeIsExposedValidator
   private final CapabilityDescriptorRegistry capabilityDescriptorRegistry;
 
   @Inject
-  public CapabilityTypeIsExposedValidator(final CapabilityFactoryRegistry capabilityFactoryRegistry,
-                                          final CapabilityDescriptorRegistry capabilityDescriptorRegistry)
+  public CapabilityTypeIsExposedValidator(
+      final CapabilityFactoryRegistry capabilityFactoryRegistry,
+      final CapabilityDescriptorRegistry capabilityDescriptorRegistry)
   {
     this.capabilityFactoryRegistry = checkNotNull(capabilityFactoryRegistry);
     this.capabilityDescriptorRegistry = checkNotNull(capabilityDescriptorRegistry);
@@ -46,7 +50,8 @@ public class CapabilityTypeIsExposedValidator
       log.trace("Validating capability type is exposed: {}", value);
       CapabilityType type = CapabilityType.capabilityType(value);
       CapabilityDescriptor capabilityDescriptor = capabilityDescriptorRegistry.get(type);
-      return capabilityFactoryRegistry.get(type) != null && capabilityDescriptor != null && capabilityDescriptor.isExposed();
+      return capabilityFactoryRegistry.get(type) != null && capabilityDescriptor != null
+          && capabilityDescriptor.isExposed();
     }
     return true;
   }

@@ -14,10 +14,8 @@ package org.sonatype.nexus.repository.httpbridge.internal;
 
 import java.util.Iterator;
 import java.util.Optional;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
 import org.sonatype.nexus.capability.CapabilityEvent;
@@ -37,20 +35,22 @@ import org.eclipse.sisu.inject.InjectorBindings;
 import org.eclipse.sisu.inject.MutableBeanLocator;
 import org.eclipse.sisu.wire.ParameterKeys;
 import org.eclipse.sisu.wire.WireModule;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.sonatype.nexus.common.app.FeatureFlags.SESSION_ENABLED;
+import org.springframework.stereotype.Component;
 
 /**
  * Manages the injection of {@link LegacyHttpBridgeModule} based on the capability being enabled or the system property
  *
  * @since 3.7
  */
-@Named
+@Component
 @Singleton
 @FeatureFlag(name = SESSION_ENABLED)
-@ConditionalOnProperty(name = SESSION_ENABLED, havingValue = "true")
+@ConditionalOnExpression("${" + SESSION_ENABLED + ":false} && !${" + FEATURE_SPRING_ONLY + "}")
 @ManagedLifecycle(phase = Phase.TASKS)
 public class LegacyHttpBridgeService
     extends LifecycleSupport

@@ -17,30 +17,33 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static java.util.Objects.requireNonNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Creates index for blob_created on each asset_blob table. Drops index for last_updated on asset table.
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AssetBlobMigrationStep_1_13
     implements DatabaseMigrationStep
 {
-  private static final String CREATE_INDEX = "CREATE INDEX IF NOT EXISTS idx_%s_asset_blob_blob_created ON %s_asset_blob (blob_created)";
+  private static final String CREATE_INDEX =
+      "CREATE INDEX IF NOT EXISTS idx_%s_asset_blob_blob_created ON %s_asset_blob (blob_created)";
 
   private static final String DROP_INDEX = "DROP INDEX IF EXISTS idx_%s_asset_last_updated";
 
   private final List<Format> formats;
 
   @Inject
-  public AssetBlobMigrationStep_1_13(final List<Format> formats)
-  {
+  public AssetBlobMigrationStep_1_13(final List<Format> formats) {
     this.formats = requireNonNull(formats);
   }
 

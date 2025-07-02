@@ -12,17 +12,19 @@
  */
 package org.sonatype.nexus.repository.raw.rest;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.rest.api.HostedRepositoryApiRequestToConfigurationConverter;
 
 import static org.sonatype.nexus.repository.raw.rest.RawAttributes.CONTENT_DISPOSITION;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.25
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RawHostedRepositoryApiRequestToConfigurationConverter
     extends HostedRepositoryApiRequestToConfigurationConverter<RawHostedRepositoryApiRequest>
 {

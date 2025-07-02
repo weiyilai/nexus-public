@@ -15,7 +15,7 @@ package org.sonatype.nexus.blobstore.s3.internal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 import javax.validation.ValidationException;
 
 import org.sonatype.nexus.blobstore.MockBlobStoreConfiguration;
@@ -52,7 +52,8 @@ import static org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper.BUC
 import static org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper.CONFIG_KEY;
 
 @RunWith(MockitoJUnitRunner.class)
-public class S3BlobStoreDescriptorTest {
+public class S3BlobStoreDescriptorTest
+{
 
   @Mock
   private BlobStoreQuotaService quotaService;
@@ -165,7 +166,8 @@ public class S3BlobStoreDescriptorTest {
 
     try {
       underTest.validateConfig(config);
-    } catch (ValidationException e) {
+    }
+    catch (ValidationException e) {
       assertEquals("Blob Store 'other' is already using bucket 'bucket' with prefix ''", e.getMessage());
     }
   }
@@ -204,8 +206,10 @@ public class S3BlobStoreDescriptorTest {
 
       try {
         underTest.validateConfig(config);
-      } catch (ValidationException e) {
-        assertEquals("Blob Store 'other' is already using bucket 'bucket' with prefix '" + prefixPair[0] + "'", e.getMessage());
+      }
+      catch (ValidationException e) {
+        assertEquals("Blob Store 'other' is already using bucket 'bucket' with prefix '" + prefixPair[0] + "'",
+            e.getMessage());
       }
     }
   }
@@ -307,7 +311,8 @@ public class S3BlobStoreDescriptorTest {
 
   @Test
   public void testCustomS3RegionCapabilityIsEnabled() {
-    S3BlobStoreDescriptor spyDescriptor = spy(new S3BlobStoreDescriptor(quotaService, blobStoreManager, capabilityRegistryProvider));
+    S3BlobStoreDescriptor spyDescriptor =
+        spy(new S3BlobStoreDescriptor(quotaService, blobStoreManager, capabilityRegistryProvider));
     doReturn(true).when(spyDescriptor).isCustomS3RegionCapabilityEnabled();
 
     CustomS3RegionCapability mockCapability = mock(CustomS3RegionCapability.class);

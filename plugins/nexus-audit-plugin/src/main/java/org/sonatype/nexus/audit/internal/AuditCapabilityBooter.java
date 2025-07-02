@@ -12,18 +12,18 @@
  */
 package org.sonatype.nexus.audit.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.capability.CapabilityBooterSupport;
 import org.sonatype.nexus.capability.CapabilityRegistry;
+import org.springframework.stereotype.Component;
 
 /**
  * Audit {@link CapabilityBooterSupport}.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class AuditCapabilityBooter
     extends CapabilityBooterSupport

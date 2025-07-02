@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.content.maven.internal.recipe;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.sonatype.nexus.content.maven.internal.index.MavenContentProxyIndexFacet;
 import org.sonatype.nexus.repository.Repository;

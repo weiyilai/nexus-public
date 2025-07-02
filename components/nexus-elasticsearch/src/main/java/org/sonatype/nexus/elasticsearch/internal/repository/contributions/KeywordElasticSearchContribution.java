@@ -16,8 +16,7 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.elasticsearch.ElasticSearchContribution;
 
@@ -28,13 +27,16 @@ import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * "Keyword" {@link ElasticSearchContribution} (adds filter as an ES query string).
  *
  * @since 3.15
  */
-@Named(KeywordElasticSearchContribution.NAME)
+@Component
+@Qualifier(KeywordElasticSearchContribution.NAME)
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class KeywordElasticSearchContribution

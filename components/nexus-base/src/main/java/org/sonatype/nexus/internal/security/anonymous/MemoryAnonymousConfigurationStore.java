@@ -14,22 +14,27 @@ package org.sonatype.nexus.internal.security.anonymous;
 
 import javax.annotation.Nullable;
 import javax.annotation.Priority;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.security.anonymous.AnonymousConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.Ordered;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * In-memory {@link AnonymousConfigurationStore}.
  */
-@Named("memory")
+@Component
+@Qualifier("memory")
 @Singleton
 @Priority(Integer.MIN_VALUE)
+@Order(Ordered.LOWEST_PRECEDENCE)
 @VisibleForTesting
 public class MemoryAnonymousConfigurationStore
     extends ComponentSupport

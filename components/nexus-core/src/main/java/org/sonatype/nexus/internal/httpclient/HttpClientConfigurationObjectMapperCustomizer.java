@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.internal.httpclient;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Time;
@@ -30,6 +29,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.collect.ImmutableList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * HTTP-client specific {@link ConfigurationObjectMapperCustomizer} that registers custom deserializer
@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @see AuthenticationConfigurationDeserializer
  */
-@Named
+@Component
 @Singleton
 public class HttpClientConfigurationObjectMapperCustomizer
     extends ComponentSupport
@@ -58,21 +58,16 @@ public class HttpClientConfigurationObjectMapperCustomizer
             new SimpleModule()
                 .addSerializer(
                     Time.class,
-                    new SecondsSerializer()
-                )
+                    new SecondsSerializer())
                 .addDeserializer(
                     Time.class,
-                    new SecondsDeserializer()
-                )
+                    new SecondsDeserializer())
                 .addSerializer(
                     AuthenticationConfiguration.class,
-                    new AuthenticationConfigurationSerializer()
-                )
+                    new AuthenticationConfigurationSerializer())
                 .addDeserializer(
                     AuthenticationConfiguration.class,
-                    new AuthenticationConfigurationDeserializer()
-                )
-                .addDeserializer(Secret.class, new SecretDeserializer(secretsService))
-        );
+                    new AuthenticationConfigurationDeserializer())
+                .addDeserializer(Secret.class, new SecretDeserializer(secretsService)));
   }
 }

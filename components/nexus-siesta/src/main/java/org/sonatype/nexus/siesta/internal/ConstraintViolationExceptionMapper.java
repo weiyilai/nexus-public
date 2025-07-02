@@ -17,8 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ElementKind;
@@ -28,6 +27,7 @@ import javax.ws.rs.ext.Provider;
 
 import org.sonatype.nexus.rest.ValidationErrorXO;
 import org.sonatype.nexus.siesta.ValidationExceptionMapperSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * Maps {@link ConstraintViolationException} to {@link Status#BAD_REQUEST} or {@link Status#INTERNAL_SERVER_ERROR}
@@ -35,7 +35,7 @@ import org.sonatype.nexus.siesta.ValidationExceptionMapperSupport;
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @Provider
 public class ConstraintViolationExceptionMapper

@@ -27,12 +27,11 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.blobstore.api.BlobRef;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.entity.EntityUUID;
 import org.sonatype.nexus.common.time.UTC;
-import org.sonatype.nexus.datastore.api.DataAccess;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DuplicateKeyException;
 import org.sonatype.nexus.datastore.mybatis.handlers.ExternalMetadataTypeHandler;
@@ -48,7 +47,9 @@ import org.sonatype.nexus.repository.content.store.example.TestAssetDAO;
 import org.sonatype.nexus.repository.content.store.example.TestAssetData;
 import org.sonatype.nexus.repository.content.store.example.TestComponentDAO;
 import org.sonatype.nexus.repository.content.store.example.TestContentRepositoryDAO;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -58,7 +59,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
@@ -73,18 +74,14 @@ import static org.sonatype.nexus.datastore.mybatis.CombUUID.combUUID;
 /**
  * Support for {@link RepositoryContent} tests.
  */
-public class ExampleContentTestSupport
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+public abstract class ExampleContentTestSupport
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME)
-      .handle(new BlobRefTypeHandler())
-      .access(TestContentRepositoryDAO.class)
-      .access(TestComponentDAO.class)
-      .access(TestAssetBlobDAO.class)
-      .access(TestAssetDAO.class)
-      .access(ConfigurationDAO.class)
-      .handle(new ExternalMetadataTypeHandler());
+  @DataSessionConfiguration(daos = {TestContentRepositoryDAO.class, TestComponentDAO.class, TestAssetBlobDAO.class,
+      TestAssetDAO.class, ConfigurationDAO.class},
+      typeHandlers = {BlobRefTypeHandler.class, ExternalMetadataTypeHandler.class})
+  protected TestDataSessionSupplier sessionRule;
 
   private Random random = new Random();
 
@@ -105,21 +102,6 @@ public class ExampleContentTestSupport
   private List<AssetData> assets;
 
   private List<ConfigurationData> configurations;
-
-  public ExampleContentTestSupport() {
-    // do nothing
-  }
-
-  public ExampleContentTestSupport(final Class<? extends DataAccess> accessType) {
-    sessionRule.access(accessType);
-  }
-
-  @SafeVarargs
-  public ExampleContentTestSupport(final Class<? extends DataAccess>... accessTypes) {
-    for (Class<? extends DataAccess> accessType : accessTypes) {
-      sessionRule.access(accessType);
-    }
-  }
 
   protected List<ContentRepositoryData> generatedRepositories() {
     return unmodifiableList(repositories);

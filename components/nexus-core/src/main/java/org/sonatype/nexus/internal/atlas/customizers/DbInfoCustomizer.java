@@ -15,9 +15,8 @@ package org.sonatype.nexus.internal.atlas.customizers;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.internal.support.DbDiagnostics;
@@ -30,11 +29,13 @@ import org.apache.commons.io.FileUtils;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Priority.HIGH;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.DBINFO;
+import org.springframework.stereotype.Component;
+
 /**
  * Creates and adds db info file to support bundle.
  *
  */
-@Named
+@Component
 @Singleton
 public class DbInfoCustomizer
     extends ComponentSupport

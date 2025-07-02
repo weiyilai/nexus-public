@@ -15,9 +15,8 @@ package org.sonatype.nexus.internal.security.secrets;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.cooperation2.Cooperation2;
@@ -41,11 +40,12 @@ import org.springframework.beans.factory.annotation.Value;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static org.sonatype.nexus.crypto.secrets.SecretsService.SECRETS_MIGRATION_VERSION;
+import org.springframework.stereotype.Component;
 
 /**
  * Implementation of {@link ReEncryptService}. It schedules a re-encryption task if one is not already running.
  */
-@Named
+@Component
 @Singleton
 public class ReEncryptServiceImpl
     extends ComponentSupport
@@ -74,7 +74,7 @@ public class ReEncryptServiceImpl
       final EventManager eventManager,
       final DatabaseCheck databaseCheck,
       final Cooperation2Factory cooperationFactory,
-      @Named("${nexus.secrets.cooperation.enabled:-true}") @Value("${nexus.secrets.cooperation.enabled:true}") final boolean cooperationEnabled)
+      @Value("${nexus.secrets.cooperation.enabled:true}") final boolean cooperationEnabled)
   {
     this.keyAccessValidator = checkNotNull(keyAccessValidator);
     this.encryptionKeyValidator = checkNotNull(encryptionKeyValidator);

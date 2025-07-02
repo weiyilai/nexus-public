@@ -24,6 +24,10 @@ import org.sonatype.nexus.repository.view.Handler;
 import org.sonatype.nexus.repository.view.Request;
 import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.repository.view.ViewFacet;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.repository.http.HttpConditions.makeConditional;
 import static org.sonatype.nexus.repository.http.HttpConditions.makeUnconditional;
@@ -47,6 +51,8 @@ import static org.sonatype.nexus.repository.http.HttpMethods.PUT;
  * @see Content
  * @since 3.0
  */
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ConditionalRequestHandler
     extends ComponentSupport
     implements Handler
@@ -68,8 +74,7 @@ public class ConditionalRequestHandler
   }
 
   @Nonnull
-  private Response handleConditional(@Nonnull final Context context) throws Exception
-  {
+  private Response handleConditional(@Nonnull final Context context) throws Exception {
     final String action = context.getRequest().getAction();
     log.debug("Conditional request: {} {}",
         action,

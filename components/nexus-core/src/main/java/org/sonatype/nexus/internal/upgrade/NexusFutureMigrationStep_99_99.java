@@ -15,8 +15,7 @@ package org.sonatype.nexus.internal.upgrade;
 import java.sql.Connection;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.FeatureFlag;
@@ -27,10 +26,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.ZERO_DOWNTIME_FUTURE_MIGRATION_ENABLED;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @FeatureFlag(name = ZERO_DOWNTIME_FUTURE_MIGRATION_ENABLED, enabledByDefault = false)
 @ConditionalOnProperty(name = ZERO_DOWNTIME_FUTURE_MIGRATION_ENABLED, havingValue = "true")
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class NexusFutureMigrationStep_99_99
     extends ComponentSupport
     implements DatabaseMigrationStep
@@ -41,8 +44,7 @@ public class NexusFutureMigrationStep_99_99
 
   @Inject
   public NexusFutureMigrationStep_99_99(
-      @Named("${" + FAIL_MIGRATION_FLAG + ":-false}") @Value("${" + FAIL_MIGRATION_FLAG
-          + ":false}") final boolean shouldFail)
+      @Value("${" + FAIL_MIGRATION_FLAG + ":false}") final boolean shouldFail)
   {
     this.shouldFail = shouldFail;
   }

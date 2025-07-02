@@ -21,10 +21,9 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.goodies.common.ComponentSupport;
@@ -50,6 +49,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
+import org.springframework.stereotype.Component;
 
 /**
  * Rapture {@link WebResourceBundle}.
@@ -64,7 +64,7 @@ import static java.util.stream.Collectors.toList;
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class RaptureWebResourceBundle
     extends ComponentSupport
@@ -98,8 +98,8 @@ public class RaptureWebResourceBundle
       final TemplateHelper templateHelper,
       final List<UiPluginDescriptor> pluginDescriptors,
       final List<org.sonatype.nexus.rapture.UiPluginDescriptor> extJsPluginDescriptors,
-      @Nullable @Named("${" + PROPERTY_WEBRESOURCES_CACHEBUSTER + "}") final String cacheBuster,
-      @Named("${nexus.analytics.enabled:-true}") @Value("${nexus.analytics.enabled:true}") final boolean analyticsEnabled)
+      @Nullable @Value("${" + PROPERTY_WEBRESOURCES_CACHEBUSTER + ":#{null}}") final String cacheBuster,
+      @Value("${nexus.analytics.enabled:true}") final boolean analyticsEnabled)
   {
     this.applicationVersion = checkNotNull(applicationVersion);
     this.servletRequestProvider = checkNotNull(servletRequestProvider);

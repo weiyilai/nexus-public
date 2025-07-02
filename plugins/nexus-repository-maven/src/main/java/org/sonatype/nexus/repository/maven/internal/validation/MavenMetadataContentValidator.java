@@ -15,7 +15,7 @@ package org.sonatype.nexus.repository.maven.internal.validation;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.InvalidContentException;
@@ -23,15 +23,17 @@ import org.sonatype.nexus.repository.maven.MavenPath;
 import org.sonatype.nexus.repository.maven.internal.MavenModels;
 
 import org.apache.maven.artifact.repository.metadata.Metadata;
+import org.springframework.stereotype.Component;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.sonatype.nexus.repository.maven.internal.hosted.metadata.MetadataUtils.metadataPath;
 
 /**
  * Validates that maven-metadata.xml is parsable and has the correct path.
- * 
+ *
  * @since 3.16
  */
+@Component
 @Singleton
 public class MavenMetadataContentValidator
     extends ComponentSupport
@@ -53,8 +55,8 @@ public class MavenMetadataContentValidator
       }
     }
     catch (IOException e) {
-      log.warn("Unable to read maven-metadata.xml at path {}", path, e );
-      
+      log.warn("Unable to read maven-metadata.xml at path {}", path, e);
+
       throw new InvalidContentException("Unable to read maven-metadata.xml reason: " + e.getMessage());
     }
   }
@@ -79,14 +81,14 @@ public class MavenMetadataContentValidator
   private String getMetadataVersion(final Metadata metadata) {
     if (metadata.getVersion() != null && metadata.getVersion().contains("-SNAPSHOT")) {
       log.debug("maven-metadata.xml contains a SNAPSHOT version ({}) therefore the version is expected to be part of " +
-              "the path", metadata.getVersion());
+          "the path", metadata.getVersion());
 
       return metadata.getVersion();
     }
     else {
       log.debug("maven-metadata.xml version ({}) is either null or not a SNAPSHOT therefore not expected in the path",
           metadata.getVersion());
-      
+
       return null;
     }
   }

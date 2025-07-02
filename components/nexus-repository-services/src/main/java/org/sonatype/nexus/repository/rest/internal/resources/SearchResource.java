@@ -21,9 +21,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -36,6 +35,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.common.event.EventManager;
@@ -72,11 +72,12 @@ import static org.sonatype.nexus.repository.search.SearchUtils.CONTINUATION_TOKE
 import static org.sonatype.nexus.repository.search.SearchUtils.SORT_DIRECTION;
 import static org.sonatype.nexus.repository.search.SearchUtils.SORT_FIELD;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.4
  */
-@Named
+@Component
 @Singleton
 @Path(SearchResource.RESOURCE_URI)
 @Produces(APPLICATION_JSON)
@@ -117,14 +118,15 @@ public class SearchResource
       final ComponentXOFactory componentXOFactory,
       final Set<SearchResourceExtension> searchResourceExtensions,
       final EventManager eventManager,
-      @Nullable final Map<String, AssetXODescriptor> assetDescriptors)
+      @Nullable final List<AssetXODescriptor> assetDescriptorsList)
   {
     this.searchUtils = checkNotNull(searchUtils);
     this.searchResultFilterUtils = checkNotNull(searchResultFilterUtils);
     this.searchService = checkNotNull(searchService);
     this.componentXOFactory = checkNotNull(componentXOFactory);
     this.searchResourceExtensions = checkNotNull(searchResourceExtensions);
-    this.assetDescriptors = assetDescriptors;
+    this.assetDescriptors =
+        assetDescriptorsList != null ? QualifierUtil.buildQualifierBeanMap(assetDescriptorsList) : null;
     this.eventManager = checkNotNull(eventManager);
   }
 

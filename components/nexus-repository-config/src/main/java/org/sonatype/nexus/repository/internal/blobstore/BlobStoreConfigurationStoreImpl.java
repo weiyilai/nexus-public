@@ -15,9 +15,8 @@ package org.sonatype.nexus.repository.internal.blobstore;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
@@ -28,13 +27,16 @@ import org.sonatype.nexus.transaction.Transactional;
 import com.google.common.collect.ImmutableList;
 
 import static org.sonatype.nexus.blobstore.group.BlobStoreGroupConfigurationHelper.memberNames;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * MyBatis {@link BlobStoreConfigurationStore} implementation.
  *
  * @since 3.21
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 public class BlobStoreConfigurationStoreImpl
     extends ConfigStoreSupport<BlobStoreConfigurationDAO>
@@ -83,7 +85,8 @@ public class BlobStoreConfigurationStoreImpl
   @Transactional
   @Override
   public Optional<BlobStoreConfiguration> findParent(final String name) {
-    return dao().findCandidateParents(name).stream()
+    return dao().findCandidateParents(name)
+        .stream()
         .filter(config -> memberNames(config).contains(name))
         .findFirst();
   }

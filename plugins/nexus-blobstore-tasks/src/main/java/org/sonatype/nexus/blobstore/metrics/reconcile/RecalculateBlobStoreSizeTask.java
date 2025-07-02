@@ -15,8 +15,7 @@ package org.sonatype.nexus.blobstore.metrics.reconcile;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.BlobAttributes;
 import org.sonatype.nexus.blobstore.api.BlobStore;
@@ -33,10 +32,14 @@ import org.sonatype.nexus.scheduling.CancelableHelper;
 import org.joda.time.DateTime;
 
 import static org.sonatype.nexus.logging.task.TaskLogType.TASK_LOG_ONLY;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @TaskLogging(TASK_LOG_ONLY)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RecalculateBlobStoreSizeTask
     extends BlobStoreTaskSupport
     implements Cancelable

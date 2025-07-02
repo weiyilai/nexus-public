@@ -14,8 +14,7 @@ package org.sonatype.nexus.repository.content.upload;
 
 import java.util.Optional;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.repository.content.Asset;
@@ -29,7 +28,7 @@ import org.sonatype.nexus.repository.view.Content;
  *
  * @since 3.29
  */
-@Named
+@org.springframework.stereotype.Component
 @Singleton
 public class UploadComponentProcessor
     implements UploadProcessor

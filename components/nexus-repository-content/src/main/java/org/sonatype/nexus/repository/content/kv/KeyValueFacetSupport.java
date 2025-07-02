@@ -13,12 +13,12 @@
 package org.sonatype.nexus.repository.content.kv;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.repository.Facet.Exposed;
@@ -53,9 +53,9 @@ public abstract class KeyValueFacetSupport<DAO extends KeyValueDAO, STORE extend
   }
 
   @Inject
-  public void inject(final Map<String, FormatStoreManager> formatStoreManagersByFormat)
-  {
-    this.formatStoreManager = checkNotNull(formatStoreManagersByFormat.get(format));
+  public void inject(final List<FormatStoreManager> formatStoreManagersByFormatList) {
+    this.formatStoreManager =
+        checkNotNull(QualifierUtil.buildQualifierBeanMap(formatStoreManagersByFormatList).get(format));
   }
 
   @Override
@@ -71,7 +71,7 @@ public abstract class KeyValueFacetSupport<DAO extends KeyValueDAO, STORE extend
    * Get the value for the key in the specified category.
    *
    * @param category the category for the property
-   * @param key      the key for the desired value
+   * @param key the key for the desired value
    *
    * @return An optional containing the value, or empty if the value is unset.
    */
@@ -88,9 +88,9 @@ public abstract class KeyValueFacetSupport<DAO extends KeyValueDAO, STORE extend
   /**
    * Set the value for the key in the specified category.
    *
-   * @param category  the category of this property
-   * @param key       the key to store the value under
-   * @param value     the value to store
+   * @param category the category of this property
+   * @param key the key to store the value under
+   * @param value the value to store
    */
   @Guarded(by = {ATTACHED, STARTED})
   protected void set(final String category, final String key, final String value) {
@@ -101,7 +101,7 @@ public abstract class KeyValueFacetSupport<DAO extends KeyValueDAO, STORE extend
    * Remove the stored value associated with the key in the specified category if it exists.
    *
    * @param category the category of the key-value pair
-   * @param key      the key identifying the value
+   * @param key the key identifying the value
    */
   @Guarded(by = {ATTACHED, STARTED})
   protected void remove(final String category, final String key) {
@@ -129,8 +129,8 @@ public abstract class KeyValueFacetSupport<DAO extends KeyValueDAO, STORE extend
   /**
    * Browse all the values stored with a category.
    *
-   * @param category          the category to browse content for
-   * @param limit             the page size
+   * @param category the category to browse content for
+   * @param limit the page size
    * @param continuationToken the continuation token for the page of results, or null for the first page
    *
    * @return the page of results.
@@ -150,8 +150,7 @@ public abstract class KeyValueFacetSupport<DAO extends KeyValueDAO, STORE extend
    * @return the distinct categories.
    */
   @Guarded(by = {ATTACHED, STARTED})
-  protected List<String> browseCategories()
-  {
+  protected List<String> browseCategories() {
     return dataStore.browseCategories(repositoryId());
   }
 
@@ -162,8 +161,7 @@ public abstract class KeyValueFacetSupport<DAO extends KeyValueDAO, STORE extend
    * @return
    */
   @Guarded(by = {ATTACHED, STARTED})
-  public int countValues(final String category)
-  {
+  public int countValues(final String category) {
     return dataStore.count(repositoryId(), category);
   }
 
@@ -171,8 +169,7 @@ public abstract class KeyValueFacetSupport<DAO extends KeyValueDAO, STORE extend
    * Count all the values stored with a category
    */
   @Guarded(by = {ATTACHED, STARTED})
-  public int countValues()
-  {
+  public int countValues() {
     return dataStore.count(repositoryId(), null);
   }
 

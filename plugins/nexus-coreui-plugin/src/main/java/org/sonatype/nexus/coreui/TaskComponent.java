@@ -27,10 +27,9 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.Validator;
 import javax.validation.constraints.NotEmpty;
@@ -94,8 +93,9 @@ import static org.sonatype.nexus.scheduling.TaskState.CANCELED;
 import static org.sonatype.nexus.scheduling.TaskState.FAILED;
 import static org.sonatype.nexus.scheduling.TaskState.INTERRUPTED;
 import static org.sonatype.nexus.scheduling.TaskState.OK;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Task")
 public class TaskComponent
@@ -126,7 +126,7 @@ public class TaskComponent
   public TaskComponent(
       final TaskScheduler taskScheduler,
       final Provider<Validator> validatorProvider,
-      @Named("${nexus.scripts.allowCreation:-false}") @Value("${nexus.scripts.allowCreation:false}") final boolean allowCreation)
+      @Value("${nexus.scripts.allowCreation:false}") final boolean allowCreation)
   {
     this.taskScheduler = checkNotNull(taskScheduler);
     this.validatorProvider = checkNotNull(validatorProvider);

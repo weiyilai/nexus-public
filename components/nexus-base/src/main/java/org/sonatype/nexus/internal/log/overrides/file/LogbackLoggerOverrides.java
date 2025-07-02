@@ -18,9 +18,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.common.log.LoggerLevel;
@@ -30,6 +29,7 @@ import org.sonatype.nexus.internal.log.LoggerOverrides;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
+import org.springframework.stereotype.Component;
 
 /**
  * Logback {@link LoggerOverrides} implementation.
@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableMap;
  *
  * @since 2.7
  */
-@Named
+@Component
 @Singleton
 public class LogbackLoggerOverrides
     extends LogbackLoggerOverridesSupport

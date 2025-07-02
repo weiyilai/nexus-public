@@ -13,21 +13,21 @@
 package org.sonatype.nexus.repository.raw;
 
 import javax.annotation.Nonnull;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.Handler;
 import org.sonatype.nexus.repository.view.Response;
 
 import static org.sonatype.nexus.repository.http.HttpMethods.GET;
+import org.springframework.stereotype.Component;
 
 /**
  * Handler to set Content-Disposition HTTP header
  *
  * @since 3.25
  */
-@Named
+@Component
 @Singleton
 public class ContentDispositionHandler
     implements Handler
@@ -40,7 +40,9 @@ public class ContentDispositionHandler
     Response response = context.proceed();
     String action = context.getRequest().getAction();
     if (GET.equals(action)) {
-      String contentDisposition = context.getRepository().getConfiguration().attributes("raw")
+      String contentDisposition = context.getRepository()
+          .getConfiguration()
+          .attributes("raw")
           .get(CONTENT_DISPOSITION_CONFIG_KEY, String.class, ContentDisposition.INLINE.name());
       response.getHeaders().replace("Content-Disposition", ContentDisposition.valueOf(contentDisposition).getValue());
     }

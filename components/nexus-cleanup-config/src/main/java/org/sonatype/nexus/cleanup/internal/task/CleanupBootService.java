@@ -17,9 +17,8 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -33,13 +32,14 @@ import com.google.common.annotations.VisibleForTesting;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
+import org.springframework.stereotype.Component;
 
 /**
  * Instantiates the cleanup task on system startup if it does not already exist
  *
  * @since 3.14
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = TASKS)
 public class CleanupBootService
@@ -79,8 +79,11 @@ public class CleanupBootService
   }
 
   private void removeDuplicates() {
-    List<TaskInfo> tasks = taskScheduler.listsTasks().stream().filter(isCleanupTask())
-        .filter(info -> TASK_NAME.equals(info.getConfiguration().getName())).filter(scheduleMatches())
+    List<TaskInfo> tasks = taskScheduler.listsTasks()
+        .stream()
+        .filter(isCleanupTask())
+        .filter(info -> TASK_NAME.equals(info.getConfiguration().getName()))
+        .filter(scheduleMatches())
         .collect(Collectors.toList());
 
     if (tasks.size() > 1) {

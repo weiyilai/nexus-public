@@ -16,9 +16,8 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.crypto.AbstractPhraseService;
 import org.sonatype.nexus.crypto.PhraseService;
@@ -30,12 +29,17 @@ import com.google.common.base.Throwables;
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.io.Files.asCharSource;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
+
 /**
  * File-backed {@link PhraseService}.
  *
  * @since 3.8
  */
-@Named("file")
+@Component
+@Qualifier("file")
 @Singleton
 public class FilePhraseService
     extends AbstractPhraseService
@@ -43,7 +47,7 @@ public class FilePhraseService
   private final Supplier<String> masterPhraseSupplier;
 
   @Inject
-  public FilePhraseService(@Named("${nexus.security.masterPhraseFile}") @Nullable final File masterPhraseFile) {
+  public FilePhraseService(@Value("${nexus.security.masterPhraseFile:#{null}}") @Nullable final File masterPhraseFile) {
     super(masterPhraseFile != null);
     this.masterPhraseSupplier = Suppliers.memoize(new Supplier<String>()
     {

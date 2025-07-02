@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -32,6 +31,8 @@ import org.sonatype.nexus.formfields.FormField;
 import static org.sonatype.nexus.capability.CapabilityType.capabilityType;
 import static org.sonatype.nexus.capability.Tag.categoryTag;
 import static org.sonatype.nexus.capability.Tag.tags;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * {@link SchedulerCapability} descriptor.
@@ -39,7 +40,8 @@ import static org.sonatype.nexus.capability.Tag.tags;
  * @since 3.0
  */
 @AvailabilityVersion(from = "1.0")
-@Named(SchedulerCapabilityDescriptor.TYPE_ID)
+@Component
+@Qualifier(SchedulerCapabilityDescriptor.TYPE_ID)
 @Singleton
 public class SchedulerCapabilityDescriptor
     extends CapabilityDescriptorSupport<SchedulerCapabilityConfiguration>

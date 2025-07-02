@@ -160,7 +160,7 @@ export const adminRoutes = [
     component: DataStoreConfiguration,
     data: {
       visibilityRequirements: {
-        bundle: 'com.sonatype.nexus.plugins.nexus-pro-datastore-plugin',
+        bundle: 'nexus-pro-datastore-plugin',
         permissions: ['nexus:*'],
         editions: ['PRO', 'COMMUNITY'],
       },
@@ -489,7 +489,7 @@ export const adminRoutes = [
     component: CrowdSettings,
     data: {
       visibilityRequirements: {
-        bundle: 'com.sonatype.nexus.plugins.nexus-crowd-plugin',
+        bundle: 'nexus-crowd-plugin',
         licenseValid: [
           {
             key: 'crowd',
@@ -508,7 +508,7 @@ export const adminRoutes = [
     component: SamlConfiguration,
     data: {
       visibilityRequirements: {
-        bundle: 'com.sonatype.nexus.plugins.nexus-saml-plugin',
+        bundle: 'nexus-saml-plugin',
         permissions: ['nexus:*'],
         editions: ['PRO'],
       },

@@ -12,20 +12,21 @@
  */
 package org.sonatype.nexus.repository.rest.api;
 
-import java.util.Map;
+import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import static org.sonatype.nexus.repository.rest.api.RepositorySettingsApiResourceV1.RESOURCE_URI;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 public class RepositorySettingsApiResourceV1
@@ -36,8 +37,8 @@ public class RepositorySettingsApiResourceV1
   @Inject
   public RepositorySettingsApiResourceV1(
       final AuthorizingRepositoryManager authorizingRepositoryManager,
-      @Named("default") final ApiRepositoryAdapter defaultAdapter,
-      final Map<String, ApiRepositoryAdapter> convertersByFormat)
+      @Qualifier("default") final ApiRepositoryAdapter defaultAdapter,
+      final List<ApiRepositoryAdapter> convertersByFormat)
   {
     super(authorizingRepositoryManager, defaultAdapter, convertersByFormat);
   }

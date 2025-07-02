@@ -12,31 +12,34 @@
  */
 package org.sonatype.nexus.repository.search.normalize;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Format;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class VersionNormalizerService
 {
   private final Map<String, VersionNormalizer> versionNormalizers;
 
   @Inject
-  public VersionNormalizerService(final Map<String, VersionNormalizer> versionNormalizers) {
-    this.versionNormalizers = checkNotNull(versionNormalizers);
+  public VersionNormalizerService(final List<VersionNormalizer> versionNormalizersList) {
+    this.versionNormalizers = QualifierUtil.buildQualifierBeanMap(checkNotNull(versionNormalizersList));
   }
 
   /**
    * Normalizes supplied version using default approach or format specific
    * if format specific implementation of {@link VersionNormalizer} is present
+   * 
    * @param version version to be normalized
    * @param format format that component belongs to
    * @return normalized version

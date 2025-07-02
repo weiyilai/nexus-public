@@ -19,22 +19,26 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.content.browse.RebuildBrowseNodesManager;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Resolves an issue where multiple browse nodes were created with the same parent and the same display name.
  *
  * @since 3.33
  */
-@Named
-public class BrowseNodeMigrationStep_1_1 implements DatabaseMigrationStep
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+public class BrowseNodeMigrationStep_1_1
+    implements DatabaseMigrationStep
 {
   private static final String TRUNCATE = "DELETE FROM {format}_browse_node";
 
@@ -45,7 +49,10 @@ public class BrowseNodeMigrationStep_1_1 implements DatabaseMigrationStep
   private List<String> formats;
 
   @Inject
-  public BrowseNodeMigrationStep_1_1(final List<Format> formats, final RebuildBrowseNodesManager rebuildBrowseNodesManager) {
+  public BrowseNodeMigrationStep_1_1(
+      final List<Format> formats,
+      final RebuildBrowseNodesManager rebuildBrowseNodesManager)
+  {
     this.formats = formats.stream().map(Format::getValue).collect(Collectors.toList());
     this.rebuildBrowseNodesManager = checkNotNull(rebuildBrowseNodesManager);
   }

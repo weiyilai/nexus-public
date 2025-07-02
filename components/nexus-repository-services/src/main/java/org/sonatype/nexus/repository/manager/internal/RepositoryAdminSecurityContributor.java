@@ -15,8 +15,7 @@ package org.sonatype.nexus.repository.manager.internal;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.security.config.MutableSecurityContributor;
@@ -31,13 +30,14 @@ import static org.sonatype.nexus.security.BreadActions.DELETE;
 import static org.sonatype.nexus.security.BreadActions.EDIT;
 import static org.sonatype.nexus.security.BreadActions.READ;
 import static org.sonatype.nexus.security.privilege.PrivilegeDescriptorSupport.ALL;
+import org.springframework.stereotype.Component;
 
 /**
  * Repository administration security contributor.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class RepositoryAdminSecurityContributor
     extends MutableSecurityContributor

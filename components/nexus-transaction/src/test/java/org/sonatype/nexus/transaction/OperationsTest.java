@@ -40,7 +40,7 @@ import static org.sonatype.nexus.transaction.Transactional.DEFAULT_REASON;
 public class OperationsTest
     extends TestSupport
 {
-  ExampleMethods methods = new ExampleMethods(new ExampleMethods.ExampleNestedStore());
+  ExampleMethods methods = new ExampleMethods();
 
   @Mock
   TransactionalSession<Transaction> session;
@@ -131,35 +131,6 @@ public class OperationsTest
   }
 
   @Test
-  public void testCanUseStereotypeAnnotation() throws Exception {
-    when(tx.allowRetry(any(Exception.class))).thenReturn(true);
-
-    methods.setCountdownToSuccess(3);
-    Transactional.operation
-        .stereotype(RetryOnIOException.class)
-        .throwing(IOException.class)
-        .call(() -> methods.retryOnCheckedException());
-
-    InOrder order = inOrder(session, tx);
-    order.verify(session).getTransaction();
-    order.verify(tx).reason(DEFAULT_REASON);
-    order.verify(tx).begin();
-    order.verify(tx).rollback();
-    order.verify(tx).allowRetry(any(IOException.class));
-    order.verify(tx).begin();
-    order.verify(tx).rollback();
-    order.verify(tx).allowRetry(any(IOException.class));
-    order.verify(tx).begin();
-    order.verify(tx).rollback();
-    order.verify(tx).allowRetry(any(IOException.class));
-    order.verify(tx).begin();
-    order.verify(tx).commit();
-    order.verify(tx).end();
-    order.verify(session).close();
-    verifyNoMoreInteractions(session, tx);
-  }
-
-  @Test
   public void testBatchModeDoesntLeakOutsideScope() {
     final Transaction[] txHolder = new Transaction[2];
 
@@ -192,5 +163,25 @@ public class OperationsTest
     TransactionalSession<Transaction> session = mock(TransactionalSession.class);
     when(session.getTransaction()).thenReturn(mock(Transaction.class));
     return session;
+  }
+
+  private class ExampleMethods
+  {
+    private int countdown;
+
+    public String retryOnCheckedException() throws IOException {
+      if (countdown-- > 0) {
+        throw new IOException();
+      }
+      return "success";
+    }
+
+    public String nonTransactional() {
+      return "success";
+    }
+
+    public void setCountdownToSuccess(final int i) {
+      countdown = i;
+    }
   }
 }

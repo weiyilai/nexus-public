@@ -15,8 +15,7 @@ package org.sonatype.nexus.repository.maven;
 
 import java.util.Collection;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.capability.CapabilityReference;
 import org.sonatype.nexus.capability.CapabilityReferenceFilterBuilder;
@@ -25,13 +24,18 @@ import org.sonatype.nexus.capability.CapabilityType;
 import org.sonatype.nexus.utils.httpclient.UserAgentGenerator;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenProxyRequestHeaderSupport
 {
   private static final String ANALYTICS_CAPABILITY = "analytics-configuration";
 
   private final CapabilityRegistry capabilityRegistry;
+
   private final UserAgentGenerator userAgentGenerator;
 
   @Inject
@@ -49,8 +53,7 @@ public class MavenProxyRequestHeaderSupport
   }
 
   @Nullable
-  public CapabilityReference getCapabilityReference()
-  {
+  public CapabilityReference getCapabilityReference() {
     CapabilityType capabilityType = CapabilityType.capabilityType(ANALYTICS_CAPABILITY);
     Collection<? extends CapabilityReference> refs = capabilityRegistry.get(
         CapabilityReferenceFilterBuilder.capabilities().withType(capabilityType).includeNotExposed());

@@ -13,15 +13,16 @@
 package org.sonatype.nexus.repository.content.store.internal.migration;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.BlobRef;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.datastore.api.DuplicateKeyException;
 import org.sonatype.nexus.repository.content.AssetBlob;
@@ -39,11 +40,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.content.store.internal.migration.AssetBlobRefMigrationTaskDescriptor.CONTENT_STORE_FIELD_ID;
 import static org.sonatype.nexus.repository.content.store.internal.migration.AssetBlobRefMigrationTaskDescriptor.FORMAT_FIELD_ID;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Migrate asset blob's blobRef field from {@code store-name:blob-id@node-id} to {@code store-name@blob-id} format.
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AssetBlobRefMigrationTask
     extends TaskSupport
     implements Cancelable
@@ -54,10 +59,10 @@ public class AssetBlobRefMigrationTask
 
   @Inject
   public AssetBlobRefMigrationTask(
-      final Map<String, FormatStoreManager> formatStoreManagers,
-      @Named("${nexus.assetBlobRef.migration.read.batchSize:-100}") @Value("${nexus.assetBlobRef.migration.read.batchSize:100}") final int readAssetsBatchSize)
+      final List<FormatStoreManager> formatStoreManagersList,
+      @Value("${nexus.assetBlobRef.migration.read.batchSize:100}") final int readAssetsBatchSize)
   {
-    this.formatStoreManagers = checkNotNull(formatStoreManagers);
+    this.formatStoreManagers = QualifierUtil.buildQualifierBeanMap(checkNotNull(formatStoreManagersList));
 
     checkArgument(readAssetsBatchSize >= 0, "Must use a non-negative readAssetsBatchSize");
     this.readAssetsBatchSize = readAssetsBatchSize;

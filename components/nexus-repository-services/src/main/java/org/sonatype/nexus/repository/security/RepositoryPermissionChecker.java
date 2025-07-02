@@ -22,11 +22,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Recipe;
 import org.sonatype.nexus.repository.Repository;
@@ -45,13 +45,14 @@ import static java.util.Collections.singletonList;
 import static org.sonatype.nexus.security.BreadActions.BROWSE;
 import static org.sonatype.nexus.security.BreadActions.DELETE;
 import static org.sonatype.nexus.security.BreadActions.READ;
+import org.springframework.stereotype.Component;
 
 /**
  * Repository permission checker.
  *
  * @since 3.10
  */
-@Named
+@Component
 @Singleton
 public class RepositoryPermissionChecker
     extends ComponentSupport
@@ -66,11 +67,11 @@ public class RepositoryPermissionChecker
   public RepositoryPermissionChecker(
       final SecurityHelper securityHelper,
       final SelectorManager selectorManager,
-      final Map<String, Recipe> recipes)
+      final List<Recipe> recipesList)
   {
     this.securityHelper = checkNotNull(securityHelper);
     this.selectorManager = checkNotNull(selectorManager);
-    this.recipes = checkNotNull(recipes);
+    this.recipes = QualifierUtil.buildQualifierBeanMap(checkNotNull(recipesList));
   }
 
   /**
@@ -80,7 +81,8 @@ public class RepositoryPermissionChecker
    * @return true if the user can browse or read the repository or if the user has a content selector granting access
    */
   public boolean userCanReadOrBrowse(final Repository repository) {
-    return userHasRepositoryViewPermissionTo(repository, BROWSE, READ) || userHasAnyContentSelectorAccessTo(repository, BROWSE, READ);
+    return userHasRepositoryViewPermissionTo(repository, BROWSE, READ)
+        || userHasAnyContentSelectorAccessTo(repository, BROWSE, READ);
   }
 
   /**
@@ -90,7 +92,8 @@ public class RepositoryPermissionChecker
    * @since 3.15
    */
   public boolean userCanDeleteInRepository(final Repository repository) {
-    return userHasRepositoryViewPermissionTo(DELETE, repository) || userHasAnyContentSelectorAccessTo(repository, DELETE);
+    return userHasRepositoryViewPermissionTo(DELETE, repository)
+        || userHasAnyContentSelectorAccessTo(repository, DELETE);
   }
 
   private boolean userHasRepositoryViewPermissionTo(final Repository repository, final String... actions) {
@@ -102,9 +105,10 @@ public class RepositoryPermissionChecker
   }
 
   private static Permission[] permissionsFor(final Repository repository, final String... actions) {
-    return Arrays.stream(actions).map(action -> new RepositoryViewPermission(repository, action)).toArray(Permission[]::new);
+    return Arrays.stream(actions)
+        .map(action -> new RepositoryViewPermission(repository, action))
+        .toArray(Permission[]::new);
   }
-
 
   /**
    * @since 3.13
@@ -222,7 +226,8 @@ public class RepositoryPermissionChecker
    * @throws AuthorizationException
    */
   public void ensureUserCanAdmin(final String action, final Repository repository) {
-    securityHelper.ensurePermitted(new RepositoryAdminPermission(repository.getFormat().getValue(), repository.getName(), singletonList(action)));
+    securityHelper.ensurePermitted(
+        new RepositoryAdminPermission(repository.getFormat().getValue(), repository.getName(), singletonList(action)));
   }
 
   /**
@@ -254,11 +259,14 @@ public class RepositoryPermissionChecker
     return permittedRepositories;
   }
 
-  private List<Repository> subjectHasAnyContentSelectorAccessTo(final Subject subject,
-                                                                final List<Repository> repositories)
+  private List<Repository> subjectHasAnyContentSelectorAccessTo(
+      final Subject subject,
+      final List<Repository> repositories)
   {
     List<String> repositoryNames = repositories.stream().map(r -> r.getName()).collect(Collectors.toList());
-    List<String> formats = repositories.stream().map(r -> r.getFormat().getValue()).distinct()
+    List<String> formats = repositories.stream()
+        .map(r -> r.getFormat().getValue())
+        .distinct()
         .collect(Collectors.toList());
     List<SelectorConfiguration> selectors = selectorManager.browseActive(repositoryNames, formats);
 
@@ -318,10 +326,12 @@ public class RepositoryPermissionChecker
   }
 
   private boolean userHasAnyContentSelectorAccessTo(final Repository repository, final String... actions) {
-    Subject subject = securityHelper.subject(); //Getting the subject a single time improves performance
-    return selectorManager.browse().stream().anyMatch(selector -> securityHelper.anyPermitted(subject,
-        Arrays.stream(actions)
-            .map(action -> new RepositoryContentSelectorPermission(selector, repository, singletonList(action)))
-            .toArray(Permission[]::new)));
+    Subject subject = securityHelper.subject(); // Getting the subject a single time improves performance
+    return selectorManager.browse()
+        .stream()
+        .anyMatch(selector -> securityHelper.anyPermitted(subject,
+            Arrays.stream(actions)
+                .map(action -> new RepositoryContentSelectorPermission(selector, repository, singletonList(action)))
+                .toArray(Permission[]::new)));
   }
 }

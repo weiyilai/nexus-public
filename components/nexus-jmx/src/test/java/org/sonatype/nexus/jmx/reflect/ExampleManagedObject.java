@@ -12,23 +12,22 @@
  */
 package org.sonatype.nexus.jmx.reflect;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import org.sonatype.nexus.jmx.ObjectNameEntry;
+
+import jakarta.inject.Singleton;
+import org.springframework.stereotype.Component;
 
 /**
  * ???
  */
-@Named
+@Component
 @Singleton
 @ManagedObject(
     domain = "org.sonatype.nexus.jmx",
     entries = {
-        @ObjectNameEntry(name="foo", value="bar")
+        @ObjectNameEntry(name = "foo", value = "bar")
     },
-    description = "Example managed object"
-)
+    description = "Example managed object")
 public class ExampleManagedObject
 {
   private String name;
@@ -54,8 +53,7 @@ public class ExampleManagedObject
   }
 
   @ManagedAttribute(
-      description = "Set password"
-  )
+      description = "Set password")
   public void setPassword(final String password) {
     this.password = password;
   }
@@ -63,8 +61,7 @@ public class ExampleManagedObject
   // Operation
 
   @ManagedOperation(
-      description = "Reset name"
-  )
+      description = "Reset name")
   public void resetName() {
     this.name = null;
   }

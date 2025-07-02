@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.rest.jackson2.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -24,6 +23,7 @@ import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rest.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 3.0
  * @see ObjectMapperProvider
  */
-@Named
+@org.springframework.stereotype.Component
 @Singleton
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
@@ -43,10 +43,10 @@ public class ObjectMapperResolver
     extends ComponentSupport
     implements ContextResolver<ObjectMapper>, Component
 {
-  private final javax.inject.Provider<ObjectMapper> mapperProvider;
+  private final jakarta.inject.Provider<ObjectMapper> mapperProvider;
 
   @Inject
-  public ObjectMapperResolver(@Named("siesta") final javax.inject.Provider<ObjectMapper> mapperProvider) {
+  public ObjectMapperResolver(@Qualifier("siesta") final jakarta.inject.Provider<ObjectMapper> mapperProvider) {
     this.mapperProvider = checkNotNull(mapperProvider);
   }
 

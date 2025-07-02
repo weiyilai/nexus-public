@@ -15,8 +15,7 @@ package org.sonatype.nexus.repository.httpbridge.internal.describe;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.collect.StringMultimap;
 import org.sonatype.nexus.repository.view.PartPayload;
@@ -32,13 +31,14 @@ import com.google.common.primitives.Primitives;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
+import org.springframework.stereotype.Component;
 
 /**
  * Helper to render description information.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class DescriptionHelper
 {
@@ -46,9 +46,9 @@ public class DescriptionHelper
     desc.topic("Request");
 
     desc.addTable("Details", ImmutableMap.<String, Object>builder()
-            .put("Action", request.getAction())
-            .put("path", request.getPath()).build()
-    );
+        .put("Action", request.getAction())
+        .put("path", request.getPath())
+        .build());
 
     desc.addTable("Parameters", toMap(request.getParameters()));
     desc.addTable("Headers", toMap(request.getHeaders()));
@@ -74,8 +74,7 @@ public class DescriptionHelper
     final Status status = response.getStatus();
     desc.addTable("Status", ImmutableMap.of(
         "Code", (Object) status.getCode(),
-        "Message", nullToEmpty(status.getMessage())
-    ));
+        "Message", nullToEmpty(status.getMessage())));
 
     desc.addTable("Headers", toMap(response.getHeaders()));
     desc.addTable("Attributes", toMap(response.getAttributes()));
@@ -89,8 +88,7 @@ public class DescriptionHelper
   private ImmutableMap<String, Object> toMap(final Payload payload) {
     return ImmutableMap.<String, Object>of(
         "Content-Type", nullToEmpty(payload.getContentType()),
-        "Size", payload.getSize()
-    );
+        "Size", payload.getSize());
   }
 
   public void describeException(final Description d, final Exception e) {

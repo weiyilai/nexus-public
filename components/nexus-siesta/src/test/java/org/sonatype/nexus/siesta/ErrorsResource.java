@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.siesta;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -25,8 +24,9 @@ import org.sonatype.nexus.rest.Resource;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @Path("/errors")
 public class ErrorsResource

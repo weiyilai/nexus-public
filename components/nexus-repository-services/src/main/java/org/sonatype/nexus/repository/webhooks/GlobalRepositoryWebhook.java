@@ -14,9 +14,8 @@ package org.sonatype.nexus.repository.webhooks;
 
 import java.util.Date;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.InitiatorProvider;
 import org.sonatype.nexus.common.node.NodeAccess;
@@ -34,13 +33,14 @@ import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Global repository {@link Webhook}.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class GlobalRepositoryWebhook
     extends GlobalWebhook
@@ -85,7 +85,8 @@ public class GlobalRepositoryWebhook
         new RepositoryWebhookPayload.RepositoryPayload(repository.getName(), repository.getType(),
             repository.getFormat());
 
-    RepositoryWebhookPayload payload = new RepositoryWebhookPayload(eventAction, repositoryPayload, nodeAccess.getId(), new Date(), initiatorProvider.get());
+    RepositoryWebhookPayload payload = new RepositoryWebhookPayload(eventAction, repositoryPayload, nodeAccess.getId(),
+        new Date(), initiatorProvider.get());
 
     getSubscriptions().forEach(subscription -> queue(subscription, payload));
   }
@@ -104,10 +105,13 @@ public class GlobalRepositoryWebhook
 
     private final RepositoryPayload repository;
 
-    public RepositoryWebhookPayload(final EventAction action, final RepositoryPayload repository,
-                                    final String nodeId,
-                                    final Date timestamp,
-                                    final String initiator) {
+    public RepositoryWebhookPayload(
+        final EventAction action,
+        final RepositoryPayload repository,
+        final String nodeId,
+        final Date timestamp,
+        final String initiator)
+    {
       this.action = checkNotNull(action);
       this.repository = checkNotNull(repository);
       setNodeId(nodeId);

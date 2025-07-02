@@ -15,8 +15,7 @@ package org.sonatype.nexus.repository.rest.api;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.Time;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
@@ -49,6 +48,11 @@ import org.sonatype.nexus.repository.types.ProxyType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.reflect.TypeToken;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.REPLICATION_HTTP_ENABLED;
@@ -59,7 +63,10 @@ import static org.sonatype.nexus.repository.config.ConfigurationConstants.PROPRI
 /**
  * @since 3.20
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SimpleApiRepositoryAdapter
     implements ApiRepositoryAdapter
 {
@@ -74,7 +81,6 @@ public class SimpleApiRepositoryAdapter
   }
 
   @Inject
-  @Named("${" + REPLICATION_HTTP_ENABLED + ":-true}")
   @Value("${" + REPLICATION_HTTP_ENABLED + ":true}")
   private boolean replicationFeatureEnabled;
 

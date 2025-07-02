@@ -15,9 +15,8 @@ package org.sonatype.nexus.repository.content.webhooks;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.InitiatorProvider;
 import org.sonatype.nexus.common.entity.EntityId;
@@ -38,8 +37,9 @@ import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class RepositoryAssetWebhook
     extends RepositoryWebhook

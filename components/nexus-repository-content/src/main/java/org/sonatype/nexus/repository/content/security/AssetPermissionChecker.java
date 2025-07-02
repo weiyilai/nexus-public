@@ -20,9 +20,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.Asset;
@@ -37,13 +36,14 @@ import org.sonatype.nexus.selector.VariableSource;
 import com.google.common.collect.ImmutableList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link Asset} permission checks.
  *
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 public class AssetPermissionChecker
 {

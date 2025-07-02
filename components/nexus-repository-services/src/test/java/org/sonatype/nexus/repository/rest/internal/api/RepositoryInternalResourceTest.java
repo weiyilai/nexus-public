@@ -62,7 +62,7 @@ public class RepositoryInternalResourceTest
   private AuthorizingRepositoryManager authorizingRepositoryManager;
 
   @Mock
-  private Map<String, ApiRepositoryAdapter> convertersByFormat;
+  private List<ApiRepositoryAdapter> convertersByFormat;
 
   @Mock
   private ApiRepositoryAdapter defaultAdapter;

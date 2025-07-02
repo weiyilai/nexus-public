@@ -13,15 +13,20 @@
 package org.sonatype.nexus.internal.node;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.Lifecycle;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.node.NodeAccess;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.isNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.STORAGE;
 
 /**
@@ -29,26 +34,30 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.STORAGE;
  *
  * @since 3.24
  */
-@Named
+@Component
 @ManagedLifecycle(phase = STORAGE)
 @Priority(Integer.MAX_VALUE - 1) // make sure this starts first
+@Order(Ordered.HIGHEST_PRECEDENCE + 1)
 @Singleton
 public class NodeAccessBooter
     implements Lifecycle
 {
-  private final NodeIdInitializer nodeIdInitializer;
+  private final ObjectProvider<NodeIdInitializer> nodeIdInitializer;
 
   private final NodeAccess nodeAccess;
 
   @Inject
-  public NodeAccessBooter(final NodeIdInitializer nodeIdInitializer, final NodeAccess nodeAccess) {
+  public NodeAccessBooter(final ObjectProvider<NodeIdInitializer> nodeIdInitializer, final NodeAccess nodeAccess) {
     this.nodeIdInitializer = checkNotNull(nodeIdInitializer);
     this.nodeAccess = checkNotNull(nodeAccess);
   }
 
   @Override
   public void start() throws Exception {
-    nodeIdInitializer.initialize();
+    NodeIdInitializer nodeIdInitializer = this.nodeIdInitializer.getIfAvailable();
+    if (!isNull(nodeIdInitializer)) {
+      nodeIdInitializer.initialize();
+    }
     nodeAccess.start();
   }
 

@@ -12,15 +12,15 @@
  */
 package org.sonatype.nexus.internal.security.secrets.task;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * This task should only be run on systems where {@link SecretsService.SECRETS_MIGRATION_VERSION} is valid, for
@@ -28,25 +28,21 @@ import org.springframework.beans.factory.annotation.Value;
  * 1.0 for the availability version.
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class SecretsMigrationTaskDescriptor
     extends TaskDescriptorSupport
 {
   public static final String TYPE_ID = "secrets.migration";
 
-  private static final String EXPOSED_FLAG = "${nexus.secrets.migration.exposed:-false}";
-
   private static final String EXPOSED_FLAG_VALUE = "${nexus.secrets.migration.exposed:false}";
-
-  private static final String VISIBLE_FLAG = "${nexus.secrets.migration.visible:-false}";
 
   private static final String VISIBLE_FLAG_VALUE = "${nexus.secrets.migration.visible:false}";
 
   @Inject
   public SecretsMigrationTaskDescriptor(
-      @Named(EXPOSED_FLAG) @Value(EXPOSED_FLAG_VALUE) final boolean exposed,
-      @Named(VISIBLE_FLAG) @Value(VISIBLE_FLAG_VALUE) final boolean visible)
+      @Value(EXPOSED_FLAG_VALUE) final boolean exposed,
+      @Value(VISIBLE_FLAG_VALUE) final boolean visible)
   {
     super(TYPE_ID,
         SecretsMigrationTask.class,

@@ -17,7 +17,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 import org.sonatype.nexus.jmx.ObjectNameEntry;
 

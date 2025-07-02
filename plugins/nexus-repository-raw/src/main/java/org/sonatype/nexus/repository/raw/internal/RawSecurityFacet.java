@@ -12,26 +12,31 @@
  */
 package org.sonatype.nexus.repository.raw.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.security.ContentPermissionChecker;
 import org.sonatype.nexus.repository.security.SecurityFacetSupport;
 import org.sonatype.nexus.repository.security.VariableResolverAdapter;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * RAW security facet.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RawSecurityFacet
     extends SecurityFacetSupport
 {
   @Inject
-  public RawSecurityFacet(final RawFormatSecurityContributor securityContributor,
-                          @Named("simple") final VariableResolverAdapter variableResolverAdapter,
-                          final ContentPermissionChecker contentPermissionChecker)
+  public RawSecurityFacet(
+      final RawFormatSecurityContributor securityContributor,
+      @Qualifier("simple") final VariableResolverAdapter variableResolverAdapter,
+      final ContentPermissionChecker contentPermissionChecker)
   {
     super(securityContributor, variableResolverAdapter, contentPermissionChecker);
   }

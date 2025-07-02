@@ -12,13 +12,16 @@
  */
 package org.sonatype.nexus.repository.group;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.collect.AttributesMap;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
+import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.cache.CacheController;
@@ -33,18 +36,17 @@ import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.repository.view.Content;
 import org.sonatype.nexus.validation.ConstraintViolationFactory;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import static com.google.common.collect.ImmutableList.copyOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -75,6 +77,8 @@ public class GroupFacetImplTest
   @Mock
   private RepositoryCacheInvalidationService repositoryCacheInvalidationService;
 
+  private Repository repository;
+
   private GroupType groupType = new GroupType();
 
   private GroupFacetImpl underTest;
@@ -83,34 +87,36 @@ public class GroupFacetImplTest
   public void setup() throws Exception {
     underTest = new GroupFacetImpl(repositoryManager, makeConstraintViolationFactory(), groupType,
         repositoryCacheInvalidationService);
-    underTest.attach(makeRepositoryUnderTest());
+    underTest.installDependencies(mock(EventManager.class));
+    repository = makeRepositoryUnderTest();
+    underTest.attach(repository);
   }
 
   @Test
   public void testDoValidate_pass() {
     Config config = new Config();
-    config.memberNames = ImmutableSet.of("repository1");
+    config.memberNames = Set.of("repository1");
     assertNull(underTest.validateGroupDoesNotContainItself("repositoryUnderTest", config));
   }
 
   @Test
   public void testDoValidate_fail_group_contains_itself() {
     Config config = new Config();
-    config.memberNames = ImmutableSet.of("repositoryUnderTest");
+    config.memberNames = Set.of("repositoryUnderTest");
     assertNotNull(underTest.validateGroupDoesNotContainItself("repositoryUnderTest", config));
   }
 
   @Test
   public void testDoValidate_fail_group_contains_a_group_that_contains_itself() {
     Config config = new Config();
-    config.memberNames = ImmutableSet.of("repository3");
+    config.memberNames = Set.of("repository3");
     assertNotNull(underTest.validateGroupDoesNotContainItself("repositoryUnderTest", config));
   }
 
   @Test
   public void testDoValidate_fail_group_contains_a_group_which_contains_a_group_which_contains_itself() {
     Config config = new Config();
-    config.memberNames = ImmutableSet.of("repository2");
+    config.memberNames = Set.of("repository2");
     assertNotNull(underTest.validateGroupDoesNotContainItself("repositoryUnderTest", config));
   }
 
@@ -120,21 +126,25 @@ public class GroupFacetImplTest
     Repository hosted2 = hostedRepository("hosted2");
     Repository group1 = groupRepository("group1", hosted1);
     Config config = new Config();
-    config.memberNames = ImmutableSet.of(hosted1.getName(), hosted2.getName(), group1.getName());
+    config.memberNames = Set.of(hosted1.getName(), hosted2.getName(), group1.getName());
     Configuration configuration = mock(Configuration.class);
     when(configuration.attributes(CONFIG_KEY)).thenReturn(new NestedAttributesMap(
         "dummy",
-        ImmutableMap.of("memberNames", config.memberNames)
-    ));
+        Map.of("memberNames", config.memberNames)));
     when(configurationFacet.readSection(configuration, CONFIG_KEY, Config.class)).thenReturn(config);
-    underTest.doConfigure(configuration);
-    assertThat(underTest.leafMembers(), contains(hosted1, hosted2));
+    when(repository.getConfiguration()).thenReturn(configuration);
+    underTest.init();
+    underTest.start();
+    assertThat(underTest.leafMembers(), containsInAnyOrder(hosted1, hosted2));
   }
 
   @Test
   public void testAllMembers() throws Exception {
     Repository hosted1 = hostedRepository("hosted1");
     Repository group1 = groupRepository("group1", hosted1);
+
+    underTest = new GroupFacetImpl(repositoryManager, makeConstraintViolationFactory(), groupType,
+        repositoryCacheInvalidationService);
     underTest.attach(group1);
 
     for (Repository repo : underTest.allMembers()) {
@@ -167,10 +177,11 @@ public class GroupFacetImplTest
     assertThat(underTest.isStale(content), is(false));
   }
 
-  private ConstraintViolationFactory makeConstraintViolationFactory() {
+  private static ConstraintViolationFactory makeConstraintViolationFactory() {
     ConstraintViolationFactory constraintViolationFactory = mock(ConstraintViolationFactory.class);
     doReturn(mock(ConstraintViolation.class))
-        .when(constraintViolationFactory).createViolation(anyString(), anyString());
+        .when(constraintViolationFactory)
+        .createViolation(anyString(), anyString());
     return constraintViolationFactory;
   }
 
@@ -182,9 +193,7 @@ public class GroupFacetImplTest
     groupRepository("repository2",
         groupRepository("repository3",
             repositoryUnderTest,
-            groupRepository("repository1")
-        )
-    );
+            groupRepository("repository1")));
     return repositoryUnderTest;
   }
 

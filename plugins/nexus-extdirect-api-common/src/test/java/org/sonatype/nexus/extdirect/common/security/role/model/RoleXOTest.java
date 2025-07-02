@@ -14,7 +14,7 @@ package org.sonatype.nexus.extdirect.common.security.role.model;
 
 import java.util.Collections;
 import java.util.Set;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;

@@ -13,13 +13,13 @@
 package org.sonatype.nexus.siesta;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebInitParam;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -27,10 +27,6 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.sonatype.nexus.rest.Component;
 
-import com.google.inject.Key;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.Mediator;
-import org.eclipse.sisu.inject.BeanLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -44,20 +40,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
+@org.springframework.stereotype.Component
 @Singleton
+@WebServlet(urlPatterns = SiestaServlet.REST_SERVICE_MP + "/*",
+    initParams = @WebInitParam(name = "resteasy.servlet.mapping.prefix", value = SiestaServlet.REST_SERVICE_MP))
 public class SiestaServlet
     extends HttpServlet
 {
-  private final Logger log = LoggerFactory.getLogger(getClass());
+  public static final String REST_SERVICE_MP = "/service/rest";
 
-  private final BeanLocator beanLocator;
+  private final Logger log = LoggerFactory.getLogger(getClass());
 
   private final ComponentContainer componentContainer;
 
   @Inject
-  public SiestaServlet(final BeanLocator beanLocator, final ComponentContainer componentContainer) {
-    this.beanLocator = checkNotNull(beanLocator);
+  public SiestaServlet(final ComponentContainer componentContainer) {
     this.componentContainer = checkNotNull(componentContainer);
 
     log.debug("Component container: {}", componentContainer);
@@ -72,47 +69,13 @@ public class SiestaServlet
     // Initialize container
     componentContainer.init(config);
     log.info("JAX-RS RuntimeDelegate: {}", RuntimeDelegate.getInstance());
-
-    // Watch for components
-    beanLocator.watch(Key.get(Component.class), new ComponentMediator(), componentContainer);
-
     log.info("Initialized");
   }
 
-  /**
-   * Handles component [de]registration events.
-   */
-  private class ComponentMediator
-      implements Mediator<Annotation, Component, ComponentContainer>
-  {
-    @Override
-    public void add(final BeanEntry<Annotation, Component> entry, final ComponentContainer container) throws Exception {
-      log.trace("Adding component: {}", entry.getKey());
-      try {
-        container.addComponent(entry);
-      }
-      catch (Exception e) {
-        log.error("Failed to add component", e);
-      }
-    }
-
-    @Override
-    public void remove(final BeanEntry<Annotation, Component> entry, final ComponentContainer container)
-        throws Exception
-    {
-      log.trace("Removing component: {}", entry.getKey());
-      try {
-        container.removeComponent(entry);
-      }
-      catch (Exception e) {
-        log.error("Failed to remove component", e);
-      }
-    }
-  }
-
   @Override
-  public void service(final HttpServletRequest request, final HttpServletResponse response)
-      throws ServletException, IOException
+  public void service(
+      final HttpServletRequest request,
+      final HttpServletResponse response) throws ServletException, IOException
   {
     checkNotNull(request);
     checkNotNull(response);

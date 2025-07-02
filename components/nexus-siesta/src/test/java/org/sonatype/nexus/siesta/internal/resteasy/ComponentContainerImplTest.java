@@ -13,19 +13,22 @@
 package org.sonatype.nexus.siesta.internal.resteasy;
 
 import java.io.IOException;
+
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.sonatype.nexus.siesta.SiestaTestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.context.ApplicationContext;
 
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -33,9 +36,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class ComponentContainerImplTest
-    extends SiestaTestSupport
+    extends Test5Support
 {
   private ComponentContainerImpl underTest;
+
+  @Mock
+  private ApplicationContext context;
 
   @Mock
   private ServletConfig servletConfig;
@@ -59,8 +65,13 @@ class ComponentContainerImplTest
   void setup() throws ServletException {
     when(servletConfig.getServletContext()).thenReturn(servletContext);
     when(deployment.getProviderFactory()).thenReturn(providerFactory);
-    underTest = spy(new ComponentContainerImpl(deployment));
+    underTest = spy(new ComponentContainerImpl(deployment, context));
     underTest.init(servletConfig);
+  }
+
+  @AfterEach
+  void teardown() {
+    underTest.destroy();
   }
 
   @Test

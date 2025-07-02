@@ -12,20 +12,16 @@
  */
 package org.sonatype.nexus.bootstrap.entrypoint.edition.core;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
-import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionMarkerFile;
 import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionSupport;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
+import static org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionPriority.CORE_PRIORITY;
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_SINGLETON;
 
-@Singleton
-@Named
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
+@Component
+@Scope(SCOPE_SINGLETON)
 public class CoreNexusEdition
     extends NexusEditionSupport
 {
@@ -33,10 +29,8 @@ public class CoreNexusEdition
 
   public static final String SHORT_NAME = "CORE";
 
-  @Inject
-  public CoreNexusEdition(final NexusEditionMarkerFile nexusEditionMarkerFile) {
-    // we want core to be the last edition validated
-    super(NAME, NAME, SHORT_NAME, Integer.MAX_VALUE, nexusEditionMarkerFile);
+  public CoreNexusEdition() {
+    super(NAME, NAME, SHORT_NAME, CORE_PRIORITY);
   }
 
   @Override

@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.elasticsearch.internal.repository;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -25,6 +24,8 @@ import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
@@ -32,7 +33,8 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 @FeatureFlag(name = ELASTIC_SEARCH_ENABLED, enabledByDefault = true)
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 @ManagedLifecycle(phase = SERVICES)
-@Named
+@Component
+@Primary
 @Singleton
 public class DefaultSearchEventHandler
     extends SearchEventHandler
@@ -41,11 +43,10 @@ public class DefaultSearchEventHandler
   public DefaultSearchEventHandler(
       final RepositoryManager repositoryManager,
       final PeriodicJobService periodicJobService,
-      @Named("${" + FLUSH_ON_COUNT_KEY + ":-100}") @Value("${" + FLUSH_ON_COUNT_KEY + ":100}") final int flushOnCount,
-      @Named("${" + FLUSH_ON_SECONDS_KEY + ":-2}") @Value("${" + FLUSH_ON_SECONDS_KEY + ":2}") final int flushOnSeconds,
-      @Named("${" + NO_PURGE_DELAY_KEY + ":-true}") @Value("${" + NO_PURGE_DELAY_KEY
-          + ":true}") final boolean noPurgeDelay,
-      @Named("${" + FLUSH_POOL_SIZE + ":-128}") @Value("${" + FLUSH_POOL_SIZE + ":128}") final int poolSize)
+      @Value("${" + FLUSH_ON_COUNT_KEY + ":100}") final int flushOnCount,
+      @Value("${" + FLUSH_ON_SECONDS_KEY + ":2}") final int flushOnSeconds,
+      @Value("${" + NO_PURGE_DELAY_KEY + ":true}") final boolean noPurgeDelay,
+      @Value("${" + FLUSH_POOL_SIZE + ":128}") final int poolSize)
   {
     super(repositoryManager, periodicJobService, flushOnCount, flushOnSeconds, noPurgeDelay, poolSize);
   }

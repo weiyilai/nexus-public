@@ -13,6 +13,7 @@
 package org.sonatype.nexus.repository.content.browse.store;
 
 import java.util.List;
+
 import javax.annotation.Nullable;
 
 import org.sonatype.nexus.common.app.VersionComparator;
@@ -34,11 +35,12 @@ import org.sonatype.nexus.repository.content.store.example.TestContentRepository
 
 import com.google.common.collect.ImmutableMap;
 import org.hamcrest.Matcher;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static com.google.common.collect.ImmutableList.of;
 import static java.util.Arrays.asList;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
@@ -46,9 +48,8 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.sonatype.nexus.common.property.SystemPropertiesHelper.getBoolean;
 import static org.sonatype.nexus.common.property.SystemPropertiesHelper.getString;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
@@ -59,13 +60,9 @@ import static org.sonatype.nexus.repository.content.store.InternalIds.toExternal
 /**
  * Test {@link BrowseNodeDAO}.
  */
-public class BrowseNodeDAOTest
+class BrowseNodeDAOTest
     extends ExampleContentTestSupport
 {
-  public BrowseNodeDAOTest() {
-    super(TestBrowseNodeDAO.class);
-  }
-
   private static final BrowseNodeComparator byName = new DefaultBrowseNodeComparator(new VersionComparator());
 
   private ContentRepositoryData contentRepository;
@@ -92,8 +89,9 @@ public class BrowseNodeDAOTest
 
   private BrowseNodeData gammaOneAlpha;
 
-  @Before
-  public void setupContent() {
+  @BeforeEach
+  void setupContent() {
+    sessionRule.register(TestBrowseNodeDAO.class);
     contentRepository = randomContentRepository();
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
@@ -161,7 +159,7 @@ public class BrowseNodeDAOTest
   }
 
   @Test
-  public void testPlainBrowsing() {
+  void testPlainBrowsing() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       BrowseNodeDAO dao = session.access(TestBrowseNodeDAO.class);
 
@@ -208,7 +206,7 @@ public class BrowseNodeDAOTest
   }
 
   @Test
-  public void testFilteredBrowsing() {
+  void testFilteredBrowsing() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       BrowseNodeDAO dao = session.access(TestBrowseNodeDAO.class);
 
@@ -247,7 +245,7 @@ public class BrowseNodeDAOTest
   }
 
   @Test
-  public void testComponentAssetDeletesNullify() {
+  void testComponentAssetDeletesNullify() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       BrowseNodeDAO dao = session.access(TestBrowseNodeDAO.class);
 
@@ -308,7 +306,7 @@ public class BrowseNodeDAOTest
   }
 
   @Test
-  public void testRepositoryDeleteCascades() {
+  void testRepositoryDeleteCascades() {
     assumeFalse(isPostgreSQL());
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       BrowseNodeDAO dao = session.access(TestBrowseNodeDAO.class);
@@ -343,7 +341,7 @@ public class BrowseNodeDAOTest
   }
 
   @Test
-  public void testFilterClauseIsolation() {
+  void testFilterClauseIsolation() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       BrowseNodeDAO dao = session.access(TestBrowseNodeDAO.class);
 
@@ -354,7 +352,7 @@ public class BrowseNodeDAOTest
   }
 
   @Test
-  public void testGetByRequestPath() {
+  void testGetByRequestPath() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       BrowseNodeDAO dao = session.access(TestBrowseNodeDAO.class);
 
@@ -365,7 +363,7 @@ public class BrowseNodeDAOTest
   }
 
   @Test
-  public void testDeleteByAssetIdAndPath() {
+  void testDeleteByAssetIdAndPath() {
     assumeTrue(isPostgreSQL());
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       BrowseNodeDAO dao = session.access(TestBrowseNodeDAO.class);
@@ -378,7 +376,7 @@ public class BrowseNodeDAOTest
   }
 
   @Test
-  public void testGetNodeParents() {
+  void testGetNodeParents() {
     assumeTrue(isPostgreSQL());
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       BrowseNodeDAO dao = session.access(TestBrowseNodeDAO.class);
@@ -392,13 +390,13 @@ public class BrowseNodeDAOTest
     }
   }
 
-  private List<BrowseNode> getListing(final BrowseNodeDAO dao, final String... paths) {
+  private static List<BrowseNode> getListing(final BrowseNodeDAO dao, final String... paths) {
     List<BrowseNode> listing = dao.getByDisplayPath(1, asList(paths), 100, null, null);
     listing.sort(byName);
     return listing;
   }
 
-  private List<BrowseNode> filterListing(final BrowseNodeDAO dao, final String... paths) {
+  private static List<BrowseNode> filterListing(final BrowseNodeDAO dao, final String... paths) {
     // select any nodes whose request path ends in a slash
     List<BrowseNode> listing = dao.getByDisplayPath(1, asList(paths), 100,
         "B.request_path ~ #{filterParams.regex}", ImmutableMap.of("regex", "^(.*/)$"));
@@ -413,7 +411,7 @@ public class BrowseNodeDAOTest
         new FieldMatcher<BrowseNode>(expected, BrowseNode::getAssetId));
   }
 
-  private BrowseNodeData createNode(
+  private static BrowseNodeData createNode(
       @Nullable final BrowseNodeData parent,
       final String displayName,
       final String requestPath)
@@ -428,7 +426,7 @@ public class BrowseNodeDAOTest
     return node;
   }
 
-  private boolean isPostgreSQL() {
+  private static boolean isPostgreSQL() {
     return getBoolean("test.postgres", false) ||
         getString("test.jdbcUrl", "").contains("postgresql");
   }

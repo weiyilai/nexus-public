@@ -13,9 +13,8 @@
 package org.sonatype.nexus.api.rest.selfhosted.formats;
 
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -36,11 +35,12 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.10
  */
-@Named
+@Component
 @Singleton
 @Path(UploadDefinitionResource.BASE_PATH)
 @Produces(APPLICATION_JSON)

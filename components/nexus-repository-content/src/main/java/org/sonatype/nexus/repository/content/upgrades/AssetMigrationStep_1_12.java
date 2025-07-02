@@ -17,28 +17,31 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static java.util.Objects.requireNonNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Creates index for last_updated on each asset table.
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AssetMigrationStep_1_12
     implements DatabaseMigrationStep
 {
-  private static final String CREATE_INDEX = "CREATE INDEX IF NOT EXISTS idx_%s_asset_last_updated ON %s_asset (last_updated)";
+  private static final String CREATE_INDEX =
+      "CREATE INDEX IF NOT EXISTS idx_%s_asset_last_updated ON %s_asset (last_updated)";
 
   private final List<Format> formats;
 
   @Inject
-  public AssetMigrationStep_1_12(final List<Format> formats)
-  {
+  public AssetMigrationStep_1_12(final List<Format> formats) {
     this.formats = requireNonNull(formats);
   }
 

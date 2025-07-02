@@ -15,9 +15,8 @@ package org.sonatype.nexus.internal.metrics;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
@@ -36,6 +35,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.stereotype.Component;
 
 import static javax.ws.rs.core.HttpHeaders.CONTENT_DISPOSITION;
 
@@ -43,7 +43,7 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_DISPOSITION;
  * Proivdes access to the metrics registry
  */
 @Path("/metrics/data")
-@Named
+@Component
 @Singleton
 public class MetricsResource
     implements Resource

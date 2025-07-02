@@ -17,9 +17,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -48,6 +47,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.COMPONENT;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.PROPRIETARY_COMPONENTS;
 import static org.sonatype.nexus.rest.APIConstants.INTERNAL_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * Internal API for UI that allows bulk (un)marking repositories as source of proprietary content to, in conjunction
@@ -55,7 +55,7 @@ import static org.sonatype.nexus.rest.APIConstants.INTERNAL_API_PREFIX;
  *
  * @since 3.30
  */
-@Named
+@Component
 @Singleton
 @Path(RepositoryProprietaryContentResource.RESOURCE_URI)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -78,8 +78,10 @@ public class RepositoryProprietaryContentResource
    */
   @GET
   public List<String> get() {
-    return repositoryManager.getRepositoriesWithAdmin().stream()
-        .filter(repository -> repository.getConfiguration().attributes(COMPONENT)
+    return repositoryManager.getRepositoriesWithAdmin()
+        .stream()
+        .filter(repository -> repository.getConfiguration()
+            .attributes(COMPONENT)
             .get(PROPRIETARY_COMPONENTS, Boolean.class, false))
         .map(Repository::getName)
         .collect(Collectors.toList());
@@ -94,7 +96,8 @@ public class RepositoryProprietaryContentResource
   public void set(@NotNull @Valid final ProprietaryContentRequest request) {
     List<String> failed = Lists.newArrayList();
 
-    request.getProprietary().stream()
+    request.getProprietary()
+        .stream()
         .map(repositoryManager::getRepositoryWithAdmin)
         .filter(Optional::isPresent)
         .map(Optional::get)
@@ -114,7 +117,8 @@ public class RepositoryProprietaryContentResource
           }
         });
 
-    request.getNonProprietary().stream()
+    request.getNonProprietary()
+        .stream()
         .map(repositoryManager::getRepositoryWithAdmin)
         .filter(Optional::isPresent)
         .map(Optional::get)
@@ -141,8 +145,10 @@ public class RepositoryProprietaryContentResource
   }
 
   private boolean isHostedRepository(final Repository repository) {
-    if(!HostedType.NAME.equals(repository.getType().getValue())){
-      log.warn("Repository {} is not a hosted repository, proprietary component flag is not valid for non-hosted repositories", repository.getName());
+    if (!HostedType.NAME.equals(repository.getType().getValue())) {
+      log.warn(
+          "Repository {} is not a hosted repository, proprietary component flag is not valid for non-hosted repositories",
+          repository.getName());
       return false;
     }
 

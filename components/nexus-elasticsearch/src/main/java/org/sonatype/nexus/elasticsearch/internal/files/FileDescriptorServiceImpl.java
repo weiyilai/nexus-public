@@ -15,8 +15,7 @@ package org.sonatype.nexus.elasticsearch.internal.files;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
@@ -25,13 +24,17 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.KERNEL;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.5
  */
-@Named
+@Component
 @ManagedLifecycle(phase = KERNEL)
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class FileDescriptorServiceImpl
     extends StateGuardLifecycleSupport
     implements FileDescriptorService

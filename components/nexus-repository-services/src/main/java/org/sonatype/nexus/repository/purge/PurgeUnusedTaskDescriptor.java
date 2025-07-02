@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.purge;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.FormField;
@@ -23,6 +22,7 @@ import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
 import static org.sonatype.nexus.repository.purge.PurgeUnusedTask.LAST_USED_FIELD_ID;
 import static org.sonatype.nexus.repository.purge.PurgeUnusedTask.REPOSITORY_NAME_FIELD_ID;
+import org.springframework.stereotype.Component;
 
 /**
  * Task descriptor for {@link PurgeUnusedTask}.
@@ -30,7 +30,7 @@ import static org.sonatype.nexus.repository.purge.PurgeUnusedTask.REPOSITORY_NAM
  * @since 3.0
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class PurgeUnusedTaskDescriptor
     extends TaskDescriptorSupport
@@ -53,14 +53,11 @@ public class PurgeUnusedTaskDescriptor
             REPOSITORY_NAME_FIELD_ID,
             "Repository",
             "Select the repository to purge components/assets from",
-            FormField.MANDATORY
-        ).includingAnyOfFacets(PurgeUnusedFacet.class).includeAnEntryForAllRepositories(),
+            FormField.MANDATORY).includingAnyOfFacets(PurgeUnusedFacet.class).includeAnEntryForAllRepositories(),
         new NumberTextFormField(
             LAST_USED_FIELD_ID,
             "Last used in days",
             "Purge all components and assets that were last used before given number of days",
-            FormField.MANDATORY
-        ).withInitialValue(LAST_USED_INIT_VALUE).withMinimumValue(LAST_USED_MIN_VALUE)
-    );
+            FormField.MANDATORY).withInitialValue(LAST_USED_INIT_VALUE).withMinimumValue(LAST_USED_MIN_VALUE));
   }
 }

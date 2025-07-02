@@ -14,8 +14,8 @@ package org.sonatype.nexus.security.token;
 
 import java.util.Optional;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.nexus.security.UserPrincipalsHelper;
@@ -61,9 +61,11 @@ public abstract class BearerTokenRealm
 
   private Provider<HttpServletRequest> requestProvider;
 
-  protected BearerTokenRealm(final ApiKeyService keyStore,
-                          final UserPrincipalsHelper principalsHelper,
-                          final String format) {
+  protected BearerTokenRealm(
+      final ApiKeyService keyStore,
+      final UserPrincipalsHelper principalsHelper,
+      final String format)
+  {
     this.keyStore = checkNotNull(keyStore);
     this.principalsHelper = checkNotNull(principalsHelper);
     this.format = checkNotNull(format);
@@ -82,8 +84,7 @@ public abstract class BearerTokenRealm
   }
 
   @Override
-  protected AuthenticationInfo doGetAuthenticationInfo(final AuthenticationToken token)
-  {
+  protected AuthenticationInfo doGetAuthenticationInfo(final AuthenticationToken token) {
     checkNotNull(token);
     return getPrincipals(token).map(principals -> {
       try {
@@ -111,11 +112,12 @@ public abstract class BearerTokenRealm
   }
 
   @Override
-  protected void assertCredentialsMatch(final AuthenticationToken token, final AuthenticationInfo info)
-      throws AuthenticationException
+  protected void assertCredentialsMatch(
+      final AuthenticationToken token,
+      final AuthenticationInfo info) throws AuthenticationException
   {
     super.assertCredentialsMatch(token, info);
-    //after successful assertion it means we authenticated successfully, so now we can set attributes
+    // after successful assertion it means we authenticated successfully, so now we can set attributes
     requestProvider.get().setAttribute(IS_TOKEN_AUTH_KEY, Boolean.TRUE);
     getPrincipals(token)
         .map(PrincipalCollection::getPrimaryPrincipal)

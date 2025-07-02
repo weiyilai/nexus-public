@@ -22,8 +22,7 @@ import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
@@ -54,12 +53,16 @@ import static org.sonatype.nexus.blobstore.group.BlobStoreGroup.MEMBERS_KEY;
 import static org.sonatype.nexus.logging.task.TaskLogType.TASK_LOG_ONLY;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.BLOB_STORE_NAME;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STORAGE;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Retrieves S3's etag and last-modified headers.
  */
-@Named
+@Component
 @TaskLogging(TASK_LOG_ONLY)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ExternalMetadataTask
     extends RepositoryTaskSupport
     implements Cancelable
@@ -82,8 +85,8 @@ public class ExternalMetadataTask
   @Inject
   public ExternalMetadataTask(
       final BlobStoreManager blobStoreManager,
-      @Named("${external.metadata.repository.concurrencyLimit:-5}") @Value("${external.metadata.repository.concurrencyLimit:5}") final int concurrencyLimit,
-      @Named("${external.metadata.repository.queueCapacity:-15}") @Value("${external.metadata.repository.queueCapacity:15}") final int queueCapacity)
+      @Value("${external.metadata.repository.concurrencyLimit:5}") final int concurrencyLimit,
+      @Value("${external.metadata.repository.queueCapacity:15}") final int queueCapacity)
   {
     this.blobStoreManager = checkNotNull(blobStoreManager);
 

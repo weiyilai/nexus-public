@@ -32,11 +32,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class KeyStoreStorageImpl
     implements KeyStoreStorage
 {
-  private final KeyStoreStorageManagerImpl storage;
+  private final PersistentKeyStoreStorageManager storage;
 
   private final String keyStoreName;
 
-  public KeyStoreStorageImpl(final KeyStoreStorageManagerImpl storage, final String keyStoreName) {
+  public KeyStoreStorageImpl(final PersistentKeyStoreStorageManager storage, final String keyStoreName) {
     this.storage = checkNotNull(storage);
     this.keyStoreName = checkNotNull(keyStoreName);
   }
@@ -56,7 +56,7 @@ public class KeyStoreStorageImpl
       final KeyStore keyStore,
       final char[] password) throws NoSuchAlgorithmException, CertificateException, IOException
   {
-    try (ByteArrayInputStream in = storage.load(keyStoreName)) {
+    try (ByteArrayInputStream in = load()) {
       keyStore.load(in, password);
     }
   }
@@ -68,7 +68,21 @@ public class KeyStoreStorageImpl
   {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream(16 * 1024)) {
       keyStore.store(out, password);
-      storage.save(keyStoreName, out);
+      save(out);
     }
+  }
+
+  private void save(final ByteArrayOutputStream out) {
+    KeyStoreData data = new KeyStoreData();
+    data.setName(keyStoreName);
+    data.setBytes(out.toByteArray());
+    storage.save(data);
+  }
+
+  private ByteArrayInputStream load() {
+    return storage.load(keyStoreName)
+        .map(KeyStoreData::getBytes)
+        .map(ByteArrayInputStream::new)
+        .orElseThrow(() -> new IllegalStateException("key store %s does not exist".formatted(keyStoreName)));
   }
 }

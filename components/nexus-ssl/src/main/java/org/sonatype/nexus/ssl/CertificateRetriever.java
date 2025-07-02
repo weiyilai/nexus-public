@@ -17,9 +17,8 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
@@ -48,8 +47,10 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
+import org.springframework.context.annotation.Lazy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Certificates retriever from a host:port using Apache Http Client 4.
@@ -57,7 +58,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since ssl 1.0
  */
 @Singleton
-@Named
+@Component
 public class CertificateRetriever
     extends ComponentSupport
 {
@@ -66,7 +67,7 @@ public class CertificateRetriever
   private final TrustStore trustStore;
 
   @Inject
-  public CertificateRetriever(final HttpClientManager httpClientManager, final TrustStore trustStore) {
+  public CertificateRetriever(final HttpClientManager httpClientManager, @Lazy final TrustStore trustStore) {
     this.httpClientManager = checkNotNull(httpClientManager);
     this.trustStore = checkNotNull(trustStore);
   }
@@ -108,7 +109,8 @@ public class CertificateRetriever
     SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sc, NoopHostnameVerifier.INSTANCE);
     Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
         .register(HttpSchemes.HTTP, PlainConnectionSocketFactory.getSocketFactory())
-        .register(HttpSchemes.HTTPS, sslSocketFactory).build();
+        .register(HttpSchemes.HTTPS, sslSocketFactory)
+        .build();
     final HttpClientConnectionManager connectionManager = new BasicHttpClientConnectionManager(registry);
 
     try {
@@ -125,8 +127,9 @@ public class CertificateRetriever
           plan.getClient().addInterceptorFirst(new HttpResponseInterceptor()
           {
             @Override
-            public void process(final HttpResponse response, final HttpContext context)
-                throws HttpException, IOException
+            public void process(
+                final HttpResponse response,
+                final HttpContext context) throws HttpException, IOException
             {
               ManagedHttpClientConnection connection =
                   HttpCoreContext.adapt(context).getConnection(ManagedHttpClientConnection.class);

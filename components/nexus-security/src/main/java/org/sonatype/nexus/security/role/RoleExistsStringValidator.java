@@ -12,14 +12,19 @@
  */
 package org.sonatype.nexus.security.role;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.security.authz.AuthorizationManager;
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
 
-@Named
+import jakarta.inject.Inject;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class RoleExistsStringValidator
     extends ConstraintValidatorSupport<RoleExistsString, String>
 {

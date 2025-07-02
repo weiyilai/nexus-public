@@ -82,7 +82,7 @@ describe("SearchGenericExt", () => {
 
   function getDefaultBundleActiveState() {
     return {
-      'org.sonatype.nexus.plugins.nexus-coreui-plugin': true
+      'nexus-coreui-plugin': true
     }
   }
 

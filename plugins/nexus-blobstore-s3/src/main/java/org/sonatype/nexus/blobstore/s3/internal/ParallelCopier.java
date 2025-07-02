@@ -16,9 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 
@@ -28,8 +27,11 @@ import com.amazonaws.services.s3.model.CopyPartRequest;
 import com.amazonaws.services.s3.model.PartETag;
 import com.codahale.metrics.annotation.Timed;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static java.lang.Math.min;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Copies a file, using multipart copy in parallel if the file is larger or equal to the chunk size. A normal
@@ -38,16 +40,18 @@ import static java.lang.Math.min;
  *
  * @since 3.19
  */
+@ConditionalOnProperty(name = "nexus.s3.copierName", havingValue = "parallelCopier", matchIfMissing = true)
 @Singleton
-@Named("parallelCopier")
+@Component
+@Qualifier("parallelCopier")
 public class ParallelCopier
     extends ParallelRequester
     implements S3Copier
 {
   @Inject
   public ParallelCopier(
-      @Named("${nexus.s3.parallelRequests.chunksize:-5242880}") @Value("${nexus.s3.parallelRequests.chunksize:5242880}") final int chunkSize,
-      @Named("${nexus.s3.parallelRequests.parallelism:-0}") @Value("${nexus.s3.parallelRequests.parallelism:0}") final int nThreads)
+      @Value("${nexus.s3.parallelRequests.chunksize:5242880}") final int chunkSize,
+      @Value("${nexus.s3.parallelRequests.parallelism:0}") final int nThreads)
   {
     super(chunkSize, nThreads, "copyThreads");
   }

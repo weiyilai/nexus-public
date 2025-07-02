@@ -17,9 +17,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
 import javax.validation.Validator;
@@ -34,13 +33,18 @@ import org.sonatype.nexus.validation.ConstraintViolations;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Default {@link ConfigurationFacet} implementation.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ConfigurationFacetImpl
     extends FacetSupport
     implements ConfigurationFacet
@@ -52,9 +56,10 @@ public class ConfigurationFacetImpl
   private final Provider<Validator> validatorProvider;
 
   @Inject
-  public ConfigurationFacetImpl(final ConfigurationStore store,
-                                @Named(ConfigurationObjectMapperProvider.NAME) final ObjectMapper objectMapper,
-                                final Provider<Validator> validatorProvider)
+  public ConfigurationFacetImpl(
+      final ConfigurationStore store,
+      @Qualifier(ConfigurationObjectMapperProvider.NAME) final ObjectMapper objectMapper,
+      final Provider<Validator> validatorProvider)
   {
     this.store = checkNotNull(store);
     this.objectMapper = checkNotNull(objectMapper);
@@ -105,7 +110,7 @@ public class ConfigurationFacetImpl
   {
     @SuppressWarnings("unused")
     @Valid
-    private Map<String,Object> attributes;
+    private Map<String, Object> attributes;
 
     public SectionWrapper(final String name, final Object value) {
       this.attributes = Collections.singletonMap(name, value);
@@ -113,10 +118,11 @@ public class ConfigurationFacetImpl
   }
 
   @Override
-  public <T> T validateSection(final Configuration configuration,
-                               final String section,
-                               final Class<T> type,
-                               final Class<?>... groups)
+  public <T> T validateSection(
+      final Configuration configuration,
+      final String section,
+      final Class<T> type,
+      final Class<?>... groups)
   {
     T value = readSection(configuration, section, type);
     SectionWrapper wrapper = new SectionWrapper(section, value);

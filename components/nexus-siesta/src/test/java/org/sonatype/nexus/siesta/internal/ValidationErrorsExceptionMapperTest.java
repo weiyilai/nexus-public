@@ -15,9 +15,9 @@ package org.sonatype.nexus.siesta.internal;
 import java.util.Collections;
 import java.util.List;
 
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.rest.ValidationErrorXO;
 import org.sonatype.nexus.rest.ValidationErrorsException;
-import org.sonatype.nexus.siesta.SiestaTestSupport;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
 class ValidationErrorsExceptionMapperTest
-    extends SiestaTestSupport
+    extends Test5Support
 {
   private ValidationErrorsExceptionMapper mapper;
 

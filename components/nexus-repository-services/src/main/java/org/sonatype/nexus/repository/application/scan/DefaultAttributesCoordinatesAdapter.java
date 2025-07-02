@@ -13,12 +13,17 @@
 package org.sonatype.nexus.repository.application.scan;
 
 import java.util.Map;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 
-@Named(DefaultAttributesCoordinatesAdapter.DEFAULT)
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+@Primary
+@Component
+@Qualifier(DefaultAttributesCoordinatesAdapter.DEFAULT)
 @Singleton
 public class DefaultAttributesCoordinatesAdapter
     implements AttributesCoordinatesAdapter

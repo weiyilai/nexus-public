@@ -21,14 +21,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
-import org.sonatype.nexus.common.app.BindAsLifecycleSupport;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.node.NodeAccess;
 import org.sonatype.nexus.common.thread.TcclBlock;
@@ -46,6 +43,7 @@ import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.plugins.PluginManager;
 import org.elasticsearch.plugins.PluginManager.OutputMode;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -53,19 +51,21 @@ import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.STORAGE;
 import static org.sonatype.nexus.common.app.ManagedLifecycleManager.isShuttingDown;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * ElasticSearch {@link Node} provider.
  *
  * @since 3.0
  */
-@Named
+@Component
 @ManagedLifecycle(phase = STORAGE)
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class NodeProvider
     extends LifecycleSupport
-    implements Provider<Node>
+    implements FactoryBean<Node>
 {
   private final ApplicationDirectories directories;
 
@@ -81,7 +81,7 @@ public class NodeProvider
   public NodeProvider(
       final ApplicationDirectories directories,
       final NodeAccess nodeAccess,
-      @Nullable @Named("${nexus.elasticsearch.plugins}") final String plugins,
+      @Nullable @Value("${nexus.elasticsearch.plugins:#{null}}") final String plugins,
       @Nullable final List<PluginLocator> pluginLocators)
   {
     this.directories = checkNotNull(directories);
@@ -91,7 +91,7 @@ public class NodeProvider
   }
 
   @Override
-  public synchronized Node get() {
+  public synchronized Node getObject() {
     if (node == null) {
       try {
         Node newNode = create();
@@ -109,6 +109,11 @@ public class NodeProvider
       }
     }
     return node;
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return Node.class;
   }
 
   private Node create() throws Exception {
@@ -158,16 +163,5 @@ public class NodeProvider
         node = null;
       }
     }
-  }
-
-  /**
-   * Provider implementations are not automatically exposed under additional interfaces.
-   * This small module is a workaround to expose this provider as a (managed) lifecycle.
-   */
-  @Named
-  private static class BindAsLifecycle
-      extends BindAsLifecycleSupport<NodeProvider>
-  {
-    // empty
   }
 }

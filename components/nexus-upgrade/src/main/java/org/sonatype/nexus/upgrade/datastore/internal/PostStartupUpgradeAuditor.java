@@ -15,9 +15,8 @@ package org.sonatype.nexus.upgrade.datastore.internal;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.event.EventManager;
@@ -26,11 +25,12 @@ import org.sonatype.nexus.common.upgrade.events.UpgradeEventSupport;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
+import org.springframework.stereotype.Component;
 
 /**
  * Stores auditable db upgrade events until after startup when auditing is enabled
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = TASKS)
 public class PostStartupUpgradeAuditor

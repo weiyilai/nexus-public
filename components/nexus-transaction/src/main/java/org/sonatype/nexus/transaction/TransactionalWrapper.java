@@ -14,7 +14,7 @@ package org.sonatype.nexus.transaction;
 
 import org.sonatype.goodies.common.Loggers;
 
-import org.aopalliance.intercept.Joinpoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 
 /**
@@ -28,11 +28,11 @@ final class TransactionalWrapper
 
   private final Transactional spec;
 
-  private final Joinpoint aspect;
+  private final ProceedingJoinPoint aspect;
 
   private final boolean tracing;
 
-  public TransactionalWrapper(final Transactional spec, final Joinpoint aspect) {
+  public TransactionalWrapper(final Transactional spec, final ProceedingJoinPoint aspect) {
     this.spec = spec;
     this.aspect = aspect;
 

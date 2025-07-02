@@ -17,32 +17,46 @@ import java.util.Set;
 
 import org.sonatype.nexus.security.AbstractSecurityTest;
 import org.sonatype.nexus.security.SecuritySystem;
-import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
+import org.sonatype.nexus.security.config.PreconfiguredSecurityConfigurationSource;
+import org.sonatype.nexus.security.config.SecurityConfigurationSource;
 import org.sonatype.nexus.security.role.RoleIdentifier;
+import org.sonatype.nexus.security.user.MissingRoleUserManagerTest.MissingRoleUserManagerTestConfiguration;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+@Import(MissingRoleUserManagerTestConfiguration.class)
 public class MissingRoleUserManagerTest
     extends AbstractSecurityTest
 {
-  @Override
-  protected MemorySecurityConfiguration initialSecurityConfiguration() {
-    return MissingRoleUserManagerTestSecurity.securityModel();
+  static class MissingRoleUserManagerTestConfiguration
+  {
+    @Qualifier("default")
+    @Primary
+    @Bean
+    SecurityConfigurationSource securityConfigurationSource() {
+      return new PreconfiguredSecurityConfigurationSource(MissingRoleUserManagerTestSecurity.securityModel());
+    }
   }
 
   @Test
-  public void testInvalidRoleMapping() throws Exception {
+  void testInvalidRoleMapping() throws Exception {
     SecuritySystem userManager = getSecuritySystem();
 
     User user = userManager.getUser("jcoder");
-    Assert.assertNotNull(user);
+    assertNotNull(user);
 
     Set<String> roleIds = new HashSet<String>();
     for (RoleIdentifier role : user.getRoles()) {
-      Assert.assertNotNull("User has null role.", role);
+      assertNotNull(role, "User has null role.");
       roleIds.add(role.getRoleId());
     }
-    Assert.assertFalse(roleIds.contains("INVALID-ROLE-BLA-BLA"));
+    assertFalse(roleIds.contains("INVALID-ROLE-BLA-BLA"));
   }
 }

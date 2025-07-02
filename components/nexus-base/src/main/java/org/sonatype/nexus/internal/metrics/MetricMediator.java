@@ -12,32 +12,44 @@
  */
 package org.sonatype.nexus.internal.metrics;
 
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
-import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.MediatorSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.Mediator;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Manages {@link Metric} registrations via Sisu component mediation.
+ * Manages {@link Metric} registrations
  *
  * @since 3.6
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class MetricMediator
-    extends ComponentSupport
-    implements Mediator<Named, Metric, MetricRegistry>
+    extends MediatorSupport<Metric>
 {
-  public void add(final BeanEntry<Named, Metric> entry, final MetricRegistry registry) throws Exception {
-    log.debug("Registering: {}", entry);
-    registry.register(entry.getKey().value(), entry.getValue());
+  private final MetricRegistry registry;
+
+  @Inject
+  public MetricMediator(final MetricRegistry registry) {
+    super(Metric.class);
+    this.registry = checkNotNull(registry);
   }
 
-  public void remove(final BeanEntry<Named, Metric> entry, final MetricRegistry registry) throws Exception {
-    log.debug("Un-registering: {}", entry);
-    registry.remove(entry.getKey().value());
+  @Override
+  protected void add(final Metric metric) {
+    if (metric == registry) {
+      // Avoid adding registry to itself
+      return;
+    }
+    log.debug("Registering: {}", metric);
+    registry.register(QualifierUtil.value(metric).orElseGet(metric.getClass()::getName), metric);
   }
 }

@@ -15,15 +15,19 @@ package org.sonatype.nexus.capability;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.db.DatabaseCheck;
+
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@Named
+@Primary
+@Component
 @Singleton
 public class DefaultCapabilityDescriptorProvider
 {
@@ -32,14 +36,17 @@ public class DefaultCapabilityDescriptorProvider
   private final DatabaseCheck databaseCheck;
 
   @Inject
-  public DefaultCapabilityDescriptorProvider(final Map<String, CapabilityDescriptor> descriptors,
-                                             final DatabaseCheck databaseCheck) {
-    this.descriptors = checkNotNull(descriptors);
+  public DefaultCapabilityDescriptorProvider(
+      final List<CapabilityDescriptor> descriptorsList,
+      final DatabaseCheck databaseCheck)
+  {
+    this.descriptors = QualifierUtil.buildQualifierBeanMap(checkNotNull(descriptorsList));
     this.databaseCheck = checkNotNull(databaseCheck);
   }
 
   public List<CapabilityDescriptor> get() {
-    return descriptors.values().stream()
+    return descriptors.values()
+        .stream()
         .filter(capabilityDescriptor -> databaseCheck.isAllowedByVersion(capabilityDescriptor.getClass()))
         .collect(Collectors.toList());
   }

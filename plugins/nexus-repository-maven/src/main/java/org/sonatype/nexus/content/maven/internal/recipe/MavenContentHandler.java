@@ -15,8 +15,7 @@ package org.sonatype.nexus.content.maven.internal.recipe;
 import java.io.IOException;
 
 import javax.annotation.Nonnull;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.content.maven.MavenContentFacet;
@@ -34,11 +33,12 @@ import static org.sonatype.nexus.repository.http.HttpMethods.DELETE;
 import static org.sonatype.nexus.repository.http.HttpMethods.GET;
 import static org.sonatype.nexus.repository.http.HttpMethods.HEAD;
 import static org.sonatype.nexus.repository.http.HttpMethods.PUT;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.25
  */
-@Named
+@Component
 @Singleton
 public class MavenContentHandler
     extends ComponentSupport
@@ -86,8 +86,7 @@ public class MavenContentHandler
   private void doPut(
       @Nonnull final Context context,
       final MavenPath mavenPath,
-      final MavenContentFacet storage)
-      throws IOException
+      final MavenContentFacet storage) throws IOException
   {
     validatePathForStrictLayoutPolicy(mavenPath, storage);
     storage.put(mavenPath, context.getRequest().getPayload());

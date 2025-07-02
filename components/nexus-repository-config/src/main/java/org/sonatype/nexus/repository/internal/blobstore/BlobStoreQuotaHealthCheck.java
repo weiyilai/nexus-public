@@ -17,10 +17,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
@@ -32,11 +31,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 
 import static java.lang.String.format;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Inform on the health of all BlobStores based on their configured soft quota.
  */
-@Named("Blob Stores Quota")
+@Component
+@Qualifier("Blob Stores Quota")
 @Singleton
 public class BlobStoreQuotaHealthCheck
     extends HealthCheck
@@ -46,8 +48,9 @@ public class BlobStoreQuotaHealthCheck
   private final Provider<BlobStoreQuotaService> quotaServiceProvider;
 
   @Inject
-  public BlobStoreQuotaHealthCheck(final Provider<BlobStoreManager> blobStoreManagerProvider,
-                                   final Provider<BlobStoreQuotaService> quotaServiceProvider)
+  public BlobStoreQuotaHealthCheck(
+      final Provider<BlobStoreManager> blobStoreManagerProvider,
+      final Provider<BlobStoreQuotaService> quotaServiceProvider)
   {
     this.blobStoreManagerProvider = Preconditions.checkNotNull(blobStoreManagerProvider);
     this.quotaServiceProvider = Preconditions.checkNotNull(quotaServiceProvider);
@@ -67,6 +70,6 @@ public class BlobStoreQuotaHealthCheck
         Iterators.size(blobStoreManagerProvider.get().browse().iterator()),
         String.join("<br>", violationMessages));
 
-    return violationMessages.isEmpty() ? Result.healthy(message): Result.unhealthy(message);
+    return violationMessages.isEmpty() ? Result.healthy(message) : Result.unhealthy(message);
   }
 }

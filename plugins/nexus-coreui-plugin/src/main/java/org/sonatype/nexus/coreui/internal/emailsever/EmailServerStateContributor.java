@@ -14,17 +14,17 @@ package org.sonatype.nexus.coreui.internal.emailsever;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class EmailServerStateContributor
     extends ComponentSupport
@@ -34,7 +34,7 @@ public class EmailServerStateContributor
 
   @Inject
   public EmailServerStateContributor(
-      @Named("${nexus.react.emailServer:-true}") @Value("${nexus.react.emailServer:true}") final Boolean featureFlag)
+      @Value("${nexus.react.emailServer:true}") final Boolean featureFlag)
   {
     state = ImmutableMap.of("nexus.react.emailServer", featureFlag);
   }

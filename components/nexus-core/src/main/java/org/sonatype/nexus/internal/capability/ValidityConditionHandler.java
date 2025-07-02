@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.internal.capability;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.capability.CapabilityContextAware;
@@ -50,10 +50,11 @@ public class ValidityConditionHandler
   private Condition validityCondition;
 
   @Inject
-  ValidityConditionHandler(final EventManager eventManager,
-                           final CapabilityRegistry capabilityRegistry,
-                           final Conditions conditions,
-                           @Assisted final DefaultCapabilityReference reference)
+  public ValidityConditionHandler(
+      final EventManager eventManager,
+      final CapabilityRegistry capabilityRegistry,
+      final Conditions conditions,
+      @Assisted final DefaultCapabilityReference reference)
   {
     this.eventManager = checkNotNull(eventManager);
     this.capabilityRegistry = checkNotNull(capabilityRegistry);
@@ -117,12 +118,10 @@ public class ValidityConditionHandler
       }
       catch (Exception e) {
         validityCondition = conditions.always(
-            "Always satisfied (failed to determine validity condition)"
-        );
+            "Always satisfied (failed to determine validity condition)");
         log.error(
             "Could not get validation condition from capability {} ({}). Considering it as always valid",
-            new Object[]{reference.capability(), reference.context().id(), e}
-        );
+            new Object[]{reference.capability(), reference.context().id(), e});
       }
       if (validityCondition == null) {
         validityCondition = conditions.always("Always satisfied (capability has no validity condition)");
@@ -148,8 +147,7 @@ public class ValidityConditionHandler
     }
     return String.format(
         "Watching '%s' condition to validate/invalidate capability '%s (id=%s)'",
-        condition, reference.capability(), reference.context().id()
-    );
+        condition, reference.capability(), reference.context().id());
   }
 
 }

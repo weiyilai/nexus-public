@@ -17,14 +17,17 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BrowseNodeMigrationStep_1_38
     extends ComponentSupport
     implements DatabaseMigrationStep
@@ -47,8 +50,7 @@ public class BrowseNodeMigrationStep_1_38
   @Override
   public void migrate(final Connection connection) throws Exception {
     formats.forEach(format -> executeStatement(connection,
-        String.format(CREATE_PARENT_ID_INDEX, format.getValue(), format.getValue())
-    ));
+        String.format(CREATE_PARENT_ID_INDEX, format.getValue(), format.getValue())));
   }
 
   private void executeStatement(final Connection connection, final String sqlStatement) {

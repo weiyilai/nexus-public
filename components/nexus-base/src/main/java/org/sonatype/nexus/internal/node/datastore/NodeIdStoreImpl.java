@@ -15,9 +15,8 @@ package org.sonatype.nexus.internal.node.datastore;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.node.NodeAccess;
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
@@ -28,11 +27,14 @@ import org.sonatype.nexus.node.datastore.NodeIdStore;
 import org.sonatype.nexus.transaction.Transactional;
 
 import com.google.common.hash.Hashing;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.37
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 public class NodeIdStoreImpl
     extends ConfigStoreSupport<NodeIdDAO>

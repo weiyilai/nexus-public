@@ -12,18 +12,18 @@
  */
 package org.sonatype.nexus.repository.rest;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.core.Response;
 
 import org.sonatype.nexus.rest.ExceptionMapperSupport;
 
 import static org.sonatype.nexus.rest.SimpleApiResponse.badRequest;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.14
  */
-@Named
+@Component
 @Singleton
 public class NoQueryParamExceptionMapper
     extends ExceptionMapperSupport<NoQueryParamException>

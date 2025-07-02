@@ -14,22 +14,15 @@ package org.sonatype.nexus.blobstore.file;
 
 import java.time.Duration;
 
-import org.sonatype.nexus.blobstore.api.softdeleted.SoftDeletedBlobsStore;
 import org.sonatype.nexus.blobstore.file.internal.datastore.DatastoreFileBlobDeletionIndex;
 import org.sonatype.nexus.blobstore.internal.softdeleted.SoftDeletedBlobsDAO;
 import org.sonatype.nexus.blobstore.internal.softdeleted.SoftDeletedBlobsStoreImpl;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
-import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.testdb.DataSessionRule;
-import org.sonatype.nexus.transaction.TransactionModule;
 
-import com.google.inject.Guice;
-import com.google.inject.Provides;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -39,7 +32,6 @@ import static org.mockito.Mockito.doAnswer;
 /**
  * {@link FileBlobStore} integration tests.
  */
-@Category(SQLTestGroup.class)
 public class DatastoreFileBlobStoreIT
     extends FileBlobStoreITSupport
 {
@@ -52,7 +44,7 @@ public class DatastoreFileBlobStoreIT
   @Mock
   private PeriodicJobService periodicJobService;
 
-  private SoftDeletedBlobsStore store;
+  private SoftDeletedBlobsStoreImpl store;
 
   @Before
   public void setupPeriodicJobService() {
@@ -68,18 +60,8 @@ public class DatastoreFileBlobStoreIT
   @Override
   protected FileBlobDeletionIndex fileBlobDeletionIndex() {
     if (store == null) {
-      store = Guice.createInjector(new TransactionModule()
-      {
-        @Provides
-        DataSessionSupplier getDataSessionSupplier() {
-          return sessionRule;
-        }
-
-        @Provides
-        EventManager getEventManager() {
-          return eventManager;
-        }
-      }).getInstance(SoftDeletedBlobsStoreImpl.class);
+      store = new SoftDeletedBlobsStoreImpl(sessionRule);
+      store.setDependencies(eventManager);
     }
 
     return new DatastoreFileBlobDeletionIndex(store, periodicJobService, Duration.ofSeconds(1));

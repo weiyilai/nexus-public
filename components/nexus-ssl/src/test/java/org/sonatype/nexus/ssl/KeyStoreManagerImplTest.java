@@ -59,7 +59,6 @@ import org.sonatype.nexus.crypto.CryptoHelper;
 import org.sonatype.nexus.crypto.internal.CryptoHelperImpl;
 import org.sonatype.nexus.ssl.internal.geronimo.KeystoreInstance;
 import org.sonatype.nexus.ssl.spi.KeyStoreStorage;
-import org.sonatype.nexus.ssl.spi.KeyStoreStorageManager;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -106,7 +105,7 @@ public class KeyStoreManagerImplTest
 {
   private final CryptoHelper crypto = new CryptoHelperImpl(false);
 
-  private KeyStoreStorageManager storageManager;
+  private KeyStoreStorageFactory storageManager;
 
   private KeyStoreManager keyStoreManager;
 
@@ -133,7 +132,7 @@ public class KeyStoreManagerImplTest
     return config;
   }
 
-  private KeyStoreManager createKeyStoreManager(final KeyStoreStorageManager storageManager) {
+  private KeyStoreManager createKeyStoreManager(final KeyStoreStorageFactory storageManager) {
     return new KeyStoreManagerImpl(crypto, storageManager, createMockConfiguration());
   }
 
@@ -607,7 +606,7 @@ public class KeyStoreManagerImplTest
             any(String.class), any(String.class), any(String.class));
   }
 
-  private Answer<?> blockingAnswer(CountDownLatch latch) {
+  private Answer<?> blockingAnswer(final CountDownLatch latch) {
     return new Answer<Object>()
     {
       @Override
@@ -619,13 +618,13 @@ public class KeyStoreManagerImplTest
   }
 
   private X509Certificate generateCertificate(
-      int validity,
-      String commonName,
-      String orgUnit,
-      String organization,
-      String locality,
-      String state,
-      String country) throws Exception
+      final int validity,
+      final String commonName,
+      final String orgUnit,
+      final String organization,
+      final String locality,
+      final String state,
+      final String country) throws Exception
   {
     KeyPairGenerator kpgen = KeyPairGenerator.getInstance("RSA");
     kpgen.initialize(512);
@@ -753,7 +752,7 @@ public class KeyStoreManagerImplTest
 
     private final List<String> results;
 
-    public SSLServerThread(SSLServerSocket sslServerSocket, List<String> results) {
+    public SSLServerThread(final SSLServerSocket sslServerSocket, final List<String> results) {
       this.sslServerSocket = sslServerSocket;
       this.results = results;
     }
@@ -782,7 +781,7 @@ public class KeyStoreManagerImplTest
   }
 
   static class MemKeyStoreStorageManager
-      implements KeyStoreStorageManager
+      implements KeyStoreStorageFactory
   {
     class MemKeyStoreStorage
         implements KeyStoreStorage
@@ -827,7 +826,7 @@ public class KeyStoreManagerImplTest
     private final Map<String, byte[]> storages = new HashMap<>();
 
     @Override
-    public KeyStoreStorage createStorage(final String keyStoreName) {
+    public KeyStoreStorage create(final String keyStoreName) {
       return new MemKeyStoreStorage(keyStoreName);
     }
   }

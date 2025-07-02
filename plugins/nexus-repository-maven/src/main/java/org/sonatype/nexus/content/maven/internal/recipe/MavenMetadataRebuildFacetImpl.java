@@ -15,8 +15,7 @@ package org.sonatype.nexus.content.maven.internal.recipe;
 import java.io.IOException;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.content.maven.MavenContentFacet;
 import org.sonatype.nexus.repository.FacetSupport;
@@ -35,11 +34,15 @@ import org.apache.maven.artifact.repository.metadata.Metadata;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Boolean.TRUE;
 import static org.sonatype.nexus.repository.maven.internal.Constants.METADATA_FILENAME;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenMetadataRebuildFacetImpl
     extends FacetSupport
     implements MavenMetadataRebuildFacet
@@ -51,8 +54,7 @@ public class MavenMetadataRebuildFacetImpl
   private static final ThreadLocal<Boolean> rebuilding = new ThreadLocal<>();
 
   @Inject
-  public MavenMetadataRebuildFacetImpl(final MetadataRebuilder metadataRebuilder)
-  {
+  public MavenMetadataRebuildFacetImpl(final MetadataRebuilder metadataRebuilder) {
     this.metadataRebuilder = checkNotNull(metadataRebuilder);
   }
 
@@ -63,8 +65,10 @@ public class MavenMetadataRebuildFacetImpl
   }
 
   @Override
-  public void maybeRebuildMavenMetadata(final String path, final boolean update, final boolean rebuildChecksums)
-      throws IOException
+  public void maybeRebuildMavenMetadata(
+      final String path,
+      final boolean update,
+      final boolean rebuildChecksums) throws IOException
   {
     Optional<FluentAsset> maybeAsset = mavenContentFacet.assets().path(path).find();
     Optional<Payload> maybePayload = maybeAsset.map(FluentAsset::download);
@@ -86,8 +90,10 @@ public class MavenMetadataRebuildFacetImpl
         && TRUE.equals(asset.attributes(METADATA_REBUILD).get(METADATA_FORCE_REBUILD, false));
   }
 
-  private void rebuildMetadata(final Payload metadataPayload, final boolean update, final boolean rebuildChecksums)
-      throws IOException
+  private void rebuildMetadata(
+      final Payload metadataPayload,
+      final boolean update,
+      final boolean rebuildChecksums) throws IOException
   {
     Metadata metadata = MavenModels.readMetadata(metadataPayload.openInputStream());
     String groupId = Optional.ofNullable(metadata).map(Metadata::getGroupId).orElse(null);
@@ -134,7 +140,8 @@ public class MavenMetadataRebuildFacetImpl
     rebuilding.set(TRUE);
     try {
       metadataRebuilder
-          .rebuildInTransaction(getRepository(), update, rebuildChecksums, cascadeUpdate, groupId, artifactId, baseVersion);
+          .rebuildInTransaction(getRepository(), update, rebuildChecksums, cascadeUpdate, groupId, artifactId,
+              baseVersion);
     }
     finally {
       rebuilding.remove();

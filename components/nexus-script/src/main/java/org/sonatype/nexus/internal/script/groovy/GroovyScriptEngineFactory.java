@@ -17,9 +17,8 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
@@ -40,20 +39,21 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static org.sonatype.nexus.internal.script.ScriptServiceImpl.SCRIPT_CLEANUP_HANDLER;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Groovy {@link ScriptEngineFactory}.
  *
  * @since 3.0
  */
-@Named("groovy")
+@Component
+@Qualifier("groovy")
 @Singleton
 public class GroovyScriptEngineFactory // NOSONAR
     extends org.codehaus.groovy.jsr223.GroovyScriptEngineFactory
 {
   private static final Logger log = LoggerFactory.getLogger(GroovyScriptEngineFactory.class);
-
-  private final ClassLoader classLoader;
 
   private final ApplicationDirectories applicationDirectories;
 
@@ -61,10 +61,8 @@ public class GroovyScriptEngineFactory // NOSONAR
 
   @Inject
   public GroovyScriptEngineFactory(
-      @Named("nexus-uber") final ClassLoader classLoader,
       final ApplicationDirectories applicationDirectories)
   {
-    this.classLoader = checkNotNull(classLoader);
     this.applicationDirectories = checkNotNull(applicationDirectories);
   }
 
@@ -75,7 +73,7 @@ public class GroovyScriptEngineFactory // NOSONAR
     cc.setSourceEncoding("UTF-8");
     cc.setScriptBaseClass(ScriptWithCleanup.class.getName());
     cc.addCompilationCustomizers(secureASTCustomizer());
-    GroovyClassLoader gcl = new GroovyClassLoader(classLoader, cc);
+    GroovyClassLoader gcl = new GroovyClassLoader(GroovyScriptEngineFactory.class.getClassLoader(), cc);
 
     engine = new GroovyScriptEngine(gcl);
 

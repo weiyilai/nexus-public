@@ -41,22 +41,23 @@ import org.sonatype.nexus.repository.content.store.InternalIds;
 import org.sonatype.nexus.repository.content.store.example.TestAssetDAO;
 import org.sonatype.nexus.repository.content.store.example.TestComponentDAO;
 import org.sonatype.nexus.repository.content.store.example.TestContentRepositoryDAO;
-import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskScheduler;
+import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class BrowseNodeMigrationStep_1_36Test
-  extends ExampleContentTestSupport
+class BrowseNodeMigrationStep_1_36Test
+    extends ExampleContentTestSupport
 {
   private static final Logger log = LoggerFactory.getLogger(BrowseNodeMigrationStep_1_36Test.class);
 
@@ -83,25 +84,22 @@ public class BrowseNodeMigrationStep_1_36Test
 
   private DataStore<?> store;
 
-  public BrowseNodeMigrationStep_1_36Test() {
-    super(TestBrowseNodeDAO.class, PyPiContentRepositoryDAO.class, PyPiComponentDAO.class, PyPiAssetBlobDAO.class,
-        PyPiAssetDAO.class, PyPiBrowseNodeDAO.class);
-  }
-
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
+    sessionRule.register(TestBrowseNodeDAO.class, PyPiContentRepositoryDAO.class, PyPiComponentDAO.class,
+        PyPiAssetBlobDAO.class, PyPiAssetDAO.class, PyPiBrowseNodeDAO.class);
     when(fakeFormat.getValue()).thenReturn("test");
-    when(pypiFormat.getValue()).thenReturn("pypi");
-    when(taskScheduler.createTaskConfigurationInstance(RebuildBrowseNodesTaskDescriptor.TYPE_ID))
+    lenient().when(pypiFormat.getValue()).thenReturn("pypi");
+    lenient().when(taskScheduler.createTaskConfigurationInstance(RebuildBrowseNodesTaskDescriptor.TYPE_ID))
         .thenReturn(configuration);
 
     upgradeStep = new BrowseNodeMigrationStep_1_36(Arrays.asList(fakeFormat, pypiFormat), taskScheduler,
         upgradeTaskScheduler);
-    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).get();
+    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME);
   }
 
-  @Test(expected = Test.None.class)
-  public void testUnknownFormat() throws Exception {
+  @Test
+  void testUnknownFormat() throws Exception {
     when(fakeFormat.getValue()).thenReturn("foo");
     BrowseNodeMigrationStep_1_36 upgradeStep = new BrowseNodeMigrationStep_1_36(Collections.singletonList(fakeFormat),
         taskScheduler, upgradeTaskScheduler);
@@ -110,10 +108,11 @@ public class BrowseNodeMigrationStep_1_36Test
       upgradeStep.migrate(conn);
     }
     // no assertions, not blowing up is the expectation
+    verify(fakeFormat).getValue();
   }
 
   @Test
-  public void testMigration() throws Exception {
+  void testMigration() throws Exception {
     generateRandomPaths(10);
     generateRandomNamespaces(10);
     generateRandomNames(10);
@@ -147,7 +146,6 @@ public class BrowseNodeMigrationStep_1_36Test
     verify(configuration).setString(RepositoryTaskSupport.REPOSITORY_NAME_FIELD_ID, "group,member,my-pypi-group");
     verify(upgradeTaskScheduler).schedule(configuration);
   }
-
 
   private void insert(
       final int repositoryId,

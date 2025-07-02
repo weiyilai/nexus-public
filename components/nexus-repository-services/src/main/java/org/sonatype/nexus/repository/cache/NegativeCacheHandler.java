@@ -13,6 +13,7 @@
 package org.sonatype.nexus.repository.cache;
 
 import java.util.Set;
+
 import javax.annotation.Nonnull;
 
 import org.sonatype.goodies.common.ComponentSupport;
@@ -27,6 +28,10 @@ import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.repository.view.Status;
 
 import com.google.common.collect.ImmutableSet;
+import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.repository.replication.PullReplicationSupport.IS_REPLICATION_REQUEST;
 
@@ -37,6 +42,9 @@ import static org.sonatype.nexus.repository.replication.PullReplicationSupport.I
  *
  * @since 3.0
  */
+@Primary
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class NegativeCacheHandler
     extends ComponentSupport
     implements Handler

@@ -13,8 +13,7 @@
 package org.sonatype.nexus.selector;
 
 import java.util.Map;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -22,16 +21,17 @@ import org.sonatype.nexus.common.event.EventAware;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * ContentSelector auditor.
  *
  */
-@Named
+@Component
 @Singleton
 public class ContentSelectorAuditor
-  extends AuditorSupport
-  implements EventAware
+    extends AuditorSupport
+    implements EventAware
 {
   public static final String DOMAIN = "ContentSelector";
 
@@ -52,7 +52,10 @@ public class ContentSelectorAuditor
     }
   }
 
-  private AuditData getSelectorAuditData(final ContentSelectorEvent event, final SelectorConfiguration selectorConfiguration) {
+  private AuditData getSelectorAuditData(
+      final ContentSelectorEvent event,
+      final SelectorConfiguration selectorConfiguration)
+  {
     AuditData data = new AuditData();
     data.setDomain(DOMAIN);
     data.setType(type(event.getClass()));

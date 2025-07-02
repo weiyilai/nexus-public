@@ -21,7 +21,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.Mockito.mock;
 
 public class NexusEditionSelectorTest
 {
@@ -59,7 +58,7 @@ public class NexusEditionSelectorTest
       extends NexusEditionSupport
   {
     public TestEdition1() {
-      super("test-1", "TEST 1", "TEST1", 200, mock(NexusEditionMarkerFile.class));
+      super("test-1", "TEST 1", "TEST1", 100);
     }
 
     @Override
@@ -72,7 +71,7 @@ public class NexusEditionSelectorTest
       extends NexusEditionSupport
   {
     public TestEdition2() {
-      super("test-2", "TEST 2", "TEST2", 100, mock(NexusEditionMarkerFile.class));
+      super("test-2", "TEST 2", "TEST2", 200);
     }
 
     @Override

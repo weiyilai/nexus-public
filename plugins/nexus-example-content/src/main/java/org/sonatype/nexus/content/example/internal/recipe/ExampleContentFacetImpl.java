@@ -14,8 +14,7 @@ package org.sonatype.nexus.content.example.internal.recipe;
 
 import java.io.IOException;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.hash.HashAlgorithm;
 import org.sonatype.nexus.content.example.ExampleContentFacet;
@@ -29,13 +28,19 @@ import org.sonatype.nexus.repository.view.payloads.TempBlob;
 import com.google.common.collect.ImmutableList;
 
 import static org.sonatype.nexus.common.hash.HashAlgorithm.SHA256;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Provides persistent content for an 'example' format.
  *
  * @since 3.24
  */
-@Named(ExampleFormat.NAME)
+@Component
+@Qualifier(ExampleFormat.NAME)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ExampleContentFacetImpl
     extends ContentFacetSupport
     implements ExampleContentFacet
@@ -44,7 +49,7 @@ public class ExampleContentFacetImpl
 
   @Inject
   public ExampleContentFacetImpl(
-      @Named(ExampleFormat.NAME) final FormatStoreManager formatStoreManager)
+      @Qualifier(ExampleFormat.NAME) final FormatStoreManager formatStoreManager)
   {
     super(formatStoreManager);
   }

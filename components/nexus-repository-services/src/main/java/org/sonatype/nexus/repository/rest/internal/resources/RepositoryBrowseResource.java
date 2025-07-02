@@ -17,9 +17,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -52,11 +51,12 @@ import static javax.ws.rs.core.MediaType.TEXT_HTML;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.sonatype.nexus.common.encoding.EncodingUtil.urlEncode;
 import static org.sonatype.nexus.security.BreadActions.BROWSE;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.6
  */
-@Named
+@Component
 @Singleton
 @Path(RepositoryBrowseResource.RESOURCE_URI)
 @Produces(TEXT_HTML)

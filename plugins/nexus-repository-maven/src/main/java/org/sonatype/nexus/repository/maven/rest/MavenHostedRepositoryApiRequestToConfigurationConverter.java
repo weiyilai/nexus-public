@@ -12,15 +12,17 @@
  */
 package org.sonatype.nexus.repository.maven.rest;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.rest.api.HostedRepositoryApiRequestToConfigurationConverter;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.20
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenHostedRepositoryApiRequestToConfigurationConverter
     extends HostedRepositoryApiRequestToConfigurationConverter<MavenHostedRepositoryApiRequest>
 {

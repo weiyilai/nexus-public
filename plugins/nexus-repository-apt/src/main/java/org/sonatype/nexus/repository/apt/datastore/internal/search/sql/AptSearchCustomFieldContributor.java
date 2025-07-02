@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.apt.datastore.internal.search.sql;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.apt.AptFormat;
@@ -21,11 +20,14 @@ import org.sonatype.nexus.repository.content.Asset;
 import org.sonatype.nexus.repository.content.search.sql.SearchCustomFieldContributor;
 import org.sonatype.nexus.repository.search.sql.SearchRecord;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED;
 
-@Named(AptFormat.NAME)
+@Component
+@Qualifier(AptFormat.NAME)
 @Singleton
 @ConditionalOnProperty(name = DATASTORE_CLUSTERED_ENABLED, havingValue = "true")
 public class AptSearchCustomFieldContributor

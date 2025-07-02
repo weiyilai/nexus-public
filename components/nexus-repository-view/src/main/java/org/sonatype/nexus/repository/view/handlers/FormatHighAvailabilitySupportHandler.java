@@ -13,9 +13,8 @@
 package org.sonatype.nexus.repository.view.handlers;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.HighAvailabilitySupportChecker;
 import org.sonatype.nexus.repository.view.Context;
@@ -24,13 +23,14 @@ import org.sonatype.nexus.repository.view.Response;
 
 import static java.lang.String.format;
 import static org.sonatype.nexus.repository.http.HttpResponses.badRequest;
+import org.springframework.stereotype.Component;
 
 /**
  * Returns the message for client in case format doesn't support High Availability infrastructure.
  *
  * @since 3.17
  */
-@Named
+@Component
 @Singleton
 public class FormatHighAvailabilitySupportHandler
     implements Handler

@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.blobstore.internal.metrics;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.ComboboxFormField;
@@ -24,20 +23,19 @@ import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.blobstore.common.BlobStoreTaskSupport.BLOBSTORE_NAME_FIELD_ID;
 import static org.sonatype.nexus.formfields.FormField.MANDATORY;
+import org.springframework.stereotype.Component;
 
 @AvailabilityVersion(from = "2.0")
-@Named
+@Component
 @Singleton
 public class BlobStoreMetricsMigrationTaskDescriptor
     extends TaskDescriptorSupport
 {
-  private static final String EXPOSED_FLAG = "${nexus.blobstore.metrics.migration.task.expose:-false}";
-
   private static final String EXPOSED_FLAG_VALUE = "${nexus.blobstore.metrics.migration.task.expose:false}";
 
   @Inject
   public BlobStoreMetricsMigrationTaskDescriptor(
-      @Named(EXPOSED_FLAG) @Value(EXPOSED_FLAG_VALUE) final boolean exposed)
+      @Value(EXPOSED_FLAG_VALUE) final boolean exposed)
   {
     super(BlobStoreMetricsMigrationTask.TYPE_ID,
         BlobStoreMetricsMigrationTask.class,

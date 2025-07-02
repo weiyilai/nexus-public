@@ -19,17 +19,17 @@ import javax.annotation.Nullable;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
-import org.sonatype.nexus.common.app.BindAsLifecycleSupport;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.ehcache.jsr107.EhcacheCachingProvider;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -42,12 +42,13 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.STORAGE;
  *
  * @since 3.0
  */
-@Named("ehcache")
+@Component
+@Qualifier("ehcache")
 @ManagedLifecycle(phase = STORAGE)
 // not a singleton because we want to provide a new manager when bouncing services
 public class EhCacheManagerProvider
     extends LifecycleSupport
-    implements Provider<CacheManager>
+    implements FactoryBean<CacheManager>
 {
   private static final String CONFIG_FILE = "ehcache.xml";
 
@@ -86,7 +87,7 @@ public class EhCacheManagerProvider
   }
 
   @Override
-  public synchronized CacheManager get() {
+  public synchronized CacheManager getObject() {
     checkState(!isStopped(), "Cache-manager destroyed");
     if (cacheManager == null) {
       this.cacheManager = create(configUri);
@@ -103,14 +104,8 @@ public class EhCacheManagerProvider
     }
   }
 
-  /**
-   * Provider implementations are not automatically exposed under additional interfaces.
-   * This small module is a workaround to expose this provider as a (managed) lifecycle.
-   */
-  @Named
-  private static class BindAsLifecycle
-      extends BindAsLifecycleSupport<EhCacheManagerProvider>
-  {
-    // empty
+  @Override
+  public Class<?> getObjectType() {
+    return CacheManager.class;
   }
 }

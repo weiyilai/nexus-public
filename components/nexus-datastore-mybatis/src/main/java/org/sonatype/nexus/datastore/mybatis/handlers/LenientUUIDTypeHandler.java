@@ -33,16 +33,16 @@ import static java.util.UUID.fromString;
  *
  * @since 3.20
  */
-// not @Named because we register this manually
+// not @Component
 public class LenientUUIDTypeHandler
     extends BaseTypeHandler<UUID>
 {
   @Override
-  public void setNonNullParameter(final PreparedStatement ps,
-                                  final int parameterIndex,
-                                  final UUID parameter,
-                                  final JdbcType jdbcType)
-      throws SQLException
+  public void setNonNullParameter(
+      final PreparedStatement ps,
+      final int parameterIndex,
+      final UUID parameter,
+      final JdbcType jdbcType) throws SQLException
   {
     // always convert UUIDs to strings before they hit the database
     ps.setString(parameterIndex, parameter.toString());

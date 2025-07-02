@@ -12,16 +12,16 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.security.secrets;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.crypto.secrets.ReEncryptService;
 
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @Path(SecretsEncryptionApiResourceV1.RESOURCE_URI)
 public class SecretsEncryptionApiResourceV1

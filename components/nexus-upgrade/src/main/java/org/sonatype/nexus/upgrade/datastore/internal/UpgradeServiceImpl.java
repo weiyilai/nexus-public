@@ -16,9 +16,8 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -27,21 +26,26 @@ import org.sonatype.nexus.upgrade.UpgradeService;
 import org.sonatype.nexus.upgrade.datastore.DeploymentValidator;
 import org.sonatype.nexus.upgrade.datastore.UpgradeManager;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.CLUSTERED_ZERO_DOWNTIME_ENABLED;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.UPGRADE;
+import org.springframework.stereotype.Component;
 
 /**
  * Default datastore {@link UpgradeService}.
  *
  * @since 3.29
  */
-@Named
+@Component
 @FeatureFlag(name = CLUSTERED_ZERO_DOWNTIME_ENABLED, inverse = true, enabledByDefault = true)
 @ConditionalOnProperty(name = CLUSTERED_ZERO_DOWNTIME_ENABLED, havingValue = "false", matchIfMissing = true)
 @Priority(Integer.MAX_VALUE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @ManagedLifecycle(phase = UPGRADE)
 @Singleton
 public class UpgradeServiceImpl

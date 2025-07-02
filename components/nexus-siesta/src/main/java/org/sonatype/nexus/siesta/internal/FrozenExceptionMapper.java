@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.siesta.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
@@ -22,6 +21,7 @@ import org.sonatype.nexus.rest.ExceptionMapperSupport;
 
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link FrozenException} mapper.
@@ -30,7 +30,7 @@ import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
  *
  * @since 3.21
  */
-@Named
+@Component
 @Singleton
 @Provider
 public class FrozenExceptionMapper

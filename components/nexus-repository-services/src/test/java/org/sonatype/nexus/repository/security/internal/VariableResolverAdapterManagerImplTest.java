@@ -12,18 +12,24 @@
  */
 package org.sonatype.nexus.repository.security.internal;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.security.VariableResolverAdapter;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 public class VariableResolverAdapterManagerImplTest
     extends TestSupport
@@ -36,12 +42,19 @@ public class VariableResolverAdapterManagerImplTest
 
   private VariableResolverAdapterManagerImpl manager;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setUp() {
-    Map<String, VariableResolverAdapter> adaptersByFormat = new HashMap<>();
-    adaptersByFormat.put("special", specializedAdapter);
-    adaptersByFormat.put(VariableResolverAdapterManagerImpl.DEFAULT_ADAPTER_NAME, defaultAdapter);
-    manager = new VariableResolverAdapterManagerImpl(adaptersByFormat);
+    mockedStatic = mockStatic(QualifierUtil.class);
+    when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(
+        Map.of(VariableResolverAdapterManagerImpl.DEFAULT_ADAPTER_NAME, defaultAdapter, "special", specializedAdapter));
+    manager = new VariableResolverAdapterManagerImpl(List.of(defaultAdapter, specializedAdapter));
+  }
+
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test

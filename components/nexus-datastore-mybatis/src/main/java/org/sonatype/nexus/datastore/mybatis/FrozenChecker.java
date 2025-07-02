@@ -16,8 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.inject.Named;
-
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.FrozenException;
 import org.sonatype.nexus.datastore.api.FreezeImmuneDAO;
@@ -37,13 +35,10 @@ class FrozenChecker
 {
   private final AtomicBoolean frozenMarker;
 
-  private final ClassLoader classLoader;
-
   private final ConcurrentMap<String, Boolean> freezeImmuneCache = new ConcurrentHashMap<>();
 
-  public FrozenChecker(final AtomicBoolean frozenMarker, @Named("nexus-uber") final ClassLoader classLoader) {
+  public FrozenChecker(final AtomicBoolean frozenMarker) {
     this.frozenMarker = checkNotNull(frozenMarker);
-    this.classLoader = checkNotNull(classLoader);
   }
 
   void checkFrozen(final MappedStatement ms) {
@@ -64,7 +59,7 @@ class FrozenChecker
    */
   private Boolean isFreezeImmune(final String className) {
     try {
-      Class<?> dao = classLoader.loadClass(className);
+      Class<?> dao = Class.forName(className);
       return FreezeImmuneDAO.class.isAssignableFrom(dao);
     }
     catch (ClassNotFoundException e) {

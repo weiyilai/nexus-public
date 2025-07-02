@@ -13,14 +13,15 @@
 package org.sonatype.nexus.elasticsearch.internal.repository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.common.stateguard.Guarded;
@@ -50,14 +51,18 @@ import static org.sonatype.nexus.repository.content.store.InternalIds.toExternal
 import static org.sonatype.nexus.repository.search.index.SearchConstants.FORMAT;
 import static org.sonatype.nexus.repository.search.index.SearchConstants.REPOSITORY_NAME;
 import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * The {@link SearchFacet} implementation for the Elastic Search.
  *
  * @since 3.25
  */
-@Named
+@Component
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SearchFacetImpl
     extends FacetSupport
     implements SearchFacet
@@ -77,12 +82,13 @@ public class SearchFacetImpl
   @Inject
   public SearchFacetImpl(
       final ElasticSearchIndexService elasticSearchIndexService,
-      final Map<String, SearchDocumentProducer> searchDocumentProducersByFormat,
-      @Named("${nexus.elasticsearch.reindex.pageSize:-1000}") @Value("${nexus.elasticsearch.reindex.pageSize:1000}") final int pageSize,
-      @Named("${nexus.elasticsearch.bulkProcessing:-true}") @Value("${nexus.elasticsearch.bulkProcessing:true}") final boolean bulkProcessing)
+      final List<SearchDocumentProducer> searchDocumentProducersByFormatList,
+      @Value("${nexus.elasticsearch.reindex.pageSize:1000}") final int pageSize,
+      @Value("${nexus.elasticsearch.bulkProcessing:true}") final boolean bulkProcessing)
   {
     this.elasticSearchIndexService = checkNotNull(elasticSearchIndexService);
-    this.searchDocumentProducersByFormat = checkNotNull(searchDocumentProducersByFormat);
+    this.searchDocumentProducersByFormat =
+        QualifierUtil.buildQualifierBeanMap(checkNotNull(searchDocumentProducersByFormatList));
     this.pageSize = max(pageSize, 1);
     this.bulkProcessing = bulkProcessing;
   }

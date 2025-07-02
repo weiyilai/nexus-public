@@ -20,9 +20,8 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.common.app.Freezable;
@@ -43,6 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.springframework.context.annotation.Lazy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -53,13 +53,14 @@ import static org.joda.time.DateTime.now;
 import static org.joda.time.DateTime.parse;
 import static org.joda.time.DateTimeZone.UTC;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.STORAGE;
+import org.springframework.stereotype.Component;
 
 /**
  * Local {@link FreezeService} that remembers user-initiated freeze requests between restarts.
  *
  * @since 3.24
  */
-@Named
+@Component
 @ManagedLifecycle(phase = STORAGE)
 @Singleton
 public class LocalFreezeService
@@ -84,7 +85,7 @@ public class LocalFreezeService
   public LocalFreezeService(
       final ApplicationDirectories directories,
       final ClientInfoProvider clientInfoProvider,
-      final List<Freezable> freezables,
+      final @Lazy List<Freezable> freezables,
       final EventManager eventManager)
   {
     this.markerFile = new File(directories.getWorkDirectory("db", false), MARKER_FILE);

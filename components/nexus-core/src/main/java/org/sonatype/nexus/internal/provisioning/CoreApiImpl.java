@@ -13,9 +13,8 @@
 package org.sonatype.nexus.internal.provisioning;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Time;
@@ -41,11 +40,12 @@ import com.google.common.collect.ImmutableMap;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.httpclient.config.AuthenticationConfiguration.AUTHENTICATION_CONFIGURATION;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class CoreApiImpl
     extends ComponentSupport

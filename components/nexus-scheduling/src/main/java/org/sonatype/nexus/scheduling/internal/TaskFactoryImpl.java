@@ -12,19 +12,18 @@
  */
 package org.sonatype.nexus.scheduling.internal;
 
-import java.lang.annotation.Annotation;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
-import org.sonatype.goodies.common.ComponentSupport;
+import javax.annotation.Nullable;
+import javax.annotation.Priority;
+import jakarta.inject.Inject;
+
+import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.db.DatabaseCheck;
+import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.scheduling.Task;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskDescriptor;
@@ -33,13 +32,21 @@ import org.sonatype.nexus.scheduling.TaskInfo;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.google.inject.Key;
 import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.Mediator;
 import org.eclipse.sisu.inject.BeanLocator;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
+import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
 
 /**
  * Default {@link TaskFactory} implementation.
@@ -50,15 +57,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
-@Singleton
+@ManagedLifecycle(phase = TASKS)
+@Priority(Integer.MAX_VALUE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class TaskFactoryImpl
-    extends ComponentSupport
+    extends StateGuardLifecycleSupport
     implements TaskFactory
 {
-  private final BeanLocator beanLocator;
-
   private final DatabaseCheck databaseCheck;
+
+  private final List<TaskDescriptor> descriptors;
+
+  private final ApplicationContext context;
 
   /**
    * Map of descriptor-id to descriptor instance.
@@ -67,14 +80,18 @@ public class TaskFactoryImpl
 
   @Inject
   public TaskFactoryImpl(
-      final BeanLocator beanLocator,
-      final DatabaseCheck databaseCheck)
+      final DatabaseCheck databaseCheck,
+      final List<TaskDescriptor> descriptors,
+      final ApplicationContext context)
   {
-    this.beanLocator = checkNotNull(beanLocator);
     this.databaseCheck = checkNotNull(databaseCheck);
+    this.descriptors = checkNotNull(descriptors);
+    this.context = checkNotNull(context);
+  }
 
-    // watch for TaskDescriptor components
-    beanLocator.watch(Key.get(TaskDescriptor.class, Named.class), new TaskDescriptorMediator(), this);
+  @Override
+  protected void doStart() {
+    createTaskDefinitionMap();
   }
 
   /**
@@ -84,31 +101,14 @@ public class TaskFactoryImpl
   {
     private final TaskDescriptor descriptor;
 
-    private final BeanEntry<Annotation, ? extends Task> beanEntry;
+    private final ObjectProvider<? extends Task> beanEntry;
 
     private TaskDefinition(
         final TaskDescriptor descriptor,
-        final BeanEntry<Annotation, ? extends Task> beanEntry)
+        final ObjectProvider<? extends Task> beanEntry)
     {
       this.descriptor = checkNotNull(descriptor);
       this.beanEntry = checkNotNull(beanEntry);
-    }
-  }
-
-  /**
-   * Sisu {@link Mediator} to maintain mapping of type-id to descriptor instance as they come and go.
-   */
-  private static class TaskDescriptorMediator
-      implements Mediator<Named, TaskDescriptor, TaskFactoryImpl>
-  {
-    @Override
-    public void add(final BeanEntry<Named, TaskDescriptor> entry, final TaskFactoryImpl watcher) throws Exception {
-      watcher.addDescriptor(entry.getValue());
-    }
-
-    @Override
-    public void remove(final BeanEntry<Named, TaskDescriptor> entry, final TaskFactoryImpl watcher) throws Exception {
-      watcher.removeDescriptor(entry.getValue().getId());
     }
   }
 
@@ -124,23 +124,24 @@ public class TaskFactoryImpl
     // resolve task component
     Class<? extends Task> type = descriptor.getType();
     log.debug("Resolving task bean-entry for type-id {} of type: {}", typeId, type.getName());
-    Iterator<? extends BeanEntry<Annotation, ? extends Task>> entries = beanLocator.locate(Key.get(type)).iterator();
-    if (!entries.hasNext()) {
+    ObjectProvider<? extends Task> provider = context.getBeanProvider(type);
+
+    if (provider == null) {
       log.warn("Missing task-component for type-id: {}; ignoring it", typeId);
       return;
     }
 
-    BeanEntry<Annotation, ? extends Task> entry = entries.next();
-    if (entry.getImplementationClass().getAnnotation(Singleton.class) != null) {
+    Task sample = provider.getIfUnique();
+    if (sample == null) {
       log.warn(
           "Task type-id {} implementation {} is singleton; ignoring it",
           typeId,
-          entry.getImplementationClass().getName());
+          type.getName());
       return;
     }
 
-    log.debug("Adding task type-id: {} -> {}", typeId, entry.getImplementationClass().getName());
-    TaskDefinition prevTaskDefinition = taskDefinitions.put(typeId, new TaskDefinition(descriptor, entry));
+    log.debug("Adding task type-id: {} -> {}", typeId, sample.getClass().getName());
+    TaskDefinition prevTaskDefinition = taskDefinitions.put(typeId, new TaskDefinition(descriptor, provider));
     if (prevTaskDefinition != null) {
       log.warn(
           "Duplicate task type-id {} implementations: {} replaced by {}",
@@ -156,7 +157,7 @@ public class TaskFactoryImpl
   @VisibleForTesting
   void removeDescriptor(final String typeId) {
     log.debug("Removing task type-id: {}", typeId);
-    taskDefinitions.remove(typeId);
+    taskDefinitions().remove(typeId);
   }
 
   /**
@@ -166,27 +167,27 @@ public class TaskFactoryImpl
    */
   @VisibleForTesting
   Task newInstance(final String typeId) {
-    TaskDefinition taskDefinition = taskDefinitions.get(typeId);
+    TaskDefinition taskDefinition = taskDefinitions().get(typeId);
     checkArgument(taskDefinition != null, "Unknown task type-id: %s", typeId);
 
     Class<? extends Task> type = taskDefinition.descriptor.getType();
-    return type.cast(taskDefinition.beanEntry.getProvider().get());
+    return type.cast(taskDefinition.beanEntry.getIfUnique());
   }
 
   @Override
   public List<TaskDescriptor> getDescriptors() {
     return Collections.unmodifiableList(
-        taskDefinitions.values().stream()
+        taskDefinitions().values()
+            .stream()
             .map(d -> d.descriptor)
             .filter(d -> databaseCheck.isAllowedByVersion(d.getClass()))
-            .collect(Collectors.toList())
-    );
+            .collect(Collectors.toList()));
   }
 
   @Override
   @Nullable
   public TaskDescriptor findDescriptor(final String typeId) {
-    TaskDefinition taskDefinition = taskDefinitions.get(typeId);
+    TaskDefinition taskDefinition = taskDefinitions().get(typeId);
     if (taskDefinition != null) {
       if (!databaseCheck.isAllowedByVersion(taskDefinition.descriptor.getClass())) {
         return null;
@@ -211,5 +212,18 @@ public class TaskFactoryImpl
     task.setTaskInfo(taskInfo);
 
     return task;
+  }
+
+  private Map<String, TaskDefinition> taskDefinitions() {
+    if (taskDefinitions.isEmpty()) {
+      createTaskDefinitionMap();
+    }
+    return taskDefinitions;
+  }
+
+  private synchronized void createTaskDefinitionMap() {
+    if (taskDefinitions.isEmpty()) {
+      descriptors.forEach(this::addDescriptor);
+    }
   }
 }

@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.selector;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.security.ContentPermissionChecker;
 import org.sonatype.nexus.repository.security.VariableResolverAdapter;
@@ -25,13 +24,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.stream;
 import static org.sonatype.nexus.security.BreadActions.BROWSE;
 import static org.sonatype.nexus.security.BreadActions.READ;
+import org.springframework.stereotype.Component;
 
 /**
  * Provides various content related auth checks.
  *
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 public class ContentAuthHelper
 {
@@ -52,14 +52,16 @@ public class ContentAuthHelper
     VariableResolverAdapter variableResolverAdapter = variableResolverAdapterManager.get(format);
     VariableSource variableSource = variableResolverAdapter.fromPath(path, format);
     return stream(repositoryNames).anyMatch(
-        repositoryName -> contentPermissionChecker.isPermittedAnyOf(repositoryName, format, variableSource, BROWSE, READ));
+        repositoryName -> contentPermissionChecker.isPermittedAnyOf(repositoryName, format, variableSource, BROWSE,
+            READ));
   }
 
   public boolean checkPathPermissionsJexlOnly(final String path, final String format, final String... repositoryNames) {
     VariableResolverAdapter variableResolverAdapter = variableResolverAdapterManager.get(format);
     VariableSource variableSource = variableResolverAdapter.fromPath(path, format);
     return stream(repositoryNames).anyMatch(
-        repositoryName -> contentPermissionChecker.isPermittedJexlOnlyAnyOf(repositoryName, format, variableSource, BROWSE, READ));
+        repositoryName -> contentPermissionChecker.isPermittedJexlOnlyAnyOf(repositoryName, format, variableSource,
+            BROWSE, READ));
   }
 
 }

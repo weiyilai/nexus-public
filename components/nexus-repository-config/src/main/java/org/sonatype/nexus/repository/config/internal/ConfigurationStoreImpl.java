@@ -16,9 +16,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
@@ -32,13 +31,16 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * MyBatis {@link ConfigurationStore} implementation.
  *
  * @since 3.21
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 public class ConfigurationStoreImpl
     extends ConfigStoreSupport<ConfigurationDAO>

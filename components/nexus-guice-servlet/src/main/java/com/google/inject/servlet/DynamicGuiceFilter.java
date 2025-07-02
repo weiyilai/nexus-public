@@ -12,8 +12,8 @@
  */
 package com.google.inject.servlet;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 /**
  * {@link GuiceFilter} that supports a dynamic ordered pipeline of filters and servlets.

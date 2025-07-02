@@ -40,6 +40,7 @@ import org.sonatype.nexus.blobstore.api.BlobStoreException;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaResult;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaService;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.blobstore.BlobStoreConfigurationStore;
 import org.sonatype.nexus.rest.Resource;
 import org.sonatype.nexus.validation.Validate;
@@ -84,12 +85,12 @@ public class BlobStoreResource
       final BlobStoreManager blobStoreManager,
       final BlobStoreConfigurationStore store,
       final BlobStoreQuotaService quotaService,
-      final Map<String, ConnectionChecker> connectionCheckers)
+      final List<ConnectionChecker> connectionCheckersList)
   {
     this.blobStoreManager = checkNotNull(blobStoreManager);
     this.store = checkNotNull(store);
     this.quotaService = checkNotNull(quotaService);
-    this.connectionCheckers = connectionCheckers;
+    this.connectionCheckers = QualifierUtil.buildQualifierBeanMap(connectionCheckersList);
   }
 
   @Override

@@ -14,16 +14,19 @@ package org.sonatype.nexus.internal.node;
 
 import java.sql.Connection;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.node.datastore.NodeIdStore;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DeploymentIdUpgradeStep_1_23
     extends ComponentSupport
     implements DatabaseMigrationStep
@@ -50,9 +53,8 @@ public class DeploymentIdUpgradeStep_1_23
       return;
     }
 
-    Optional<String> nodeId = nodeIdStore.get();
-    deploymentIdStore.set(nodeId.orElseThrow(
-        () -> new RuntimeException("Could not migrate deployment id. Reason: deploymentId and nodeId are absent.")));
+    String nodeId = nodeIdStore.getOrCreate();
+    deploymentIdStore.set(nodeId);
 
     deploymentId = deploymentIdStore.get();
     if (deploymentId.isPresent()) {

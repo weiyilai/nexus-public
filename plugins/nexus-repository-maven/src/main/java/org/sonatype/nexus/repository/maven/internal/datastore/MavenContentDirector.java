@@ -15,8 +15,7 @@ package org.sonatype.nexus.repository.maven.internal.datastore;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.content.maven.MavenContentFacet;
 import org.sonatype.nexus.repository.Repository;
@@ -35,12 +34,15 @@ import static org.sonatype.nexus.repository.maven.VersionPolicy.RELEASE;
 import static org.sonatype.nexus.repository.maven.VersionPolicy.SNAPSHOT;
 import static org.sonatype.nexus.repository.maven.internal.datastore.MavenFacetUtils.isSnapshot;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+
 /**
  * Maven content director for datastore implementation.
  *
  * @since 3.31
  */
-@Named(Maven2Format.NAME)
+@org.springframework.stereotype.Component
+@Qualifier(Maven2Format.NAME)
 @Singleton
 public class MavenContentDirector
     implements ContentDirector
@@ -51,8 +53,7 @@ public class MavenContentDirector
   }
 
   @Override
-  public boolean allowMoveTo(final FluentComponent component, final Repository destination)
-  {
+  public boolean allowMoveTo(final FluentComponent component, final Repository destination) {
     VersionPolicy versionPolicy = destination.facet(MavenFacet.class).getVersionPolicy();
     if (MIXED.equals(versionPolicy)) {
       return true;
@@ -71,8 +72,7 @@ public class MavenContentDirector
   }
 
   @Override
-  public void afterMove(final List<Map<String, String>> components, final Repository destination)
-  {
+  public void afterMove(final List<Map<String, String>> components, final Repository destination) {
     MavenMetadataRebuildFacet facet = destination.facet(MavenMetadataRebuildFacet.class);
     components.stream()
         .map(component -> Pair.of(component.get("group"), component.get("name")))
@@ -82,7 +82,8 @@ public class MavenContentDirector
 
   @Override
   public FluentComponent copyComponent(
-      final Component source, final Repository destination)
+      final Component source,
+      final Repository destination)
   {
     return destination.facet(MavenContentFacet.class).copy(source);
   }

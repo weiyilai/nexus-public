@@ -12,12 +12,9 @@
  */
 package org.sonatype.nexus.blobstore.internal.metrics;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Provider;
-
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.blobstore.AccumulatingBlobStoreMetrics;
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
@@ -29,11 +26,13 @@ import org.sonatype.nexus.blobstore.api.metrics.BlobStoreMetricsEntity;
 import org.sonatype.nexus.blobstore.api.metrics.BlobStoreMetricsPropertiesReader;
 import org.sonatype.nexus.blobstore.api.metrics.BlobStoreMetricsStore;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.context.ApplicationContext;
 
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -41,8 +40,13 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class BlobStoreMetricsMigrationTaskTest
-    extends TestSupport
+    extends Test5Support
 {
+  private static final String BEAN_NAME = "MockBlobStoreMetricsPropertiesReader";
+
+  @Mock
+  private ApplicationContext context;
+
   @Mock
   private BlobStoreManager blobStoreManager;
 
@@ -59,15 +63,15 @@ public class BlobStoreMetricsMigrationTaskTest
 
   private OperationMetrics operationMetrics = new OperationMetrics();
 
-  private Map<String, Provider<BlobStoreMetricsPropertiesReader<?>>> metricsPropertiesReaders;
-
   private BlobStoreMetricsMigrationTask task;
 
-  @Before
+  @BeforeEach
   public void setUp() {
-    metricsPropertiesReaders = new HashMap<>();
-    metricsPropertiesReaders.put("default", () -> propertiesReader);
-    task = new BlobStoreMetricsMigrationTask(blobStoreManager, metricsStore, metricsPropertiesReaders);
+    lenient().when(context.getBeanNamesForType(BlobStoreMetricsPropertiesReader.class))
+        .thenReturn(new String[]{BEAN_NAME});
+    lenient().when(context.getAliases(BEAN_NAME)).thenReturn(new String[]{"default"});
+    lenient().when(context.getBean(BEAN_NAME, BlobStoreMetricsPropertiesReader.class)).thenReturn(propertiesReader);
+    task = new BlobStoreMetricsMigrationTask(blobStoreManager, metricsStore, context);
   }
 
   @Test
@@ -103,7 +107,6 @@ public class BlobStoreMetricsMigrationTaskTest
     when(propertiesReader.getMetrics()).thenReturn(blobStoreMetrics);
     when(propertiesReader.getOperationMetrics()).thenReturn(
         Map.of(OperationType.DOWNLOAD, operationMetrics, OperationType.UPLOAD, operationMetrics));
-
     task.execute(blobStore);
 
     verify(blobStore, times(1)).isStarted();
@@ -154,7 +157,7 @@ public class BlobStoreMetricsMigrationTaskTest
     verifyNoMoreInteractions(metricsStore);
   }
 
-  private BlobStoreConfiguration mockBlobStoreConfiguration(String type, String name) {
+  private BlobStoreConfiguration mockBlobStoreConfiguration(final String type, final String name) {
     BlobStoreConfiguration configuration = mock(BlobStoreConfiguration.class);
     when(configuration.getType()).thenReturn(type);
     when(configuration.getName()).thenReturn(name);

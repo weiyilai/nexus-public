@@ -13,8 +13,7 @@
 package org.sonatype.nexus.content.maven.internal.recipe;
 
 import javax.annotation.Nonnull;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.Repository;
@@ -27,11 +26,12 @@ import org.sonatype.nexus.repository.view.Response;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 import static org.sonatype.nexus.repository.http.HttpMethods.GET;
 import static org.sonatype.nexus.repository.http.HttpMethods.HEAD;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 public class MavenMetadataRebuildHandler
     extends ComponentSupport
@@ -41,8 +41,7 @@ public class MavenMetadataRebuildHandler
 
   @Nonnull
   @Override
-  public Response handle(@Nonnull final Context context) throws Exception
-  {
+  public Response handle(@Nonnull final Context context) throws Exception {
     String method = context.getRequest().getAction();
     Repository repository = context.getRepository();
     if ((GET.equals(method) || HEAD.equals(method)) && isNotProxy(repository)) {

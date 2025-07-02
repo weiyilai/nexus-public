@@ -34,7 +34,7 @@ import static java.util.UUID.fromString;
  *
  * @since 3.19
  */
-// not @Named because we register this manually
+// not @Component
 public class EntityUUIDTypeHandler
     extends BaseTypeHandler<EntityId>
 {
@@ -45,11 +45,11 @@ public class EntityUUIDTypeHandler
   }
 
   @Override
-  public void setNonNullParameter(final PreparedStatement ps,
-                                  final int parameterIndex,
-                                  final EntityId parameter,
-                                  final JdbcType jdbcType)
-      throws SQLException
+  public void setNonNullParameter(
+      final PreparedStatement ps,
+      final int parameterIndex,
+      final EntityId parameter,
+      final JdbcType jdbcType) throws SQLException
   {
     UUID uuid;
     if (parameter instanceof EntityUUID) {

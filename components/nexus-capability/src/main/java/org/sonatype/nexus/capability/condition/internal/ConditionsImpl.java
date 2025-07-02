@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.capability.condition.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.capability.Condition;
 import org.sonatype.nexus.capability.condition.CapabilityConditions;
@@ -23,14 +22,17 @@ import org.sonatype.nexus.capability.condition.CryptoConditions;
 import org.sonatype.nexus.capability.condition.LogicalConditions;
 import org.sonatype.nexus.capability.condition.NexusConditions;
 
+import org.springframework.context.annotation.Lazy;
+
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Default implementation of {@link Conditions}.
  *
  * @since capabilities 2.0
  */
-@Named
+@Component
 @Singleton
 public class ConditionsImpl
     implements Conditions
@@ -45,10 +47,11 @@ public class ConditionsImpl
   private final CryptoConditions cryptoConditions;
 
   @Inject
-  public ConditionsImpl(final LogicalConditions logicalConditions,
-                        final CapabilityConditions capabilityConditions,
-                        final NexusConditions nexusConditions,
-                        final CryptoConditions cryptoConditions)
+  public ConditionsImpl(
+      @Lazy final LogicalConditions logicalConditions,
+      @Lazy final CapabilityConditions capabilityConditions,
+      @Lazy final NexusConditions nexusConditions,
+      @Lazy final CryptoConditions cryptoConditions)
   {
     this.logicalConditions = checkNotNull(logicalConditions);
     this.capabilityConditions = checkNotNull(capabilityConditions);

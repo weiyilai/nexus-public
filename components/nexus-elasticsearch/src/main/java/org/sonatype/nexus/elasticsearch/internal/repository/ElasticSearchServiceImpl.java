@@ -26,9 +26,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.text.Strings2;
@@ -52,13 +51,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.time.format.DateTimeFormatter.ofPattern;
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 import static org.sonatype.nexus.repository.search.index.SearchConstants.*;
+import org.springframework.stereotype.Component;
 
 /**
  * Implementation of {@link SearchService} to be used with orient/elasticsearch
  *
  * @since 3.38
  */
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class ElasticSearchServiceImpl

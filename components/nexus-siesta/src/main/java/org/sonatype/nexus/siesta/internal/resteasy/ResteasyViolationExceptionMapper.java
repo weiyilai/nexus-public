@@ -16,8 +16,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
@@ -26,6 +25,7 @@ import org.sonatype.nexus.siesta.ValidationExceptionMapperSupport;
 
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
 import org.jboss.resteasy.api.validation.ResteasyViolationException;
+import org.springframework.stereotype.Component;
 
 import static org.jboss.resteasy.api.validation.ConstraintType.Type.RETURN_VALUE;
 
@@ -35,7 +35,7 @@ import static org.jboss.resteasy.api.validation.ConstraintType.Type.RETURN_VALUE
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @Provider
 public class ResteasyViolationExceptionMapper
@@ -67,19 +67,17 @@ public class ResteasyViolationExceptionMapper
     if (iterator.hasNext()) {
       return getResponseStatus(iterator.next());
     }
-    else {
-      return Status.BAD_REQUEST;
-    }
+    return Status.BAD_REQUEST;
   }
 
-  private Status getResponseStatus(final ResteasyConstraintViolation violation) {
+  private static Status getResponseStatus(final ResteasyConstraintViolation violation) {
     if (RETURN_VALUE.equals(violation.getConstraintType())) {
       return Status.INTERNAL_SERVER_ERROR;
     }
     return Status.BAD_REQUEST;
   }
 
-  private String getPath(final ResteasyConstraintViolation violation) {
+  private static String getPath(final ResteasyConstraintViolation violation) {
     final String propertyPath = violation.getPath();
     final String propertyName = propertyPath.substring(propertyPath.lastIndexOf('.') + 1);
 

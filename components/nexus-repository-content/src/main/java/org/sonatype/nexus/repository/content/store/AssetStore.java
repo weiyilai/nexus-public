@@ -24,8 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.BlobRef;
 import org.sonatype.nexus.common.entity.Continuation;
@@ -52,7 +51,6 @@ import org.apache.shiro.util.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
 
 import static java.util.Arrays.stream;
-import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE;
 import static org.sonatype.nexus.repository.content.AttributesHelper.applyAttributeChange;
 import static org.sonatype.nexus.repository.content.store.InternalIds.internalComponentId;
@@ -62,7 +60,6 @@ import static org.sonatype.nexus.repository.content.store.InternalIds.internalCo
  *
  * @since 3.21
  */
-@Named
 public class AssetStore<T extends AssetDAO>
     extends ContentStoreEventSupport<T>
 {
@@ -73,7 +70,7 @@ public class AssetStore<T extends AssetDAO>
   @Inject
   public AssetStore(
       final DataSessionSupplier sessionSupplier,
-      @Named(DATASTORE_CLUSTERED_ENABLED_NAMED) @Value(DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean clustered,
+      @Value(DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean clustered,
       @Assisted final String contentStoreName,
       @Assisted final Class<T> daoClass)
   {

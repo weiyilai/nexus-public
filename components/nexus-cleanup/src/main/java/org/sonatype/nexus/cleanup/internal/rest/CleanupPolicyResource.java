@@ -24,11 +24,11 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
@@ -49,6 +49,7 @@ import javax.ws.rs.core.StreamingOutput;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.cleanup.config.CleanupPolicyConfiguration;
+import org.sonatype.nexus.cleanup.config.DefaultCleanupPolicyConfiguration;
 import org.sonatype.nexus.cleanup.content.CleanupPolicyCreatedEvent;
 import org.sonatype.nexus.cleanup.content.CleanupPolicyDeletedEvent;
 import org.sonatype.nexus.cleanup.content.CleanupPolicyUpdatedEvent;
@@ -61,6 +62,7 @@ import org.sonatype.nexus.cleanup.storage.CleanupPolicyCriteria;
 import org.sonatype.nexus.cleanup.storage.CleanupPolicyPreviewXO;
 import org.sonatype.nexus.cleanup.storage.CleanupPolicyReleaseType;
 import org.sonatype.nexus.cleanup.storage.CleanupPolicyStorage;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.extdirect.model.PagedResponse;
 import org.sonatype.nexus.repository.CleanupDryRunEvent;
@@ -79,6 +81,8 @@ import org.sonatype.nexus.validation.group.Update;
 import com.codahale.metrics.annotation.Timed;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Boolean.TRUE;
@@ -96,7 +100,7 @@ import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.RETAIN_SO
 import static org.sonatype.nexus.cleanup.internal.rest.CleanupPolicyResource.RESOURCE_URI;
 import static org.sonatype.nexus.cleanup.storage.CleanupPolicy.ALL_FORMATS;
 import static org.sonatype.nexus.cleanup.storage.CleanupPolicyReleaseType.PRERELEASES;
-import static org.sonatype.nexus.common.app.FeatureFlags.CLEANUP_PREVIEW_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.CLEANUP_PREVIEW_ENABLED_NAMED_VALUE;
 import static org.sonatype.nexus.repository.CleanupDryRunEvent.FINISHED_AT_IN_MILLISECONDS;
 import static org.sonatype.nexus.repository.CleanupDryRunEvent.STARTED_AT_IN_MILLISECONDS;
 import static org.sonatype.nexus.rest.APIConstants.INTERNAL_API_PREFIX;
@@ -104,7 +108,7 @@ import static org.sonatype.nexus.rest.APIConstants.INTERNAL_API_PREFIX;
 /**
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
@@ -145,11 +149,11 @@ public class CleanupPolicyResource
   public CleanupPolicyResource(
       final CleanupPolicyStorage cleanupPolicyStorage,
       final List<Format> formats,
-      final Map<String, CleanupPolicyConfiguration> cleanupFormatConfigurationMap,
+      final List<CleanupPolicyConfiguration> cleanupFormatConfigurationList,
       final Provider<CleanupPreviewHelper> cleanupPreviewHelper,
       final RepositoryManager repositoryManager,
       final EventManager eventManager,
-      @Named(CLEANUP_PREVIEW_ENABLED_NAMED) final boolean isPreviewEnabled,
+      @Value(CLEANUP_PREVIEW_ENABLED_NAMED_VALUE) final boolean isPreviewEnabled,
       final CsvCleanupPreviewContentWriter csvCleanupPreviewContentWriter,
       final Collection<CleanupPolicyRequestValidator> cleanupPolicyValidators)
   {
@@ -158,8 +162,10 @@ public class CleanupPolicyResource
     this.formatNames = formats.stream().map(Format::getValue).collect(Collectors.toList());
     this.eventManager = checkNotNull(eventManager);
     this.formatNames.add(ALL_FORMATS);
-    this.cleanupFormatConfigurationMap = checkNotNull(cleanupFormatConfigurationMap);
-    this.defaultCleanupFormatConfiguration = checkNotNull(cleanupFormatConfigurationMap.get("default"));
+    this.cleanupFormatConfigurationMap =
+        QualifierUtil.buildQualifierBeanMap(checkNotNull(cleanupFormatConfigurationList));
+    this.defaultCleanupFormatConfiguration =
+        checkNotNull(this.cleanupFormatConfigurationMap.get(DefaultCleanupPolicyConfiguration.NAME));
     this.cleanupPreviewHelper = checkNotNull(cleanupPreviewHelper);
     this.repositoryManager = checkNotNull(repositoryManager);
     this.isPreviewEnabled = isPreviewEnabled;
@@ -174,9 +180,11 @@ public class CleanupPolicyResource
     List<CleanupPolicy> policies = isBlank(format) || format.equals(ALL_FORMATS)
         ? cleanupPolicyStorage.getAll()
         : cleanupPolicyStorage.getAllByFormat(format);
-    return policies.stream().map(cleanupPolicy -> CleanupPolicyXO.fromCleanupPolicy(cleanupPolicy,
+    return policies.stream()
+        .map(cleanupPolicy -> CleanupPolicyXO.fromCleanupPolicy(cleanupPolicy,
             (int) repositoryManager.browseForCleanupPolicy(cleanupPolicy.getName()).count()))
-        .sorted(Comparator.comparing(CleanupPolicyXO::getName)).collect(toList());
+        .sorted(Comparator.comparing(CleanupPolicyXO::getName))
+        .collect(toList());
   }
 
   @POST
@@ -290,8 +298,12 @@ public class CleanupPolicyResource
     criteriaByFormat.sort(Comparator.comparing(CleanupPolicyFormatXO::getName));
 
     criteriaByFormat.add(0, new CleanupPolicyFormatXO(ALL_FORMATS, "All Formats",
-        defaultCleanupFormatConfiguration.getConfiguration().entrySet().stream().filter(Entry::getValue)
-            .map(Entry::getKey).collect(toSet())));
+        defaultCleanupFormatConfiguration.getConfiguration()
+            .entrySet()
+            .stream()
+            .filter(Entry::getValue)
+            .map(Entry::getKey)
+            .collect(toSet())));
 
     return criteriaByFormat;
   }
@@ -300,8 +312,7 @@ public class CleanupPolicyResource
   @Path("preview/components")
   @RequiresAuthentication
   @RequiresPermissions("nexus:*")
-  public PageResult<ComponentXO> previewContent(PreviewRequestXO request)
-  {
+  public PageResult<ComponentXO> previewContent(final PreviewRequestXO request) {
     Repository repository = repositoryManager.get(request.getRepository());
 
     if (repository == null) {
@@ -336,15 +347,14 @@ public class CleanupPolicyResource
   @Produces(APPLICATION_OCTET_STREAM)
   @Timed
   public Response previewContentCsv(
-      @QueryParam("name") @Nullable String name,
-      @QueryParam("repository") String repositoryName,
-      @QueryParam("criteriaLastBlobUpdated") @Nullable Integer criteriaLastBlobUpdated,
-      @QueryParam("criteriaLastDownloaded") @Nullable Integer criteriaLastDownloaded,
-      @QueryParam("criteriaReleaseType") @Nullable CleanupPolicyReleaseType criteriaReleaseType,
-      @QueryParam("criteriaAssetRegex") @Nullable String criteriaAssetRegex,
-      @QueryParam("criteriaRetain") @Nullable Integer criteriaRetain,
-      @QueryParam("criteriaSortBy") @Nullable String criteriaSortBy
-  )
+      @QueryParam("name") @Nullable final String name,
+      @QueryParam("repository") final String repositoryName,
+      @QueryParam("criteriaLastBlobUpdated") @Nullable final Integer criteriaLastBlobUpdated,
+      @QueryParam("criteriaLastDownloaded") @Nullable final Integer criteriaLastDownloaded,
+      @QueryParam("criteriaReleaseType") @Nullable final CleanupPolicyReleaseType criteriaReleaseType,
+      @QueryParam("criteriaAssetRegex") @Nullable final String criteriaAssetRegex,
+      @QueryParam("criteriaRetain") @Nullable final Integer criteriaRetain,
+      @QueryParam("criteriaSortBy") @Nullable final String criteriaSortBy)
   {
 
     if (!isPreviewEnabled) {
@@ -453,12 +463,12 @@ public class CleanupPolicyResource
   }
 
   private void handleCriteria(
-      CleanupPolicyConfiguration cleanupPolicyConfiguration,
-      Map<String, String> criteriaMap,
-      String key,
-      Object value,
-      String keyText,
-      String format)
+      final CleanupPolicyConfiguration cleanupPolicyConfiguration,
+      final Map<String, String> criteriaMap,
+      final String key,
+      final Object value,
+      final String keyText,
+      final String format)
   {
     if (value != null) {
       Boolean val = cleanupPolicyConfiguration.getConfiguration().get(key);
@@ -481,4 +491,3 @@ public class CleanupPolicyResource
     }
   }
 }
-

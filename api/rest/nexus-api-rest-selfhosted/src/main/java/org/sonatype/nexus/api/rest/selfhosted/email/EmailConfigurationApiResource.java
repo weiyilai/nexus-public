@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.email;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.mail.internet.AddressException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;

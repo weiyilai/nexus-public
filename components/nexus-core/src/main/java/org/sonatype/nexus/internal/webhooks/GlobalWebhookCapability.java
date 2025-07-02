@@ -19,9 +19,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -46,10 +45,15 @@ import org.sonatype.nexus.webhooks.WebhookSubscription;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.capability.CapabilityType.capabilityType;
 
-@Named(GlobalWebhookCapability.TYPE_ID)
+@Component(GlobalWebhookCapability.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class GlobalWebhookCapability
     extends CapabilitySupport<GlobalWebhookCapability.Configuration>
 {
@@ -110,6 +114,7 @@ public class GlobalWebhookCapability
     return conditions().capabilities().passivateCapabilityDuringUpdate();
   }
 
+  @Override
   public void onActivate(final Configuration config) {
     webhookService.getWebhooks()
         .stream()
@@ -117,6 +122,7 @@ public class GlobalWebhookCapability
         .forEach(webhook -> subscriptions.add(webhook.subscribe(config)));
   }
 
+  @Override
   public void onPassivate(final Configuration config) {
     subscriptions.forEach(WebhookSubscription::cancel);
     subscriptions.clear();
@@ -168,7 +174,8 @@ public class GlobalWebhookCapability
   }
 
   @AvailabilityVersion(from = "1.0")
-  @Named(TYPE_ID)
+  @Component
+  @Qualifier(TYPE_ID)
   @Singleton
   public static class Descriptor
       extends CapabilityDescriptorSupport<Configuration>

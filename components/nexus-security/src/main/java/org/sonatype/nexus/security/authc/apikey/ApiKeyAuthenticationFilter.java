@@ -12,13 +12,17 @@
  */
 package org.sonatype.nexus.security.authc.apikey;
 
+import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 
+import org.sonatype.nexus.common.QualifierUtil;
+import org.sonatype.nexus.common.app.WebFilterPriority;
 import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.security.authc.NexusApiKeyAuthenticationToken;
 import org.sonatype.nexus.security.authc.NexusBasicHttpAuthenticationFilter;
@@ -26,6 +30,7 @@ import org.sonatype.nexus.security.authc.NexusBasicHttpAuthenticationFilter;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.apache.shiro.web.util.WebUtils;
+import org.springframework.core.annotation.Order;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -34,6 +39,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * {@link AuthenticatingFilter} that looks for credentials with help of registered {@link ApiKeyExtractor}s.
  */
+@WebFilter(filterName = ApiKeyAuthenticationFilter.NAME)
+@Order(WebFilterPriority.AUTHENTICATION)
 public class ApiKeyAuthenticationFilter
     extends NexusBasicHttpAuthenticationFilter
 {
@@ -46,12 +53,12 @@ public class ApiKeyAuthenticationFilter
   private final Map<String, ApiKeyExtractor> apiKeys;
 
   @Inject
-  public ApiKeyAuthenticationFilter(final Map<String, ApiKeyExtractor> apiKeys) {
-    this.apiKeys = checkNotNull(apiKeys);
+  public ApiKeyAuthenticationFilter(final List<ApiKeyExtractor> apiKeysList) {
+    this.apiKeys = QualifierUtil.buildQualifierBeanMap(checkNotNull(apiKeysList));
   }
 
   @Override
-  protected boolean isLoginAttempt(ServletRequest request, ServletResponse response) {
+  protected boolean isLoginAttempt(final ServletRequest request, final ServletResponse response) {
     final HttpServletRequest http = WebUtils.toHttp(request);
     for (final Map.Entry<String, ApiKeyExtractor> apiKeyEntry : apiKeys.entrySet()) {
       final String apiKey = apiKeyEntry.getValue().extract(http);

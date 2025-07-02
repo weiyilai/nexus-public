@@ -22,11 +22,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.constraints.NotEmpty;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.DetachedEntityId;
 import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.extdirect.DirectComponent;
@@ -51,11 +51,12 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Streams.stream;
+import org.springframework.stereotype.Component;
 
 /**
  * Component {@link DirectComponent}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Component")
 public class ComponentComponent
@@ -77,13 +78,13 @@ public class ComponentComponent
       final SelectorFactory selectorFactory,
       final JsonMapper jsonMapper,
       final ComponentHelper componentHelper,
-      final Map<String, AssetAttributeTransformer> formatTransformations)
+      final List<AssetAttributeTransformer> formatTransformationsList)
   {
     this.repositoryManager = checkNotNull(repositoryManager);
     this.selectorFactory = checkNotNull(selectorFactory);
     this.jsonMapper = checkNotNull(jsonMapper);
     this.componentHelper = checkNotNull(componentHelper);
-    this.formatTransformations = checkNotNull(formatTransformations);
+    this.formatTransformations = QualifierUtil.buildQualifierBeanMap(checkNotNull(formatTransformationsList));
   }
 
   @DirectMethod

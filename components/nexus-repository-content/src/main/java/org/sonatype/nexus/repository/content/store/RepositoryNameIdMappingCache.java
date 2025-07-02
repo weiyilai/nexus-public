@@ -19,9 +19,9 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.FeatureFlag;
@@ -32,8 +32,11 @@ import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.manager.RepositoryCreatedEvent;
 import org.sonatype.nexus.repository.manager.RepositoryDeletedEvent;
 
+import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.REPOSITORY_SIZE_ENABLED;
@@ -42,7 +45,8 @@ import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTOR
 /**
  * Maintain mapping of repository name and id
  */
-@Named
+@Lazy
+@Component
 @Singleton
 @FeatureFlag(name = REPOSITORY_SIZE_ENABLED, enabledByDefault = true)
 @ConditionalOnProperty(name = REPOSITORY_SIZE_ENABLED, havingValue = "true", matchIfMissing = true)
@@ -56,22 +60,25 @@ public class RepositoryNameIdMappingCache
 
   private final List<String> formatNames;
 
-  private boolean isAvailable;
+  private final DatabaseCheck databaseCheck;
+
+  private Boolean available;
 
   @Inject
   public RepositoryNameIdMappingCache(
-      FormatStoreManager formatStoreManager,
+      final List<FormatStoreManager> formatStoreManagers,
       final List<Format> formats,
       final DatabaseCheck databaseCheck)
   {
-    this.contentRepositoryStore = checkNotNull(formatStoreManager).contentRepositoryStore(DEFAULT_DATASTORE_NAME);
+    this.contentRepositoryStore =
+        Iterables.get(checkNotNull(formatStoreManagers), 0).contentRepositoryStore(DEFAULT_DATASTORE_NAME);
     this.formatNames = checkNotNull(formats).stream().map(Format::getValue).collect(Collectors.toList());
-    this.isAvailable = checkNotNull(databaseCheck).isPostgresql();
+    this.databaseCheck = checkNotNull(databaseCheck);
   }
 
   @Subscribe
   public void on(final RepositoryCreatedEvent event) {
-    if (!isAvailable) {
+    if (!isAvailable()) {
       return;
     }
     Repository repository = event.getRepository();
@@ -81,7 +88,7 @@ public class RepositoryNameIdMappingCache
 
   @Subscribe
   public void on(final RepositoryDeletedEvent event) {
-    if (!isAvailable) {
+    if (!isAvailable()) {
       return;
     }
     log.debug("Handling repository deleted event for {}", event.getRepository().getName());
@@ -90,7 +97,14 @@ public class RepositoryNameIdMappingCache
     }
   }
 
-  public Map<Integer, String> getRepositoryNameIds(List<String> repositoryNames, String format) {
+  private boolean isAvailable() {
+    if (available == null) {
+      available = databaseCheck.isPostgresql();
+    }
+    return available;
+  }
+
+  public Map<Integer, String> getRepositoryNameIds(final List<String> repositoryNames, final String format) {
     return repositoryNames.stream()
         .map(name -> new AbstractMap.SimpleEntry<>(fetchRepositoryId(name, format), name))
         .filter(entry -> entry.getKey().isPresent())
@@ -110,7 +124,7 @@ public class RepositoryNameIdMappingCache
     return cache;
   }
 
-  private OptionalInt fetchRepositoryId(String name, String format) {
+  private OptionalInt fetchRepositoryId(final String name, final String format) {
     if (getCache().containsKey(name)) {
       return OptionalInt.of(getCache().get(name));
     }

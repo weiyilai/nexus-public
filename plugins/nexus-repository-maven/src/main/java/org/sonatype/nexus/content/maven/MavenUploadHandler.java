@@ -22,9 +22,8 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.hash.HashAlgorithm;
 import org.sonatype.nexus.repository.Repository;
@@ -59,13 +58,16 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 import static org.sonatype.nexus.repository.maven.internal.Constants.CHECKSUM_CONTENT_TYPE;
 import static org.sonatype.nexus.repository.view.Content.CONTENT_LAST_MODIFIED;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Support for uploading maven components via UI & API
  *
  * @since 3.26
  */
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 @Singleton
 public class MavenUploadHandler
     extends MavenUploadHandlerSupport
@@ -73,7 +75,7 @@ public class MavenUploadHandler
   @Inject
   public MavenUploadHandler(
       final Maven2MavenPathParser parser,
-      @Named(Maven2Format.NAME) final VariableResolverAdapter variableResolverAdapter,
+      @Qualifier(Maven2Format.NAME) final VariableResolverAdapter variableResolverAdapter,
       final ContentPermissionChecker contentPermissionChecker,
       final VersionPolicyValidator versionPolicyValidator,
       final MavenPomGenerator mavenPomGenerator,
@@ -84,15 +86,17 @@ public class MavenUploadHandler
   }
 
   @Override
-  protected UploadResponse getUploadResponse(final Repository repository,
-                                             final ComponentUpload componentUpload,
-                                             final String basePath) throws IOException
+  protected UploadResponse getUploadResponse(
+      final Repository repository,
+      final ComponentUpload componentUpload,
+      final String basePath) throws IOException
   {
     ContentAndAssetPathResponseData responseData =
         createAssets(repository, basePath, componentUpload.getAssetUploads());
     maybeGeneratePom(repository, componentUpload, basePath, responseData);
     updateMetadata(repository, responseData.getCoordinates());
-    return new UploadResponse(responseData.getContent(), responseData.getAssetPaths().stream()
+    return new UploadResponse(responseData.getContent(), responseData.getAssetPaths()
+        .stream()
         .map(assetPath -> prependIfMissing(assetPath, "/"))
         .collect(toList()));
   }
@@ -109,9 +113,7 @@ public class MavenUploadHandler
   }
 
   @Override
-  protected Content doPut(final ImportFileConfiguration configuration)
-      throws IOException
-  {
+  protected Content doPut(final ImportFileConfiguration configuration) throws IOException {
     Repository repository = configuration.getRepository();
     MavenPath mavenPath = parser.parsePath(configuration.getAssetName());
     File content = configuration.getFile();
@@ -119,15 +121,18 @@ public class MavenUploadHandler
 
     MavenContentFacet contentFacet = repository.facet(MavenContentFacet.class);
     String contentType = Files.probeContentType(contentPath);
-    try (TempBlob blob = contentFacet.blobs().ingest(contentPath, contentType, MavenPath.HashType.ALGORITHMS,
-        configuration.isHardLinkingEnabled())) {
+    try (TempBlob blob = contentFacet.blobs()
+        .ingest(contentPath, contentType, MavenPath.HashType.ALGORITHMS,
+            configuration.isHardLinkingEnabled())) {
       return doPut(repository, mavenPath, new TempBlobPayload(blob, contentType));
     }
   }
 
   @Override
-  protected Content doPut(final Repository repository, final MavenPath mavenPath, final Payload payload)
-      throws IOException
+  protected Content doPut(
+      final Repository repository,
+      final MavenPath mavenPath,
+      final Payload payload) throws IOException
   {
     MavenContentFacet mavenFacet = repository.facet(MavenContentFacet.class);
     Content asset = mavenFacet.put(mavenPath, payload);
@@ -145,13 +150,15 @@ public class MavenUploadHandler
     return repository.facet(MavenContentFacet.class).blobs().ingest(payload, MavenPath.HashType.ALGORITHMS);
   }
 
-  private void putChecksumFiles(final MavenContentFacet facet, final MavenPath path, final Content content)
-      throws IOException
+  private void putChecksumFiles(
+      final MavenContentFacet facet,
+      final MavenPath path,
+      final Content content) throws IOException
   {
     DateTime dateTime = content.getAttributes().require(CONTENT_LAST_MODIFIED, DateTime.class);
     for (Entry<String, String> e : getChecksumsFromContent(content).entrySet()) {
       Optional<HashAlgorithm> hashAlgorithm = HashAlgorithm.getHashAlgorithm(e.getKey())
-        .filter(HashType.ALGORITHMS::contains);
+          .filter(HashType.ALGORITHMS::contains);
       if (hashAlgorithm.isPresent()) {
         Content c = new Content(new StringPayload(e.getValue(), CHECKSUM_CONTENT_TYPE));
         c.getAttributes().set(CONTENT_LAST_MODIFIED, dateTime);
@@ -162,8 +169,8 @@ public class MavenUploadHandler
 
   private Map<String, String> getChecksumsFromContent(final Content content) {
     return Optional.ofNullable(content.getAttributes().get(Asset.class))
-          .flatMap(Asset::blob)
-          .map(AssetBlob::checksums)
-          .orElse(Collections.emptyMap());
+        .flatMap(Asset::blob)
+        .map(AssetBlob::checksums)
+        .orElse(Collections.emptyMap());
   }
 }

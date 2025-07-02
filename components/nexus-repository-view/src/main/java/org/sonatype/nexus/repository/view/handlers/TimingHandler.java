@@ -14,9 +14,8 @@ package org.sonatype.nexus.repository.view.handlers;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.collect.AttributeKey;
@@ -25,13 +24,15 @@ import org.sonatype.nexus.repository.view.Handler;
 import org.sonatype.nexus.repository.view.Response;
 
 import com.google.common.base.Stopwatch;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 /**
  * Simple timing handler.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class TimingHandler
     extends ComponentSupport
@@ -42,7 +43,7 @@ public class TimingHandler
   private final Handler meteringHandler;
 
   @Inject
-  public TimingHandler(@Named("nexus.analytics.meteringHandler") @Nullable final Handler meteringHandler) {
+  public TimingHandler(@Qualifier("nexus.analytics.meteringHandler") @Nullable final Handler meteringHandler) {
     this.meteringHandler = meteringHandler;
   }
 

@@ -14,9 +14,8 @@ package org.sonatype.nexus.script.plugin.internal.provisioning;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.repository.Repository;
@@ -35,11 +34,12 @@ import com.google.common.annotations.VisibleForTesting;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyMap;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class RepositoryApiImpl
     implements RepositoryApi

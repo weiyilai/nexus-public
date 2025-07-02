@@ -12,14 +12,18 @@
  */
 package org.sonatype.nexus.repository.upload;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.7
  */
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class UploadConfiguration
 {
   /**
@@ -31,7 +35,7 @@ public class UploadConfiguration
 
   @Inject
   public UploadConfiguration(
-      @Named("${" + ENABLED + ":-true}") @Value("${" + ENABLED + ":true}") final boolean enabled)
+      @Value("${" + ENABLED + ":true}") final boolean enabled)
   {
     this.enabled = enabled;
   }

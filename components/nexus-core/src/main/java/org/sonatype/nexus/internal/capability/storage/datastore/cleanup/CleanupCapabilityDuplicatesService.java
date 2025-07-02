@@ -12,19 +12,28 @@
  */
 package org.sonatype.nexus.internal.capability.storage.datastore.cleanup;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.capability.CapabilityIdentity;
 import org.sonatype.nexus.internal.capability.storage.CapabilityStorage;
+import org.sonatype.nexus.internal.capability.storage.CapabilityStorageItem;
+
+import com.google.common.annotations.VisibleForTesting;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Remove all capability duplicate records from storage.
  */
-@Named
+@Component
 @Singleton
 public class CleanupCapabilityDuplicatesService
     extends ComponentSupport
@@ -37,12 +46,13 @@ public class CleanupCapabilityDuplicatesService
   }
 
   public void doCleanup() {
-    if (!capabilityStorage.isDuplicatesFound()) {
+    Map<CapabilityStorageItem, List<CapabilityIdentity>> duplicateCapabilities = browseCapabilityDuplicates();
+    if (duplicateCapabilities.isEmpty()) {
       log.debug("No capabilities duplicates found.");
       return;
     }
 
-    capabilityStorage.browseCapabilityDuplicates().forEach((typeId, duplicates) -> {
+    duplicateCapabilities.forEach((typeId, duplicates) -> {
       log.info("Cleaning up {} duplicates for {} capability", duplicates.size() - 1, typeId);
 
       duplicates.stream()
@@ -53,5 +63,27 @@ public class CleanupCapabilityDuplicatesService
             }
           });
     });
+  }
+
+  /**
+   * Find capability duplicates.
+   *
+   * @return duplicates capability identities grouped by capability
+   */
+  @VisibleForTesting
+  Map<CapabilityStorageItem, List<CapabilityIdentity>> browseCapabilityDuplicates() {
+    return capabilityStorage.getAll()
+        .entrySet()
+        .stream()
+        .collect(Collectors.groupingBy(Entry::getValue))
+        .entrySet()
+        .stream()
+        .filter(f -> f.getValue().size() > 1)
+        .collect(Collectors.toMap(
+            Entry::getKey,
+            entry -> entry.getValue()
+                .stream()
+                .map(Entry::getKey)
+                .collect(Collectors.toList())));
   }
 }

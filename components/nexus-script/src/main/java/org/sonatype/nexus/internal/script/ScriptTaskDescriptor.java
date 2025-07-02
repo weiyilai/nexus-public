@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.internal.script;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -26,6 +25,7 @@ import org.sonatype.nexus.formfields.TextAreaFormField;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link ScriptTask} descriptor.
@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Value;
  * @since 3.0
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class ScriptTaskDescriptor
     extends TaskDescriptorSupport
@@ -74,7 +74,7 @@ public class ScriptTaskDescriptor
   @Inject
   public ScriptTaskDescriptor(
       final NodeAccess nodeAccess,
-      @Named("${nexus.scripts.allowCreation:-false}") @Value("${nexus.scripts.allowCreation:false}") final boolean allowCreation)
+      @Value("${nexus.scripts.allowCreation:false}") final boolean allowCreation)
   {
     super(TYPE_ID,
         ScriptTask.class,

@@ -68,7 +68,9 @@ public final class UnitOfWork
 
   enum Scope
   {
-    TRANSACTIONAL, UNIT_OF_WORK, LOCAL_STORE
+    TRANSACTIONAL,
+    UNIT_OF_WORK,
+    LOCAL_STORE
   }
 
   @Nullable
@@ -209,7 +211,7 @@ public final class UnitOfWork
   /**
    * Opens a new session; from the local store if it exists or from the surrounding unit-of-work.
    */
-  static TransactionalSession<?> openSession(
+  public static TransactionalSession<?> openSession(
       @Nullable final TransactionalStore<?> localStore,
       final TransactionIsolation isolation)
   {

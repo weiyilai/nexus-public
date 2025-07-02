@@ -22,6 +22,10 @@ import org.sonatype.nexus.repository.http.HttpResponses;
 import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.Handler;
 import org.sonatype.nexus.repository.view.Response;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.repository.http.HttpMethods.PUT;
 
@@ -31,13 +35,15 @@ import static org.sonatype.nexus.repository.http.HttpMethods.PUT;
  *
  * @since 3.0
  */
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ExceptionHandler
     extends ComponentSupport
     implements Handler
 {
   @Nonnull
   @Override
-  public Response handle(@Nonnull final Context context) throws Exception {  //NOSONAR
+  public Response handle(@Nonnull final Context context) throws Exception { // NOSONAR
     try {
       return context.proceed();
     }
@@ -56,9 +62,7 @@ public class ExceptionHandler
       if (PUT.equals(context.getRequest().getAction())) {
         return HttpResponses.badRequest(e.getMessage());
       }
-      else {
-        return HttpResponses.notFound(e.getMessage());
-      }
+      return HttpResponses.notFound(e.getMessage());
     }
     catch (FrozenException e) {
       return readOnly(context, e);
@@ -72,9 +76,7 @@ public class ExceptionHandler
           || exceptionName.contains("OWriteOperationNotPermittedException")) {
         return readOnly(context, e);
       }
-      else {
-        throw e;
-      }
+      throw e;
     }
   }
 

@@ -13,9 +13,8 @@
 package org.sonatype.nexus.coreui;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.coreui.internal.UploadService;
 import org.sonatype.nexus.extdirect.DirectComponent;
@@ -34,11 +33,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Upload {@link DirectComponent}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Upload")
 public class UploadComponent

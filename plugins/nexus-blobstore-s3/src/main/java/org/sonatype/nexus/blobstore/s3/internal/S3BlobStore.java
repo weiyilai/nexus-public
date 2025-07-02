@@ -31,8 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.BlobIdLocationResolver;
 import org.sonatype.nexus.blobstore.BlobSupport;
@@ -108,13 +107,19 @@ import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.St
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.SHUTDOWN;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STOPPED;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * A {@link BlobStore} that stores its content on AWS S3.
  *
  * @since 3.6.1
  */
-@Named(S3BlobStore.TYPE)
+@Component
+@Qualifier(S3BlobStore.TYPE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class S3BlobStore
     extends CloudBlobStoreSupport<S3AttributesLocation>
 {
@@ -191,10 +196,10 @@ public class S3BlobStore
   public S3BlobStore(
       final AmazonS3Factory amazonS3Factory,
       final BlobIdLocationResolver blobIdLocationResolver,
-      @Named("${nexus.s3.uploaderName:-producerConsumerUploader}") @Value("${nexus.s3.uploaderName:producerConsumerUploader}") final S3Uploader uploader,
-      @Named("${nexus.s3.copierName:-parallelCopier}") @Value("${nexus.s3.copierName:parallelCopier}") final S3Copier copier,
-      @Named("${nexus.s3.preferAsyncCleanup:-true}") @Value("${nexus.s3.preferAsyncCleanup:true}") final boolean preferAsyncCleanup,
-      @Named(S3BlobStore.TYPE) final BlobStoreMetricsService<S3BlobStore> metricsService,
+      final S3Uploader uploader,
+      final S3Copier copier,
+      @Value("${nexus.s3.preferAsyncCleanup:true}") final boolean preferAsyncCleanup,
+      @Qualifier(S3BlobStore.TYPE) final BlobStoreMetricsService<S3BlobStore> metricsService,
       final SoftDeletedBlobIndex deletedBlobIndex,
       final DryRunPrefix dryRunPrefix,
       final BucketManager bucketManager,

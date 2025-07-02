@@ -20,20 +20,17 @@ import javax.sql.DataSource;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.stateguard.InvalidStateException;
-import org.sonatype.nexus.common.stateguard.StateGuardModule;
 import org.sonatype.nexus.datastore.api.DataAccess;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DataStoreConfiguration;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Injector;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.mockito.ArgumentCaptor;
 
-import static com.google.inject.Guice.createInjector;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasEntry;
@@ -111,8 +108,7 @@ public class DataStoreSupportTest
 
   @Before
   public void setUp() throws Exception {
-    Injector injector = createInjector(new StateGuardModule());
-    underTest = spy(injector.getInstance(TestDataStore.class));
+    underTest = spy(new TestDataStore());
   }
 
   private DataStoreConfiguration newDataStoreConfiguration(final String name) {

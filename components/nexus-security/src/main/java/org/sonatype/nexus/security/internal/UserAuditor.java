@@ -16,8 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -31,13 +30,14 @@ import org.sonatype.nexus.security.user.UserUpdatedEvent;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link User} auditor.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class UserAuditor
     extends AuditorSupport

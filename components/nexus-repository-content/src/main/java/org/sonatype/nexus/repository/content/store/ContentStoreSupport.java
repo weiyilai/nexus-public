@@ -27,10 +27,6 @@ import org.sonatype.nexus.transaction.Transaction;
 import org.sonatype.nexus.transaction.Transactional;
 import org.sonatype.nexus.transaction.UnitOfWork;
 
-import com.google.inject.TypeLiteral;
-import org.eclipse.sisu.inject.TypeArguments;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
 
 /**
@@ -39,29 +35,22 @@ import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
  * @since 3.21
  */
 public abstract class ContentStoreSupport<T extends ContentDataAccess>
-    extends TransactionalStoreSupport
+    extends TransactionalStoreSupport<T>
 {
   private static final int DELETE_BATCH_SIZE_DEFAULT =
       SystemPropertiesHelper.getInteger("nexus.content.deleteBatchSize", 1000);
 
-  private final Class<T> daoClass;
-
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   protected ContentStoreSupport(final DataSessionSupplier sessionSupplier, final String contentStoreName) {
-    super(sessionSupplier, contentStoreName);
-
-    // use generic type information to discover the DAO class from the concrete implementation
-    TypeLiteral<?> superType = TypeLiteral.get(getClass()).getSupertype(ContentStoreSupport.class);
-    this.daoClass = (Class) TypeArguments.get(superType, 0).getRawType();
+    super(sessionSupplier, contentStoreName, ContentStoreSupport.class);
   }
 
   // alternative constructor that overrides discovery of the DAO class
-  protected ContentStoreSupport(final DataSessionSupplier sessionSupplier,
-                                final String contentStoreName,
-                                final Class<T> daoClass)
+  protected ContentStoreSupport(
+      final DataSessionSupplier sessionSupplier,
+      final String contentStoreName,
+      final Class<T> daoClass)
   {
-    super(sessionSupplier, contentStoreName);
-    this.daoClass = checkNotNull(daoClass);
+    super(sessionSupplier, contentStoreName, ContentStoreSupport.class, daoClass);
   }
 
   protected DataSession<?> thisSession() {
@@ -114,7 +103,11 @@ public abstract class ContentStoreSupport<T extends ContentDataAccess>
    * @since 3.30
    */
   @Transactional(retryOn = DuplicateKeyException.class)
-  protected  <D> D transactionalSave(final Supplier<Optional<D>> find, final Supplier<D> create, final UnaryOperator<D> update) {
+  protected <D> D transactionalSave(
+      final Supplier<Optional<D>> find,
+      final Supplier<D> create,
+      final UnaryOperator<D> update)
+  {
     return find.get().map(update).orElseGet(create);
   }
 }

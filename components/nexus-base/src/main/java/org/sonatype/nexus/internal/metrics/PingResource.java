@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.internal.metrics;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -24,12 +23,13 @@ import javax.ws.rs.core.Response;
 import org.sonatype.nexus.rest.Resource;
 
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.stereotype.Component;
 
 /**
  * Resource to ping for uptime.
  */
 @Path("/metrics/ping")
-@Named
+@Component
 @Singleton
 public class PingResource
     implements Resource

@@ -13,8 +13,7 @@
 package org.sonatype.nexus.self.hosted.datastore;
 
 import javax.annotation.Priority;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.datastore.DataStoreConfigurationSource;
@@ -22,25 +21,30 @@ import org.sonatype.nexus.datastore.api.DataStoreConfiguration;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import org.springframework.core.annotation.Order;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Integer.MIN_VALUE;
-import static org.sonatype.nexus.self.hosted.datastore.DataStoreConfigurationDefaultSource.LOCAL;
+import static org.sonatype.nexus.self.hosted.datastore.DataStoreConfigurationDefaultSource.DEFAULT;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Source of {@link DataStoreConfiguration}s for the default datastore only
  *
  * @since 3.19
  */
-@Named(LOCAL)
+@Component
+@Qualifier(DEFAULT)
 @Priority(MIN_VALUE)
+@Order
 @Singleton
 public class DataStoreConfigurationDefaultSource
     extends ComponentSupport
     implements DataStoreConfigurationSource
 {
-  static final String LOCAL = "local";
+  static final String DEFAULT = "default";
 
   private static final String JDBC_TEMPLATE_URL = "jdbc:h2:file:${karaf.data}/db/" + DEFAULT_DATASTORE_NAME;
 
@@ -70,7 +74,7 @@ public class DataStoreConfigurationDefaultSource
     DataStoreConfiguration configuration = new DataStoreConfiguration();
     configuration.setName(DEFAULT_DATASTORE_NAME);
     configuration.setType(JDBC);
-    configuration.setSource(LOCAL);
+    configuration.setSource(DEFAULT);
     configuration.setAttributes(ImmutableMap.of(JDBC_URL, JDBC_TEMPLATE_URL));
 
     log.info("Loaded '{}' data store configuration defaults (Embedded H2)", storeName);

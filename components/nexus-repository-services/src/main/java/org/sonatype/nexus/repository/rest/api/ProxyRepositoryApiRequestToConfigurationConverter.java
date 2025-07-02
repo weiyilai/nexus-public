@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.rest.api;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.text.Strings2;
@@ -37,11 +36,15 @@ import static org.sonatype.nexus.httpclient.HttpSchemes.HTTPS;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.BLOB_STORE_NAME;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STORAGE;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STRICT_CONTENT_TYPE_VALIDATION;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.20
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ProxyRepositoryApiRequestToConfigurationConverter<T extends ProxyRepositoryApiRequest>
     extends AbstractRepositoryApiRequestToConfigurationConverter<T>
 {

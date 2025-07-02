@@ -12,19 +12,18 @@
  */
 package org.sonatype.nexus.internal.scheduling;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.capability.CapabilityBooterSupport;
 import org.sonatype.nexus.capability.CapabilityRegistry;
 
 import org.eclipse.sisu.EagerSingleton;
+import org.springframework.stereotype.Component;
 
 /**
  * Creates {@link SchedulerCapability}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @EagerSingleton
 public class SchedulerCapabilityBooter
     extends CapabilityBooterSupport

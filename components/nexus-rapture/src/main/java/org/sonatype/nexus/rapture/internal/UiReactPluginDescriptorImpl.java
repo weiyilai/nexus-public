@@ -15,25 +15,25 @@ package org.sonatype.nexus.rapture.internal;
 import java.util.List;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.sonatype.nexus.ui.UiPluginDescriptor;
 import org.sonatype.nexus.ui.UiUtil;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.eclipse.sisu.Priority;
-import org.eclipse.sisu.space.ClassSpace;
-
-import static java.util.Arrays.asList;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link UiPluginDescriptor} for {@code nexus-rapture} react code.
  *
  * @since 3.25
  */
-@Named
+@Component
 @Singleton
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @Priority(Integer.MAX_VALUE) // always load first
 public class UiReactPluginDescriptorImpl
     implements UiPluginDescriptor
@@ -45,10 +45,10 @@ public class UiReactPluginDescriptorImpl
   private final List<String> styles;
 
   @Inject
-  public UiReactPluginDescriptorImpl(final ClassSpace space) {
-    scripts = asList(UiUtil.getPathForFile("nexus-rapture-bundle.js", space));
-    debugScripts = asList(UiUtil.getPathForFile("nexus-rapture-bundle.debug.js", space));
-    styles = asList(UiUtil.getPathForFile("nexus-rapture-bundle.css", space));
+  public UiReactPluginDescriptorImpl(final UiUtil uiUtil) {
+    scripts = List.of(uiUtil.getPathForFile("nexus-rapture-bundle.js"));
+    debugScripts = List.of(uiUtil.getPathForFile("nexus-rapture-bundle.debug.js"));
+    styles = List.of(uiUtil.getPathForFile("nexus-rapture-bundle.css"));
   }
 
   @Override

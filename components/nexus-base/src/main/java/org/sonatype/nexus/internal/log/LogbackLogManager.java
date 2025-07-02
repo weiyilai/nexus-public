@@ -32,10 +32,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.event.EventManager;
@@ -62,18 +60,24 @@ import ch.qos.logback.core.rolling.RollingPolicy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.ByteStreams;
-import com.google.inject.Key;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.commons.io.FilenameUtils;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.Mediator;
-import org.eclipse.sisu.inject.BeanLocator;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 import static org.slf4j.Logger.ROOT_LOGGER_NAME;
+import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.KERNEL;
 import static org.sonatype.nexus.common.log.LoggerLevel.DEFAULT;
 import static org.sonatype.nexus.common.log.LoggerLevel.INFO;
@@ -82,16 +86,15 @@ import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.St
 /**
  * Logback {@link LogManager}.
  */
-@Named
+@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
+@Component
 @ManagedLifecycle(phase = KERNEL)
 @Singleton
 public class LogbackLogManager
     extends StateGuardLifecycleSupport
-    implements LogManager
+    implements LogManager, ApplicationContextAware
 {
   private final EventManager eventManager;
-
-  private final BeanLocator beanLocator;
 
   private final Map<String, LoggerLevel> customizations;
 
@@ -99,33 +102,16 @@ public class LogbackLogManager
 
   private final List<String> allowedFilePrefixes = Arrays.asList(TASKS_PREFIX, REPLICATION_PREFIX);
 
+  private ApplicationContext applicationContext;
+
   @Inject
   public LogbackLogManager(
       final EventManager eventManager,
-      final BeanLocator beanLocator,
       final LoggerOverrides overrides)
   {
     this.eventManager = checkNotNull(eventManager);
-    this.beanLocator = checkNotNull(beanLocator);
     this.overrides = checkNotNull(overrides);
     this.customizations = new HashMap<>();
-  }
-
-  /**
-   * Mediator to register customizers.
-   */
-  private static class CustomizerMediator
-      implements Mediator<Named, LogConfigurationCustomizer, LogbackLogManager>
-  {
-    @Override
-    public void add(final BeanEntry<Named, LogConfigurationCustomizer> entry, final LogbackLogManager watcher) {
-      watcher.registerCustomization(entry.getValue());
-    }
-
-    @Override
-    public void remove(final BeanEntry<Named, LogConfigurationCustomizer> entry, final LogbackLogManager watcher) {
-      // ignore
-    }
   }
 
   @Override
@@ -133,7 +119,7 @@ public class LogbackLogManager
     configure();
 
     // watch for LogConfigurationCustomizer components
-    beanLocator.watch(Key.get(LogConfigurationCustomizer.class, Named.class), new CustomizerMediator(), this);
+    registerCustomizations(applicationContext);
 
     eventManager.register(this);
   }
@@ -209,7 +195,7 @@ public class LogbackLogManager
   }
 
   @VisibleForTesting
-  void logFileNotFound(String fileName) {
+  void logFileNotFound(final String fileName) {
     log.info("Unable to find log file: {}", fileName);
   }
 
@@ -529,8 +515,7 @@ public class LogbackLogManager
   /**
    * Register and apply customizations.
    */
-  @VisibleForTesting
-  void registerCustomization(final LogConfigurationCustomizer customizer) {
+  private void registerCustomization(final LogConfigurationCustomizer customizer) {
     log.debug("Registering customizations: {}", customizer);
 
     customizer.customize((name, level) -> {
@@ -619,7 +604,8 @@ public class LogbackLogManager
     }
   }
 
-  public final boolean isValidLogFile(java.nio.file.Path path) {
+  @Override
+  public final boolean isValidLogFile(final java.nio.file.Path path) {
     boolean isValid = path.getFileName().toString().toLowerCase().endsWith(".log");
     if (log.isDebugEnabled() && !isValid) {
       log.debug("File {} skipped as not valid log file", path.getFileName().toString());
@@ -627,6 +613,7 @@ public class LogbackLogManager
     return isValid;
   }
 
+  @Override
   public Map<String, LoggerLevel> getEffectiveLoggersUpdatedByFetchedOverrides() {
     Map<String, LoggerLevel> loggersOverrides = overrides.syncWithDBAndGet();
     Map<String, LoggerLevel> loggers = getLoggers();
@@ -636,5 +623,21 @@ public class LogbackLogManager
 
     loggers.putAll(loggersOverrides);
     return loggers;
+  }
+
+  @Override
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    this.applicationContext = applicationContext;
+  }
+
+  @EventListener
+  public void on(final ContextRefreshedEvent event) {
+    registerCustomizations(event.getApplicationContext());
+  }
+
+  private void registerCustomizations(final ApplicationContext applicationContext) {
+    applicationContext.getBeansOfType(LogConfigurationCustomizer.class)
+        .values()
+        .forEach(this::registerCustomization);
   }
 }

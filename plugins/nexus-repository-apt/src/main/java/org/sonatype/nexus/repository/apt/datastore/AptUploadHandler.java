@@ -16,15 +16,14 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
+import org.sonatype.nexus.repository.apt.AptFormat;
 import org.sonatype.nexus.repository.apt.AptUploadHandlerSupport;
 import org.sonatype.nexus.repository.apt.datastore.internal.hosted.AptHostedFacet;
 import org.sonatype.nexus.repository.apt.internal.AptFacetHelper;
-import org.sonatype.nexus.repository.apt.AptFormat;
 import org.sonatype.nexus.repository.apt.internal.AptPackageParser;
 import org.sonatype.nexus.repository.apt.internal.debian.ControlFile;
 import org.sonatype.nexus.repository.apt.internal.debian.PackageInfo;
@@ -37,22 +36,28 @@ import org.sonatype.nexus.repository.view.Content;
 import org.sonatype.nexus.repository.view.PartPayload;
 import org.sonatype.nexus.repository.view.payloads.TempBlob;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Support for uploading an Apt components via UI
  *
  * @since 3.31
  */
+@Qualifier(AptFormat.NAME)
 @Singleton
-@Named(AptFormat.NAME)
+@Component
 public class AptUploadHandler
     extends AptUploadHandlerSupport
 {
   @Inject
-  public AptUploadHandler(@Named("simple") final VariableResolverAdapter variableResolverAdapter,
-                          final ContentPermissionChecker contentPermissionChecker,
-                          final Set<UploadDefinitionExtension> uploadDefinitionExtensions)
+  public AptUploadHandler(
+      @Qualifier("simple") final VariableResolverAdapter variableResolverAdapter,
+      final ContentPermissionChecker contentPermissionChecker,
+      final Set<UploadDefinitionExtension> uploadDefinitionExtensions)
   {
     super(variableResolverAdapter, contentPermissionChecker, uploadDefinitionExtensions);
   }

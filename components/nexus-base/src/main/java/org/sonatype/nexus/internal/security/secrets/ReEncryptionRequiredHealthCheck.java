@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.internal.security.secrets;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.crypto.secrets.SecretsService;
 import org.sonatype.nexus.internal.security.secrets.tasks.ReEncryptTaskDescriptor;
@@ -23,11 +22,14 @@ import org.sonatype.nexus.scheduling.TaskScheduler;
 import com.codahale.metrics.health.HealthCheck;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Health check to determine if re-encryption is required.
  */
-@Named("Re-encryption required")
+@Component
+@Qualifier("Re-encryption required")
 @Singleton
 public class ReEncryptionRequiredHealthCheck
     extends HealthCheck

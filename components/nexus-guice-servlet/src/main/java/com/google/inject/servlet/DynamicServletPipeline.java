@@ -17,8 +17,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkState;
  * Includes patched methods from {@link ManagedServletPipeline} where delegating isn't possible.
  */
 @Singleton
-// don't use @Named, keep as implicit JIT-binding
+// don't use @Component
 final class DynamicServletPipeline
     extends ManagedServletPipeline
 {
@@ -100,7 +100,8 @@ final class DynamicServletPipeline
             servletResponse.resetBuffer();
 
             ServletRequest requestToProcess =
-                servletRequest instanceof HttpServletRequest ? wrapRequest((HttpServletRequest) servletRequest, path)
+                servletRequest instanceof HttpServletRequest
+                    ? wrapRequest((HttpServletRequest) servletRequest, path)
                     : servletRequest;
 
             doServiceImpl(requestToProcess, servletResponse);

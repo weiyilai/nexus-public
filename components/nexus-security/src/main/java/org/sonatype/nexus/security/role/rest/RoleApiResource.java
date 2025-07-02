@@ -15,7 +15,7 @@ package org.sonatype.nexus.security.role.rest;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -77,7 +77,8 @@ public class RoleApiResource
 
   public static final String CONTAINED_PRIV_NOT_FOUND = "\"Privilege '%s' contained in role '%s' not found.\"";
 
-  public static final String ROLE_CONTAINS_ITSELF = "\"Role '%s' cannot contain itself either directly or indirectly through child roles.\"";
+  public static final String ROLE_CONTAINS_ITSELF =
+      "\"Role '%s' cannot contain itself either directly or indirectly through child roles.\"";
 
   private final SecuritySystem securitySystem;
 
@@ -90,16 +91,21 @@ public class RoleApiResource
   @GET
   @RequiresAuthentication
   @RequiresPermissions("nexus:roles:read")
-  public List<RoleXOResponse> getRoles(@QueryParam("source") final String source)
-  {
+  public List<RoleXOResponse> getRoles(@QueryParam("source") final String source) {
     if (StringUtils.isEmpty(source)) {
-      return securitySystem.listRoles().stream().map(RoleXOResponse::fromRole)
-          .sorted(Comparator.comparing(RoleXOResponse::getId)).collect(toList());
+      return securitySystem.listRoles()
+          .stream()
+          .map(RoleXOResponse::fromRole)
+          .sorted(Comparator.comparing(RoleXOResponse::getId))
+          .collect(toList());
     }
     else {
       try {
-        return securitySystem.listRoles(source).stream().map(RoleXOResponse::fromRole)
-            .sorted(Comparator.comparing(RoleXOResponse::getId)).collect(toList());
+        return securitySystem.listRoles(source)
+            .stream()
+            .map(RoleXOResponse::fromRole)
+            .sorted(Comparator.comparing(RoleXOResponse::getId))
+            .collect(toList());
       }
       catch (NoSuchAuthorizationManagerException e) {
         throw buildBadSourceException(source);
@@ -133,8 +139,9 @@ public class RoleApiResource
   @Path("/{id}")
   @RequiresAuthentication
   @RequiresPermissions("nexus:roles:read")
-  public RoleXOResponse getRole(@DefaultValue(DEFAULT_SOURCE) @QueryParam("source") final String source,
-                               @PathParam("id") @NotEmpty final String id)
+  public RoleXOResponse getRole(
+      @DefaultValue(DEFAULT_SOURCE) @QueryParam("source") final String source,
+      @PathParam("id") @NotEmpty final String id)
   {
     try {
       return RoleXOResponse.fromRole(securitySystem.getAuthorizationManager(source).getRole(id));
@@ -152,8 +159,7 @@ public class RoleApiResource
   @Path("/{id}")
   @RequiresAuthentication
   @RequiresPermissions("nexus:roles:update")
-  public void update(@PathParam("id") @NotEmpty final String id, @NotNull @Valid final RoleXORequest roleXO)
-  {
+  public void update(@PathParam("id") @NotEmpty final String id, @NotNull @Valid final RoleXORequest roleXO) {
     try {
       if (!roleXO.getId().equals(id)) {
         throw buildRoleConflictException(roleXO.getId(), id);
@@ -189,16 +195,15 @@ public class RoleApiResource
   @Path("/{id}")
   @RequiresAuthentication
   @RequiresPermissions("nexus:roles:delete")
-  public void delete(@PathParam("id") @NotEmpty final String id)
-  {
+  public void delete(@PathParam("id") @NotEmpty final String id) {
     AuthorizationManager authorizationManager = getDefaultAuthorizationManager();
     try {
       authorizationManager.deleteRole(id);
     }
-    catch (NoSuchRoleException e) { //NOSONAR
+    catch (NoSuchRoleException e) { // NOSONAR
       throw buildRoleNotFoundException(id);
     }
-    catch (ReadonlyRoleException e) { //NOSONAR
+    catch (ReadonlyRoleException e) { // NOSONAR
       throw buildReadonlyRoleException(id);
     }
   }
@@ -225,16 +230,18 @@ public class RoleApiResource
     return new WebApplicationMessageException(Status.NOT_FOUND, String.format(ROLE_NOT_FOUND, id), APPLICATION_JSON);
   }
 
-  private WebApplicationMessageException buildContainedRoleNotFoundException(final String containedId,
-                                                                                  final String roleId)
+  private WebApplicationMessageException buildContainedRoleNotFoundException(
+      final String containedId,
+      final String roleId)
   {
     log.debug("Role {} in role {} not found", containedId, roleId);
     return new WebApplicationMessageException(Status.BAD_REQUEST,
         String.format(CONTAINED_ROLE_NOT_FOUND, containedId, roleId), APPLICATION_JSON);
   }
 
-  private WebApplicationMessageException buildContainedPrivilegeNotFoundException(final String containedId,
-                                                                                  final String roleId)
+  private WebApplicationMessageException buildContainedPrivilegeNotFoundException(
+      final String containedId,
+      final String roleId)
   {
     log.debug("Privilege {} in role {} not found", containedId, roleId);
     return new WebApplicationMessageException(Status.BAD_REQUEST,
@@ -262,7 +269,7 @@ public class RoleApiResource
     try {
       return securitySystem.getAuthorizationManager(DEFAULT_SOURCE);
     }
-    //this should never happen, the default source is always available
+    // this should never happen, the default source is always available
     catch (NoSuchAuthorizationManagerException e) {
       log.error("Unable to retrieve the default authorization manager", e);
       return null;

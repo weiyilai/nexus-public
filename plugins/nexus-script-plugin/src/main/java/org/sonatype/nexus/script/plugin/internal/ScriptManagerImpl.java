@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.script.plugin.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.event.EventManager;
@@ -32,13 +31,14 @@ import org.springframework.beans.factory.annotation.Value;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link ScriptManager}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @ManagedLifecycle(phase = SERVICES)
 @Singleton
 public class ScriptManagerImpl
@@ -55,7 +55,7 @@ public class ScriptManagerImpl
   public ScriptManagerImpl(
       final EventManager eventManager,
       final ScriptStore scriptStore,
-      @Named("${nexus.scripts.allowCreation:-false}") @Value("${nexus.scripts.allowCreation:false}") final boolean allowCreation)
+      @Value("${nexus.scripts.allowCreation:false}") final boolean allowCreation)
   {
     this.eventManager = checkNotNull(eventManager);
     this.scriptStore = checkNotNull(scriptStore);

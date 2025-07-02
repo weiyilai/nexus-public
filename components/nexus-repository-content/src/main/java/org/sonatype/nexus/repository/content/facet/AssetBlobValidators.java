@@ -13,12 +13,13 @@
 package org.sonatype.nexus.repository.content.facet;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.mime.MimeRulesSource;
 import org.sonatype.nexus.repository.InvalidContentException;
 import org.sonatype.nexus.repository.Repository;
@@ -26,13 +27,14 @@ import org.sonatype.nexus.repository.mime.ContentValidator;
 import org.sonatype.nexus.repository.mime.DefaultContentValidator;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Supplies {@link AssetBlobValidator}s to {@link ContentFacet}s.
  *
  * @since 3.24
  */
-@Named
+@Component
 @Singleton
 public class AssetBlobValidators
 {
@@ -43,12 +45,13 @@ public class AssetBlobValidators
   private final DefaultContentValidator defaultContentValidator;
 
   @Inject
-  public AssetBlobValidators(final Map<String, MimeRulesSource> mimeRulesSources,
-                             final Map<String, ContentValidator> contentValidators,
-                             final DefaultContentValidator defaultContentValidator)
+  public AssetBlobValidators(
+      final List<MimeRulesSource> mimeRulesSourcesList,
+      final List<ContentValidator> contentValidatorsList,
+      final DefaultContentValidator defaultContentValidator)
   {
-    this.mimeRulesSources = checkNotNull(mimeRulesSources);
-    this.contentValidators = checkNotNull(contentValidators);
+    this.mimeRulesSources = QualifierUtil.buildQualifierBeanMap(checkNotNull(mimeRulesSourcesList));
+    this.contentValidators = QualifierUtil.buildQualifierBeanMap(checkNotNull(contentValidatorsList));
     this.defaultContentValidator = checkNotNull(defaultContentValidator);
   }
 

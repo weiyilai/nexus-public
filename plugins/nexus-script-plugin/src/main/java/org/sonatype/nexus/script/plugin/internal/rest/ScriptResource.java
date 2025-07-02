@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.script.plugin.internal.rest;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -59,13 +58,14 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.stereotype.Component;
 
 /**
  * BREAD resource for managing {@link Script} instances.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @Path(ScriptResource.RESOURCE_URI)
 @Produces(APPLICATION_JSON)

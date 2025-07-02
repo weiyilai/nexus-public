@@ -17,9 +17,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.NotFoundException;
 
 import org.sonatype.goodies.common.ComponentSupport;
@@ -37,13 +36,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.log.LogManager.DEFAULT_LOGGER;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Priority.LOW;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.LOG;
+import org.springframework.stereotype.Component;
 
 /**
  * Adds log files to support bundle.
  *
  * @since 2.7
  */
-@Named
+@Component
 @Singleton
 public class LogCustomizer
     extends ComponentSupport

@@ -15,8 +15,6 @@ package org.sonatype.nexus.blobstore.s3.internal;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.blobstore.AccumulatingBlobStoreMetrics;
 import org.sonatype.nexus.blobstore.BlobStoreMetricsNotAvailableException;
 import org.sonatype.nexus.blobstore.metrics.BlobStoreMetricsPropertiesReaderSupport;
@@ -26,16 +24,23 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.collect.ImmutableMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
- * A S3 specific {@link BlobStoreMetricsPropertiesReaderSupport} implementation that retains blobstore metrics in memory,
+ * A S3 specific {@link BlobStoreMetricsPropertiesReaderSupport} implementation that retains blobstore metrics in
+ * memory,
  * periodically writing them out to S3.
  *
  * @since 3.6.1
  * @deprecated legacy method for metrics stored in the blob store
  */
 @Deprecated
-@Named(S3BlobStore.TYPE)
+@Component
+@Qualifier(S3BlobStore.TYPE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class S3BlobStoreMetricsPropertiesReader
     extends BlobStoreMetricsPropertiesReaderSupport<S3BlobStore, S3PropertiesFile>
 {
@@ -59,7 +64,8 @@ public class S3BlobStoreMetricsPropertiesReader
         return Stream.empty();
       }
       else {
-        return s3.listObjects(bucket, bucketPrefix).getObjectSummaries()
+        return s3.listObjects(bucket, bucketPrefix)
+            .getObjectSummaries()
             .stream()
             .filter(Objects::nonNull)
             .filter(summary -> summary.getKey().endsWith(METRICS_FILENAME))

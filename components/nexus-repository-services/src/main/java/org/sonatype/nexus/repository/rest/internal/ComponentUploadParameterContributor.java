@@ -16,9 +16,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.upload.UploadDefinition;
 import org.sonatype.nexus.repository.upload.UploadManager;
@@ -30,11 +29,12 @@ import io.swagger.models.parameters.FormParameter;
 
 import static io.swagger.models.HttpMethod.POST;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.8
  */
-@Named
+@Component
 @Singleton
 public class ComponentUploadParameterContributor
     extends ParameterContributor<FormParameter>
@@ -48,14 +48,17 @@ public class ComponentUploadParameterContributor
     super(HTTP_METHODS, PATHS, transformUploadDefinitions(uploadManager.getAvailableDefinitions()));
   }
 
-  private static Collection<FormParameter> transformUploadDefinitions(final Collection<UploadDefinition> uploadDefinitions) {
+  private static Collection<FormParameter> transformUploadDefinitions(
+      final Collection<UploadDefinition> uploadDefinitions)
+  {
     Collection<FormParameter> parameters = new ArrayList<>();
 
     for (UploadDefinition uploadDefinition : uploadDefinitions) {
-      uploadDefinition.getComponentFields().forEach(uploadFieldDefinition -> parameters.add(new FormParameter()
-          .name(uploadDefinition.getFormat() + "." + uploadFieldDefinition.getName())
-          .type(uploadFieldDefinition.getType().name().toLowerCase())
-          .description(uploadDefinition.getFormat() + " " + uploadFieldDefinition.getDisplayName())));
+      uploadDefinition.getComponentFields()
+          .forEach(uploadFieldDefinition -> parameters.add(new FormParameter()
+              .name(uploadDefinition.getFormat() + "." + uploadFieldDefinition.getName())
+              .type(uploadFieldDefinition.getType().name().toLowerCase())
+              .description(uploadDefinition.getFormat() + " " + uploadFieldDefinition.getDisplayName())));
 
       for (int i = 1; i <= (uploadDefinition.isMultipleUpload() ? 3 : 1); i++) {
         String assetIndex = uploadDefinition.isMultipleUpload() ? Integer.toString(i) : "";
@@ -67,10 +70,11 @@ public class ComponentUploadParameterContributor
             .type("file")
             .description(assetDisplayName));
 
-        uploadDefinition.getAssetFields().forEach(uploadFieldDefinition -> parameters.add(new FormParameter()
-            .name(assetName + "." + uploadFieldDefinition.getName())
-            .type(uploadFieldDefinition.getType().name().toLowerCase())
-            .description(assetDisplayName + " " + uploadFieldDefinition.getDisplayName())));
+        uploadDefinition.getAssetFields()
+            .forEach(uploadFieldDefinition -> parameters.add(new FormParameter()
+                .name(assetName + "." + uploadFieldDefinition.getName())
+                .type(uploadFieldDefinition.getType().name().toLowerCase())
+                .description(assetDisplayName + " " + uploadFieldDefinition.getDisplayName())));
       }
     }
 

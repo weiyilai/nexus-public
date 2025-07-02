@@ -20,9 +20,8 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
@@ -36,8 +35,9 @@ import com.zaxxer.hikari.HikariDataSource;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.file.Files.deleteIfExists;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class H2VersionUpgrader
     extends ComponentSupport
@@ -66,7 +66,7 @@ public class H2VersionUpgrader
     Path dbPath = directories.getWorkDirectory("db").toPath();
     Optional<Path> sqlLatestFile = FileFinder.findLatestTimestampedFile(dbPath, "nexus-", ".sql");
 
-    if(validateH2SqlFileExists(sqlLatestFile)) {
+    if (validateH2SqlFileExists(sqlLatestFile)) {
       backupCurrentH2Database(dbPath, storeName);
       dataSource = createUpgradedH2Database(hikariConfig, sqlLatestFile.get().toString());
     }
@@ -77,12 +77,12 @@ public class H2VersionUpgrader
   private boolean validateH2SqlFileExists(Optional<Path> sqlFile) throws Exception {
     if (!sqlFile.isPresent()) {
       StringBuilder buf = new StringBuilder();
-      buf.append("\n-------------------------------------------------------------------------------------------" + 
-      "----------------------------------------------------------------------------------\n\n");
+      buf.append("\n-------------------------------------------------------------------------------------------" +
+          "----------------------------------------------------------------------------------\n\n");
       buf.append("Your H2 database version is no longer supported. Upgrade to a supported version using upgrade " +
-      "instructions at https://links.sonatype.com/products/nxrm3/docs/upgrade-h2.html.");
-      buf.append("\n\n-----------------------------------------------------------------------------------------" + 
-      "------------------------------------------------------------------------------------\n\n");
+          "instructions at https://links.sonatype.com/products/nxrm3/docs/upgrade-h2.html.");
+      buf.append("\n\n-----------------------------------------------------------------------------------------" +
+          "------------------------------------------------------------------------------------\n\n");
       log.error(buf.toString());
       managedLifecycleManager.shutdownWithExitCode(1);
       return false;
@@ -106,9 +106,9 @@ public class H2VersionUpgrader
     log.info("Create H2 database V2.2 starts");
     HikariDataSource dataSource = new HikariDataSource(hikariConfig);
     try (Connection conn = dataSource.getConnection()) {
-        try (PreparedStatement scriptStmt = conn.prepareStatement("RUNSCRIPT FROM '" + sqlFilePath + "' FROM_1X")) {
-          scriptStmt.execute();
-        }
+      try (PreparedStatement scriptStmt = conn.prepareStatement("RUNSCRIPT FROM '" + sqlFilePath + "' FROM_1X")) {
+        scriptStmt.execute();
+      }
     }
     log.info("Create H2 database V2.2 ends");
     return dataSource;

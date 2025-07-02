@@ -18,8 +18,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
@@ -33,7 +32,12 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -43,7 +47,10 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @since 3.12
  */
-@Named("multipart-uploader")
+@ConditionalOnProperty(name = "nexus.s3.uploaderName", havingValue = "multipart-uploader")
+@Component
+@Qualifier("multipart-uploader")
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MultipartUploader
     extends ComponentSupport
     implements S3Uploader
@@ -53,7 +60,7 @@ public class MultipartUploader
 
   @Inject
   public MultipartUploader(
-      @Named("${nexus.s3.multipartupload.chunksize:-5242880}") @Value("${nexus.s3.multipartupload.chunksize:5242880}") final int chunkSize)
+      @Value("${nexus.s3.multipartupload.chunksize:5242880}") final int chunkSize)
   {
     this.chunkSize = chunkSize;
   }

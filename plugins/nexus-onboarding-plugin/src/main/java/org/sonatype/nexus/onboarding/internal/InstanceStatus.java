@@ -12,17 +12,17 @@
  */
 package org.sonatype.nexus.onboarding.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.onboarding.capability.OnboardingCapability;
 import org.sonatype.nexus.onboarding.capability.OnboardingCapabilityHelper;
 import org.sonatype.nexus.security.anonymous.AnonymousManager;
 
 import static java.util.Objects.requireNonNull;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class InstanceStatus
 {

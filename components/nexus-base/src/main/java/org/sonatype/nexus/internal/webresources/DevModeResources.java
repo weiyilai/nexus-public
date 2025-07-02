@@ -17,12 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 
 import com.google.common.base.Throwables;
+import org.springframework.stereotype.Component;
 
 /**
  * Utility related to finding resources when {@code NEXUS_RESOURCE_DIRS} environment-variable
@@ -30,7 +30,7 @@ import com.google.common.base.Throwables;
  *
  * @since 2.7
  */
-@Named
+@Component
 @Singleton
 public class DevModeResources
     extends ComponentSupport

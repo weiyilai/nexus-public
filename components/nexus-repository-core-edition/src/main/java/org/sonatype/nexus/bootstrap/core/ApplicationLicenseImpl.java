@@ -13,10 +13,10 @@
 package org.sonatype.nexus.bootstrap.core;
 
 import java.util.Map;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.bootstrap.core.ApplicationLicenseImpl.AnotherPropertyCondition;
+import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEdition;
 import org.sonatype.nexus.common.app.ApplicationLicense;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,11 +28,12 @@ import org.springframework.lang.Nullable;
 
 import static java.util.Collections.emptyMap;
 import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
+import org.springframework.stereotype.Component;
 
 /**
  * CORE {@link ApplicationLicense}.
  */
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 @Conditional(AnotherPropertyCondition.class)
@@ -103,9 +104,8 @@ public class ApplicationLicenseImpl
   {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-      String nexusEdition = context.getEnvironment().getProperty("nexus.edition");
-
-      return "CORE".equals(nexusEdition);
+      NexusEdition nexusEdition = context.getEnvironment().getProperty("nexus.edition", NexusEdition.class);
+      return nexusEdition == null || "CORE".equals(nexusEdition.getShortName());
     }
   }
 }

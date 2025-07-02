@@ -12,21 +12,24 @@
  */
 package org.sonatype.nexus.internal.node;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.node.DeploymentAccess;
 import org.sonatype.nexus.common.node.NodeAccess;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
 /**
  * Simple {@link DeploymentAccess} that just delegates to {@link NodeAccess} and doesn't allow aliases.
  *
  * @since 3.21
  */
-@Named
+@Component
+@Primary
 @Singleton
 public class SimpleDeploymentAccess
     implements DeploymentAccess

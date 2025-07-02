@@ -13,8 +13,6 @@
 package org.sonatype.nexus.common.json;
 
 import javax.annotation.Priority;
-import javax.inject.Named;
-import javax.inject.Provider;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -24,6 +22,13 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 /**
  * Provider for the default configuration of {@link JsonMapper}. Marked with a sub-zero priority to prioritize
@@ -31,13 +36,19 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
  *
  * Reminder, if customization is required, use {@link JsonMapper#copy()} to create a local copy before customization.
  */
-@Named("default")
+@Component
+@Qualifier(JsonMapperProvider.DEFAULT)
 @Priority(-1)
+@Order
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class JsonMapperProvider
-    implements Provider<JsonMapper>
+    implements FactoryBean<JsonMapper>
 {
+  public static final String DEFAULT = "default";
+
+  @Primary
   @Override
-  public JsonMapper get() {
+  public JsonMapper getObject() {
     return JsonMapper.builder()
         .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -46,5 +57,15 @@ public class JsonMapperProvider
         .addModule(new ParameterNamesModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         .build();
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return JsonMapper.class;
+  }
+
+  @Override
+  public boolean isSingleton() {
+    return false;
   }
 }

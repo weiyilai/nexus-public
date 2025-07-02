@@ -21,9 +21,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.event.EventHelper;
@@ -44,13 +43,19 @@ import com.google.common.eventbus.Subscribe;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.permission.RolePermissionResolver;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Default {@link RolePermissionResolver}.
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @Singleton
 public class RolePermissionResolverImpl
     extends ComponentSupport
@@ -79,9 +84,9 @@ public class RolePermissionResolverImpl
   @Inject
   public RolePermissionResolverImpl(
       final SecurityConfigurationManager configuration,
-      final List<PrivilegeDescriptor> privilegeDescriptors,
+      final @Lazy List<PrivilegeDescriptor> privilegeDescriptors,
       final EventManager eventManager,
-      @Named("${security.roleNotFoundCacheSize:-100000}") @Value("${security.roleNotFoundCacheSize:100000}") final int roleNotFoundCacheSize)
+      @Value("${security.roleNotFoundCacheSize:100000}") final int roleNotFoundCacheSize)
   {
     this.configuration = checkNotNull(configuration);
     this.privilegeDescriptors = checkNotNull(privilegeDescriptors);

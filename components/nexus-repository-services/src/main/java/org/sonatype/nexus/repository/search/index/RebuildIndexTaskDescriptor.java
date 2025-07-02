@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.search.index;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.node.NodeAccess;
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
@@ -22,6 +21,8 @@ import org.sonatype.nexus.formfields.RepositoryCombobox;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Task descriptor for {@link RebuildIndexTask}.
@@ -29,7 +30,8 @@ import org.springframework.beans.factory.annotation.Value;
  * @since 3.0
  */
 @AvailabilityVersion(from = "1.0")
-@Named(RebuildIndexTaskDescriptor.TYPE_ID)
+@Component
+@Qualifier(RebuildIndexTaskDescriptor.TYPE_ID)
 @Singleton
 public class RebuildIndexTaskDescriptor
     extends TaskDescriptorSupport
@@ -41,7 +43,7 @@ public class RebuildIndexTaskDescriptor
   @Inject
   public RebuildIndexTaskDescriptor(
       final NodeAccess nodeAccess,
-      @Named("${nexus.elasticsearch.enabled:-true}") @Value("${nexus.elasticsearch.enabled:true}") final boolean esEnabled)
+      @Value("${nexus.elasticsearch.enabled:true}") final boolean esEnabled)
   {
     super(TYPE_ID,
         RebuildIndexTask.class,

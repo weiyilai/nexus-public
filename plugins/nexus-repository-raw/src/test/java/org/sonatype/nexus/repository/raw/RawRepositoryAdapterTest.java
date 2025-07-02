@@ -13,6 +13,7 @@
 package org.sonatype.nexus.repository.raw;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
@@ -59,12 +60,11 @@ public class RawRepositoryAdapterTest
 
   @Test
   public void testAdapt_groupRepository() throws Exception {
-    // No maven specific props so simple smoke test
-    Repository repository = createRepository(new GroupType());
-    Configuration configuration = repository.getConfiguration();
-    configuration.attributes("group").set("memberNames", Arrays.asList("a", "b"));
-    configuration.attributes("raw").set("contentDisposition", ContentDisposition.ATTACHMENT.toString());
-    repository.update(configuration);
+    // No raw specific props so simple smoke test
+    Repository repository = createRepository(new GroupType(), configuration -> {
+      configuration.attributes("group").set("memberNames", Arrays.asList("a", "b"));
+      configuration.attributes("raw").set("contentDisposition", ContentDisposition.ATTACHMENT.toString());
+    });
 
     RawGroupApiRepository groupRepository = (RawGroupApiRepository) adapter.adapt(repository);
     assertRepository(groupRepository, "group", true);
@@ -118,9 +118,11 @@ public class RawRepositoryAdapterTest
     return configuration;
   }
 
-  private static Repository createRepository(final Type type) throws Exception {
+  private static Repository createRepository(final Type type, final Consumer<Configuration> mutator) throws Exception {
     Repository repository = new RepositoryImpl(Mockito.mock(EventManager.class), type, new RawFormat());
-    repository.init(config("my-repo"));
+    Configuration configuration = config("my-repo");
+    mutator.accept(configuration);
+    repository.init(configuration);
     return repository;
   }
 

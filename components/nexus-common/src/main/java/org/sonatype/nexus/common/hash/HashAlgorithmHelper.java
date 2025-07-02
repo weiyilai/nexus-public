@@ -24,22 +24,22 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import com.google.common.hash.HashCode;
 import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.35
  * @deprecated please use the appropriate ingest methods on {@code StorageFacet} and {@code FluentBlobs}
  */
 @Deprecated
-@Named
+@Component
 @Singleton
 public class HashAlgorithmHelper
 {
@@ -47,7 +47,7 @@ public class HashAlgorithmHelper
 
   @Inject
   public HashAlgorithmHelper(
-      @Named("${nexus.calculateChecksums.bufferSize:-32768}") @Value("${nexus.calculateChecksums.bufferSize:32768}") final int bufferSize)
+      @Value("${nexus.calculateChecksums.bufferSize:32768}") final int bufferSize)
   {
     checkState(bufferSize > 0, String.format("Buffer size should be a positive value: %s", bufferSize));
     this.bufferSize = bufferSize;

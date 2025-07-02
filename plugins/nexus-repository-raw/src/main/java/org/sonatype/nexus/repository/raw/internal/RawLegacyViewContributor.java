@@ -14,18 +14,18 @@ package org.sonatype.nexus.repository.raw.internal;
 
 import java.util.regex.Pattern;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.httpbridge.LegacyViewConfiguration;
 import org.sonatype.nexus.repository.httpbridge.LegacyViewContributor;
+import org.springframework.stereotype.Component;
 
 /**
  * Legacy view contributor for Raw.
  *
  * @since 3.7
  */
-@Named
+@Component
 @Singleton
 public class RawLegacyViewContributor
     implements LegacyViewContributor

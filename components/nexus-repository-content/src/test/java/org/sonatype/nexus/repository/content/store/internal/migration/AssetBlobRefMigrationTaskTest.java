@@ -14,11 +14,13 @@ package org.sonatype.nexus.repository.content.store.internal.migration;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.api.BlobRef;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.entity.ContinuationAware;
 import org.sonatype.nexus.datastore.mybatis.ContinuationArrayList;
@@ -28,14 +30,17 @@ import org.sonatype.nexus.repository.content.store.AssetBlobStore;
 import org.sonatype.nexus.repository.content.store.FormatStoreManager;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 
-import com.google.common.collect.ImmutableMap;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -57,8 +62,11 @@ public class AssetBlobRefMigrationTaskTest
   @Mock
   private AssetBlobStore<?> assetBlobStore;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setup() {
+    mockedStatic = mockStatic(QualifierUtil.class);
     ContinuationArrayList<AssetBlobData> firstPage = new ContinuationArrayList<>();
     firstPage.add(newNotMigratedAssetBlobData());
     firstPage.add(newNotMigratedAssetBlobData());
@@ -86,10 +94,14 @@ public class AssetBlobRefMigrationTaskTest
     when(formatStoreManager.assetBlobStore("content")).thenReturn(assetBlobStore);
   }
 
+  @After
+  public void teardown() {
+    mockedStatic.close();
+  }
+
   @Test
   public void testUpdateDuplicatedBlobRef() {
-    Map<String, FormatStoreManager> map = ImmutableMap.of();
-    AssetBlobRefMigrationTask assetBlobRefMigrationTask = new AssetBlobRefMigrationTask(map, 3);
+    AssetBlobRefMigrationTask assetBlobRefMigrationTask = new AssetBlobRefMigrationTask(List.of(), 3);
 
     String uuid = UUID.randomUUID().toString();
     AssetBlobData blobData1 = new AssetBlobData();
@@ -103,13 +115,16 @@ public class AssetBlobRefMigrationTaskTest
 
     assetBlobRefMigrationTask.updateDuplicatedBlobRef(blobs);
 
-    assertTrue(blobs.stream().map(AssetBlob::blobRef).map(BlobRef::getBlob)
+    assertTrue(blobs.stream()
+        .map(AssetBlob::blobRef)
+        .map(BlobRef::getBlob)
         .noneMatch(blob -> blob.equals(uuid)));
   }
 
   @Test
   public void testAssetBlobRefMigration() throws Exception {
-    AssetBlobRefMigrationTask underTest = new AssetBlobRefMigrationTask(ImmutableMap.of("raw", formatStoreManager),
+    when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(Map.of("raw", formatStoreManager));
+    AssetBlobRefMigrationTask underTest = new AssetBlobRefMigrationTask(List.of(formatStoreManager),
         READ_ASSETS_BATCH_SIZE);
 
     TaskConfiguration taskConfiguration = new TaskConfiguration();

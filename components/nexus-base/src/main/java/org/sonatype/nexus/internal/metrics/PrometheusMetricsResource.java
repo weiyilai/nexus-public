@@ -17,9 +17,8 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
@@ -34,9 +33,10 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.dropwizard.DropwizardExports;
 import io.prometheus.client.exporter.common.TextFormat;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.stereotype.Component;
 
 @Path("/metrics/prometheus")
-@Named
+@Component
 @Singleton
 public class PrometheusMetricsResource
     implements Resource

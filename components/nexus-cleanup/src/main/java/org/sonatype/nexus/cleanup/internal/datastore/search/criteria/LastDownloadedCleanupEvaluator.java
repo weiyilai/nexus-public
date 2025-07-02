@@ -17,8 +17,6 @@ import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.cleanup.datastore.search.criteria.ComponentCleanupEvaluator;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.Asset;
@@ -29,13 +27,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.LAST_DOWNLOADED_KEY;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 
 /**
  * Tests whether all assets under a component were last downloaded before the specified offset. If an asset has never
  * been downloaded then it's blob created date is used instead of last downloaded.
  *
  */
-@Named(LAST_DOWNLOADED_KEY)
+@org.springframework.stereotype.Component
+@Qualifier(LAST_DOWNLOADED_KEY)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class LastDownloadedCleanupEvaluator
     implements ComponentCleanupEvaluator
 {
@@ -52,7 +55,8 @@ public class LastDownloadedCleanupEvaluator
       OffsetDateTime max = StreamSupport.stream(assets.spliterator(), false)
           .map(asset -> asset.lastDownloaded().orElse(blobCreated(asset)))
           .filter(Objects::nonNull)
-          .max(OffsetDateTime::compareTo).orElse(null);
+          .max(OffsetDateTime::compareTo)
+          .orElse(null);
       if (max != null) {
         boolean shouldCleanup = max.isBefore(cutTime);
         log.debug("{} cleanup component (assuming other criteria pass) with max last downloaded timestamp {} < {}",

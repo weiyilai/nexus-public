@@ -12,17 +12,19 @@
  */
 package org.sonatype.nexus.content.raw.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.director.ContentDirector;
 import org.sonatype.nexus.repository.content.fluent.FluentComponent;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.27
  */
-@Named("raw")
+@Component
+@Qualifier("raw")
 @Singleton
 public class RawContentDirector
     implements ContentDirector

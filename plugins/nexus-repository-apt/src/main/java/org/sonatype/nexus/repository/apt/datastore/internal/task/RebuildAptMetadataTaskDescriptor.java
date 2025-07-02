@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.apt.datastore.internal.task;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.CheckboxFormField;
@@ -23,9 +22,10 @@ import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
 import static org.sonatype.nexus.formfields.FormField.OPTIONAL;
+import org.springframework.stereotype.Component;
 
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class RebuildAptMetadataTaskDescriptor
     extends TaskDescriptorSupport
@@ -36,8 +36,7 @@ public class RebuildAptMetadataTaskDescriptor
 
   public static final String APT_METADATA_FULL_REBUILD = "rebuildAptMetadataFullRebuild";
 
-  public RebuildAptMetadataTaskDescriptor()
-  {
+  public RebuildAptMetadataTaskDescriptor() {
     super(TYPE_ID,
         RebuildAptMetadataTask.class,
         "Apt - Rebuild Apt metadata",
@@ -47,14 +46,13 @@ public class RebuildAptMetadataTaskDescriptor
             REPOSITORY_NAME_FIELD_ID,
             "Repository",
             "Select the Apt repository to populate table",
-            true
-        ).includingAnyOfFormats(AptFormat.NAME).includingAnyOfTypes(HostedType.NAME).includeAnEntryForAllRepositories(),
+            true).includingAnyOfFormats(AptFormat.NAME)
+                .includingAnyOfTypes(HostedType.NAME)
+                .includeAnEntryForAllRepositories(),
         new CheckboxFormField(
             APT_METADATA_FULL_REBUILD,
             "Full rebuild",
             "Repopulate apt_key_value table and execute full rebuild of metadata",
-            OPTIONAL
-        )
-    );
+            OPTIONAL));
   }
 }

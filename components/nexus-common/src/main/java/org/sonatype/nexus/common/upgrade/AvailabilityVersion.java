@@ -18,21 +18,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.google.inject.BindingAnnotation;
+import jakarta.inject.Qualifier;
 
 /**
- * !!!! DEPRECATED in favor of a new implementation that doesn't use @BindingAnnotation. This class should be
- * removed when the previous DI architecture is removed. Until then changes should primarily be done on the newer
- * "nexus.spring.only=true" impl, then only brought back to this class ifnecessary
- * -------------------------------------------------------
- * Old javadoc
  * Marks a class or a method as available from a specified database schema version onwards
  */
-@Deprecated(since = "4/1/2025", forRemoval = true)
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@BindingAnnotation
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Qualifier
+@Target({ElementType.TYPE})
 public @interface AvailabilityVersion
 {
   String from();

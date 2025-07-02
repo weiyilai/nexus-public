@@ -15,13 +15,13 @@ package org.sonatype.nexus.upgrade.datastore.internal.steps;
 
 import java.sql.Connection;
 import java.util.Optional;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class RemoveLog4JVisualizer_2_15
     extends ComponentSupport

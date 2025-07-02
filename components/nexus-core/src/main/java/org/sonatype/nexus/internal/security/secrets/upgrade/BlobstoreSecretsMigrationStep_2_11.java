@@ -14,9 +14,8 @@ package org.sonatype.nexus.internal.security.secrets.upgrade;
 
 import java.sql.Connection;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.internal.security.secrets.task.SecretsMigrationTaskDescriptor;
@@ -24,11 +23,12 @@ import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Migration step to migrate session token from existing blobstore configurations
  */
-@Named
+@Component
 @Singleton
 public class BlobstoreSecretsMigrationStep_2_11
     extends ComponentSupport

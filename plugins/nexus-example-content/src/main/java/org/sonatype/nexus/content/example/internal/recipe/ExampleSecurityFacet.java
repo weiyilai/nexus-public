@@ -12,26 +12,30 @@
  */
 package org.sonatype.nexus.content.example.internal.recipe;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.security.ContentPermissionChecker;
 import org.sonatype.nexus.repository.security.SecurityFacetSupport;
 import org.sonatype.nexus.repository.security.VariableResolverAdapter;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Example format security facet.
  *
  * @since 3.24
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ExampleSecurityFacet
     extends SecurityFacetSupport
 {
   @Inject
   public ExampleSecurityFacet(
       final ExampleFormatSecurityContributor securityContributor,
-      @Named("simple") final VariableResolverAdapter variableResolverAdapter,
+      @Qualifier("simple") final VariableResolverAdapter variableResolverAdapter,
       final ContentPermissionChecker contentPermissionChecker)
   {
     super(securityContributor, variableResolverAdapter, contentPermissionChecker);

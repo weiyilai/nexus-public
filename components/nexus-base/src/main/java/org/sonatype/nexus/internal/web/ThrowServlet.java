@@ -14,24 +14,30 @@ package org.sonatype.nexus.internal.web;
 
 import java.io.IOException;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sonatype.nexus.common.app.WebFilterPriority;
 import org.sonatype.nexus.common.text.Strings2;
 
+import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 /**
  * Helper servlet to throw an exception.
  *
  * @since 3.0
  */
-@Named
+// needs to be first-most when calculating order (some fudge room for edge-cases)
+@Order(WebFilterPriority.WEB)
+@WebServlet("/throw.html")
+@Component
 @Singleton
 public class ThrowServlet
     extends HttpServlet
@@ -40,7 +46,10 @@ public class ThrowServlet
 
   private enum Type
   {
-    RUNTIME, ERROR, IO, SERVLET;
+    RUNTIME,
+    ERROR,
+    IO,
+    SERVLET;
 
     static Type parse(final String value) {
       if (value == null) {

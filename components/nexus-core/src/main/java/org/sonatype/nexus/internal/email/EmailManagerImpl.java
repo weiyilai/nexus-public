@@ -15,10 +15,10 @@ package org.sonatype.nexus.internal.email;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javax.mail.Session;
 import javax.net.ssl.SSLContext;
 
@@ -47,15 +47,18 @@ import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailConstants;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
+import org.springframework.context.annotation.Lazy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Default {@link EmailManager}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class EmailManagerImpl
     extends ComponentSupport
@@ -82,12 +85,13 @@ public class EmailManagerImpl
   private final SecretsService secretsService;
 
   @Inject
-  public EmailManagerImpl(final EventManager eventManager,
-                          final EmailConfigurationStore store,
-                          final TrustStore trustStore,
-                          @Named("initial") final  Function<EmailConfiguration, EmailConfiguration> defaults,
-                          final Provider<CapabilityRegistry> capabilityRegistryProvider,
-                          final SecretsService secretsService)
+  public EmailManagerImpl(
+      final EventManager eventManager,
+      final EmailConfigurationStore store,
+      @Lazy final TrustStore trustStore,
+      @Qualifier("initial") final Function<EmailConfiguration, EmailConfiguration> defaults,
+      final Provider<CapabilityRegistry> capabilityRegistryProvider,
+      final SecretsService secretsService)
   {
     this.eventManager = checkNotNull(eventManager);
     this.store = checkNotNull(store);
@@ -241,8 +245,10 @@ public class EmailManagerImpl
   }
 
   @Override
-  public void sendVerification(final EmailConfiguration configuration, final String password, final String address)
-      throws EmailException
+  public void sendVerification(
+      final EmailConfiguration configuration,
+      final String password,
+      final String address) throws EmailException
   {
     checkNotNull(configuration);
     Email mail = createVerificationEmail(address);
@@ -256,9 +262,7 @@ public class EmailManagerImpl
   }
 
   @Override
-  public void sendVerification(final EmailConfiguration configuration, final String address)
-      throws EmailException
-  {
+  public void sendVerification(final EmailConfiguration configuration, final String address) throws EmailException {
     checkNotNull(configuration);
     Email mail = createVerificationEmail(address);
     mail = apply(configuration, mail, getPassword(configuration));
@@ -275,8 +279,10 @@ public class EmailManagerImpl
   }
 
   private static String getPassword(final EmailConfiguration configuration) {
-    return Objects.nonNull(configuration.getPassword()) ? String.valueOf(
-        configuration.getPassword().decrypt()) : Strings2.EMPTY;
+    return Objects.nonNull(configuration.getPassword())
+        ? String.valueOf(
+            configuration.getPassword().decrypt())
+        : Strings2.EMPTY;
   }
 
   @Override

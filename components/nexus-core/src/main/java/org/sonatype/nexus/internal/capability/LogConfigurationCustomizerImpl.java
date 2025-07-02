@@ -12,11 +12,11 @@
  */
 package org.sonatype.nexus.internal.capability;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.log.LogConfigurationCustomizer;
 import org.sonatype.nexus.common.log.LoggerLevel;
+import org.springframework.stereotype.Component;
 
 /**
  * Capabilities {@link LogConfigurationCustomizer}.
@@ -24,7 +24,7 @@ import org.sonatype.nexus.common.log.LoggerLevel;
  * @since 2.7
  */
 @Singleton
-@Named
+@Component
 public class LogConfigurationCustomizerImpl
     implements LogConfigurationCustomizer
 {

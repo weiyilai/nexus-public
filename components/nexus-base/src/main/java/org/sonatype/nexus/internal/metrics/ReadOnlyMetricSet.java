@@ -15,7 +15,7 @@ package org.sonatype.nexus.internal.metrics;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.sonatype.nexus.common.app.FreezeRequest;
 import org.sonatype.nexus.common.app.FreezeService;

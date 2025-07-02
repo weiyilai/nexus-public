@@ -17,29 +17,61 @@ import java.util.Set;
 import org.sonatype.nexus.security.AbstractSecurityTest;
 import org.sonatype.nexus.security.config.CUser;
 import org.sonatype.nexus.security.config.CUserRoleMapping;
-import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
+import org.sonatype.nexus.security.config.PreconfiguredSecurityConfigurationSource;
 import org.sonatype.nexus.security.config.SecurityConfiguration;
+import org.sonatype.nexus.security.config.SecurityConfigurationSource;
+import org.sonatype.nexus.security.config.memory.MemoryCUser;
 import org.sonatype.nexus.security.role.RoleIdentifier;
+import org.sonatype.nexus.security.user.EmptyRoleManagementTest.EmptyRoleManagementTestSecurityConfiguration;
 
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-public class EmptyRoleManagementTest
+@Import(EmptyRoleManagementTestSecurityConfiguration.class)
+class EmptyRoleManagementTest
     extends AbstractSecurityTest
 {
-  @Override
-  protected MemorySecurityConfiguration initialSecurityConfiguration() {
-    return EmptyRoleManagementTestSecurity.securityModel();
+  protected static class EmptyRoleManagementTestSecurityConfiguration
+  {
+    @Qualifier("default")
+    @Primary
+    @Bean
+    SecurityConfigurationSource securityConfigurationSource() {
+      return new PreconfiguredSecurityConfigurationSource(EmptyRoleManagementTestSecurity.securityModel());
+    }
+  }
+
+  @AfterEach
+  void restoreUserWithEmptyRole() {
+    CUser originalUser = new MemoryCUser()
+        .withId("test-user-with-empty-role")
+        .withPassword("b2a0e378437817cebdf753d7dff3dd75483af9e0")
+        .withFirstName("Test User With Empty Role")
+        .withStatus("active")
+        .withEmail("test-user-with-empty-role@example.org");
+    Set<String> roles = Set.of("empty-role", "role1", "role2");
+
+    SecurityConfiguration securityModel = this.getSecurityConfiguration();
+    try {
+      securityModel.updateUser(originalUser, roles);
+    }
+    catch (UserNotFoundException e) {
+      // user does not exist, so we need to restore it
+      securityModel.addUser(originalUser, roles);
+    }
   }
 
   @Test
-  public void testDeleteUserWithEmptyRole()
-      throws Exception
-  {
+  void testDeleteUserWithEmptyRole() throws Exception {
     String userId = "test-user-with-empty-role";
 
     UserManager userManager = this.getUserManager();
@@ -61,7 +93,7 @@ public class EmptyRoleManagementTest
   }
 
   @Test
-  public void testDeleteEmptyRoleFromUser() throws Exception {
+  void testDeleteEmptyRoleFromUser() throws Exception {
     String userId = "test-user-with-empty-role";
     String roleId = "empty-role";
 
@@ -91,7 +123,7 @@ public class EmptyRoleManagementTest
   }
 
   @Test
-  public void testUpdateUser() throws Exception {
+  void testUpdateUser() throws Exception {
     String userId = "test-user-with-empty-role";
 
     UserManager userManager = this.getUserManager();
@@ -115,7 +147,7 @@ public class EmptyRoleManagementTest
         found = true;
       }
     }
-    assertTrue("user not found", found);
+    assertTrue(found, "user not found");
 
     found = false;
     for (CUserRoleMapping userRoleMapping : securityModel.getUserRoleMappings()) {
@@ -125,11 +157,11 @@ public class EmptyRoleManagementTest
       }
     }
 
-    assertTrue("userRoleMapping not found", found);
+    assertTrue(found, "userRoleMapping not found");
   }
 
   @Test
-  public void testDeleteOtherRoleFromUser() throws Exception {
+  void testDeleteOtherRoleFromUser() throws Exception {
     String userId = "test-user-with-empty-role";
     String roleId = "role1";
 

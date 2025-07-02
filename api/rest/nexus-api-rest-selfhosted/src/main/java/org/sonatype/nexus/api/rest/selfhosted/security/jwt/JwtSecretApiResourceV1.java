@@ -14,9 +14,8 @@ package org.sonatype.nexus.api.rest.selfhosted.security.jwt;
 
 import java.util.UUID;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -39,6 +38,7 @@ import static javax.ws.rs.core.Response.Status.OK;
 import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 import static org.sonatype.nexus.api.rest.selfhosted.security.jwt.JwtSecretApiResourceV1.PATH;
+import org.springframework.stereotype.Component;
 
 /**
  * REST API to reset the stored JWT secret.
@@ -50,7 +50,7 @@ import static org.sonatype.nexus.api.rest.selfhosted.security.jwt.JwtSecretApiRe
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @Path(PATH)
-@Named
+@Component
 @Singleton
 public class JwtSecretApiResourceV1
     extends ComponentSupport

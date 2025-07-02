@@ -13,7 +13,7 @@
 package org.sonatype.nexus.coreui.internal.privileges;
 
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,11 +57,12 @@ public class PrivilegesUIResourceTest
   public static final String ACTIONS_KEY = "options";
 
   public static final List<String> CRUD_ACTION_STRINGS = Arrays.asList(
-    "create", "read", "update", "delete", "start", "stop", "associate", "disassociate");
+      "create", "read", "update", "delete", "start", "stop", "associate", "disassociate");
 
   public static final List<String> BREAD_ACTION_STRINGS = Arrays.asList("browse", "read", "edit", "add", "delete");
 
-  public static final List<String> BREAD_RUN_ACTION_STRINGS = Arrays.asList("browse", "read", "edit", "add", "delete", "run");
+  public static final List<String> BREAD_RUN_ACTION_STRINGS =
+      Arrays.asList("browse", "read", "edit", "add", "delete", "run");
 
   @Mock
   private RepositoryManager repositoryManager;
@@ -99,15 +100,12 @@ public class PrivilegesUIResourceTest
 
     List<Format> formats = Arrays.asList(format1, format2);
 
-    Map<String, PrivilegeDescriptor> privilegeDescriptors = new HashMap<>();
-    privilegeDescriptors.put(ApplicationPrivilegeDescriptor.TYPE, new ApplicationPrivilegeDescriptor(true));
-    privilegeDescriptors.put(RepositoryAdminPrivilegeDescriptor.TYPE,
-        new RepositoryAdminPrivilegeDescriptor(repositoryManager, formats, true));
-    privilegeDescriptors
-        .put(RepositoryViewPrivilegeDescriptor.TYPE, new RepositoryViewPrivilegeDescriptor(repositoryManager, formats, true));
-    privilegeDescriptors.put(RepositoryContentSelectorPrivilegeDescriptor.TYPE,
-        new RepositoryContentSelectorPrivilegeDescriptor(repositoryManager, selectorManager, formats, true));
-    privilegeDescriptors.put(ScriptPrivilegeDescriptor.TYPE, new ScriptPrivilegeDescriptor(scriptManager, true));
+    List<PrivilegeDescriptor> privilegeDescriptors = new LinkedList<>();
+    privilegeDescriptors.add(new ApplicationPrivilegeDescriptor(true));
+    privilegeDescriptors.add(new RepositoryAdminPrivilegeDescriptor(repositoryManager, formats, true));
+    privilegeDescriptors.add(new RepositoryViewPrivilegeDescriptor(repositoryManager, formats, true));
+    privilegeDescriptors.add(new RepositoryContentSelectorPrivilegeDescriptor(repositoryManager, selectorManager, formats, true));
+    privilegeDescriptors.add(new ScriptPrivilegeDescriptor(scriptManager, true));
 
     underTest = new PrivilegesUIResource(privilegeDescriptors);
   }
@@ -119,38 +117,46 @@ public class PrivilegesUIResourceTest
 
     PrivilegesTypesUIResponse responseApplication = responses.stream()
         .filter(r -> r.getId() == ApplicationPrivilegeDescriptor.TYPE)
-        .findFirst().orElse(null);
+        .findFirst()
+        .orElse(null);
     assertSetOfCheckboxesFormField(responseApplication, HELP_TEXT, FORM_TYPE, CRUD_ACTION_STRINGS);
 
     PrivilegesTypesUIResponse responseRepositoryAdmin = responses.stream()
         .filter(r -> r.getId() == RepositoryAdminPrivilegeDescriptor.TYPE)
-        .findFirst().orElse(null);
+        .findFirst()
+        .orElse(null);
     assertSetOfCheckboxesFormField(responseRepositoryAdmin, HELP_TEXT, FORM_TYPE, BREAD_ACTION_STRINGS);
 
     PrivilegesTypesUIResponse responseRepositoryView = responses.stream()
         .filter(r -> r.getId() == RepositoryViewPrivilegeDescriptor.TYPE)
-        .findFirst().orElse(null);
+        .findFirst()
+        .orElse(null);
     assertSetOfCheckboxesFormField(responseRepositoryView, HELP_TEXT, FORM_TYPE, BREAD_ACTION_STRINGS);
 
     PrivilegesTypesUIResponse responseRepositoryContentSelector = responses.stream()
         .filter(r -> r.getId() == RepositoryContentSelectorPrivilegeDescriptor.TYPE)
-        .findFirst().orElse(null);
+        .findFirst()
+        .orElse(null);
     assertSetOfCheckboxesFormField(responseRepositoryContentSelector, HELP_TEXT, FORM_TYPE, BREAD_ACTION_STRINGS);
 
     PrivilegesTypesUIResponse responseScript = responses.stream()
         .filter(r -> r.getId() == ScriptPrivilegeDescriptor.TYPE)
-        .findFirst().orElse(null);
+        .findFirst()
+        .orElse(null);
     assertSetOfCheckboxesFormField(responseScript, HELP_TEXT, FORM_TYPE, BREAD_RUN_ACTION_STRINGS);
   }
 
-  private void assertSetOfCheckboxesFormField(PrivilegesTypesUIResponse response,
-                               String helpText,
-                               String type,
-                               List<String> actions)
+  private void assertSetOfCheckboxesFormField(
+      PrivilegesTypesUIResponse response,
+      String helpText,
+      String type,
+      List<String> actions)
   {
     List<FormField> formFields = response.getFormFields();
     SetOfCheckboxesFormField formField = (SetOfCheckboxesFormField) formFields.stream()
-        .filter(r -> r.getId() == FORM_ID).findFirst().orElse(null);
+        .filter(r -> r.getId() == FORM_ID)
+        .findFirst()
+        .orElse(null);
     assertThat(formField.getType(), is(type));
     assertThat(formField.getHelpText(), is(helpText));
 

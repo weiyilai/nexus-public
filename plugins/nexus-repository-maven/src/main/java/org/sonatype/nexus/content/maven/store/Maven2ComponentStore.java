@@ -17,8 +17,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.repository.content.store.ComponentStore;
@@ -27,7 +26,6 @@ import org.sonatype.nexus.transaction.Transactional;
 import com.google.inject.assistedinject.Assisted;
 import org.springframework.beans.factory.annotation.Value;
 
-import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE;
 
 /**
@@ -39,7 +37,7 @@ public class Maven2ComponentStore
   @Inject
   public Maven2ComponentStore(
       final DataSessionSupplier sessionSupplier,
-      @Named(DATASTORE_CLUSTERED_ENABLED_NAMED) @Value(DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean clustered,
+      @Value(DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean clustered,
       @Assisted final String storeName)
   {
     super(sessionSupplier, clustered, storeName, Maven2ComponentDAO.class);

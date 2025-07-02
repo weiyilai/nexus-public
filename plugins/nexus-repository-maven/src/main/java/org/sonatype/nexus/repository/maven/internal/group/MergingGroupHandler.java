@@ -20,14 +20,13 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.collect.AttributesMap;
 import org.sonatype.nexus.common.cooperation2.Cooperation2;
-import org.sonatype.nexus.common.cooperation2.Cooperation2Factory;
 import org.sonatype.nexus.common.cooperation2.IOCall;
+import org.sonatype.nexus.common.cooperation2.datastore.DefaultCooperation2Factory;
 import org.sonatype.nexus.repository.HasFacet;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.group.GroupFacet;
@@ -47,6 +46,7 @@ import static com.google.common.base.Predicates.or;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
+import org.springframework.stereotype.Component;
 
 /**
  * Maven2 specific group handler: calls into {@link MavenGroupFacet} to get some content from members, cache it, and
@@ -55,7 +55,7 @@ import static java.util.stream.Collectors.toList;
  * @since 3.0
  */
 @Singleton
-@Named
+@Component
 public class MergingGroupHandler
     extends GroupHandler
 {
@@ -66,13 +66,12 @@ public class MergingGroupHandler
 
   @Inject
   public MergingGroupHandler(
-      @Named final Cooperation2Factory cooperationFactory,
-      @Named("${nexus.maven.group.cooperation.enabled:-true}") @Value("${nexus.maven.group.cooperation.enabled:true}") final boolean cooperationEnabled,
-      @Named("${nexus.maven.group.cooperation.majorTimeout:-0s}") @Value("${nexus.maven.group.cooperation.majorTimeout:0s}") final Duration majorTimeout,
-      @Named("${nexus.maven.group.cooperation.minorTimeout:-30s}") @Value("${nexus.maven.group.cooperation.minorTimeout:30s}") final Duration minorTimeout,
-      @Named("${nexus.maven.group.cooperation.threadsPerKey:-100}") @Value("${nexus.maven.group.cooperation.threadsPerKey:100}") final int threadsPerKey)
+      @Value("${nexus.maven.group.cooperation.enabled:true}") final boolean cooperationEnabled,
+      @Value("${nexus.maven.group.cooperation.majorTimeout:0s}") final Duration majorTimeout,
+      @Value("${nexus.maven.group.cooperation.minorTimeout:30s}") final Duration minorTimeout,
+      @Value("${nexus.maven.group.cooperation.threadsPerKey:100}") final int threadsPerKey)
   {
-    this.metadataCooperation = cooperationFactory.configure()
+    this.metadataCooperation = new DefaultCooperation2Factory().configure()
         .majorTimeout(majorTimeout)
         .minorTimeout(minorTimeout)
         .threadsPerKey(threadsPerKey)

@@ -14,9 +14,9 @@ package org.sonatype.nexus.repository.content.browse.store;
 
 import java.util.List;
 import java.util.Map;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.repository.browse.node.BrowseNode;
@@ -30,7 +30,6 @@ import com.google.inject.assistedinject.Assisted;
  *
  * @since 3.26
  */
-@Named
 public class BrowseNodeStore<T extends BrowseNodeDAO>
     extends ContentStoreSupport<T>
 {

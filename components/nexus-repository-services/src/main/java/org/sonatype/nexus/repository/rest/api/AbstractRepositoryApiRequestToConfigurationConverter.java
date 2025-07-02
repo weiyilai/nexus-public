@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.repository.rest.api;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.config.ConfigurationStore;

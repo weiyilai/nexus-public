@@ -23,21 +23,18 @@ import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.content.browse.RebuildBrowseNodesManager;
 import org.sonatype.nexus.repository.content.browse.store.example.TestBrowseNodeDAO;
-import org.sonatype.nexus.repository.content.store.AssetDAO;
 import org.sonatype.nexus.repository.content.store.AssetData;
-import org.sonatype.nexus.repository.content.store.ComponentDAO;
 import org.sonatype.nexus.repository.content.store.ComponentData;
 import org.sonatype.nexus.repository.content.store.ContentRepositoryDAO;
 import org.sonatype.nexus.repository.content.store.ContentRepositoryData;
 import org.sonatype.nexus.repository.content.store.ExampleContentTestSupport;
 import org.sonatype.nexus.repository.content.store.InternalIds;
-import org.sonatype.nexus.repository.content.store.example.TestAssetDAO;
-import org.sonatype.nexus.repository.content.store.example.TestComponentDAO;
 import org.sonatype.nexus.repository.content.store.example.TestContentRepositoryDAO;
+import org.sonatype.nexus.testdb.TestTable;
 
 import org.assertj.db.type.Table;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import static org.assertj.db.api.Assertions.assertThat;
@@ -45,8 +42,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class BrowseNodeMigrationStep_1_1Test
-  extends ExampleContentTestSupport
+class BrowseNodeMigrationStep_1_1Test
+    extends ExampleContentTestSupport
 {
   private final String INSERT = "INSERT INTO test_browse_node (repository_id, parent_id, display_name, request_path,"
       + " asset_id, component_id) "
@@ -58,24 +55,23 @@ public class BrowseNodeMigrationStep_1_1Test
   @Mock
   private RebuildBrowseNodesManager rebuildBrowseNodesManager;
 
+  @TestTable(table = "test_browse_node")
+  Table testBrowseNodeTable;
+
   private BrowseNodeMigrationStep_1_1 upgradeStep;
 
   private DataStore<?> store;
 
-  public BrowseNodeMigrationStep_1_1Test() {
-    super(TestBrowseNodeDAO.class);
-  }
-
-
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
+    sessionRule.register(TestBrowseNodeDAO.class);
     when(fakeFormat.getValue()).thenReturn("test");
     upgradeStep = new BrowseNodeMigrationStep_1_1(Collections.singletonList(fakeFormat), rebuildBrowseNodesManager);
-    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).get();
+    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME);
   }
 
   @Test
-  public void testUnknownFormat() throws Exception {
+  void testUnknownFormat() throws Exception {
     when(fakeFormat.getValue()).thenReturn("foo");
     BrowseNodeMigrationStep_1_1 upgradeStep =
         new BrowseNodeMigrationStep_1_1(Collections.singletonList(fakeFormat), rebuildBrowseNodesManager);
@@ -87,7 +83,7 @@ public class BrowseNodeMigrationStep_1_1Test
   }
 
   @Test
-  public void testMigration() throws Exception {
+  void testMigration() throws Exception {
     generateRandomPaths(10);
     generateRandomNamespaces(10);
     generateRandomNames(10);
@@ -100,11 +96,10 @@ public class BrowseNodeMigrationStep_1_1Test
       upgradeStep.migrate(conn);
     }
 
-    assertThat(new Table(store.getDataSource(), "test_browse_node")).isEmpty();
+    assertThat(testBrowseNodeTable).isEmpty();
 
     verify(rebuildBrowseNodesManager).setRebuildOnSart(true);
   }
-
 
   private void insert(
       final int repositoryId,
@@ -138,36 +133,6 @@ public class BrowseNodeMigrationStep_1_1Test
     }
   }
 
-  private void backup() throws SQLException {
-    try (Connection conn = store.openConnection()) {
-      try (PreparedStatement statement = conn.prepareStatement("SCRIPT TO 'backup.sql'")) {
-        statement.execute();
-      }
-    }
-  }
-
-  private AssetData createAsset(final AssetData asset) {
-    try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
-      AssetDAO assetDao = session.access(TestAssetDAO.class);
-
-      assetDao.createAsset(asset, false);
-
-      session.getTransaction().commit();
-    }
-    return asset;
-  }
-
-  private ComponentData createComponent(final ComponentData component) {
-    try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
-      ComponentDAO componentDao = session.access(TestComponentDAO.class);
-
-      componentDao.createComponent(component, false);
-
-      session.getTransaction().commit();
-    }
-    return component;
-  }
-
   private ContentRepositoryData createContentRepository(final ContentRepositoryData contentRepository) {
     try (DataSession<?> session = store.openSession()) {
       ContentRepositoryDAO dao = session.access(TestContentRepositoryDAO.class);
@@ -176,5 +141,4 @@ public class BrowseNodeMigrationStep_1_1Test
     }
     return contentRepository;
   }
-
 }

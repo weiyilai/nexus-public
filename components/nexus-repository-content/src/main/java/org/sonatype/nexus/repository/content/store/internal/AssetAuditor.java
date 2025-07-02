@@ -16,9 +16,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -37,15 +37,17 @@ import org.sonatype.nexus.repository.content.event.asset.AssetUploadedEvent;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.beans.factory.annotation.Value;
 
-import static org.sonatype.nexus.common.app.FeatureFlags.ASSET_AUDITOR_ATTRIBUTE_CHANGES_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.ASSET_AUDITOR_ATTRIBUTE_CHANGES_ENABLED_VALUE;
+import org.springframework.stereotype.Component;
 
 /**
  * Repository asset auditor.
  *
  * @since 3.27
  */
-@Named
+@Component
 @Singleton
 public class AssetAuditor
     extends AuditorSupport
@@ -56,7 +58,9 @@ public class AssetAuditor
   private final boolean attributeChangesDetailEnabled;
 
   @Inject
-  public AssetAuditor(@Named(ASSET_AUDITOR_ATTRIBUTE_CHANGES_ENABLED_NAMED) boolean attributeChangesDetailEnabled) {
+  public AssetAuditor(
+      @Value(ASSET_AUDITOR_ATTRIBUTE_CHANGES_ENABLED_VALUE) final boolean attributeChangesDetailEnabled)
+  {
     registerType(AssetCreatedEvent.class, CREATED_TYPE);
 
     registerType(AssetDeletedEvent.class, DELETED_TYPE);

@@ -12,11 +12,11 @@
  */
 package org.sonatype.nexus.internal.security.apikey;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * Task descriptor for {@link PurgeApiKeysTask}.
@@ -24,7 +24,7 @@ import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
  * @since 3.0
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class PurgeApiKeysTaskDescriptor
     extends TaskDescriptorSupport
@@ -36,7 +36,6 @@ public class PurgeApiKeysTaskDescriptor
         PurgeApiKeysTask.class,
         "Admin - Delete orphaned API keys",
         VISIBLE,
-        EXPOSED
-    );
+        EXPOSED);
   }
 }

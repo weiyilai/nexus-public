@@ -25,7 +25,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.event.EventManager;
@@ -129,7 +129,7 @@ public class ElasticSearchIndexServiceImplTest
   ElasticSearchQueryServiceImpl searchQueryService;
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     CancelableHelper.set(cancelled);
     when(clientProvider.get()).thenReturn(client);
     when(client.admin()).thenReturn(adminClient);
@@ -140,6 +140,7 @@ public class ElasticSearchIndexServiceImplTest
 
     searchIndexService = new ElasticSearchIndexServiceImpl(clientProvider,
         indexNamingPolicy, indexSettingsContributors, eventManager, 1000, 0, 0, 3000, 1);
+    searchIndexService.start();
 
     searchQueryService = new ElasticSearchQueryServiceImpl(clientProvider,
         repositoryManager, securityHelper, searchSubjectHelper, indexNamingPolicy, false);

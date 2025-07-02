@@ -14,9 +14,8 @@ package org.sonatype.nexus.cleanup.internal.storage;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.cleanup.storage.CleanupPolicy;
 import org.sonatype.nexus.cleanup.storage.CleanupPolicyStorage;
@@ -29,13 +28,16 @@ import org.sonatype.nexus.transaction.Transactional;
 import com.google.common.collect.ImmutableList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * MyBatis {@link CleanupPolicyStorage} implementation.
  *
  * @since 3.21
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 public class CleanupPolicyStorageImpl
     extends ConfigStoreSupport<CleanupPolicyDAO>

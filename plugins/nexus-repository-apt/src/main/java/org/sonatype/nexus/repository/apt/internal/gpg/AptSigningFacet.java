@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import javax.inject.Named;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
@@ -37,14 +36,18 @@ import org.apache.commons.io.IOUtils;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Signs an Apt metadata by using PGP signing key pair.
  *
  * @since 3.17
  */
-@Named
+@Component
 @Facet.Exposed
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AptSigningFacet
     extends FacetSupport
 {

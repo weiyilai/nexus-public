@@ -14,9 +14,8 @@ package org.sonatype.nexus.onboarding.internal;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -39,18 +38,20 @@ import javax.validation.constraints.NotEmpty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.17
  */
 @Singleton
-@Named
+@Component
 @Path(OnboardingResource.RESOURCE_URI)
 public class OnboardingResource
     extends ComponentSupport
     implements Resource
 {
   public static final String PASSWORD_REQUIRED = "password is a required field, and cannot be empty.";
+
   public static final String RESOURCE_URI = "internal/ui/onboarding";
 
   private final OnboardingManager onboardingManager;
@@ -60,9 +61,10 @@ public class OnboardingResource
   private final AdminPasswordFileManager adminPasswordFileManager;
 
   @Inject
-  public OnboardingResource(final OnboardingManager onboardingManager,
-                            final SecuritySystem securitySystem,
-                            final AdminPasswordFileManager adminPasswordFileManager)
+  public OnboardingResource(
+      final OnboardingManager onboardingManager,
+      final SecuritySystem securitySystem,
+      final AdminPasswordFileManager adminPasswordFileManager)
   {
     this.onboardingManager = checkNotNull(onboardingManager);
     this.securitySystem = checkNotNull(securitySystem);

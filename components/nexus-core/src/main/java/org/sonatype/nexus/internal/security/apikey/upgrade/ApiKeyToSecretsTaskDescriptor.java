@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.internal.security.apikey.upgrade;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
@@ -24,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.internal.security.apikey.upgrade.ApiKeyToSecretsTask.MESSAGE;
 import static org.sonatype.nexus.internal.security.apikey.upgrade.ApiKeyToSecretsTask.TYPE_ID;
+import org.springframework.stereotype.Component;
 
 /**
  * This task should only be run on systems where {@link SecretsService.SECRETS_MIGRATION_VERSION} is valid, for
@@ -31,14 +31,14 @@ import static org.sonatype.nexus.internal.security.apikey.upgrade.ApiKeyToSecret
  * 1.0 for the availability version.
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class ApiKeyToSecretsTaskDescriptor
     extends TaskDescriptorSupport
 {
   @Inject
   public ApiKeyToSecretsTaskDescriptor(
-      @Named("${nexus.upgrade.apikey.secrets:-false}") @Value("${nexus.upgrade.apikey.secrets:false}") final boolean exposed)
+      @Value("${nexus.upgrade.apikey.secrets:false}") final boolean exposed)
   {
     super(TYPE_ID, ApiKeyToSecretsTask.class, MESSAGE, true, exposed);
   }

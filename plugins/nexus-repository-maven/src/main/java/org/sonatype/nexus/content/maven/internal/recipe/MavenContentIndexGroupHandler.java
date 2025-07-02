@@ -21,12 +21,18 @@ import org.sonatype.nexus.repository.maven.MavenPath;
 import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.Handler;
 import org.sonatype.nexus.repository.view.Response;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+
+import org.springframework.stereotype.Component;
 
 /**
  * Group specific handler of Maven indexes: it serves up merged group index, if present.
  *
  * @since 3.26
  */
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class MavenContentIndexGroupHandler
     extends ComponentSupport
     implements Handler

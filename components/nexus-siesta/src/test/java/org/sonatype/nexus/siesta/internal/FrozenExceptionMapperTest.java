@@ -14,8 +14,8 @@ package org.sonatype.nexus.siesta.internal;
 
 import javax.ws.rs.core.Response;
 
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.app.FrozenException;
-import org.sonatype.nexus.siesta.SiestaTestSupport;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 class FrozenExceptionMapperTest
-    extends SiestaTestSupport
+    extends Test5Support
 {
   private FrozenExceptionMapper mapper;
 

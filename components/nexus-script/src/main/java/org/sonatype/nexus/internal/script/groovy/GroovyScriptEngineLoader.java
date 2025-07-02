@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.internal.script.groovy;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.script.ScriptEngineManager;
 
 import org.sonatype.nexus.common.app.ApplicationDirectories;
@@ -23,36 +22,34 @@ import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
+import org.springframework.stereotype.Component;
 
 /**
  * Groovy script engine loader. Is used to run groovy scripts.
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = SERVICES)
 public class GroovyScriptEngineLoader
     extends StateGuardLifecycleSupport
 {
-  private final ClassLoader classLoader;
-
   private final ApplicationDirectories applicationDirectories;
 
   private final ScriptEngineManager scriptEngineManager;
 
   @Inject
   public GroovyScriptEngineLoader(
-      final @Named("nexus-uber") ClassLoader classLoader,
       final ApplicationDirectories applicationDirectories,
       final ScriptEngineManager scriptEngineManager)
   {
-    this.classLoader = checkNotNull(classLoader);
     this.applicationDirectories = checkNotNull(applicationDirectories);
     this.scriptEngineManager = checkNotNull(scriptEngineManager);
   }
 
   @Override
   protected void doStart() throws Exception {
-    GroovyScriptEngineFactory groovyEngineFactory = new GroovyScriptEngineFactory(classLoader, applicationDirectories);
+    GroovyScriptEngineFactory groovyEngineFactory =
+        new GroovyScriptEngineFactory(applicationDirectories);
     log.debug("Registering engine-factory: {}", groovyEngineFactory);
     groovyEngineFactory.getNames().forEach(name -> scriptEngineManager.registerEngineName(name, groovyEngineFactory));
   }

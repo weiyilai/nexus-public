@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.coreui;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.extdirect.DirectComponent;
 import org.sonatype.nexus.extdirect.DirectComponentSupport;
@@ -31,11 +30,12 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
 /**
  * Webhook {@link DirectComponent}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Webhook")
 public class WebhookComponent

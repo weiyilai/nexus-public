@@ -14,9 +14,8 @@ package org.sonatype.nexus.repository.content.facet;
 
 import java.util.Optional;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.common.node.NodeAccess;
@@ -28,13 +27,14 @@ import org.sonatype.nexus.security.ClientInfoProvider;
 import org.sonatype.nexus.validation.ConstraintViolationFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Internal dependencies injected into a repository's {@link ContentFacet}.
  *
  * @since 3.24
  */
-@Named
+@Component
 @Singleton
 public class ContentFacetDependencies
 {

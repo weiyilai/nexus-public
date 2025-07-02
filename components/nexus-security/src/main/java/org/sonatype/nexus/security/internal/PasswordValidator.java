@@ -17,17 +17,19 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.apache.commons.lang.StringUtils;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 /**
  * @since 3.25
  */
-@Named
+@Component
 @Singleton
 public class PasswordValidator
 {
@@ -37,8 +39,8 @@ public class PasswordValidator
 
   @Inject
   public PasswordValidator(
-      @Nullable @Named("nexus.password.validator") final String passwordValidator,
-      @Nullable @Named("nexus.password.validator.message") final String errorMessage)
+      @Nullable @Value("${nexus.password.validator:#{null}}") final String passwordValidator,
+      @Nullable @Value("${nexus.password.validator.message:#{null}}") final String errorMessage)
   {
     this.passwordValidator =
         Optional.ofNullable(passwordValidator).map(Pattern::compile).map(Pattern::asPredicate).orElse(pw -> true);

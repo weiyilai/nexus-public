@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.maven.tasks;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.FormField;
@@ -25,6 +24,7 @@ import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
 import static org.sonatype.nexus.repository.RepositoryTaskSupport.REPOSITORY_NAME_FIELD_ID;
 import static org.sonatype.nexus.repository.maven.tasks.PurgeMavenUnusedSnapshotsTask.LAST_USED_FIELD_ID;
+import org.springframework.stereotype.Component;
 
 /**
  * Task descriptor for {@link PurgeMavenUnusedSnapshotsTask}.
@@ -32,7 +32,7 @@ import static org.sonatype.nexus.repository.maven.tasks.PurgeMavenUnusedSnapshot
  * @since 3.0
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class PurgeMavenUnusedSnapshotsTaskDescriptor
     extends TaskDescriptorSupport
@@ -55,16 +55,13 @@ public class PurgeMavenUnusedSnapshotsTaskDescriptor
             REPOSITORY_NAME_FIELD_ID,
             "Repository",
             "Select the repository to delete unused snapshot versions from",
-            FormField.MANDATORY
-        ).includingAnyOfFacets(PurgeUnusedSnapshotsFacet.class)
-            .excludingAnyOfVersionPolicies(VersionPolicy.RELEASE.name())
-            .includeAnEntryForAllRepositories(),
+            FormField.MANDATORY).includingAnyOfFacets(PurgeUnusedSnapshotsFacet.class)
+                .excludingAnyOfVersionPolicies(VersionPolicy.RELEASE.name())
+                .includeAnEntryForAllRepositories(),
         new NumberTextFormField(
             LAST_USED_FIELD_ID,
             "Last used in days",
             "Delete all snapshots that were last used before given number of days",
-            FormField.MANDATORY
-        ).withInitialValue(LAST_USED_INIT_VALUE).withMinimumValue(LAST_USED_MIN_VALUE)
-    );
+            FormField.MANDATORY).withInitialValue(LAST_USED_INIT_VALUE).withMinimumValue(LAST_USED_MIN_VALUE));
   }
 }

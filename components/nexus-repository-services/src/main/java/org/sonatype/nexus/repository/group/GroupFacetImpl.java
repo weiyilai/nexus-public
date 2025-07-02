@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintViolation;
 import javax.validation.constraints.NotNull;
 
@@ -42,6 +41,11 @@ import org.sonatype.nexus.validation.ConstraintViolationFactory;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.Iterables;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.isNull;
@@ -54,7 +58,10 @@ import static org.sonatype.nexus.validation.ConstraintViolations.maybePropagate;
  *
  * @since 3.0
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class GroupFacetImpl
     extends FacetSupport
     implements GroupFacet
@@ -88,10 +95,11 @@ public class GroupFacetImpl
   protected CacheController cacheController;
 
   @Inject
-  public GroupFacetImpl(final RepositoryManager repositoryManager,
-                        final ConstraintViolationFactory constraintViolationFactory,
-                        @Named(GroupType.NAME) final Type groupType,
-                        final RepositoryCacheInvalidationService repositoryCacheInvalidationService)
+  public GroupFacetImpl(
+      final RepositoryManager repositoryManager,
+      final ConstraintViolationFactory constraintViolationFactory,
+      @Qualifier(GroupType.NAME) final Type groupType,
+      final RepositoryCacheInvalidationService repositoryCacheInvalidationService)
   {
     this.repositoryManager = checkNotNull(repositoryManager);
     this.groupType = checkNotNull(groupType);
@@ -126,7 +134,11 @@ public class GroupFacetImpl
     return null;
   }
 
-  private boolean containsGroup(final Repository root, final String repositoryName, final Set<Repository> checkedGroups) {
+  private boolean containsGroup(
+      final Repository root,
+      final String repositoryName,
+      final Set<Repository> checkedGroups)
+  {
     return root.facet(GroupFacet.class).members().stream().anyMatch((repository) -> {
       return checkedGroups.add(repository) &&
           (repository.getName().equals(repositoryName) ||
@@ -239,11 +251,12 @@ public class GroupFacetImpl
     }
 
     members.add(root);
-    List<Repository> groupMembers = root.optionalFacet(GroupFacet.class).map(GroupFacet::members)
+    List<Repository> groupMembers = root.optionalFacet(GroupFacet.class)
+        .map(GroupFacet::members)
         .orElseGet(Collections::emptyList);
     for (Repository child : groupMembers) {
-        allMembers(members, child);
-      }
+      allMembers(members, child);
+    }
     return members;
   }
 
@@ -264,7 +277,7 @@ public class GroupFacetImpl
 
     final CacheInfo cacheInfo = content.getAttributes().get(CacheInfo.class);
 
-    if(isNull(cacheInfo)) {
+    if (isNull(cacheInfo)) {
       log.warn("CacheInfo missing for {}, assuming stale content.", content);
       return true;
     }

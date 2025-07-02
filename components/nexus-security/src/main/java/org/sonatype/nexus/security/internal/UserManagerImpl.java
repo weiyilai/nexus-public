@@ -16,10 +16,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.Description;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.config.CRole;
@@ -46,7 +46,10 @@ import org.sonatype.nexus.security.user.UserUpdatedEvent;
 
 import com.google.common.collect.Sets;
 import org.apache.shiro.authc.credential.PasswordService;
-import org.eclipse.sisu.Description;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.security.config.CUser.STATUS_ACTIVE;
@@ -55,7 +58,9 @@ import static org.sonatype.nexus.security.config.CUser.STATUS_CHANGE_PASSWORD;
 /**
  * Default {@link UserManager}.
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @Singleton
 @Description("Local")
 public class UserManagerImpl
@@ -73,11 +78,12 @@ public class UserManagerImpl
   private final PasswordValidator passwordValidator;
 
   @Inject
-  public UserManagerImpl(final EventManager eventManager,
-                         final SecurityConfigurationManager configuration,
-                         final SecuritySystem securitySystem,
-                         final PasswordService passwordService,
-                         final PasswordValidator passwordValidator)
+  public UserManagerImpl(
+      final EventManager eventManager,
+      final SecurityConfigurationManager configuration,
+      @Lazy final SecuritySystem securitySystem,
+      final PasswordService passwordService,
+      final PasswordValidator passwordValidator)
   {
     this.eventManager = checkNotNull(eventManager);
     this.configuration = configuration;
@@ -86,7 +92,7 @@ public class UserManagerImpl
     this.passwordValidator = passwordValidator;
   }
 
-  protected CUser toUser(User user) {
+  protected CUser toUser(final User user) {
     if (user == null) {
       return null;
     }
@@ -104,7 +110,7 @@ public class UserManagerImpl
     return secUser;
   }
 
-  protected User toUser(CUser cUser, Set<String> roleIds) {
+  protected User toUser(final CUser cUser, final Set<String> roleIds) {
     if (cUser == null) {
       return null;
     }
@@ -122,7 +128,8 @@ public class UserManagerImpl
     try {
       if (roleIds != null) {
         user.setRoles(getUsersRoles(roleIds));
-      } else {
+      }
+      else {
         user.setRoles(getUsersRoles(cUser.getId(), DEFAULT_SOURCE));
       }
     }
@@ -173,7 +180,7 @@ public class UserManagerImpl
   }
 
   @Override
-  public User getUser(String userId) throws UserNotFoundException {
+  public User getUser(final String userId) throws UserNotFoundException {
     return getUser(userId, null);
   }
 
@@ -193,7 +200,7 @@ public class UserManagerImpl
   }
 
   @Override
-  public User addUser(final User user, String password) {
+  public User addUser(final User user, final String password) {
     final CUser secUser = this.toUser(user);
     secUser.setPassword(this.hashPassword(password));
 
@@ -311,7 +318,7 @@ public class UserManagerImpl
     return true;
   }
 
-  private String hashPassword(String clearPassword) {
+  private String hashPassword(final String clearPassword) {
     passwordValidator.validate(clearPassword);
     // set the password if its not null
     if (clearPassword != null && clearPassword.trim().length() > 0) {
@@ -322,8 +329,10 @@ public class UserManagerImpl
   }
 
   @Override
-  public void setUsersRoles(final String userId, final String userSource, final Set<RoleIdentifier> roleIdentifiers)
-      throws UserNotFoundException
+  public void setUsersRoles(
+      final String userId,
+      final String userSource,
+      final Set<RoleIdentifier> roleIdentifiers) throws UserNotFoundException
   {
     // delete if no roleIdentifiers
     if (roleIdentifiers == null || roleIdentifiers.isEmpty()) {
@@ -366,7 +375,7 @@ public class UserManagerImpl
     }
   }
 
-  private void updateRoles(CUserRoleMapping roleMapping, final Set<RoleIdentifier> roleIdentifiers) {
+  private void updateRoles(final CUserRoleMapping roleMapping, final Set<RoleIdentifier> roleIdentifiers) {
     for (RoleIdentifier roleIdentifier : roleIdentifiers) {
       if (getSource().equals(roleIdentifier.getSource())) {
         roleMapping.addRole(roleIdentifier.getRoleId());
@@ -379,7 +388,7 @@ public class UserManagerImpl
     return AuthenticatingRealmImpl.NAME;
   }
 
-  private Set<String> getRoleIdsFromUser(User user) {
+  private Set<String> getRoleIdsFromUser(final User user) {
     Set<String> roles = new HashSet<String>();
     for (RoleIdentifier roleIdentifier : user.getRoles()) {
       // TODO: should we just grab the Default roles?

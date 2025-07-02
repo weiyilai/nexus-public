@@ -14,9 +14,8 @@ package org.sonatype.nexus.kv;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
@@ -25,13 +24,16 @@ import org.sonatype.nexus.transaction.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * MyBatis nexus_key_value access interface
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 public class GlobalKeyValueStore
     extends ConfigStoreSupport<NexusKeyValueDAO>
@@ -55,6 +57,7 @@ public class GlobalKeyValueStore
     return dao().get(key);
   }
 
+  // TODO don't mark this as Transactional it is expensive
   public <E> Optional<E> get(final String key, final Class<E> clazz) {
     Optional<NexusKeyValue> val = getKey(key);
     if (!val.isPresent()) {
@@ -64,16 +67,19 @@ public class GlobalKeyValueStore
     return val.map(o -> o.getAsObject(mapper, clazz));
   }
 
+  @Transactional
   public Optional<Boolean> getBoolean(final String key) {
     return getKey(key)
         .map(NexusKeyValue::getAsBoolean);
   }
 
+  @Transactional
   public Optional<String> getString(final String key) {
     return getKey(key)
         .map(NexusKeyValue::getAsString);
   }
 
+  @Transactional
   public Optional<Integer> getInt(final String key) {
     return getKey(key)
         .map(NexusKeyValue::getAsInt);
@@ -90,18 +96,22 @@ public class GlobalKeyValueStore
     dao().set(keyValue);
   }
 
+  @Transactional
   public void setBoolean(final String key, final boolean value) {
     setKey(new NexusKeyValue(key, ValueType.BOOLEAN, value));
   }
 
+  @Transactional
   public void setInt(final String key, final int value) {
     setKey(new NexusKeyValue(key, ValueType.NUMBER, value));
   }
 
+  @Transactional
   public void setString(final String key, final String value) {
     setKey(new NexusKeyValue(key, ValueType.CHARACTER, value));
   }
 
+  @Transactional
   public void setString(final String key, final Object value) {
     setKey(new NexusKeyValue(key, ValueType.OBJECT, value));
   }

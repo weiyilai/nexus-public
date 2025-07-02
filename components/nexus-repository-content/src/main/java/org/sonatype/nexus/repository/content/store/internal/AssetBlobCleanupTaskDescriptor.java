@@ -12,17 +12,17 @@
  */
 package org.sonatype.nexus.repository.content.store.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.24
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class AssetBlobCleanupTaskDescriptor
     extends TaskDescriptorSupport

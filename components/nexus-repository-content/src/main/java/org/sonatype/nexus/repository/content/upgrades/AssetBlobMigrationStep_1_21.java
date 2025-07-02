@@ -16,18 +16,21 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static java.util.Objects.requireNonNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Drops index for blob_created on asset_blob table.
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AssetBlobMigrationStep_1_21
     implements DatabaseMigrationStep
 {
@@ -36,8 +39,7 @@ public class AssetBlobMigrationStep_1_21
   private final List<Format> formats;
 
   @Inject
-  public AssetBlobMigrationStep_1_21(final List<Format> formats)
-  {
+  public AssetBlobMigrationStep_1_21(final List<Format> formats) {
     this.formats = requireNonNull(formats);
   }
 

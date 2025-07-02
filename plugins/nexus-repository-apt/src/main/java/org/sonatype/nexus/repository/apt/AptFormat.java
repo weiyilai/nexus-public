@@ -12,15 +12,18 @@
  */
 package org.sonatype.nexus.repository.apt;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Format;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.17
  */
-@Named(AptFormat.NAME)
+@Component
+@Qualifier(AptFormat.NAME)
 @Singleton
 public class AptFormat
     extends Format

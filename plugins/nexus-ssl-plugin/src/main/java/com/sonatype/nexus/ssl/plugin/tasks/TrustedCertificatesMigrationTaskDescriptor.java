@@ -12,15 +12,15 @@
  */
 package com.sonatype.nexus.ssl.plugin.tasks;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
+import org.springframework.stereotype.Component;
 
 @AvailabilityVersion(from = "1.1")
-@Named
+@Component
 @Singleton
 public class TrustedCertificatesMigrationTaskDescriptor
     extends TaskDescriptorSupport

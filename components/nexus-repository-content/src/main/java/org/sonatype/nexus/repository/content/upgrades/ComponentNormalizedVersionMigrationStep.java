@@ -18,8 +18,7 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.Format;
@@ -32,11 +31,15 @@ import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
 import org.sonatype.nexus.upgrade.datastore.RepeatableDatabaseMigrationStep;
 
 import static java.lang.String.format;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Migration step to populate the normalized_version column on the {format}_component tables
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ComponentNormalizedVersionMigrationStep
     extends ComponentSupport
     implements RepeatableDatabaseMigrationStep
@@ -104,8 +107,10 @@ public class ComponentNormalizedVersionMigrationStep
     }
   }
 
-  private void alter(final Connection connection, final Statement alterStatement, final Format format)
-      throws SQLException
+  private void alter(
+      final Connection connection,
+      final Statement alterStatement,
+      final Format format) throws SQLException
   {
     String formatName = format.getValue();
     log.info("validating {} component table", formatName);

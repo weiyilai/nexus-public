@@ -14,17 +14,17 @@ package org.sonatype.nexus.coreui.internal.ldap;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class LdapStateContributor
     extends ComponentSupport
@@ -36,8 +36,8 @@ public class LdapStateContributor
 
   @Inject
   public LdapStateContributor(
-      @Named("${nexus.react.ldap:-false}") @Value("${nexus.react.ldap:false}") final Boolean featureFlag,
-      @Named("${nexus.ldap.mapped.role.query.character.limit:-3}") @Value("${nexus.ldap.mapped.role.query.character.limit:3}") final int mappedRoleQueryCharacterLimit)
+      @Value("${nexus.react.ldap:false}") final Boolean featureFlag,
+      @Value("${nexus.ldap.mapped.role.query.character.limit:3}") final int mappedRoleQueryCharacterLimit)
   {
     this.featureFlag = featureFlag;
     this.mappedRoleQueryCharacterLimit = mappedRoleQueryCharacterLimit;

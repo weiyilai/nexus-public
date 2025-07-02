@@ -14,9 +14,8 @@ package org.sonatype.nexus.coreui.internal.content;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -43,11 +42,12 @@ import static com.google.common.collect.Streams.stream;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
@@ -79,8 +79,7 @@ public class SelectorPreviewResource
   @Path("/preview")
   @RequiresAuthentication
   @RequiresPermissions(value = {"nexus:selectors:create", "nexus:selectors:update"}, logical = Logical.OR)
-  public PageResult<AssetXO> previewContent(SelectorPreviewRequest request)
-  {
+  public PageResult<AssetXO> previewContent(SelectorPreviewRequest request) {
     selectorFactory.validateSelector(request.getType().toLowerCase(), request.getExpression());
 
     RepositorySelector repositorySelector = RepositorySelector.fromSelector(request.getRepository());
@@ -93,8 +92,7 @@ public class SelectorPreviewResource
         repositorySelector,
         selectedRepositories,
         request.getExpression(),
-        new QueryOptions(null, null, null, 0, 10)
-    );
+        new QueryOptions(null, null, null, 0, 10));
   }
 
   private List<Repository> getPreviewRepositories(final RepositorySelector repositorySelector) {

@@ -12,15 +12,16 @@
  */
 package org.sonatype.nexus.repository.maven.application.scan;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.application.scan.RepositoryApplicationScanSupport;
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.repository.types.HostedType;
 
-@Named(Maven2Format.NAME + "-" + HostedType.NAME)
+import org.springframework.beans.factory.annotation.Qualifier;
+
+@Qualifier(Maven2Format.NAME + "-" + HostedType.NAME)
 @Singleton
 public class Maven2HostedRepositoryApplicationScanSupport
     implements RepositoryApplicationScanSupport

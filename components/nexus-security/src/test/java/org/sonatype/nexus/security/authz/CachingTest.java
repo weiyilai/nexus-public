@@ -13,32 +13,37 @@
 package org.sonatype.nexus.security.authz;
 
 import org.sonatype.nexus.security.AbstractSecurityTest;
+import org.sonatype.nexus.security.AbstractSecurityTest.BaseSecurityConfiguration;
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.realm.MockRealmB;
 import org.sonatype.nexus.security.user.User;
 
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.subject.SimplePrincipalCollection;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Import;
 
-public class CachingTest
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@Import(BaseSecurityConfiguration.class)
+class CachingTest
     extends AbstractSecurityTest
 {
   @Test
-  public void testCacheClearing() throws Exception {
+  void testCacheClearing() throws Exception {
     SecuritySystem securitySystem = this.lookup(SecuritySystem.class);
 
     MockRealmB mockRealmB = (MockRealmB) this.lookup(Realm.class, "MockRealmB");
 
     // cache should be empty to start
-    Assert.assertTrue(mockRealmB.getAuthorizationCache().keys().isEmpty());
+    assertTrue(mockRealmB.getAuthorizationCache().keys().isEmpty());
 
-    Assert.assertTrue(securitySystem.isPermitted(
+    assertTrue(securitySystem.isPermitted(
         new SimplePrincipalCollection("jcool", mockRealmB.getName()), "test:heHasIt"));
 
     // now something will be in the cache, just make sure
-    Assert.assertFalse(mockRealmB.getAuthorizationCache().keys().isEmpty());
+    assertFalse(mockRealmB.getAuthorizationCache().keys().isEmpty());
 
     // now if we update a user the cache should be cleared
     User user = securitySystem.getUser("bburton", "MockUserManagerB");
@@ -46,6 +51,6 @@ public class CachingTest
     securitySystem.updateUser(user);
 
     // empty again
-    Assert.assertTrue(mockRealmB.getAuthorizationCache().keys().isEmpty());
+    assertTrue(mockRealmB.getAuthorizationCache().keys().isEmpty());
   }
 }

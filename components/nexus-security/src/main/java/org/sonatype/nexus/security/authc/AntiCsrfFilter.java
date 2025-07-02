@@ -14,25 +14,26 @@ package org.sonatype.nexus.security.authc;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.web.filter.authc.AuthenticationFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.springframework.stereotype.Component;
 
 /**
  * This is an anti cross-site request forgery (CSRF / XSRF) protection using a cookie-to-header token approach.
  *
  * @since 3.13
  */
-@Named
+@WebFilter(filterName = AntiCsrfFilter.NAME)
+@Component
 @Singleton
 public class AntiCsrfFilter
     extends AuthenticationFilter
@@ -44,8 +45,7 @@ public class AntiCsrfFilter
   private final AntiCsrfHelper csrfHelper;
 
   @Inject
-  public AntiCsrfFilter(final AntiCsrfHelper csrfHelper)
-  {
+  public AntiCsrfFilter(final AntiCsrfHelper csrfHelper) {
     this.csrfHelper = csrfHelper;
   }
 
@@ -55,13 +55,16 @@ public class AntiCsrfFilter
   }
 
   @Override
-  protected boolean isAccessAllowed(final ServletRequest request, final ServletResponse response, final Object mappedValue) {
+  protected boolean isAccessAllowed(
+      final ServletRequest request,
+      final ServletResponse response,
+      final Object mappedValue)
+  {
     return csrfHelper.isAccessAllowed((HttpServletRequest) request);
   }
 
   @Override
-  protected boolean onAccessDenied(final ServletRequest request, final ServletResponse response) throws IOException
-  {
+  protected boolean onAccessDenied(final ServletRequest request, final ServletResponse response) throws IOException {
     log.debug("Rejecting request from {} due to invalid cross-site request forgery token", request.getRemoteAddr());
 
     HttpServletResponse httpResponse = (HttpServletResponse) response;

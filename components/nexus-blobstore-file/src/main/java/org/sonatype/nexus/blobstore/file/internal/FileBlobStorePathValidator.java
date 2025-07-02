@@ -22,10 +22,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
@@ -42,11 +41,14 @@ import static com.codahale.metrics.health.HealthCheck.Result.unhealthy;
 import static org.sonatype.nexus.blobstore.file.FileBlobStore.BASEDIR;
 import static org.sonatype.nexus.blobstore.file.FileBlobStore.CONFIG_KEY;
 import static org.sonatype.nexus.blobstore.file.FileBlobStore.PATH_KEY;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.29
  */
-@Named("File Blob Stores Path")
+@Component
+@Qualifier("File Blob Stores Path")
 @Singleton
 public class FileBlobStorePathValidator
     extends HealthCheck

@@ -12,20 +12,24 @@
  */
 package org.sonatype.nexus.cleanup.internal.datastore.search.criteria;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.cleanup.datastore.search.criteria.ComponentCleanupEvaluator;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.Asset;
 import org.sonatype.nexus.repository.content.Component;
 import org.sonatype.nexus.repository.content.utils.PreReleaseEvaluator;
 
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.IS_PRERELEASE_KEY;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 
 /**
  * An evaluator which creates a test which determines whether a component and its assets pre-release state matches the
@@ -33,7 +37,9 @@ import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.IS_PREREL
  *
  * @since 3.38
  */
-@Named(IS_PRERELEASE_KEY)
+@org.springframework.stereotype.Component
+@Qualifier(IS_PRERELEASE_KEY)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class PrereleaseCleanupEvaluator
     extends ComponentSupport
     implements ComponentCleanupEvaluator
@@ -41,8 +47,8 @@ public class PrereleaseCleanupEvaluator
   private Map<String, PreReleaseEvaluator> matchers;
 
   @Inject
-  public PrereleaseCleanupEvaluator(final Map<String, PreReleaseEvaluator> matchers) {
-    this.matchers = matchers;
+  public PrereleaseCleanupEvaluator(final List<PreReleaseEvaluator> matchersList) {
+    this.matchers = QualifierUtil.buildQualifierBeanMap(matchersList);
   }
 
   /*

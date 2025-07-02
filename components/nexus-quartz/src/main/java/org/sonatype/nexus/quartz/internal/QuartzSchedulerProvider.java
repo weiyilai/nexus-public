@@ -12,12 +12,10 @@
  */
 package org.sonatype.nexus.quartz.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
-import org.sonatype.nexus.common.app.BindAsLifecycleSupport;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.node.NodeAccess;
 
@@ -28,7 +26,10 @@ import org.quartz.impl.SchedulerRepository;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.JobStore;
 import org.quartz.spi.ThreadExecutor;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -39,11 +40,12 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
  *
  * @since 3.19
  */
-@Named
+@Lazy
+@Component
 @ManagedLifecycle(phase = SERVICES)
 public class QuartzSchedulerProvider
     extends LifecycleSupport
-    implements Provider<Scheduler>
+    implements FactoryBean<Scheduler>
 {
   private static final String SCHEDULER_NAME = "nexus";
 
@@ -64,8 +66,8 @@ public class QuartzSchedulerProvider
       final NodeAccess nodeAccess,
       final Provider<JobStore> jobStore,
       final JobFactory jobFactory,
-      @Named("${nexus.quartz.poolSize:-20}") @Value("${nexus.quartz.poolSize:20}") final int threadPoolSize,
-      @Named("${nexus.quartz.taskThreadPriority:-5}") @Value("${nexus.quartz.taskThreadPriority:5}") final int threadPriority)
+      @Value("${nexus.quartz.poolSize:20}") final int threadPoolSize,
+      @Value("${nexus.quartz.taskThreadPriority:5}") final int threadPriority)
   {
     this.nodeAccess = checkNotNull(nodeAccess);
     this.jobStore = checkNotNull(jobStore);
@@ -85,8 +87,9 @@ public class QuartzSchedulerProvider
     SchedulerRepository.getInstance().remove(SCHEDULER_NAME);
   }
 
+  @Lazy
   @Override
-  public Scheduler get() {
+  public Scheduler getObject() throws Exception {
     Scheduler localRef = scheduler;
     if (localRef == null) {
       synchronized (this) {
@@ -97,6 +100,11 @@ public class QuartzSchedulerProvider
       }
     }
     return localRef;
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return Scheduler.class;
   }
 
   private Scheduler createScheduler() {
@@ -144,14 +152,8 @@ public class QuartzSchedulerProvider
     }
   }
 
-  /**
-   * Provider implementations are not automatically exposed under additional interfaces.
-   * This small module is a workaround to expose this provider as a (managed) lifecycle.
-   */
-  @Named
-  private static class BindAsLifecycle
-      extends BindAsLifecycleSupport<QuartzSchedulerProvider>
-  {
-    // empty
+  @Override
+  public boolean isSingleton() {
+    return false;
   }
 }

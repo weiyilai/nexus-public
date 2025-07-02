@@ -15,7 +15,6 @@ package org.sonatype.nexus.security.authc;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
@@ -24,6 +23,7 @@ import org.sonatype.nexus.crypto.CryptoHelper;
 import org.sonatype.nexus.security.AbstractSecurityTest;
 import org.sonatype.nexus.security.JwtFilter;
 import org.sonatype.nexus.security.JwtHelper;
+import org.sonatype.nexus.security.authc.AuthenticatingRealmImplTest.AuthenticatingRealmImplTestConfiguration;
 import org.sonatype.nexus.security.config.CPrivilege;
 import org.sonatype.nexus.security.config.CRole;
 import org.sonatype.nexus.security.config.CUser;
@@ -34,8 +34,6 @@ import org.sonatype.nexus.security.internal.DefaultSecurityPasswordService;
 import org.sonatype.nexus.security.internal.SecurityConfigurationManagerImpl;
 
 import com.google.common.hash.Hashing;
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.CredentialsException;
 import org.apache.shiro.authc.DisabledAccountException;
@@ -44,33 +42,66 @@ import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authc.credential.PasswordService;
 import org.apache.shiro.realm.Realm;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@Import(AuthenticatingRealmImplTestConfiguration.class)
 public class AuthenticatingRealmImplTest
     extends AbstractSecurityTest
 {
+  protected static class AuthenticatingRealmImplTestConfiguration
+      extends BaseSecurityConfiguration
+  {
+    @Primary
+    @Bean
+    public CryptoHelper cryptoHelper() throws Exception {
+      CryptoHelper cryptoHelper = mock(CryptoHelper.class);
+      when(cryptoHelper.createSecureRandom()).thenReturn(new SecureRandom());
+      SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+      when(cryptoHelper.createSecretKeyFactory(anyString())).thenReturn(keyFactory);
+
+      when(cryptoHelper.createCipher(anyString())).thenReturn(Cipher.getInstance("AES/CBC/PKCS5Padding"));
+      return cryptoHelper;
+    }
+
+    @Bean
+    public JwtHelper jwtHelper() {
+      return mock(JwtHelper.class);
+    }
+
+    @Bean
+    public JwtFilter jwtFilter() {
+      return mock(JwtFilter.class);
+    }
+  }
+
   private AuthenticatingRealmImpl realm;
 
   private SecurityConfigurationManagerImpl configurationManager;
 
   private PasswordService passwordService;
 
+  private CPrivilege testPrivilege;
+
+  private CRole testRole;
+
   private CUser testUser;
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
+  @BeforeEach
   @Override
   protected void setUp() throws Exception {
     super.setUp();
@@ -80,29 +111,19 @@ public class AuthenticatingRealmImplTest
     passwordService = lookup(PasswordService.class, "default");
   }
 
-  @Override
-  protected void customizeModules(List<Module> modules) {
-    super.customizeModules(modules);
-    modules.add(new AbstractModule()
-    {
-      @Override
-      protected void configure() {
-        bind(JwtHelper.class).toInstance(mock(JwtHelper.class));
-        bind(JwtFilter.class).toInstance(mock(JwtFilter.class));
-        CryptoHelper cryptoHelper = mock(CryptoHelper.class);
-        try {
-          when(cryptoHelper.createSecureRandom()).thenReturn(new SecureRandom());
-          SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-          when(cryptoHelper.createSecretKeyFactory(anyString())).thenReturn(keyFactory);
+  @AfterEach
+  public void cleanup() throws Exception {
+    if (testUser != null) {
+      configurationManager.deleteUser(testUser.getId());
+    }
 
-          when(cryptoHelper.createCipher(anyString())).thenReturn(Cipher.getInstance("AES/CBC/PKCS5Padding"));
-        }
-        catch (Exception e) {
-          throw new RuntimeException("Failed to setup crypto mocks", e);
-        }
-        bind(CryptoHelper.class).toInstance(cryptoHelper);
-      }
-    });
+    if (testRole != null) {
+      configurationManager.deleteRole(testRole.getId());
+    }
+
+    if (testPrivilege != null) {
+      configurationManager.deletePrivilege(testPrivilege.getId());
+    }
   }
 
   @Test
@@ -143,8 +164,7 @@ public class AuthenticatingRealmImplTest
 
     UsernamePasswordToken upToken = new UsernamePasswordToken("username", "badpassword");
 
-    thrown.expect(IncorrectCredentialsException.class);
-    realm.getAuthenticationInfo(upToken);
+    assertThrows(IncorrectCredentialsException.class, () -> realm.getAuthenticationInfo(upToken));
   }
 
   @Test
@@ -152,8 +172,7 @@ public class AuthenticatingRealmImplTest
     buildTestAuthenticationConfig(CUser.STATUS_DISABLED);
     UsernamePasswordToken upToken = new UsernamePasswordToken("username", "password");
 
-    thrown.expect(DisabledAccountException.class);
-    realm.getAuthenticationInfo(upToken);
+    assertThrows(DisabledAccountException.class, () -> realm.getAuthenticationInfo(upToken));
   }
 
   @Test
@@ -186,8 +205,7 @@ public class AuthenticatingRealmImplTest
     buildTestAuthenticationConfig(CUser.STATUS_ACTIVE);
     UsernamePasswordToken upToken = new UsernamePasswordToken("non-existent-user", "password");
 
-    thrown.expect(UnknownAccountException.class);
-    realm.getAuthenticationInfo(upToken);
+    assertThrows(UnknownAccountException.class, () -> realm.getAuthenticationInfo(upToken));
   }
 
   @Test
@@ -195,8 +213,7 @@ public class AuthenticatingRealmImplTest
     buildTestAuthenticationConfig(CUser.STATUS_ACTIVE);
     UsernamePasswordToken upToken = new UsernamePasswordToken("username", (String) null);
 
-    thrown.expect(CredentialsException.class);
-    realm.getAuthenticationInfo(upToken);
+    assertThrows(CredentialsException.class, () -> realm.getAuthenticationInfo(upToken));
   }
 
   @Test
@@ -227,18 +244,16 @@ public class AuthenticatingRealmImplTest
     buildTestAuthenticationConfig(CUser.STATUS_ACTIVE, initialHash, username);
 
     UsernamePasswordToken upToken = new UsernamePasswordToken(username, "wrongpassword");
-    thrown.expect(IncorrectCredentialsException.class);
-    try {
-      realm.getAuthenticationInfo(upToken);
-    }
-    finally {
-      String afterHash = configurationManager.readUser(username).getPassword();
-      assertThat("Password should not be rehashed for failed auth",
-          afterHash, equalTo(initialHash));
-    }
+    assertThrows(IncorrectCredentialsException.class, () -> realm.getAuthenticationInfo(upToken));
+    String afterHash = configurationManager.readUser(username).getPassword();
+    assertThat("Password should not be rehashed for failed auth", afterHash, equalTo(initialHash));
   }
 
-  private void buildTestAuthenticationConfig(final String status, final String hash, String username) throws Exception {
+  private void buildTestAuthenticationConfig(
+      final String status,
+      final String hash,
+      final String username) throws Exception
+  {
     CPrivilege priv = new MemoryCPrivilege();
     priv.setId("priv-" + username);
     priv.setName("name");
@@ -247,6 +262,7 @@ public class AuthenticatingRealmImplTest
     priv.setProperty("method", "read");
     priv.setProperty("permission", "somevalue");
 
+    testPrivilege = priv;
     configurationManager.createPrivilege(priv);
 
     CRole role = configurationManager.newRole();
@@ -255,6 +271,7 @@ public class AuthenticatingRealmImplTest
     role.setDescription("desc");
     role.addPrivilege("priv-" + username);
 
+    testRole = role;
     configurationManager.createRole(role);
 
     testUser = user("dummyemail@somewhere", "dummyFirstName", "dummyLastName", status, username, hash);
@@ -278,6 +295,7 @@ public class AuthenticatingRealmImplTest
     priv.setProperty("method", "read");
     priv.setProperty("permission", "somevalue");
 
+    testPrivilege = priv;
     configurationManager.createPrivilege(priv);
 
     CRole role = configurationManager.newRole();
@@ -286,6 +304,7 @@ public class AuthenticatingRealmImplTest
     role.setDescription("desc");
     role.addPrivilege("priv");
 
+    testRole = role;
     configurationManager.createRole(role);
 
     testUser = user("dummyemail@somewhere", "dummyFirstName", "dummyLastName", status, "username", hash);
@@ -294,10 +313,6 @@ public class AuthenticatingRealmImplTest
     roles.add("role");
 
     configurationManager.createUser(testUser, roles);
-  }
-
-  private void buildLegacyTestAuthenticationConfig(final String password, String username) throws Exception {
-    buildTestAuthenticationConfig(CUser.STATUS_ACTIVE, legacyHashPassword(password), username);
   }
 
   private String hashPassword(final String password) {

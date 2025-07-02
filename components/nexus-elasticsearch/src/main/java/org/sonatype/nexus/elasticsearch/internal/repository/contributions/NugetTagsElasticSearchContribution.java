@@ -14,8 +14,7 @@ package org.sonatype.nexus.elasticsearch.internal.repository.contributions;
 
 import java.util.function.Consumer;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.elasticsearch.ElasticSearchContribution;
 
@@ -24,13 +23,16 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * "attributes.nuget.tag" {@link ElasticSearchContribution} (adds a match query for tag).
  *
  * @since 3.15
  */
-@Named("assets.attributes.nuget.tags")
+@Component
+@Qualifier("assets.attributes.nuget.tags")
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class NugetTagsElasticSearchContribution

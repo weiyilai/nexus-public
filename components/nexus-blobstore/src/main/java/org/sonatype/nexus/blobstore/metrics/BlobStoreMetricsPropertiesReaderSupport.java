@@ -64,14 +64,17 @@ public abstract class BlobStoreMetricsPropertiesReaderSupport<B extends BlobStor
   private Map<OperationType, OperationMetrics> operationMetrics;
 
   @Override
-  @Guarded(by = NEW)
   public final void init(final B blobStore) throws Exception {
+    initMetrics(blobStore);
+    this.start();
+  }
+
+  @Guarded(by = NEW)
+  private void initMetrics(final B blobStore) throws Exception {
     checkState(this.blobStore == null, "Do not initialize twice");
 
     this.blobStore = checkNotNull(blobStore);
     doInit(blobStore);
-
-    this.start();
   }
 
   /**

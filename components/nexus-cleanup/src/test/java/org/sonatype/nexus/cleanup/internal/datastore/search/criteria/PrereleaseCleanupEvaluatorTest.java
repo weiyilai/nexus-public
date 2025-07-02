@@ -13,20 +13,25 @@
 package org.sonatype.nexus.cleanup.internal.datastore.search.criteria;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 
 import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.Asset;
 import org.sonatype.nexus.repository.content.Component;
 import org.sonatype.nexus.repository.content.utils.PreReleaseEvaluator;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import static java.util.Collections.emptyList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -46,11 +51,21 @@ class PrereleaseCleanupEvaluatorTest
 
   private PrereleaseCleanupEvaluator underTest;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @BeforeEach
   void setup() {
+    mockedStatic = Mockito.mockStatic(QualifierUtil.class);
+    List<PreReleaseEvaluator> preReleaseEvaluators = List.of(preReleaseEvaluator);
     Map<String, PreReleaseEvaluator> matchers = Collections.singletonMap("test-format", preReleaseEvaluator);
-    underTest = new PrereleaseCleanupEvaluator(matchers);
+    when(QualifierUtil.buildQualifierBeanMap(preReleaseEvaluators)).thenReturn(matchers);
+    underTest = new PrereleaseCleanupEvaluator(preReleaseEvaluators);
     setupRepositoryAndEvaluator();
+  }
+
+  @AfterEach
+  void tearDown() {
+    mockedStatic.close();
   }
 
   private void setupRepositoryAndEvaluator() {

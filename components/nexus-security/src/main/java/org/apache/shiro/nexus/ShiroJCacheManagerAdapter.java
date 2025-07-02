@@ -18,7 +18,7 @@ import java.util.Optional;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.EternalExpiryPolicy;
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Time;
@@ -37,15 +37,16 @@ import static org.apache.shiro.session.mgt.eis.CachingSessionDAO.ACTIVE_SESSION_
  * @since 3.0
  */
 public class ShiroJCacheManagerAdapter
-  extends ComponentSupport
-  implements CacheManager
+    extends ComponentSupport
+    implements CacheManager
 {
   private final Provider<CacheHelper> cacheHelperProvider;
 
   private final Provider<Time> defaultTimeToLive;
 
-  public ShiroJCacheManagerAdapter(final Provider<CacheHelper> cacheHelperProvider,
-                                   final Provider<Time> defaultTimeToLive)
+  public ShiroJCacheManagerAdapter(
+      final Provider<CacheHelper> cacheHelperProvider,
+      final Provider<Time> defaultTimeToLive)
   {
     this.cacheHelperProvider = checkNotNull(cacheHelperProvider);
     this.defaultTimeToLive = checkNotNull(defaultTimeToLive);
@@ -54,7 +55,7 @@ public class ShiroJCacheManagerAdapter
   @Override
   public <K, V> Cache<K, V> getCache(final String name) {
     log.debug("Getting cache: {}", name);
-    return new ShiroJCacheAdapter<>(this.<K,V>maybeCreateCache(name));
+    return new ShiroJCacheAdapter<>(this.<K, V>maybeCreateCache(name));
   }
 
   @VisibleForTesting
@@ -68,8 +69,9 @@ public class ShiroJCacheManagerAdapter
       Time timeToLive = Optional.ofNullable(System.getProperty(name + ".timeToLive"))
           .map(Time::parse)
           .orElse(defaultTimeToLive.get());
-      return cacheHelperProvider.get().maybeCreateCache(name,
-          CreatedExpiryPolicy.factoryOf(new Duration(timeToLive.getUnit(), timeToLive.getValue())));
+      return cacheHelperProvider.get()
+          .maybeCreateCache(name,
+              CreatedExpiryPolicy.factoryOf(new Duration(timeToLive.getUnit(), timeToLive.getValue())));
     }
   }
 }

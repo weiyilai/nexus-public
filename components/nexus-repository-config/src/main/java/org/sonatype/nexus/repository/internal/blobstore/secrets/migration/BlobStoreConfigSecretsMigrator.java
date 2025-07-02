@@ -14,8 +14,7 @@ package org.sonatype.nexus.repository.internal.blobstore.secrets.migration;
 
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
@@ -29,11 +28,15 @@ import org.sonatype.nexus.security.secrets.SecretsMigrator;
 import com.google.common.annotations.VisibleForTesting;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * migrates existing values from the legacy secret format to the new secret format.
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BlobStoreConfigSecretsMigrator
     implements SecretsMigrator
 {

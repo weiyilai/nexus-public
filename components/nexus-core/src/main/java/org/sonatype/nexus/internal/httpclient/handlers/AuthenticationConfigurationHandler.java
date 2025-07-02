@@ -12,21 +12,21 @@
  */
 package org.sonatype.nexus.internal.httpclient.handlers;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.crypto.secrets.SecretsFactory;
 import org.sonatype.nexus.httpclient.config.AuthenticationConfiguration;
 
 import org.apache.ibatis.type.TypeHandler;
+import org.springframework.stereotype.Component;
 
 /**
  * MyBatis {@link TypeHandler} that maps an {@link AuthenticationConfiguration} to/from JSON.
  *
  * @since 3.21
  */
-@Named
+@Component
 @Singleton
 public class AuthenticationConfigurationHandler
     extends HttpClientConfigurationHandler<AuthenticationConfiguration>

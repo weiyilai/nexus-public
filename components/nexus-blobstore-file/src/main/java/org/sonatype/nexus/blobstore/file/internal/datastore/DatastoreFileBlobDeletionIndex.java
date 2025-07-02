@@ -20,8 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.BlobId;
 import org.sonatype.nexus.blobstore.api.softdeleted.SoftDeletedBlobsStore;
@@ -33,14 +32,20 @@ import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 import org.sonatype.nexus.logging.task.ProgressLogIntervalHelper;
 
 import com.squareup.tape.QueueFile;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.sonatype.nexus.blobstore.file.FileBlobStore.REBUILD_DELETED_BLOB_INDEX_KEY;
 
-@Named(FileBlobStore.TYPE)
+@Component
+@Qualifier(FileBlobStore.TYPE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DatastoreFileBlobDeletionIndex
     extends SoftDeletedBlobIndexImpl
     implements FileBlobDeletionIndex
@@ -57,7 +62,7 @@ public class DatastoreFileBlobDeletionIndex
   public DatastoreFileBlobDeletionIndex(
       final SoftDeletedBlobsStore softDeletedBlobsStore,
       final PeriodicJobService periodicJobService,
-      @Named("${nexus.file.deletion.migrate.delay:-60s}") @Value("${nexus.file.deletion.migrate.delay:60s}") final Duration migrationDelay)
+      @Value("${nexus.file.deletion.migrate.delay:60s}") final Duration migrationDelay)
   {
     super(softDeletedBlobsStore);
     this.periodicJobService = checkNotNull(periodicJobService);

@@ -23,9 +23,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.event.EventAware;
 import org.sonatype.nexus.common.event.EventManager;
@@ -51,12 +50,13 @@ import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.node.datastore.NodeHeartbeatManager.NODE_ID;
+import org.springframework.stereotype.Component;
 
 /**
  * Implementation of {@link KeyAccessValidator}. It sends an event to all nodes, waits for all nodes to respond and then
  * checks if all nodes have access to the key.
  */
-@Named
+@Component
 @Singleton
 public class KeyAccessValidatorImpl
     extends StateGuardLifecycleSupport
@@ -94,7 +94,7 @@ public class KeyAccessValidatorImpl
       final NodeAccess nodeAccess,
       final GlobalKeyValueStore globalKeyValueStore,
       final Clock clock,
-      @Named("${nexus.distributed.events.fetch.interval.seconds:-5}") @Value("${nexus.distributed.events.fetch.interval.seconds:5}") final int pollIntervalSeconds)
+      @Value("${nexus.distributed.events.fetch.interval.seconds:5}") final int pollIntervalSeconds)
   {
     this.encryptionKeyValidator = checkNotNull(encryptionKeyValidator);
     this.nodeHeartbeatManager = nodeHeartbeatManager;

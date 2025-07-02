@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.support;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -43,13 +42,14 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static org.sonatype.nexus.repository.http.HttpStatus.FORBIDDEN;
 import static org.sonatype.nexus.repository.http.HttpStatus.OK;
+import org.springframework.stereotype.Component;
 
 /**
  * Resource for support API.
  *
  * @since 3.13
  */
-@Named
+@Component
 @Singleton
 @Path(SupportResource.RESOURCE_URI)
 @Api("Support")

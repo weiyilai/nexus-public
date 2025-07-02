@@ -14,8 +14,7 @@ package org.sonatype.nexus.internal.metrics;
 
 import java.lang.management.ManagementFactory;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -33,12 +32,13 @@ import com.codahale.metrics.jvm.ThreadDump;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static javax.ws.rs.core.HttpHeaders.CONTENT_DISPOSITION;
+import org.springframework.stereotype.Component;
 
 /**
  * Provides current stacktraces for running threads
  */
 @Path("/metrics/threads")
-@Named
+@Component
 @Singleton
 public class ThreadDumpResource
     extends ComponentSupport

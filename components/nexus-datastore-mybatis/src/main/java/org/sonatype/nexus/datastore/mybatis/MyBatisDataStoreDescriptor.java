@@ -14,8 +14,7 @@ package org.sonatype.nexus.datastore.mybatis;
 
 import java.util.List;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -26,6 +25,8 @@ import org.sonatype.nexus.formfields.StringTextFormField;
 import org.sonatype.nexus.formfields.TextAreaFormField;
 
 import com.google.common.collect.ImmutableList;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * MyBatis {@link DataStoreDescriptor}.
@@ -33,7 +34,8 @@ import com.google.common.collect.ImmutableList;
  * @since 3.19
  */
 @Singleton
-@Named(MyBatisDataStoreDescriptor.NAME)
+@Component
+@Qualifier(MyBatisDataStoreDescriptor.NAME)
 public class MyBatisDataStoreDescriptor
     implements DataStoreDescriptor
 {
@@ -75,8 +77,7 @@ public class MyBatisDataStoreDescriptor
       new StringTextFormField(USERNAME, messages.usernameLabel(), null, false),
       new PasswordFormField(PASSWORD, messages.passwordLabel(), null, false),
       new StringTextFormField(SCHEMA, messages.schemaLabel(), null, false),
-      new TextAreaFormField(ADVANCED, messages.advancedLabel(), null, false)
-  );
+      new TextAreaFormField(ADVANCED, messages.advancedLabel(), null, false));
 
   @Override
   public String getName() {

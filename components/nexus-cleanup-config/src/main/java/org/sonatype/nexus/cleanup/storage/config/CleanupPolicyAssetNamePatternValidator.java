@@ -12,7 +12,6 @@
  */
 package org.sonatype.nexus.cleanup.storage.config;
 
-import javax.inject.Named;
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.cleanup.storage.config.RegexCriteriaValidator.InvalidExpressionException;
@@ -20,12 +19,16 @@ import org.sonatype.nexus.validation.ConstraintValidatorSupport;
 
 import static java.util.Objects.nonNull;
 import static org.sonatype.nexus.cleanup.storage.config.RegexCriteriaValidator.validate;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  *
  * @since 3.19
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class CleanupPolicyAssetNamePatternValidator
     extends ConstraintValidatorSupport<CleanupPolicyAssetNamePattern, String>
 {
@@ -43,7 +46,8 @@ public class CleanupPolicyAssetNamePatternValidator
       }
       catch (InvalidExpressionException e) { // NOSONAR
         context.disableDefaultConstraintViolation();
-        context.buildConstraintViolationWithTemplate(getEscapeHelper().stripJavaEl(e.getMessage())).addConstraintViolation();
+        context.buildConstraintViolationWithTemplate(getEscapeHelper().stripJavaEl(e.getMessage()))
+            .addConstraintViolation();
         return false;
       }
     }

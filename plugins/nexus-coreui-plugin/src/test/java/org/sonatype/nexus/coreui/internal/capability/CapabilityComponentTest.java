@@ -15,7 +15,8 @@ package org.sonatype.nexus.coreui.internal.capability;
 import java.util.List;
 import java.util.Map;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.capability.Capability;
 import org.sonatype.nexus.capability.CapabilityContext;
 import org.sonatype.nexus.capability.CapabilityDescriptor;
@@ -27,9 +28,10 @@ import org.sonatype.nexus.capability.CapabilityType;
 import org.sonatype.nexus.rapture.PasswordPlaceholder;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableMap;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorFactoryImpl;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -40,6 +42,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -48,9 +51,11 @@ import static org.mockito.Mockito.when;
 /**
  * Tests {@link CapabilityComponent}.
  */
-public class CapabilityComponentTest
-    extends TestSupport
+class CapabilityComponentTest
+    extends Test5Support
 {
+  private final ValidationConfiguration configuration = new ValidationConfiguration();
+
   @Mock
   private CapabilityDescriptorRegistry capabilityDescriptorRegistry;
 
@@ -80,24 +85,30 @@ public class CapabilityComponentTest
 
   private CapabilityComponent underTest;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     underTest = new CapabilityComponent(capabilityDescriptorRegistry, capabilityRegistry);
     when(capabilityContext.properties()).thenReturn(
-        ImmutableMap.of("username", "username", "password", "its a secret to everybody"));
+        Map.of("username", "username", "password", "its a secret to everybody"));
     when(capabilityContext.descriptor()).thenReturn(capabilityDescriptor);
     when(capabilityContext.id()).thenReturn(capabilityId);
     when(capabilityReference.capability()).thenReturn(capability);
     when(capabilityReference.context()).thenReturn(capabilityContext);
-    when(capabilityRegistry.get(any(CapabilityIdentity.class))).thenReturn(capabilityReference);
-    when(capabilityRegistry.get(any(Predicate.class))).thenReturn(singletonList(capabilityReference));
-    when(capabilityRegistry.update(any(), anyBoolean(), any(), any())).thenReturn(capabilityReference);
+    lenient().when(capabilityRegistry.get(any(CapabilityIdentity.class))).thenReturn(capabilityReference);
+    lenient().when(capabilityRegistry.get(any(Predicate.class))).thenReturn(singletonList(capabilityReference));
+    lenient().when(capabilityRegistry.update(any(), anyBoolean(), any(), any())).thenReturn(capabilityReference);
     when(capabilityDescriptor.type()).thenReturn(mock(CapabilityType.class));
-    when(capability.isPasswordProperty("password")).thenReturn(true);
+    when(capability.isPasswordProperty(any())).thenAnswer(i -> "password".equals(i.getArgument(0)));
+    configuration.validator(configuration.validatorFactory(new ConstraintValidatorFactoryImpl()));
+  }
+
+  @AfterEach
+  void teardown() {
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
   }
 
   @Test
-  public void testReadPasswordNotCleartext() {
+  void testReadPasswordNotCleartext() {
     List<CapabilityXO> capabilities = underTest.read();
     assertThat(capabilities, hasSize(1));
     assertThat(capabilities.get(0).getProperties().get("username"), is("username"));
@@ -106,9 +117,9 @@ public class CapabilityComponentTest
   }
 
   @Test
-  public void testReadPasswordEmptyForPKI() {
+  void testReadPasswordEmptyForPKI() {
     when(capabilityContext.properties()).thenReturn(
-        ImmutableMap.of("username", "username", "password", "its a secret to everybody", "authenticationType", "PKI"));
+        Map.of("username", "username", "password", "its a secret to everybody", "authenticationType", "PKI"));
     List<CapabilityXO> capabilities = underTest.read();
 
     assertThat(capabilities, hasSize(1));
@@ -116,10 +127,10 @@ public class CapabilityComponentTest
   }
 
   @Test
-  public void testUpdatePlacheholderRetainsCurrentPassword() {
+  void testUpdatePlacheholderRetainsCurrentPassword() {
     CapabilityXO capabilityXO = new CapabilityXO();
     capabilityXO.setId("mycap");
-    capabilityXO.setProperties(ImmutableMap.of("username", "username", "password", PasswordPlaceholder.get()));
+    capabilityXO.setProperties(Map.of("username", "username", "password", PasswordPlaceholder.get()));
     capabilityXO.setEnabled(true);
 
     underTest.update(capabilityXO);

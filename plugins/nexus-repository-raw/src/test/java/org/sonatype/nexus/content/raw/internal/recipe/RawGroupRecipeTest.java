@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.content.raw.internal.recipe;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.group.GroupFacet;

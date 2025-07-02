@@ -17,11 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.event.EventManager;
@@ -30,10 +30,15 @@ import org.sonatype.nexus.scheduling.schedule.Schedule;
 import org.sonatype.nexus.scheduling.schedule.ScheduleFactory;
 import org.sonatype.nexus.scheduling.spi.SchedulerSPI;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static org.sonatype.nexus.common.app.FeatureFlags.CHANGE_REPO_BLOBSTORE_TASK_ENABLED_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.CHANGE_REPO_BLOBSTORE_TASK_ENABLED_NAMED_VALUE;
+
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link TaskScheduler} implementation.
@@ -41,7 +46,7 @@ import static org.sonatype.nexus.common.app.FeatureFlags.CHANGE_REPO_BLOBSTORE_T
  * @since 3.0
  */
 @Singleton
-@Named
+@Component
 public class TaskSchedulerImpl
     extends ComponentSupport
     implements TaskScheduler
@@ -55,19 +60,19 @@ public class TaskSchedulerImpl
 
   private final Provider<SchedulerSPI> scheduler;
 
-  @Inject
-  @Named(CHANGE_REPO_BLOBSTORE_TASK_ENABLED_NAMED)
-  protected boolean changeRepoBlobstoreTaskEnabled;
+  protected final boolean changeRepoBlobstoreTaskEnabled;
 
   @Inject
   public TaskSchedulerImpl(
       final EventManager eventManager,
-      final TaskFactory taskFactory,
-      final Provider<SchedulerSPI> scheduler)
+      @Lazy final TaskFactory taskFactory,
+      final Provider<SchedulerSPI> scheduler,
+      @Value(CHANGE_REPO_BLOBSTORE_TASK_ENABLED_NAMED_VALUE) final boolean changeRepoBlobstoreTaskEnabled)
   {
     this.eventManager = checkNotNull(eventManager);
     this.taskFactory = checkNotNull(taskFactory);
     this.scheduler = checkNotNull(scheduler);
+    this.changeRepoBlobstoreTaskEnabled = changeRepoBlobstoreTaskEnabled;
   }
 
   @Override

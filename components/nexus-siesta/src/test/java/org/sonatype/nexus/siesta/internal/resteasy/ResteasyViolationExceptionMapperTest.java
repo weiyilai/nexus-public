@@ -14,10 +14,11 @@ package org.sonatype.nexus.siesta.internal.resteasy;
 
 import java.util.Collections;
 import java.util.List;
+
 import javax.ws.rs.core.Response.Status;
 
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.rest.ValidationErrorXO;
-import org.sonatype.nexus.siesta.SiestaTestSupport;
 
 import org.jboss.resteasy.api.validation.ConstraintType.Type;
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
@@ -32,7 +33,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class ResteasyViolationExceptionMapperTest
-    extends SiestaTestSupport
+    extends Test5Support
 {
   private ResteasyViolationExceptionMapper mapper;
 

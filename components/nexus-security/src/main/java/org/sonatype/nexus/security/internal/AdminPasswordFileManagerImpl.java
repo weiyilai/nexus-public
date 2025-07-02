@@ -17,24 +17,24 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.security.config.AdminPasswordFileManager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.17
  */
-@Named
+@Component
 @Singleton
 public class AdminPasswordFileManagerImpl
-  extends ComponentSupport
-  implements AdminPasswordFileManager
+    extends ComponentSupport
+    implements AdminPasswordFileManager
 {
   private static final String FILENAME = "admin.password";
 

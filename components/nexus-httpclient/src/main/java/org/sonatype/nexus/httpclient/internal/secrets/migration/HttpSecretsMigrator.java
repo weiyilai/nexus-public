@@ -16,8 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
@@ -35,8 +34,12 @@ import org.sonatype.nexus.security.secrets.SecretsMigratorSupport;
 import com.google.common.annotations.VisibleForTesting;
 
 import static org.sonatype.nexus.httpclient.config.AuthenticationConfiguration.AUTHENTICATION_CONFIGURATION;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class HttpSecretsMigrator
     extends SecretsMigratorSupport
 {
@@ -53,7 +56,8 @@ public class HttpSecretsMigrator
 
   @Inject
   public HttpSecretsMigrator(
-      final HttpClientManager httpClientManager, final SecretsService secretsService)
+      final HttpClientManager httpClientManager,
+      final SecretsService secretsService)
   {
     super(secretsService);
     this.httpClientManager = httpClientManager;

@@ -18,9 +18,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.event.EventAware;
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
@@ -29,6 +28,8 @@ import org.sonatype.nexus.internal.security.apikey.ApiKeyInternal;
 import org.sonatype.nexus.transaction.Transactional;
 
 import org.apache.shiro.subject.PrincipalCollection;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Legacy {@link ApiKeyStore} implementation
@@ -36,7 +37,8 @@ import org.apache.shiro.subject.PrincipalCollection;
  * @since 3.21
  */
 @Deprecated
-@Named("v1")
+@Component
+@Qualifier("v1")
 @Singleton
 public class ApiKeyStoreImpl
     extends ConfigStoreSupport<ApiKeyDAO>
@@ -94,7 +96,8 @@ public class ApiKeyStoreImpl
   @Transactional
   @Override
   public int deleteApiKeys(final PrincipalCollection principals) {
-    return dao().findApiKeysForPrimary(principals.getPrimaryPrincipal().toString()).stream()
+    return dao().findApiKeysForPrimary(principals.getPrimaryPrincipal().toString())
+        .stream()
         .filter(principalMatches(principals))
         .map(key -> dao().deleteKey(key.getDomain(), new ApiKeyToken(key.getApiKey())))
         .mapToInt(Integer::intValue)
@@ -166,7 +169,8 @@ public class ApiKeyStoreImpl
    * Finds ApiKey records for the provided username, and ensures the realm is the same
    */
   private Optional<ApiKeyInternal> findApiKey(final String domain, final PrincipalCollection principals) {
-    return dao().findApiKeys(domain, principals.getPrimaryPrincipal().toString()).stream()
+    return dao().findApiKeys(domain, principals.getPrimaryPrincipal().toString())
+        .stream()
         .filter(principalMatches(principals))
         .findAny();
   }

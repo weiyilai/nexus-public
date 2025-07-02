@@ -14,8 +14,7 @@ package org.sonatype.nexus.siesta;
 
 import java.util.List;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -33,8 +32,9 @@ import org.slf4j.LoggerFactory;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @Path("/user")
 public class UserResource
@@ -47,8 +47,7 @@ public class UserResource
   public List<UserXO> get() {
     return Lists.newArrayList(
         new UserXO().withName("foo"),
-        new UserXO().withName("bar")
-    );
+        new UserXO().withName("bar"));
   }
 
   @GET

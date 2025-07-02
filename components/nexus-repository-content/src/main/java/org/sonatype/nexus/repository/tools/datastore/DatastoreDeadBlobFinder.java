@@ -24,8 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.constraints.NotNull;
 
 import org.sonatype.goodies.common.ComponentSupport;
@@ -57,6 +56,9 @@ import static org.sonatype.nexus.repository.tools.ResultState.SHA1_DISAGREEMENT;
 import static org.sonatype.nexus.repository.tools.ResultState.UNAVAILABLE_BLOB;
 import static org.sonatype.nexus.repository.tools.ResultState.UNKNOWN;
 import static org.sonatype.nexus.repository.tools.ResultState.UNREADABLE_BLOB;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Examines Asset metadata and confirms the sha1 of all referenced blobs. Reports on any instances where
@@ -64,7 +66,8 @@ import static org.sonatype.nexus.repository.tools.ResultState.UNREADABLE_BLOB;
  *
  * @since 3.25
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DatastoreDeadBlobFinder
     extends ComponentSupport
     implements DeadBlobFinder<Asset>

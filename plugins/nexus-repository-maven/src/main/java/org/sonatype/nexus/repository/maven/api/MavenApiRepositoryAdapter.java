@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.maven.api;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.repository.Repository;
@@ -27,13 +26,19 @@ import org.sonatype.nexus.repository.rest.api.model.HttpClientAttributes;
 import org.sonatype.nexus.repository.routing.RoutingRuleStore;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.repository.types.ProxyType;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Adapter to expose maven specific repository configuration for the repositories REST API.
  *
  * @since 3.20
  */
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenApiRepositoryAdapter
     extends SimpleApiRepositoryAdapter
 {
@@ -93,8 +98,9 @@ public class MavenApiRepositoryAdapter
       NestedAttributesMap authenticationMap = httpclient.child("authentication");
       Boolean preemptive = authenticationMap.get("preemptive", Boolean.class);
 
-      authentication = new HttpClientConnectionAuthenticationAttributesWithPreemptive(httpClientAttributes.getAuthentication(),
-          preemptive);
+      authentication =
+          new HttpClientConnectionAuthenticationAttributesWithPreemptive(httpClientAttributes.getAuthentication(),
+              preemptive);
     }
 
     return new HttpClientAttributesWithPreemptiveAuth(httpClientAttributes, authentication);

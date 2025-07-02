@@ -24,10 +24,9 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.elasticsearch.internal.repository.index.IndexNamingPolicy;
@@ -62,8 +61,12 @@ import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.internal.InternalSearchResponse;
 import org.elasticsearch.search.profile.ProfileShardResult;
 import org.elasticsearch.search.sort.SortBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
@@ -79,7 +82,9 @@ import static org.sonatype.nexus.security.BreadActions.BROWSE;
  *
  * @since 3.25
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class ElasticSearchQueryServiceImpl
@@ -114,11 +119,11 @@ public class ElasticSearchQueryServiceImpl
   @Inject
   public ElasticSearchQueryServiceImpl(
       final Provider<Client> client,
-      final RepositoryManager repositoryManager,
+      @Lazy final RepositoryManager repositoryManager,
       final SecurityHelper securityHelper,
       final SearchSubjectHelper searchSubjectHelper,
       final IndexNamingPolicy indexNamingPolicy,
-      @Named("${nexus.elasticsearch.profile:-false}") @Value("${nexus.elasticsearch.profile:false}") final boolean profile)
+      @Value("${nexus.elasticsearch.profile:false}") final boolean profile)
   {
     this.client = checkNotNull(client);
     this.repositoryManager = checkNotNull(repositoryManager);

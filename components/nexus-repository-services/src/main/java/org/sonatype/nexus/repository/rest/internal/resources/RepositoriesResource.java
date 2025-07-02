@@ -13,9 +13,8 @@
 package org.sonatype.nexus.repository.rest.internal.resources;
 
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,11 +29,12 @@ import org.sonatype.nexus.rest.Resource;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.9
  */
-@Named
+@Component
 @Singleton
 @Path(RepositoriesResource.RESOURCE_URI)
 @Produces(APPLICATION_JSON)
@@ -62,7 +62,7 @@ public class RepositoriesResource
   @Path("/{repositoryName}")
   public RepositoryXO getRepository(@PathParam("repositoryName") final String repositoryName) {
     return RepositoryXO.fromRepository(
-            repositoryManagerRESTAdapter.getReadableRepository(repositoryName),
-            repositoryManagerRESTAdapter.getRepositorySize(repositoryName).orElse(null));
+        repositoryManagerRESTAdapter.getReadableRepository(repositoryName),
+        repositoryManagerRESTAdapter.getRepositorySize(repositoryName).orElse(null));
   }
 }

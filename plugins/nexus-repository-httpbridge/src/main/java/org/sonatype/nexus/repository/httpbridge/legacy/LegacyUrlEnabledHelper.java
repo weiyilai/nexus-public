@@ -14,30 +14,28 @@ package org.sonatype.nexus.repository.httpbridge.legacy;
 
 import java.util.Collection;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.capability.CapabilityReference;
 import org.sonatype.nexus.capability.CapabilityRegistry;
 import org.sonatype.nexus.common.property.SystemPropertiesHelper;
-import org.sonatype.nexus.repository.httpbridge.internal.HttpBridgeModule;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.capability.CapabilityReferenceFilterBuilder.capabilities;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class LegacyUrlEnabledHelper
 {
   private final boolean supportLegacyContent = SystemPropertiesHelper
-      .getBoolean(HttpBridgeModule.class.getName() + ".legacy", false);
+      .getBoolean("org.sonatype.nexus.repository.httpbridge.internal.HttpBridgeModule.legacy", false);
 
   private final CapabilityRegistry capabilities;
 
   @Inject
-  public LegacyUrlEnabledHelper(final CapabilityRegistry capabilities)
-  {
+  public LegacyUrlEnabledHelper(final CapabilityRegistry capabilities) {
     this.capabilities = checkNotNull(capabilities);
   }
 

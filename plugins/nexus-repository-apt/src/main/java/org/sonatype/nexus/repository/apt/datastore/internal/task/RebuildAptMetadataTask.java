@@ -14,7 +14,6 @@ package org.sonatype.nexus.repository.apt.datastore.internal.task;
 
 import java.io.IOException;
 import java.util.Collections;
-import javax.inject.Named;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.RepositoryTaskSupport;
@@ -26,8 +25,12 @@ import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.scheduling.Cancelable;
 import org.sonatype.nexus.scheduling.CancelableHelper;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RebuildAptMetadataTask
     extends RepositoryTaskSupport
     implements Cancelable

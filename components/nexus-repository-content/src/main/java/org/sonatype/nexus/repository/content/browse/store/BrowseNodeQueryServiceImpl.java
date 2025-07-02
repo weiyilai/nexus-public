@@ -22,10 +22,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.common.template.EscapeHelper;
@@ -66,13 +66,14 @@ import static org.sonatype.nexus.repository.browse.node.BrowsePath.SLASH;
 import static org.sonatype.nexus.repository.browse.node.BrowsePath.SLASH_CHAR;
 import static org.sonatype.nexus.repository.content.facet.ContentFacetFinder.findContentFacets;
 import static org.sonatype.nexus.repository.content.store.InternalIds.contentRepositoryId;
+import org.springframework.stereotype.Component;
 
 /**
  * New-DB implementation of {@link BrowseNodeQueryService}.
  *
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 public class BrowseNodeQueryServiceImpl
     extends StateGuardLifecycleSupport
@@ -98,23 +99,22 @@ public class BrowseNodeQueryServiceImpl
 
   private final SelectorFilterBuilder selectorFilterBuilder;
 
-
   @Inject
   public BrowseNodeQueryServiceImpl(
       final SecurityHelper securityHelper,
       final SelectorManager selectorManager,
-      final Map<String, BrowseNodeFilter> browseNodeFilters,
-      final Map<String, BrowseNodeIdentity> browseNodeIdentities,
-      final Map<String, BrowseNodeComparator> browseNodeComparators,
+      final List<BrowseNodeFilter> browseNodeFilters,
+      final List<BrowseNodeIdentity> browseNodeIdentitiesList,
+      final List<BrowseNodeComparator> browseNodeComparatorsList,
       final ContentAuthHelper contentAuthHelper,
       final SelectorFilterBuilder selectorFilterBuilder)
   {
     this.securityHelper = checkNotNull(securityHelper);
     this.selectorManager = checkNotNull(selectorManager);
-    this.browseNodeFilters = checkNotNull(browseNodeFilters);
-    this.browseNodeIdentities = checkNotNull(browseNodeIdentities);
-    this.browseNodeComparators = checkNotNull(browseNodeComparators);
-    this.defaultBrowseNodeComparator = checkNotNull(browseNodeComparators.get(DefaultBrowseNodeComparator.NAME));
+    this.browseNodeFilters = QualifierUtil.buildQualifierBeanMap(checkNotNull(browseNodeFilters));
+    this.browseNodeIdentities = QualifierUtil.buildQualifierBeanMap(checkNotNull(browseNodeIdentitiesList));
+    this.browseNodeComparators = QualifierUtil.buildQualifierBeanMap(checkNotNull(browseNodeComparatorsList));
+    this.defaultBrowseNodeComparator = checkNotNull(this.browseNodeComparators.get(DefaultBrowseNodeComparator.NAME));
     this.contentAuthHelper = checkNotNull(contentAuthHelper);
     this.selectorFilterBuilder = checkNotNull(selectorFilterBuilder);
   }

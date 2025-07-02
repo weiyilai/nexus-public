@@ -12,18 +12,14 @@
  */
 package org.sonatype.nexus.rapture.internal;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.rapture.internal.security.JwtAuthenticationFilter;
-import org.sonatype.nexus.rapture.internal.security.JwtServlet;
-import org.sonatype.nexus.security.CookieFilter;
-import org.sonatype.nexus.security.FilterChainModule;
-import org.sonatype.nexus.security.JwtSecurityFilter;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.servlet.ServletModule;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
+import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
 import static org.sonatype.nexus.security.FilterProviderSupport.filterKey;
 
@@ -32,35 +28,15 @@ import static org.sonatype.nexus.security.FilterProviderSupport.filterKey;
  *
  * @since 3.38
  */
-@Named
+@Deprecated
+@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "false", matchIfMissing = true)
+@Component
 @FeatureFlag(name = JWT_ENABLED)
 public class RaptureJwtModule
     extends AbstractModule
 {
-  private static final String MOUNT_POINT = "/service/rapture";
-
-  private static final String SESSION_MP = MOUNT_POINT + "/session";
-
   @Override
   protected void configure() {
     bind(filterKey(JwtAuthenticationFilter.NAME)).to(JwtAuthenticationFilter.class);
-
-    install(new ServletModule()
-    {
-      @Override
-      protected void configureServlets() {
-        serve(SESSION_MP).with(JwtServlet.class);
-        filter(SESSION_MP).through(JwtSecurityFilter.class);
-        filter(SESSION_MP).through(CookieFilter.class);
-      }
-    });
-
-    install(new FilterChainModule()
-    {
-      @Override
-      protected void configure() {
-        addFilterChain(SESSION_MP, JwtAuthenticationFilter.NAME);
-      }
-    });
   }
 }

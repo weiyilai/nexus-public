@@ -22,9 +22,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FreezeService;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -43,6 +42,7 @@ import static java.util.stream.Collectors.toList;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.STORAGE;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.NEW;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
+import org.springframework.stereotype.Component;
 
 /**
  * An {@link ExecutorService} that tries to delay all submitted tasks until the database is writable.
@@ -51,7 +51,7 @@ import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.St
  *
  * @since 3.16
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = STORAGE)
 public class DatabaseStatusDelayedExecutor
@@ -71,9 +71,9 @@ public class DatabaseStatusDelayedExecutor
   @Inject
   public DatabaseStatusDelayedExecutor(
       final FreezeService freezeService,
-      @Named("${nexus.delayedExecutor.threadPoolSize:-1}") @Value("${nexus.delayedExecutor.threadPoolSize:1}") final int delayedExecutorThreadPoolSize,
-      @Named("${nexus.delayedExecutor.sleepIntervalMs:-5000}") @Value("${nexus.delayedExecutor.sleepIntervalMs:5000}") final int sleepInterval,
-      @Named("${nexus.delayedExecutor.maxRetries:-8640}") @Value("${nexus.delayedExecutor.maxRetries:8640}") final int maxRetries)
+      @Value("${nexus.delayedExecutor.threadPoolSize:1}") final int delayedExecutorThreadPoolSize,
+      @Value("${nexus.delayedExecutor.sleepIntervalMs:5000}") final int sleepInterval,
+      @Value("${nexus.delayedExecutor.maxRetries:8640}") final int maxRetries)
   {
     this.freezeService = checkNotNull(freezeService);
     checkArgument(delayedExecutorThreadPoolSize > 0, delayedExecutorThreadPoolSize);

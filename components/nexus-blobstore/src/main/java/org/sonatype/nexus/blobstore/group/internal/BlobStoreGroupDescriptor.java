@@ -17,9 +17,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -33,6 +32,7 @@ import org.sonatype.nexus.blobstore.group.BlobStoreGroup;
 import org.sonatype.nexus.blobstore.group.BlobStoreGroupService;
 import org.sonatype.nexus.blobstore.group.FillPolicy;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaService;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.ComboboxFormField;
 import org.sonatype.nexus.formfields.FormField;
@@ -40,6 +40,12 @@ import org.sonatype.nexus.formfields.ItemselectFormField;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Streams.stream;
@@ -59,7 +65,9 @@ import static org.sonatype.nexus.formfields.FormField.MANDATORY;
  * @since 3.14
  */
 @AvailabilityVersion(from = "1.0")
-@Named(BlobStoreGroup.TYPE)
+@Component
+@Qualifier(BlobStoreGroup.TYPE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BlobStoreGroupDescriptor
     extends BlobStoreDescriptorSupport
 {
@@ -92,17 +100,17 @@ public class BlobStoreGroupDescriptor
 
   @Inject
   public BlobStoreGroupDescriptor(
-      final BlobStoreManager blobStoreManager,
+      @Lazy final BlobStoreManager blobStoreManager,
       final BlobStoreUtil blobStoreUtil,
-      final Provider<BlobStoreGroupService> blobStoreGroupService,
+      final ObjectProvider<BlobStoreGroupService> blobStoreGroupService,
       final BlobStoreQuotaService quotaService,
-      final Map<String, FillPolicy> fillPolicies)
+      final List<FillPolicy> fillPoliciesList)
   {
     super(quotaService);
     this.blobStoreManager = checkNotNull(blobStoreManager);
     this.blobStoreUtil = checkNotNull(blobStoreUtil);
-    this.blobStoreGroupService = checkNotNull(blobStoreGroupService);
-    this.fillPolicies = checkNotNull(fillPolicies);
+    this.blobStoreGroupService = checkNotNull(blobStoreGroupService)::getIfAvailable;
+    this.fillPolicies = QualifierUtil.buildQualifierBeanMap(checkNotNull(fillPoliciesList));
     this.members = new ItemselectFormField(
         MEMBERS_KEY,
         messages.membersLabel(),

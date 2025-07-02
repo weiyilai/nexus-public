@@ -13,8 +13,7 @@
 package org.sonatype.nexus.repository.view.handlers;
 
 import javax.annotation.Nonnull;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.ETagHeaderUtils;
@@ -28,6 +27,7 @@ import com.google.common.net.HttpHeaders;
 import org.joda.time.DateTime;
 
 import static org.sonatype.nexus.repository.date.DateTimeUtils.formatDateTime;
+import org.springframework.stereotype.Component;
 
 /**
  * A format-neutral content handler for decorating response using {@link Content#getAttributes()} provided attributes.
@@ -35,7 +35,7 @@ import static org.sonatype.nexus.repository.date.DateTimeUtils.formatDateTime;
  * @since 3.0
  */
 @Singleton
-@Named
+@Component
 public class ContentHeadersHandler
     extends ComponentSupport
     implements Handler

@@ -19,8 +19,6 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Named;
-
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.cooperation2.Cooperation2;
 import org.sonatype.nexus.common.cooperation2.Cooperation2Factory;
@@ -29,11 +27,9 @@ import org.sonatype.nexus.common.cooperation2.datastore.DefaultCooperation2Facto
 import org.sonatype.nexus.common.event.EventHelper;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
-import org.sonatype.nexus.common.stateguard.StateGuardModule;
 import org.sonatype.nexus.common.upgrade.events.UpgradeCompletedEvent;
 import org.sonatype.nexus.common.upgrade.events.UpgradeFailedEvent;
 import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
-import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.scheduling.ExternalTaskState;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskInfo;
@@ -43,18 +39,14 @@ import org.sonatype.nexus.scheduling.events.TaskEventStoppedCanceled;
 import org.sonatype.nexus.scheduling.events.TaskEventStoppedDone;
 import org.sonatype.nexus.scheduling.events.TaskEventStoppedFailed;
 import org.sonatype.nexus.testdb.DataSessionRule;
-import org.sonatype.nexus.transaction.TransactionModule;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Guice;
-import com.google.inject.Provides;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Value;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
@@ -130,8 +122,11 @@ public class QueuingUpgradeTaskSchedulerTest
 
     when(taskScheduler.submit(any())).thenReturn(taskInfo);
 
-    underTest = create(QueuingUpgradeTaskScheduler.class);
-    upgradeTaskStore = create(UpgradeTaskStore.class);
+    upgradeTaskStore = new UpgradeTaskStore(sessionRule);
+    upgradeTaskStore.setDependencies(eventManager);
+
+    underTest = new QueuingUpgradeTaskScheduler(periodicJobService, taskScheduler, upgradeTaskStore, true,
+        Duration.ofSeconds(0), localCooperationSelector, distributedCooperationSelector);
   }
 
   @After
@@ -392,60 +387,5 @@ public class QueuingUpgradeTaskSchedulerTest
 
     // wait for the async task to complete
     startup[0].get();
-  }
-
-  private <T> T create(final Class<T> clazz) {
-    return Guice.createInjector(new TransactionModule()
-    {
-      @Provides
-      DataSessionSupplier getDataSessionSupplier() {
-        return sessionRule;
-      }
-
-      @Provides
-      EventManager getEventManager() {
-        return eventManager;
-      }
-
-      @Provides
-      TaskScheduler getTaskScheduler() {
-        return taskScheduler;
-      }
-
-      @Provides
-      Cooperation2Factory getCooperation() {
-        return cooperationFactory;
-      }
-
-      @Provides
-      @Named("${nexus.upgrade.tasks.checkOnStartup:-true}")
-      @Value("${nexus.upgrade.tasks.checkOnStartup:true}")
-      Boolean getCheckRequiresMigration() {
-        return true;
-      }
-
-      @Provides
-      @Named("${nexus.upgrade.tasks.delay:-10s}")
-      @Value("${nexus.upgrade.tasks.delay:10s}")
-      Duration getDelay() {
-        return Duration.ofSeconds(0);
-      }
-
-      @Provides
-      Cooperation2Selector getLocalCooperationSelector() {
-        return localCooperationSelector;
-      }
-
-      @Provides
-      @Named("distributed")
-      Cooperation2Selector getDistributedCooperationSelector() {
-        return distributedCooperationSelector;
-      }
-
-      @Provides
-      PeriodicJobService periodicJobService() {
-        return periodicJobService;
-      }
-    }, new StateGuardModule()).getInstance(clazz);
   }
 }

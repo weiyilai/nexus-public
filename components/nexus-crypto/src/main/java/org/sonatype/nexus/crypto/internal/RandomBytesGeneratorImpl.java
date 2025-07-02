@@ -14,8 +14,7 @@ package org.sonatype.nexus.crypto.internal;
 
 import java.security.SecureRandom;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.CryptoHelper;
@@ -23,13 +22,17 @@ import org.sonatype.nexus.crypto.RandomBytesGenerator;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link RandomBytesGenerator} implementation.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RandomBytesGeneratorImpl
     extends ComponentSupport
     implements RandomBytesGenerator

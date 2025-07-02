@@ -15,32 +15,36 @@ package org.sonatype.nexus.supportzip.datastore;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.supportzip.ImportTaskData;
 
 import org.apache.commons.io.FileUtils;
+import org.springframework.core.annotation.Order;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
 import static org.sonatype.nexus.supportzip.datastore.RestoreHelper.FILE_SUFFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * Restore Task's related data from JSON file(s).
  *
  * @since 3.30
  */
-@Named
+@Component
 @Singleton
 @Priority(0) // allow all default tasks to be loaded at first.
+@Order
 @ManagedLifecycle(phase = TASKS)
 public class TaskRestorer
     extends StateGuardLifecycleSupport
@@ -52,10 +56,10 @@ public class TaskRestorer
   @Inject
   public TaskRestorer(
       final RestoreHelper restoreHelper,
-      final Map<String, ImportTaskData> importTaskByName)
+      final List<ImportTaskData> importTaskByName)
   {
     this.restoreHelper = checkNotNull(restoreHelper);
-    this.importTaskByName = checkNotNull(importTaskByName);
+    this.importTaskByName = QualifierUtil.buildQualifierBeanMap(checkNotNull(importTaskByName));
   }
 
   @Override

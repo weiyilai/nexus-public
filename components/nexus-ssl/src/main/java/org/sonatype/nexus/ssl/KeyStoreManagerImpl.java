@@ -30,7 +30,6 @@ import org.sonatype.nexus.ssl.internal.ReloadableX509TrustManager;
 import org.sonatype.nexus.ssl.internal.geronimo.FileKeystoreInstance;
 import org.sonatype.nexus.ssl.internal.geronimo.KeystoreInstance;
 import org.sonatype.nexus.ssl.spi.KeyStoreStorage;
-import org.sonatype.nexus.ssl.spi.KeyStoreStorageManager;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -79,20 +78,20 @@ public class KeyStoreManagerImpl
 
   public KeyStoreManagerImpl(
       final CryptoHelper crypto,
-      final KeyStoreStorageManager storageManager,
+      final KeyStoreStorageFactory factory,
       final KeyStoreManagerConfiguration config)
   {
     this.crypto = checkNotNull(crypto);
     this.config = checkNotNull(config);
 
     if (!config.isFipsEnabled()) {
-      this.privateKeyStore = initializePrivateKeyStore(storageManager.createStorage(PRIVATE_KEY_STORE_NAME));
+      this.privateKeyStore = initializePrivateKeyStore(factory.create(PRIVATE_KEY_STORE_NAME));
     }
     else {
       // This private key store will not be used in FIPS mode, so we set it to null since we cannot initialize it
       this.privateKeyStore = null;
     }
-    this.trustedKeyStore = initializeTrustedKeyStore(storageManager.createStorage(TRUSTED_KEY_STORE_NAME));
+    this.trustedKeyStore = initializeTrustedKeyStore(factory.create(TRUSTED_KEY_STORE_NAME));
   }
 
   @VisibleForTesting
@@ -274,7 +273,7 @@ public class KeyStoreManagerImpl
   }
 
   @Override
-  public void importTrustCertificate(Certificate certificate, String alias) throws KeystoreException {
+  public void importTrustCertificate(final Certificate certificate, final String alias) throws KeystoreException {
     trustedKeyStoreLock.writeLock().lock();
     try {
       log.debug("Importing trust certificate w/alias: {}", alias);
@@ -308,7 +307,7 @@ public class KeyStoreManagerImpl
   }
 
   @Override
-  public Certificate getTrustedCertificate(String alias) throws KeystoreException {
+  public Certificate getTrustedCertificate(final String alias) throws KeystoreException {
     trustedKeyStoreLock.readLock().lock();
     try {
       return trustedKeyStore.getCertificate(
@@ -344,7 +343,7 @@ public class KeyStoreManagerImpl
   }
 
   @Override
-  public void removeTrustCertificate(String alias) throws KeystoreException {
+  public void removeTrustCertificate(final String alias) throws KeystoreException {
     trustedKeyStoreLock.writeLock().lock();
     try {
       log.debug("Removing trust certificate w/alias: {}", alias);

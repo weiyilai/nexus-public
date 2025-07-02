@@ -67,7 +67,7 @@ export const userRoutes = [
     component: UserToken,
     data: {
       visibilityRequirements: {
-        bundle: 'com.sonatype.nexus.plugins.nexus-usertoken-plugin',
+        bundle: 'nexus-usertoken-plugin',
         statesEnabled: [
           {
             key: 'usertoken',

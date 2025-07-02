@@ -16,9 +16,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.node.NodeAccess;
 import org.sonatype.nexus.common.node.NodeAccessSupport;
@@ -29,13 +28,16 @@ import com.google.common.collect.ImmutableMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Local {@link NodeAccess}.
  *
  * @since 3.0
  */
-@Named("local")
+@Component
+@Qualifier("local")
 @Singleton
 public class LocalNodeAccess
     extends NodeAccessSupport

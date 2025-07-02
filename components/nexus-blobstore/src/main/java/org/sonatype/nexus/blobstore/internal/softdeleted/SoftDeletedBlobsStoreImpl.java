@@ -15,9 +15,8 @@ package org.sonatype.nexus.blobstore.internal.softdeleted;
 import java.time.OffsetDateTime;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobId;
 import org.sonatype.nexus.blobstore.api.softdeleted.SoftDeletedBlob;
@@ -27,11 +26,14 @@ import org.sonatype.nexus.common.entity.Continuations;
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.transaction.Transactional;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Implementation of {@link SoftDeletedBlobsStore}
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 public class SoftDeletedBlobsStoreImpl
     extends ConfigStoreSupport<SoftDeletedBlobsDAO>

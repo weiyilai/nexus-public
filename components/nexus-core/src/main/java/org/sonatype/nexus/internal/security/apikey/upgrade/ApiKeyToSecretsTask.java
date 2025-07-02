@@ -15,8 +15,7 @@ package org.sonatype.nexus.internal.security.apikey.upgrade;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.crypto.secrets.SecretsService;
 import org.sonatype.nexus.datastore.api.DuplicateKeyException;
@@ -24,6 +23,7 @@ import org.sonatype.nexus.internal.security.apikey.store.ApiKeyData;
 import org.sonatype.nexus.internal.security.apikey.store.ApiKeyStoreImpl;
 import org.sonatype.nexus.internal.security.apikey.store.ApiKeyStoreV2Impl;
 import org.sonatype.nexus.kv.GlobalKeyValueStore;
+import org.sonatype.nexus.scheduling.Cancelable;
 import org.sonatype.nexus.scheduling.CancelableHelper;
 import org.sonatype.nexus.scheduling.TaskSupport;
 
@@ -31,15 +31,21 @@ import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.internal.security.apikey.ApiKeyServiceImpl.MIGRATION_COMPLETE;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * A task which is used to migrate from {@code api_key} to {@code api_key_v2} and encrypt using the
  * {@link SecretsService}
  */
 @SuppressWarnings("deprecation")
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ApiKeyToSecretsTask
     extends TaskSupport
+    implements Cancelable
 {
   static final String MESSAGE = "Upgrade - moving api keys to v2 table";
 
@@ -55,9 +61,9 @@ public class ApiKeyToSecretsTask
 
   @Inject
   public ApiKeyToSecretsTask(
-      @Named("v1") final ApiKeyStoreImpl apiKeyStoreV1,
-      @Named("v2") final ApiKeyStoreV2Impl apiKeyStoreV2,
-      @Named("${nexus.distributed.events.fetch.interval.seconds:-5}") @Value("${nexus.distributed.events.fetch.interval.seconds:5}") final int interval,
+      @Qualifier("v1") final ApiKeyStoreImpl apiKeyStoreV1,
+      @Qualifier("v2") final ApiKeyStoreV2Impl apiKeyStoreV2,
+      @Value("${nexus.distributed.events.fetch.interval.seconds:5}") final int interval,
       final GlobalKeyValueStore kv)
   {
     this.apiKeyStoreV1 = checkNotNull(apiKeyStoreV1);

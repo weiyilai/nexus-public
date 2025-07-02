@@ -21,9 +21,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.sonatype.nexus.repository.rest.SearchMapping;
@@ -37,13 +36,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.toList;
+import org.springframework.stereotype.Component;
 
 /**
  * Utility for working with search results
  *
  * @since 3.6.1
  */
-@Named
+@Component
 @Singleton
 public class SearchResultFilterUtils
 {
@@ -123,7 +123,8 @@ public class SearchResultFilterUtils
       final ComponentSearchResult component,
       final MultivaluedMap<String, String> assetParams)
   {
-    Map<String, String> assetParamMap = assetParams.entrySet().stream()
+    Map<String, String> assetParamMap = assetParams.entrySet()
+        .stream()
         .collect(Collectors.toMap(Entry::getKey, entry -> entry.getValue().get(0)));
 
     // if no asset parameters were sent, we'll count that as return all assets
@@ -131,7 +132,8 @@ public class SearchResultFilterUtils
       return component.getAssets().stream();
     }
 
-    return component.getAssets().stream()
+    return component.getAssets()
+        .stream()
         .filter(asset -> filterAsset(asset, assetParamMap));
   }
 
@@ -143,14 +145,18 @@ public class SearchResultFilterUtils
    *
    * For example, the following set of query parameters:
    *
-   * <pre>maven.artifactId=foo&maven.baseVersion=2.7.3&maven.extension=jar&maven.classifier</pre>
+   * <pre>
+   * maven.artifactId=foo&maven.baseVersion=2.7.3&maven.extension=jar&maven.classifier
+   * </pre>
    *
    * means search for and return assets that match on these values
    * artifactId=foo, baseVersion=2.7.3, extension=jar and no classifier defined.
    *
    * Alternatively, the following
    *
-   * <pre>maven.artifactId=foo&maven.baseVersion=2.7.3&maven.extension=jar&maven.classifier=sources</pre>
+   * <pre>
+   * maven.artifactId=foo&maven.baseVersion=2.7.3&maven.extension=jar&maven.classifier=sources
+   * </pre>
    *
    * means search for and return assets that match on these values
    * artifactId=foo, baseVersion=2.7.3, extension=jar and classifier=sources
@@ -172,9 +178,9 @@ public class SearchResultFilterUtils
       return true;
     }
 
-
     // loop each asset specific http query parameter to filter out assets that do not apply
-    return assetParamsWithValues.entrySet().stream()
+    return assetParamsWithValues.entrySet()
+        .stream()
         .allMatch(entry -> keepAsset(asset, entry.getKey(), entry.getValue()));
   }
 
@@ -185,7 +191,7 @@ public class SearchResultFilterUtils
    * @return boolean indicating if the asset for which this method was called should be excluded from the response
    */
   @VisibleForTesting
-   static boolean excludeAsset(final AssetSearchResult asset, final List<String> paramFilters) {
+  static boolean excludeAsset(final AssetSearchResult asset, final List<String> paramFilters) {
     return paramFilters.stream()
         .anyMatch(filter -> getValueFromAssetMap(asset, filter).isPresent());
   }
@@ -197,7 +203,7 @@ public class SearchResultFilterUtils
    * @return boolean indicating if the asset contains the param key and matches the provided param value
    */
   @VisibleForTesting
-   boolean keepAsset(final AssetSearchResult asset, final String paramKey, final String paramValue) {
+  boolean keepAsset(final AssetSearchResult asset, final String paramKey, final String paramValue) {
     return getValueFromAssetMap(asset, paramKey)
         .map(Object::toString)
         .map(matches(asset, paramKey, paramValue))

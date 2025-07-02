@@ -15,9 +15,9 @@ package org.sonatype.nexus.repository.group;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
+
 import javax.annotation.Nonnull;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.Repository;
@@ -32,6 +32,9 @@ import org.sonatype.nexus.repository.view.ViewFacet;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.unmodifiableSet;
@@ -46,7 +49,9 @@ import static org.sonatype.nexus.repository.proxy.ProxyFacetSupport.PROXY_THROTT
  *
  * @since 3.0
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @Singleton
 public class GroupHandler
     extends ComponentSupport

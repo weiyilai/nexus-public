@@ -14,15 +14,15 @@ package org.sonatype.nexus.repository.content.upgrades;
 
 import java.util.Optional;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.content.search.upgrade.SearchIndexUpgrade;
+import org.springframework.stereotype.Component;
 
 /**
  * Re-index search for all formats.
  */
-@Named
+@Component
 @Singleton
 public class SearchIndexUpgrade_1_25
     extends SearchIndexUpgrade

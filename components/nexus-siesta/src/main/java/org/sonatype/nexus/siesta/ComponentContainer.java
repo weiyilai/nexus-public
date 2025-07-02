@@ -22,7 +22,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.sonatype.nexus.rest.Component;
 import org.sonatype.nexus.rest.Resource;
 
-import org.eclipse.sisu.BeanEntry;
 import org.jboss.resteasy.core.Dispatcher;
 
 /**
@@ -37,10 +36,6 @@ public interface ComponentContainer
   void service(final HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException;
 
   void destroy();
-
-  void addComponent(BeanEntry<?,?> entry) throws Exception;
-
-  void removeComponent(BeanEntry<?,?> entry) throws Exception;
 
   Dispatcher getDispatcher();
 }

@@ -14,7 +14,13 @@ package org.sonatype.nexus.internal.script;
 
 import java.util.ArrayList;
 
-import org.eclipse.sisu.inject.BeanLocator;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
+import org.sonatype.nexus.common.app.GlobalComponentLookupHelper;
+import org.sonatype.nexus.common.script.ScriptCleanupHandler;
+import org.sonatype.nexus.common.script.ScriptService;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,16 +28,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import org.sonatype.nexus.common.app.GlobalComponentLookupHelper;
-import org.sonatype.nexus.common.script.ScriptCleanupHandler;
-import org.sonatype.nexus.common.script.ScriptService;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ScriptServiceImplTest
@@ -74,10 +74,9 @@ public class ScriptServiceImplTest
     assertNotNull(engine);
   }
 
-  private ScriptService createScriptService(boolean groovyOnly) {
+  private ScriptService createScriptService(final boolean groovyOnly) {
     return new ScriptServiceImpl(
         engineManager,
-        mock(BeanLocator.class),
         mock(GlobalComponentLookupHelper.class),
         new ArrayList<>(),
         mock(ScriptCleanupHandler.class),

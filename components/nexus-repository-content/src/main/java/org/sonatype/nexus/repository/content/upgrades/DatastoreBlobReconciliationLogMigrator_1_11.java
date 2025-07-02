@@ -25,9 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
@@ -45,6 +44,7 @@ import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace
 import static org.sonatype.nexus.blobstore.file.FileBlobStore.BASEDIR;
 import static org.sonatype.nexus.blobstore.file.FileBlobStore.CONFIG_KEY;
 import static org.sonatype.nexus.blobstore.file.FileBlobStore.PATH_KEY;
+import org.springframework.stereotype.Component;
 
 /**
  * Moves each reconciliation log from ${karaf.data}/log/blobstore/${blobstore}/%date.log to &lt;blobstore
@@ -52,7 +52,7 @@ import static org.sonatype.nexus.blobstore.file.FileBlobStore.PATH_KEY;
  *
  * @since 3.41
  */
-@Named
+@Component
 @Singleton
 public class DatastoreBlobReconciliationLogMigrator_1_11
     extends ComponentSupport
@@ -72,8 +72,10 @@ public class DatastoreBlobReconciliationLogMigrator_1_11
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  private static final TypeReference<Map<String, Map<String, Object>>>
-      ATTRIBUTES_TYPE_REF = new TypeReference<Map<String, Map<String, Object>>>() { };
+  private static final TypeReference<Map<String, Map<String, Object>>> ATTRIBUTES_TYPE_REF =
+      new TypeReference<Map<String, Map<String, Object>>>()
+      {
+      };
 
   private final ApplicationDirectories applicationDirectories;
 

@@ -19,7 +19,7 @@ import java.time.ZoneId;
 import java.util.Optional;
 import java.util.Properties;
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.Blob;
@@ -54,8 +54,7 @@ public abstract class BaseRestoreBlobStrategy<T extends DataStoreRestoreBlobData
 
   private LastDownloadedAttributeHandler lastDownloadedAttributeHandler;
 
-  protected BaseRestoreBlobStrategy(final DryRunPrefix dryRunPrefix)
-  {
+  protected BaseRestoreBlobStrategy(final DryRunPrefix dryRunPrefix) {
     this.dryRunPrefix = checkNotNull(dryRunPrefix);
   }
 
@@ -65,8 +64,7 @@ public abstract class BaseRestoreBlobStrategy<T extends DataStoreRestoreBlobData
   }
 
   @Override
-  public void restore(final Properties properties, final Blob blob, final BlobStore blobStore, final boolean isDryRun)
-  {
+  public void restore(final Properties properties, final Blob blob, final BlobStore blobStore, final boolean isDryRun) {
     String logPrefix = isDryRun ? dryRunPrefix.get() : "";
 
     T restoreData = createRestoreData(properties, blob, blobStore);
@@ -82,7 +80,8 @@ public abstract class BaseRestoreBlobStrategy<T extends DataStoreRestoreBlobData
     }
 
     if (isDeleted(restoreData, blobStore)) {
-      log.info("Skipping soft-deleted asset for blob store: {}, repository: {}, blob name: {}, blob id: {}", blobStoreName,
+      log.info("Skipping soft-deleted asset for blob store: {}, repository: {}, blob name: {}, blob id: {}",
+          blobStoreName,
           repoName, blobName, blob.getId());
       return;
     }
@@ -157,8 +156,7 @@ public abstract class BaseRestoreBlobStrategy<T extends DataStoreRestoreBlobData
   /**
    * Create the metadata asset
    */
-  protected abstract void createAssetFromBlob(final Blob assetBlob, final T data)
-      throws IOException;
+  protected abstract void createAssetFromBlob(final Blob assetBlob, final T data) throws IOException;
 
   protected boolean shouldDeleteAsset(
       final T restoreData,
@@ -171,8 +169,7 @@ public abstract class BaseRestoreBlobStrategy<T extends DataStoreRestoreBlobData
   /**
    * Whether the restoreData's blob was created more recent than the asset's blob
    */
-  protected boolean isRestoreDataMoreRecent(final T restoreData, final FluentAsset asset)
-  {
+  protected boolean isRestoreDataMoreRecent(final T restoreData, final FluentAsset asset) {
     return asset
         .blob()
         .map(AssetBlob::blobCreated)
@@ -181,7 +178,8 @@ public abstract class BaseRestoreBlobStrategy<T extends DataStoreRestoreBlobData
           Instant instant = Instant.ofEpochMilli(dateTime.getMillis());
           OffsetDateTime restoredBlob = OffsetDateTime.ofInstant(instant, ZoneId.of(dateTime.getZone().getID()));
           return blobCreated.isBefore(restoredBlob);
-        }).orElse(false);
+        })
+        .orElse(false);
   }
 
   /**

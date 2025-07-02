@@ -32,16 +32,16 @@ import static org.joda.time.DateTimeZone.UTC;
  *
  * @since 3.20
  */
-// not @Named because we register this manually
+// not @Component
 public class DateTimeTypeHandler
     extends BaseTypeHandler<DateTime>
 {
   @Override
-  public void setNonNullParameter(final PreparedStatement ps,
-                                  final int parameterIndex,
-                                  final DateTime parameter,
-                                  final JdbcType jdbcType)
-      throws SQLException
+  public void setNonNullParameter(
+      final PreparedStatement ps,
+      final int parameterIndex,
+      final DateTime parameter,
+      final JdbcType jdbcType) throws SQLException
   {
     ps.setTimestamp(parameterIndex, new Timestamp(parameter.getMillis()));
   }

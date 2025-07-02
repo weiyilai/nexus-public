@@ -12,10 +12,11 @@
  */
 package org.sonatype.nexus.repository.content.store.internal.migration;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.kv.GlobalKeyValueStore;
 import org.sonatype.nexus.repository.Format;
@@ -30,11 +31,13 @@ import org.sonatype.nexus.scheduling.schedule.ScheduleFactoryImpl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -43,8 +46,10 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.DATA_STORE_NAME;
@@ -91,10 +96,11 @@ public class AssetBlobRefMigrationTaskManagerTest
   @Mock
   private GlobalKeyValueStore globalKeyValueStore;
 
-  private Map<String, FormatStoreManager> formatStoreManagers = new HashMap<>();
+  private MockedStatic<QualifierUtil> mockedStatic;
 
   @Before
   public void setup() {
+    mockedStatic = mockStatic(QualifierUtil.class);
     when(rawFormat.getValue()).thenReturn("raw");
     when(mavenFormat.getValue()).thenReturn("maven");
 
@@ -113,8 +119,12 @@ public class AssetBlobRefMigrationTaskManagerTest
 
     when(taskScheduler.createTaskConfigurationInstance(TYPE_ID)).thenAnswer(call -> new TaskConfiguration());
     when(taskScheduler.getScheduleFactory()).thenReturn(new ScheduleFactoryImpl());
-
     prepareFormatStoreManagers();
+  }
+
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test
@@ -122,7 +132,7 @@ public class AssetBlobRefMigrationTaskManagerTest
     when(assetBlobStore.notMigratedAssetBlobRefsExists()).thenReturn(true);
 
     AssetBlobRefMigrationTaskManager underTest = new AssetBlobRefMigrationTaskManager(repositoryManager,
-        formatStoreManagers, taskScheduler, globalKeyValueStore);
+        List.of(), taskScheduler, globalKeyValueStore);
     InOrder inOrder = inOrder(taskScheduler);
 
     inOrder.verify(taskScheduler, never()).scheduleTask(any(), any());
@@ -146,7 +156,7 @@ public class AssetBlobRefMigrationTaskManagerTest
     when(assetBlobStore.notMigratedAssetBlobRefsExists()).thenReturn(false);
 
     AssetBlobRefMigrationTaskManager underTest = new AssetBlobRefMigrationTaskManager(repositoryManager,
-        formatStoreManagers, taskScheduler, globalKeyValueStore);
+        List.of(), taskScheduler, globalKeyValueStore);
 
     InOrder inOrder = inOrder(taskScheduler);
 
@@ -158,10 +168,11 @@ public class AssetBlobRefMigrationTaskManagerTest
   private void prepareFormatStoreManagers() {
     FormatStoreManager rawStoreManager = mock(FormatStoreManager.class);
     when(rawStoreManager.assetBlobStore(STORE_NAME)).thenReturn(assetBlobStore);
-    formatStoreManagers.put("raw", rawStoreManager);
 
     FormatStoreManager mavenStoreManager = mock(FormatStoreManager.class);
     when(mavenStoreManager.assetBlobStore(STORE_NAME)).thenReturn(assetBlobStore);
-    formatStoreManagers.put("maven", mavenStoreManager);
+
+    when(QualifierUtil.buildQualifierBeanMap(anyList()))
+        .thenReturn(Map.of("raw", rawStoreManager, "maven", mavenStoreManager));
   }
 }

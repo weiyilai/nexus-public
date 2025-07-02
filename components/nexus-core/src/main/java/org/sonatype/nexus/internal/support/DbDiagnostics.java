@@ -28,7 +28,8 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import javax.inject.Inject;
+
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.datastore.api.DataStore;
@@ -36,6 +37,9 @@ import org.sonatype.nexus.datastore.api.DataStoreManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toMap;
@@ -44,6 +48,8 @@ import static java.util.stream.Collectors.toMap;
  * Adds Db diagnostic info to support zip
  *
  */
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DbDiagnostics
 {
   private static final Logger log = LoggerFactory.getLogger(DbDiagnostics.class);

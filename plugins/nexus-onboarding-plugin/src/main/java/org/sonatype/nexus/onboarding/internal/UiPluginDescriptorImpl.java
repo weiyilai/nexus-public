@@ -12,23 +12,26 @@
  */
 package org.sonatype.nexus.onboarding.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.rapture.UiPluginDescriptor;
 import org.sonatype.nexus.rapture.UiPluginDescriptorSupport;
 
 import org.eclipse.sisu.Priority;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 /**
  * Rapture {@link UiPluginDescriptor} for {@code nexus-onboarding-plugin}.
  *
  * @since 3.17
  */
-@Named
+@Component
 @Singleton
 @Priority(Integer.MAX_VALUE - 300) // after nexus-proui-plugin
+@Order(Ordered.HIGHEST_PRECEDENCE + 300)
 public class UiPluginDescriptorImpl
     extends UiPluginDescriptorSupport
 {

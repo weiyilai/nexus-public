@@ -12,11 +12,12 @@
  */
 package org.sonatype.nexus.content.raw.internal.browse;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.content.browse.AssetPathBrowseNodeGenerator;
 import org.sonatype.nexus.repository.raw.internal.RawFormat;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * RAW places components at the same level as their assets.
@@ -24,7 +25,8 @@ import org.sonatype.nexus.repository.raw.internal.RawFormat;
  * @since 3.26
  */
 @Singleton
-@Named(RawFormat.NAME)
+@Component
+@Qualifier(RawFormat.NAME)
 public class RawBrowseNodeGenerator
     extends AssetPathBrowseNodeGenerator
 {

@@ -12,20 +12,20 @@
  */
 package org.sonatype.nexus.internal.httpclient;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.log.LogConfigurationCustomizer;
 import org.sonatype.nexus.common.log.LoggerLevel;
 
 import static org.sonatype.nexus.internal.httpclient.HttpClientManagerImpl.HTTPCLIENT_OUTBOUND_LOGGER_NAME;
+import org.springframework.stereotype.Component;
 
 /**
  * HTTP-client {@link LogConfigurationCustomizer}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class LogConfigurationCustomizerImpl
     implements LogConfigurationCustomizer

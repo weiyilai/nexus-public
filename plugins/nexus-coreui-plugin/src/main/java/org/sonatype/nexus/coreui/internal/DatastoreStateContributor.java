@@ -14,40 +14,39 @@ package org.sonatype.nexus.coreui.internal;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
-import org.sonatype.nexus.rapture.StateContributor;
 import org.sonatype.nexus.common.db.DatabaseCheck;
+import org.sonatype.nexus.rapture.StateContributor;
 
-import com.google.common.collect.ImmutableMap;
+import org.springframework.stereotype.Component;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_IS_POSTGRESQL;
 
 @Singleton
-@Named
+@Component
 public class DatastoreStateContributor
     implements StateContributor
 {
-  private boolean datastoreEnabled;
+  private final DatabaseCheck dbCheck;
 
-  private boolean datastoreDeveloper;
-
-  private boolean isPostgresql;
+  private Map<String, Object> state;
 
   @Inject
-  public DatastoreStateContributor(DatabaseCheck dbCheck) {
-    this.datastoreEnabled = true;
-    this.datastoreDeveloper = false;
-    this.isPostgresql = dbCheck.isPostgresql();
+  public DatastoreStateContributor(final DatabaseCheck dbCheck) {
+    this.dbCheck = checkNotNull(dbCheck);
   }
 
   @Override
   public Map<String, Object> getState() {
-    return ImmutableMap.of(
-        "nexus.datastore.enabled", datastoreEnabled,
-        "nexus.datastore.developer", datastoreDeveloper,
-        DATASTORE_IS_POSTGRESQL, isPostgresql);
+    if (state == null) {
+      state = Map.of(
+          "nexus.datastore.enabled", true,
+          "nexus.datastore.developer", false,
+          DATASTORE_IS_POSTGRESQL, dbCheck.isPostgresql());
+    }
+    return state;
   }
 }

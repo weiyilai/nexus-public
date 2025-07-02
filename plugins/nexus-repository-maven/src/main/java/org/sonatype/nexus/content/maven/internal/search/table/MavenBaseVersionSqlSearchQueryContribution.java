@@ -14,8 +14,7 @@ package org.sonatype.nexus.content.maven.internal.search.table;
 
 import java.util.Optional;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.search.query.SearchFilter;
 import org.sonatype.nexus.repository.search.sql.SqlSearchQueryContributionSupport;
@@ -27,11 +26,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Creates sql query conditions for the assets.attributes.baseVersion search term.
  */
-@Named(MavenBaseVersionSqlSearchQueryContribution.NAME)
+@Component
+@Qualifier(MavenBaseVersionSqlSearchQueryContribution.NAME)
 @Singleton
 @ConditionalOnProperty(name = DATASTORE_CLUSTERED_ENABLED, havingValue = "true")
 public class MavenBaseVersionSqlSearchQueryContribution

@@ -20,34 +20,51 @@ import java.util.Set;
 import org.sonatype.nexus.security.AbstractSecurityTest;
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.authz.AuthorizationManager;
-import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
+import org.sonatype.nexus.security.config.PreconfiguredSecurityConfigurationSource;
+import org.sonatype.nexus.security.config.SecurityConfigurationSource;
 import org.sonatype.nexus.security.role.Role;
 import org.sonatype.nexus.security.role.RoleIdentifier;
+import org.sonatype.nexus.security.user.AdditionalRoleSecuritySystemTest.AdditionalRoleSecuritySystemTestSecurityConfiguration;
 
-import org.junit.Assert;
 import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class AdditionalRoleSecuritySystemTest
+@Import(AdditionalRoleSecuritySystemTestSecurityConfiguration.class)
+class AdditionalRoleSecuritySystemTest
     extends AbstractSecurityTest
 {
+  protected static class AdditionalRoleSecuritySystemTestSecurityConfiguration
+  {
+    @Qualifier("default")
+    @Primary
+    @Bean
+    public SecurityConfigurationSource securityConfigurationSource() {
+      return new PreconfiguredSecurityConfigurationSource(AdditionalRoleSecuritySystemTestSecurity.securityModel());
+    }
+  }
+
   private SecuritySystem securitySystem;
 
   @Override
+  @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
 
     securitySystem = getSecuritySystem();
-  }
-
-  @Override
-  protected MemorySecurityConfiguration initialSecurityConfiguration() {
-    return AdditionalRoleSecuritySystemTestSecurity.securityModel();
   }
 
   private Set<String> getRoles() throws Exception {
@@ -69,7 +86,7 @@ public class AdditionalRoleSecuritySystemTest
     Map<String, User> userMap = toUserMap(users);
 
     User user = userMap.get("jcoder");
-    Assert.assertNotNull(user);
+    assertNotNull(user);
 
     // A,B,C,1
     Set<String> roleIds = toRoleIdSet(user.getRoles());
@@ -77,7 +94,7 @@ public class AdditionalRoleSecuritySystemTest
     assertThat(roleIds, hasSize(4));
 
     user = userMap.get("dknudsen");
-    Assert.assertNotNull(user);
+    assertNotNull(user);
     assertThat(user.getRoles(), hasSize(1));
 
     // Role2
@@ -85,7 +102,7 @@ public class AdditionalRoleSecuritySystemTest
     assertThat(roleIds, hasItems("Role2"));
 
     user = userMap.get("cdugas");
-    Assert.assertNotNull(user);
+    assertNotNull(user);
     assertThat(user.getRoles(), hasSize(3));
 
     // A,B,1
@@ -93,7 +110,7 @@ public class AdditionalRoleSecuritySystemTest
     assertThat(roleIds, hasItems("RoleA", "RoleB", "Role1"));
 
     user = userMap.get("pperalez");
-    Assert.assertNotNull(user);
+    assertNotNull(user);
     assertThat(user.getRoles(), empty());
   }
 
@@ -104,12 +121,12 @@ public class AdditionalRoleSecuritySystemTest
 
     criteria.setUserId("pperalez");
     User user = searchForSingleUser(criteria, "pperalez", null);
-    Assert.assertNull(user);
+    assertNull(user);
 
     criteria.setUserId("jcoder");
     user = searchForSingleUser(criteria, "jcoder", null);
-    Assert.assertNotNull(user);
-    Assert.assertEquals("Roles: " + toRoleIdSet(user.getRoles()), 4, user.getRoles().size());
+    assertNotNull(user);
+    assertThat(user.getRoles(), hasSize(4));
 
     // A,B,C,1
     Set<String> roleIds = toRoleIdSet(user.getRoles());
@@ -117,7 +134,7 @@ public class AdditionalRoleSecuritySystemTest
 
     criteria.setUserId("dknudsen");
     user = searchForSingleUser(criteria, "dknudsen", null);
-    Assert.assertNotNull(user);
+    assertNotNull(user);
     assertThat(user.getRoles(), hasSize(1));
 
     // Role2
@@ -126,7 +143,7 @@ public class AdditionalRoleSecuritySystemTest
 
     criteria.setUserId("cdugas");
     user = searchForSingleUser(criteria, "cdugas", null);
-    Assert.assertNotNull(user);
+    assertNotNull(user);
     assertThat(user.getRoles(), hasSize(3));
 
     // A,B,1
@@ -140,11 +157,11 @@ public class AdditionalRoleSecuritySystemTest
 
     criteria.setUserId("pperalez");
     User user = searchForSingleUser(criteria, "pperalez", "MockUserManagerA");
-    Assert.assertNotNull(user);
+    assertNotNull(user);
 
     criteria.setUserId("jcoder");
     user = searchForSingleUser(criteria, "jcoder", "MockUserManagerA");
-    Assert.assertNotNull(user);
+    assertNotNull(user);
 
     // A,B,C,1
     Set<String> roleIds = toRoleIdSet(user.getRoles());
@@ -153,7 +170,7 @@ public class AdditionalRoleSecuritySystemTest
 
     criteria.setUserId("dknudsen");
     user = searchForSingleUser(criteria, "dknudsen", "MockUserManagerA");
-    Assert.assertNotNull(user);
+    assertNotNull(user);
     assertThat(user.getRoles(), hasSize(1));
 
     // Role2
@@ -162,7 +179,7 @@ public class AdditionalRoleSecuritySystemTest
 
     criteria.setUserId("cdugas");
     user = searchForSingleUser(criteria, "cdugas", "MockUserManagerA");
-    Assert.assertNotNull(user);
+    assertNotNull(user);
     assertThat(user.getRoles(), hasSize(3));
 
     // A,B,1
@@ -178,11 +195,11 @@ public class AdditionalRoleSecuritySystemTest
     Set<User> result = securitySystem.searchUsers(criteria);
 
     Map<String, User> userMap = toUserMap(result);
-    Assert.assertTrue("User not found in: " + userMap, userMap.containsKey("admin"));
-    Assert.assertTrue("User not found in: " + userMap, userMap.containsKey("test-user"));
-    Assert.assertTrue("User not found in: " + userMap, userMap.containsKey("jcoder"));
-    Assert.assertTrue("User not found in: " + userMap, userMap.containsKey("cdugas"));
-    // Assert.assertTrue( "User not found in: " + userMap, userMap.containsKey( "other-user" ) );
+    assertTrue(userMap.containsKey("admin"), "User not found in: " + userMap);
+    assertTrue(userMap.containsKey("test-user"), "User not found in: " + userMap);
+    assertTrue(userMap.containsKey("jcoder"), "User not found in: " + userMap);
+    assertTrue(userMap.containsKey("cdugas"), "User not found in: " + userMap);
+    // assertTrue( userMap.containsKey( "other-user" ) );
     // other user is only defined in the mapping, simulates a user that was deleted
 
     assertThat(result, hasSize(4));
@@ -202,7 +219,7 @@ public class AdditionalRoleSecuritySystemTest
     }
 
     Map<String, User> userMap = toUserMap(users);
-    Assert.assertTrue("More then 1 User was returned: " + userMap.keySet(), users.size() <= 1);
+    assertThat(userMap, aMapWithSize(1));
 
     return userMap.get(userId);
   }

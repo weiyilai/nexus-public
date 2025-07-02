@@ -12,7 +12,9 @@
  */
 package org.sonatype.nexus.security.internal;
 
-import java.util.Map;
+import java.util.List;
+
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.event.EventManager;
@@ -23,10 +25,8 @@ import org.sonatype.nexus.security.realm.RealmConfigurationStore;
 import org.sonatype.nexus.security.realm.TestRealmConfiguration;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.realm.Realm;
-import org.eclipse.sisu.inject.BeanLocator;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -41,6 +41,9 @@ import static org.mockito.Mockito.when;
 public class RealmManagerImplTest
     extends TestSupport
 {
+  @Mock
+  private Provider<RealmConfiguration> initialRealmConfigurationProvider;
+
   @Mock
   private EventManager eventManager;
 
@@ -59,18 +62,16 @@ public class RealmManagerImplTest
   @Mock
   private RealmConfigurationEvent configEvent;
 
-  @Mock
-  private BeanLocator beanLocator;
-
   private RealmManagerImpl manager;
 
   @Before
   public void setUp() {
-    Map<String, Realm> realms = ImmutableMap.of("A", realmA, "B", realmB);
+    List<Realm> realms = List.of(realmA, realmB);
     RealmConfiguration defaultConfig = new TestRealmConfiguration();
-    defaultConfig.setRealmNames(ImmutableList.of("A"));
-    manager = new RealmManagerImpl(beanLocator, eventManager, configStore, () -> defaultConfig, securityManager, realms,
-        false);
+    defaultConfig.setRealmNames(List.of("A"));
+    when(initialRealmConfigurationProvider.get()).thenReturn(defaultConfig);
+    manager = new RealmManagerImpl(eventManager, configStore, initialRealmConfigurationProvider, securityManager,
+        realms, false);
   }
 
   @Test

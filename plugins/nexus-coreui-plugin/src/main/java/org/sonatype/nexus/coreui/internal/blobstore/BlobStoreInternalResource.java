@@ -13,13 +13,11 @@
 package org.sonatype.nexus.coreui.internal.blobstore;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -40,6 +38,7 @@ import org.sonatype.nexus.blobstore.quota.BlobStoreQuota;
 import org.sonatype.nexus.blobstore.file.FileBlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.blobstore.BlobStoreConfigurationStore;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.rest.Resource;
@@ -50,11 +49,12 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 import static org.sonatype.nexus.coreui.internal.blobstore.BlobStoreInternalResource.RESOURCE_PATH;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.30
  */
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_PATH)
 public class BlobStoreInternalResource
@@ -94,14 +94,17 @@ public class BlobStoreInternalResource
       final BlobStoreManager blobStoreManager,
       final BlobStoreConfigurationStore store,
       final BlobStoreDescriptorProvider blobStoreDescriptorProvider,
-      final Map<String, BlobStoreQuota> quotaFactories,
+      final List<BlobStoreQuota> quotaFactoriesList,
       final RepositoryManager repositoryManager)
   {
     this.blobStoreManager = checkNotNull(blobStoreManager);
     this.store = checkNotNull(store);
     this.blobStoreDescriptorProvider = checkNotNull(blobStoreDescriptorProvider);
-    this.blobStoreQuotaTypes = quotaFactories.entrySet().stream()
-        .map(BlobStoreQuotaTypesUIResponse::new).collect(toList());
+    this.blobStoreQuotaTypes = QualifierUtil.buildQualifierBeanMap(quotaFactoriesList)
+        .entrySet()
+        .stream()
+        .map(BlobStoreQuotaTypesUIResponse::new)
+        .collect(toList());
     this.repositoryManager = checkNotNull(repositoryManager);
   }
 
@@ -110,7 +113,8 @@ public class BlobStoreInternalResource
   @GET
   public List<BlobStoreUIResponse> listBlobStores() {
 
-    return store.list().stream()
+    return store.list()
+        .stream()
         .map(configuration -> {
           String blobStoreType = configuration.getType();
           BlobStoreDescriptor blobStoreDescriptor = Optional.ofNullable(blobStoreDescriptorProvider.get())
@@ -121,11 +125,11 @@ public class BlobStoreInternalResource
           }
           String typeId = blobStoreDescriptor.getId();
 
-            final String path = getPath(typeId.toLowerCase(), configuration);
-            BlobStoreMetrics metrics = Optional.ofNullable(blobStoreManager.get(configuration.getName()))
-                .map(BlobStoreInternalResource::getBlobStoreMetrics)
-                .orElse(null);
-            return new BlobStoreUIResponse(typeId, configuration, metrics, path);
+          final String path = getPath(typeId.toLowerCase(), configuration);
+          BlobStoreMetrics metrics = Optional.ofNullable(blobStoreManager.get(configuration.getName()))
+              .map(BlobStoreInternalResource::getBlobStoreMetrics)
+              .orElse(null);
+          return new BlobStoreUIResponse(typeId, configuration, metrics, path);
         })
         .filter(Objects::nonNull)
         .collect(toList());
@@ -138,7 +142,8 @@ public class BlobStoreInternalResource
       return bs.isStarted() ? bs.getMetrics() : null;
     }
     else {
-      return ((BlobStoreGroup) bs).getMembers().stream()
+      return ((BlobStoreGroup) bs).getMembers()
+          .stream()
           .map(BlobStore::isStarted)
           .reduce(Boolean::logicalAnd)
           .orElse(false) ? bs.getMetrics() : null;
@@ -151,7 +156,8 @@ public class BlobStoreInternalResource
     }
     else if (typeId.equals(S3BlobStoreConfigurationHelper.CONFIG_KEY)) {
       return S3BlobStoreConfigurationHelper.getBucketPrefix(configuration) + configuration
-         .attributes(S3BlobStoreConfigurationHelper.CONFIG_KEY).get(S3BlobStoreConfigurationHelper.BUCKET_KEY, String.class);
+          .attributes(S3BlobStoreConfigurationHelper.CONFIG_KEY)
+          .get(S3BlobStoreConfigurationHelper.BUCKET_KEY, String.class);
     }
     else if (typeId.equals(AZURE_TYPE)) {
       return configuration.attributes(AZURE_CONFIG).get(CONTAINER_NAME, String.class);
@@ -161,9 +167,9 @@ public class BlobStoreInternalResource
     }
     else if (typeId.equals(GOOGLE_TYPE)) {
       final String prefix = Optional.ofNullable(configuration.attributes(GOOGLE_CONFIG).get(PREFIX_KEY, String.class))
-        .filter(Predicates.not(Strings::isNullOrEmpty))
-        .map(s -> s.replaceFirst("/$", "") + "/")
-        .orElse("");
+          .filter(Predicates.not(Strings::isNullOrEmpty))
+          .map(s -> s.replaceFirst("/$", "") + "/")
+          .orElse("");
       return prefix + configuration.attributes(GOOGLE_CONFIG).get(GOOGLE_BUCKET_KEY, String.class);
     }
     logger.warn("blob store type {} unknown, defaulting to N/A for path", typeId);
@@ -175,8 +181,12 @@ public class BlobStoreInternalResource
   @GET
   @Path("/types")
   public List<BlobStoreTypesUIResponse> listBlobStoreTypes() {
-    return blobStoreDescriptorProvider.get().entrySet().stream().filter(entry -> entry.getValue().isEnabled())
-        .map(BlobStoreTypesUIResponse::new).collect(toList());
+    return blobStoreDescriptorProvider.get()
+        .entrySet()
+        .stream()
+        .filter(entry -> entry.getValue().isEnabled())
+        .map(BlobStoreTypesUIResponse::new)
+        .collect(toList());
   }
 
   @RequiresAuthentication

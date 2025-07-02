@@ -15,7 +15,6 @@ package org.sonatype.nexus.repository.manager.internal;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -25,10 +24,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Provider;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.FreezeService;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.entity.EntityMetadata;
@@ -46,19 +45,19 @@ import org.sonatype.nexus.repository.config.internal.ConfigurationData;
 import org.sonatype.nexus.repository.group.GroupFacet;
 import org.sonatype.nexus.repository.manager.DefaultRepositoriesContributor;
 
-import com.google.common.collect.ImmutableMap;
+import jakarta.inject.Provider;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.Test.None;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
 import static com.google.common.collect.Iterables.size;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -70,6 +69,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -201,11 +201,19 @@ public class BaseRepositoryManagerTest
   // Subject of the test
   private BaseRepositoryManager repositoryManager;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setup() {
+    mockedStatic = mockStatic(QualifierUtil.class);
     setupRecipe();
     setupRepositories();
     blobstoreProvisionDefaults(false, false);
+  }
+
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   private void setupRecipe() {
@@ -218,7 +226,7 @@ public class BaseRepositoryManagerTest
         thenReturn(asList(mavenCentralConfiguration, apacheSnapshotsConfiguration, thirdPartyConfiguration,
             groupConfiguration, parentGroupConfiguration, cycleGroupAConfiguration, cycleGroupBConfiguration,
             ungroupedRepoConfiguration));
-    defaultRepositoriesContributorList = singletonList(defaultRepositoriesContributor);
+    defaultRepositoriesContributorList = List.of(defaultRepositoriesContributor);
 
     mockRepository(mavenCentralConfiguration, mavenCentralRepository, MAVEN_CENTRAL_NAME, "default");
     mockRepository(apacheSnapshotsConfiguration, apacheSnapshotsRepository, APACHE_SNAPSHOTS_NAME, "default");
@@ -279,7 +287,7 @@ public class BaseRepositoryManagerTest
     when(configuration.getRepositoryName()).thenReturn(name);
 
     Map<String, Map<String, Object>> attr = new HashMap<>();
-    attr.put("storage", Collections.singletonMap("blobStoreName", blobstoreName));
+    attr.put("storage", Map.of("blobStoreName", blobstoreName));
     when(configuration.getAttributes()).thenReturn(attr);
     when(repository.getConfiguration()).thenReturn(configuration);
     when(repository.getName()).thenReturn(name);
@@ -303,12 +311,13 @@ public class BaseRepositoryManagerTest
   private BaseRepositoryManager initializeAndStartRepositoryManager(
       final boolean skipDefaultRepositories) throws Exception
   {
+    when(QualifierUtil.buildQualifierBeanMap(any())).thenReturn(Map.of(recipeName, recipe));
     repositoryManager = new BaseRepositoryManager(eventManager, configurationStore, repositoryFactory,
-        configurationFacetProvider, ImmutableMap.of(recipeName, recipe), securityContributor,
+        configurationFacetProvider, List.of(), securityContributor,
         defaultRepositoriesContributorList, freezeService, skipDefaultRepositories, blobStoreManager,
-        groupMemberMappingCache, Collections.emptyList(), httpAuthenticationPasswordEncoder);
+        groupMemberMappingCache, List.of(), httpAuthenticationPasswordEncoder);
 
-    repositoryManager.doStart();
+    repositoryManager.start();
     return repositoryManager;
   }
 
@@ -382,7 +391,7 @@ public class BaseRepositoryManagerTest
 
   @Test
   public void testStartup_noDefaultsProvided() throws Exception {
-    when(defaultRepositoriesContributor.getRepositoryConfigurations()).thenReturn(emptyList());
+    when(defaultRepositoriesContributor.getRepositoryConfigurations()).thenReturn(List.of());
 
     repositoryManager = buildRepositoryManagerImpl(false, false);
 
@@ -530,7 +539,7 @@ public class BaseRepositoryManagerTest
   public void getFunctionalityShouldFallBackToDbIfMissing() throws Exception {
     repositoryManager = buildRepositoryManagerImpl(false, true);
 
-    when(configurationStore.list()).thenReturn(Collections.singletonList(mavenCentralConfiguration));
+    when(configurationStore.list()).thenReturn(List.of(mavenCentralConfiguration));
 
     Repository repository = repositoryManager.get(MAVEN_CENTRAL_NAME);
 
@@ -541,7 +550,7 @@ public class BaseRepositoryManagerTest
   public void repoNotInCacheOrDbReturnsNullForGet() throws Exception {
     repositoryManager = buildRepositoryManagerImpl(false, true);
 
-    when(configurationStore.readByNames(any(Set.class))).thenReturn(Collections.emptySet());
+    when(configurationStore.readByNames(any(Set.class))).thenReturn(Set.of());
 
     Repository repository = repositoryManager.get("maven-central");
 

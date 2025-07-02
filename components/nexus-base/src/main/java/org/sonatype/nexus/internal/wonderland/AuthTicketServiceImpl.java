@@ -15,9 +15,8 @@ package org.sonatype.nexus.internal.wonderland;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.wonderland.AuthTicketService;
@@ -27,13 +26,14 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link AuthTicketService} implementation.
  *
  * @since 2.7
  */
-@Named
+@Component
 @Singleton
 public class AuthTicketServiceImpl
     extends ComponentSupport

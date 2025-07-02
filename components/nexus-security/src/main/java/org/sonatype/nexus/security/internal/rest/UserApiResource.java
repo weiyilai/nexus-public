@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -67,14 +67,18 @@ public class UserApiResource
     implements Resource, UserApiResourceDoc
 {
   public static final String ADMIN_USER_ID = "admin";
+
   private static final String SAML_SOURCE = "SAML";
 
   private final SecuritySystem securitySystem;
+
   private final AdminPasswordFileManager adminPasswordFileManager;
 
   @Inject
-  public UserApiResource(final SecuritySystem securitySystem,
-                         final AdminPasswordFileManager adminPasswordFileManager) {
+  public UserApiResource(
+      final SecuritySystem securitySystem,
+      final AdminPasswordFileManager adminPasswordFileManager)
+  {
     this.securitySystem = checkNotNull(securitySystem);
     this.adminPasswordFileManager = checkNotNull(adminPasswordFileManager);
   }
@@ -94,7 +98,9 @@ public class UserApiResource
       criteria.setLimit(100);
     }
 
-    return securitySystem.searchUsers(criteria).stream().map(this::fromUser)
+    return securitySystem.searchUsers(criteria)
+        .stream()
+        .map(this::fromUser)
         .collect(Collectors.toList());
   }
 
@@ -140,8 +146,10 @@ public class UserApiResource
         // Ensure user exists
         securitySystem.getUser(userId, apiUser.getSource());
 
-        Set<RoleIdentifier> roleIdentifiers = apiUser.getRoles().stream()
-            .map(roleId -> new RoleIdentifier(UserManager.DEFAULT_SOURCE, roleId)).collect(Collectors.toSet());
+        Set<RoleIdentifier> roleIdentifiers = apiUser.getRoles()
+            .stream()
+            .map(roleId -> new RoleIdentifier(UserManager.DEFAULT_SOURCE, roleId))
+            .collect(Collectors.toSet());
         securitySystem.setUsersRoles(userId, apiUser.getSource(), roleIdentifiers);
       }
     }
@@ -160,8 +168,10 @@ public class UserApiResource
   @Path("{userId}")
   @RequiresAuthentication
   @RequiresPermissions("nexus:users:delete")
-  public void deleteUser(@PathParam("userId") final String userId,
-                         @QueryParam("realm") final String realm) {
+  public void deleteUser(
+      @PathParam("userId") final String userId,
+      @QueryParam("realm") final String realm)
+  {
     User user = null;
     try {
       if (realm == null) {
@@ -169,7 +179,8 @@ public class UserApiResource
         if (!UserManager.DEFAULT_SOURCE.equals(user.getSource()) && !SAML_SOURCE.equals(user.getSource())) {
           throw createWebException(Status.BAD_REQUEST, "Non-local user cannot be deleted.");
         }
-      } else {
+      }
+      else {
         if (!securitySystem.isValidRealm(realm)) {
           throw createWebException(Status.BAD_REQUEST, "Invalid or empty realm name.");
         }
@@ -203,7 +214,6 @@ public class UserApiResource
     if (StringUtils.isBlank(password)) {
       throw createWebException(Status.BAD_REQUEST, "Password must be supplied.");
     }
-
     try {
       securitySystem.changePassword(userId, password);
 
@@ -245,7 +255,9 @@ public class UserApiResource
 
     Set<String> localRoles;
     try {
-      localRoles = securitySystem.listRoles(UserManager.DEFAULT_SOURCE).stream().map(Role::getRoleId)
+      localRoles = securitySystem.listRoles(UserManager.DEFAULT_SOURCE)
+          .stream()
+          .map(Role::getRoleId)
           .collect(Collectors.toSet());
       for (String roleId : roleIds) {
         if (!localRoles.contains(roleId)) {
@@ -265,6 +277,7 @@ public class UserApiResource
   private WebApplicationMessageException createNoSuchUserManagerException(final String source) {
     return createWebException(Status.NOT_FOUND, "Unable to locate source: " + source);
   }
+
   private WebApplicationMessageException createUnknownUserException(final String userId) {
     return createWebException(Status.NOT_FOUND, "User '" + userId + "' not found.");
   }

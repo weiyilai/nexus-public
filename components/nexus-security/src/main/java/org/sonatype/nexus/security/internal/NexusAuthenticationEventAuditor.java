@@ -16,8 +16,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -29,13 +28,14 @@ import org.sonatype.nexus.security.authc.NexusAuthenticationEvent;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * Writes to the audit log for fired {@link NexusAuthenticationEvent}
  *
  * @since 3.22
  */
-@Named
+@Component
 @Singleton
 public class NexusAuthenticationEventAuditor
     extends AuditorSupport

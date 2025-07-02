@@ -13,8 +13,7 @@
 package org.sonatype.nexus.repository.maven.internal;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.http.HttpResponses;
@@ -29,13 +28,17 @@ import org.sonatype.nexus.repository.view.Response;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.http.HttpMethods.GET;
 import static org.sonatype.nexus.repository.http.HttpMethods.HEAD;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Enforces the repository's version policy on all requests.
  *
  * @since 3.25
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class VersionPolicyHandler
     extends ComponentSupport
     implements Handler

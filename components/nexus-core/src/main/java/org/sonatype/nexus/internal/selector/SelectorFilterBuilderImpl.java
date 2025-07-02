@@ -17,9 +17,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.selector.JexlSelector;
@@ -30,8 +29,9 @@ import org.sonatype.nexus.selector.SelectorManager;
 import org.sonatype.nexus.selector.SelectorSqlBuilder;
 
 import static java.util.Objects.requireNonNull;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class SelectorFilterBuilderImpl
     extends ComponentSupport

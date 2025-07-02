@@ -13,20 +13,26 @@
 package org.sonatype.nexus.repository.apt.datastore.internal.hosted;
 
 import java.util.Set;
-import javax.inject.Named;
 
+import org.sonatype.nexus.repository.apt.AptFormat;
 import org.sonatype.nexus.repository.apt.datastore.internal.hosted.metadata.AptHostedMetadataFacet;
 import org.sonatype.nexus.repository.content.Asset;
 import org.sonatype.nexus.repository.content.Component;
 import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.content.maintenance.LastAssetMaintenanceFacet;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+
 /**
  * Apt maintenance facet
  *
  * @since 3.31
  */
-@Named
+@Qualifier(AptFormat.NAME)
+@org.springframework.stereotype.Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AptLastAssetMaintenanceFacet
     extends LastAssetMaintenanceFacet
 {

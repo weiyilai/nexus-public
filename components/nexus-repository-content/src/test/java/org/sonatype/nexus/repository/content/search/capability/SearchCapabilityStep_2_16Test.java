@@ -15,9 +15,11 @@ package org.sonatype.nexus.repository.content.search.capability;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.content.testsuite.groups.PostgresTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
@@ -35,19 +37,24 @@ import org.sonatype.nexus.testdb.DataSessionRule;
 import org.assertj.core.api.Condition;
 import org.assertj.core.condition.MappedCondition;
 import org.assertj.db.type.Table;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import static org.assertj.core.condition.MappedCondition.mappedCondition;
 import static org.assertj.db.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
 @Category(PostgresTestGroup.class)
@@ -66,14 +73,22 @@ public class SearchCapabilityStep_2_16Test
   @Mock
   private Recipe recipe;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   private SearchCapabilityStep_2_16 underTest = new SearchCapabilityStep_2_16();
 
   @Before
   public void setup() {
-    underTest.inject(Map.of("test-proxy", recipe));
+    mockedStatic = Mockito.mockStatic(QualifierUtil.class);
+    when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(Map.of("test-proxy", recipe));
+    underTest.inject(List.of(recipe));
     lenient().when(recipe.getFormat()).thenReturn(format);
     lenient().when(format.getValue()).thenReturn("test");
+  }
 
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test

@@ -17,8 +17,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Mutex;
@@ -30,13 +29,17 @@ import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Manages cache (and expiration) of authentication tickets.
  *
  * @since 2.7
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class LocalAuthTicketCache
     extends ComponentSupport
     implements AuthTicketCache
@@ -48,7 +51,7 @@ public class LocalAuthTicketCache
   private final Duration expireAfter;
 
   @Inject
-  public LocalAuthTicketCache(@Named(EXPIRE) @Value(EXPIRE_VALUE) final Duration expireAfter) {
+  public LocalAuthTicketCache(@Value(EXPIRE_VALUE) final Duration expireAfter) {
     this.expireAfter = checkNotNull(expireAfter);
     log.debug("Expire after: {}", expireAfter);
   }

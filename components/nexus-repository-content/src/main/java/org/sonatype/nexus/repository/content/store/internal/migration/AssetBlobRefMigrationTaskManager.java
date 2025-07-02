@@ -13,13 +13,14 @@
 package org.sonatype.nexus.repository.content.store.internal.migration;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.event.EventAware;
@@ -43,11 +44,12 @@ import static org.sonatype.nexus.repository.config.ConfigurationConstants.STORAG
 import static org.sonatype.nexus.repository.content.store.internal.migration.AssetBlobRefMigrationTaskDescriptor.CONTENT_STORE_FIELD_ID;
 import static org.sonatype.nexus.repository.content.store.internal.migration.AssetBlobRefMigrationTaskDescriptor.FORMAT_FIELD_ID;
 import static org.sonatype.nexus.repository.content.store.internal.migration.AssetBlobRefMigrationTaskDescriptor.TYPE_ID;
+import org.springframework.stereotype.Component;
 
 /**
  * Manage scheduling {@link AssetBlobRefMigrationTask} for each format separately (if necessary).
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = TASKS)
 public class AssetBlobRefMigrationTaskManager
@@ -65,12 +67,12 @@ public class AssetBlobRefMigrationTaskManager
   @Inject
   public AssetBlobRefMigrationTaskManager(
       final RepositoryManager repositoryManager,
-      final Map<String, FormatStoreManager> formatStoreManagers,
+      final List<FormatStoreManager> formatStoreManagersList,
       final TaskScheduler taskScheduler,
       final GlobalKeyValueStore globalKeyValueStore)
   {
     this.repositoryManager = checkNotNull(repositoryManager);
-    this.formatStoreManagers = checkNotNull(formatStoreManagers);
+    this.formatStoreManagers = QualifierUtil.buildQualifierBeanMap(checkNotNull(formatStoreManagersList));
     this.taskScheduler = checkNotNull(taskScheduler);
     this.globalKeyValueStore = checkNotNull(globalKeyValueStore);
   }

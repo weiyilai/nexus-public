@@ -16,9 +16,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.group.GroupFacet;
@@ -30,11 +29,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 import static org.sonatype.nexus.repository.search.index.SearchConstants.REPOSITORY_NAME;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.15.2
  */
-@Named(RepositoryElasticSearchContribution.NAME)
+@Component
+@Qualifier(RepositoryElasticSearchContribution.NAME)
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class RepositoryElasticSearchContribution

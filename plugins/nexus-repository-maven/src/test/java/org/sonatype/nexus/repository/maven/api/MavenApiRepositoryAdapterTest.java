@@ -13,6 +13,7 @@
 package org.sonatype.nexus.repository.maven.api;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
@@ -39,10 +40,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import static com.google.common.collect.Maps.newHashMap;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -65,10 +66,8 @@ public class MavenApiRepositoryAdapterTest
   @Test
   public void testAdapt_groupRepository() throws Exception {
     // No maven specific props so simple smoke test
-    Repository repository = createRepository(new GroupType());
-    Configuration configuration = repository.getConfiguration();
-    configuration.attributes("group").set("memberNames", Arrays.asList("a", "b"));
-    repository.update(configuration);
+    Repository repository = createRepository(new GroupType(),
+        configuration -> configuration.attributes("group").set("memberNames", Arrays.asList("a", "b")));
 
     SimpleApiGroupRepository groupRepository = (SimpleApiGroupRepository) underTest.adapt(repository);
     assertRepository(groupRepository, "group", true);
@@ -76,7 +75,8 @@ public class MavenApiRepositoryAdapterTest
 
   @Test
   public void testAdapt_hostedRepository() throws Exception {
-    Repository repository = createRepository(new HostedType(), LayoutPolicy.STRICT, VersionPolicy.MIXED, ContentDisposition.INLINE);
+    Repository repository =
+        createRepository(new HostedType(), LayoutPolicy.STRICT, VersionPolicy.MIXED, ContentDisposition.INLINE);
 
     MavenHostedApiRepository hostedRepository = (MavenHostedApiRepository) underTest.adapt(repository);
     assertRepository(hostedRepository, "hosted", true);
@@ -90,7 +90,8 @@ public class MavenApiRepositoryAdapterTest
 
   @Test
   public void testAdapt_proxyRepository() throws Exception {
-    Repository repository = createRepository(new ProxyType(), LayoutPolicy.STRICT, VersionPolicy.MIXED, ContentDisposition.INLINE);
+    Repository repository =
+        createRepository(new ProxyType(), LayoutPolicy.STRICT, VersionPolicy.MIXED, ContentDisposition.INLINE);
 
     MavenProxyApiRepository proxyRepository = (MavenProxyApiRepository) underTest.adapt(repository);
     assertRepository(proxyRepository, "proxy", true);
@@ -125,9 +126,11 @@ public class MavenApiRepositoryAdapterTest
     return configuration;
   }
 
-  private static Repository createRepository(final Type type) throws Exception {
+  private static Repository createRepository(final Type type, final Consumer<Configuration> mutator) throws Exception {
     Repository repository = new RepositoryImpl(Mockito.mock(EventManager.class), type, new Maven2Format());
-    repository.init(config("my-repo"));
+    Configuration configuration = config("my-repo");
+    mutator.accept(configuration);
+    repository.init(configuration);
     return repository;
   }
 

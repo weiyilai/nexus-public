@@ -12,26 +12,31 @@
  */
 package org.sonatype.nexus.repository.maven.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.security.ContentPermissionChecker;
 import org.sonatype.nexus.repository.security.SecurityFacetSupport;
 import org.sonatype.nexus.repository.security.VariableResolverAdapter;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Maven 2 security facet.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenSecurityFacet
     extends SecurityFacetSupport
 {
   @Inject
-  public MavenSecurityFacet(final MavenFormatSecurityContributor securityContributor,
-                            @Named(Maven2Format.NAME) final VariableResolverAdapter variableResolverAdapter,
-                            final ContentPermissionChecker contentPermissionChecker)
+  public MavenSecurityFacet(
+      final MavenFormatSecurityContributor securityContributor,
+      @Qualifier(Maven2Format.NAME) final VariableResolverAdapter variableResolverAdapter,
+      final ContentPermissionChecker contentPermissionChecker)
   {
     super(securityContributor, variableResolverAdapter, contentPermissionChecker);
   }

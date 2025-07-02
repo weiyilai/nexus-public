@@ -12,10 +12,16 @@
  */
 package org.sonatype.nexus.repository.browse.node;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.app.VersionComparator;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import org.springframework.context.annotation.Primary;
 
 /**
  * Sort using VersionComparator when dealing with two components, fall back to node name when dealing
@@ -23,16 +29,21 @@ import org.sonatype.nexus.common.app.VersionComparator;
  *
  * @since 3.13
  */
-@Named(value = DefaultBrowseNodeComparator.NAME)
+@Component
+@Qualifier(DefaultBrowseNodeComparator.NAME)
+@Primary
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DefaultBrowseNodeComparator
     implements BrowseNodeComparator
 {
-  public static final String NAME = "default";
+  public static final String NAME = "DefaultBrowseNodeComparator";
 
   private final VersionComparator versionComparator;
 
   public static final int NODE_PRIORITY_COMPONENT = 1;
+
   public static final int NODE_PRIORITY_FOLDER = 2;
+
   public static final int NODE_PRIORITY_ASSET = 3;
 
   @Inject
@@ -49,7 +60,7 @@ public class DefaultBrowseNodeComparator
       try {
         return versionComparator.compare(o1.getName(), o2.getName());
       }
-      catch (IllegalArgumentException e) { //NOSONAR
+      catch (IllegalArgumentException e) { // NOSONAR
         return 0;
       }
     }
@@ -68,7 +79,7 @@ public class DefaultBrowseNodeComparator
    *
    * @param browseNode browseNode the node to evaluate for priority
    * @return an integer indicating the BrowseNode's priority level. A component node has the lowest priority,
-   * followed by asset nodes, then folder nodes.
+   *         followed by asset nodes, then folder nodes.
    */
   public static int getNodePriorityLevel(final BrowseNode browseNode) {
     if (browseNode.getComponentId() != null) {

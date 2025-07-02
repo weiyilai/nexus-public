@@ -138,7 +138,7 @@ public class StateGuard
       final String to,
       final boolean silent,
       final Class<? extends Exception>[] ignore,
-      boolean requiresWriteLock)
+      final boolean requiresWriteLock)
   {
     return new TransitionImpl(to, silent, ignore, requiresWriteLock);
   }

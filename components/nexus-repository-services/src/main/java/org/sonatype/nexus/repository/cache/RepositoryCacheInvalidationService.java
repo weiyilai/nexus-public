@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.cache;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.event.EventAware;
 import org.sonatype.nexus.common.event.EventHelper;
@@ -31,13 +30,14 @@ import com.google.common.eventbus.Subscribe;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Service class for consolidating repeated cache-related logic not exclusive to individual facets and components.
  *
  * @since 3.41
  */
-@Named
+@Component
 @Singleton
 public class RepositoryCacheInvalidationService
     implements EventAware

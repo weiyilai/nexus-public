@@ -12,11 +12,7 @@
  */
 package org.sonatype.nexus.extdirect.internal;
 
-import java.util.Map;
-
-import com.google.common.collect.Maps;
 import com.google.inject.servlet.ServletModule;
-import com.softwarementors.extjs.djn.servlet.DirectJNgineServlet.GlobalParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +21,7 @@ import org.slf4j.LoggerFactory;
  *
  * @since 3.38
  */
+@Deprecated(since = "4/1/2025", forRemoval = true)
 public abstract class ExtDirectServletModule
     extends ServletModule
 {
@@ -38,16 +35,6 @@ public abstract class ExtDirectServletModule
 
   @Override
   protected void configureServlets() {
-    Map<String, String> config = Maps.newHashMap();
-    config.put(GlobalParameters.PROVIDERS_URL, mountPoint.substring(1));
-    config.put("minify", Boolean.FALSE.toString());
-    config.put(GlobalParameters.DEBUG, Boolean.toString(log.isDebugEnabled()));
-    config.put(GlobalParameters.JSON_REQUEST_PROCESSOR_THREAD_CLASS,
-        ExtDirectJsonRequestProcessorThread.class.getName());
-    config.put(GlobalParameters.GSON_BUILDER_CONFIGURATOR_CLASS,
-        ExtDirectGsonBuilderConfigurator.class.getName());
-
-    serve(mountPoint + "*").with(ExtDirectServlet.class, config);
     bindSecurityFilter();
   }
 

@@ -14,14 +14,17 @@ package org.sonatype.nexus.internal.capability.node;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
 import org.sonatype.nexus.capability.CapabilitySupport;
 import org.sonatype.nexus.common.node.NodeAccess;
 import org.sonatype.nexus.common.template.TemplateParameters;
+
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -30,7 +33,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named(IdentityCapabilityDescriptor.TYPE_ID)
+@Component(IdentityCapabilityDescriptor.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class IdentityCapability
     extends CapabilitySupport<IdentityCapabilityConfiguration>
 {

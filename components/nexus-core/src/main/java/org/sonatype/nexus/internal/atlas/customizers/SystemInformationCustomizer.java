@@ -17,9 +17,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.atlas.SystemInformationGenerator;
@@ -32,13 +31,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Priority.REQUIRED;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.SYSINFO;
+import org.springframework.stereotype.Component;
 
 /**
  * Adds system information report to support bundle.
  *
  * @since 2.7
  */
-@Named
+@Component
 @Singleton
 public class SystemInformationCustomizer
     extends ComponentSupport

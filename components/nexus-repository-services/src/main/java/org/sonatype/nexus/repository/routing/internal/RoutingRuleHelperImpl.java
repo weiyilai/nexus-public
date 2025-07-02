@@ -16,9 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.repository.Repository;
@@ -31,6 +30,7 @@ import org.sonatype.nexus.repository.security.RepositoryPermissionChecker;
 import org.sonatype.nexus.repository.types.ProxyType;
 
 import org.apache.shiro.authz.Permission;
+import org.springframework.context.annotation.Lazy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.singletonList;
@@ -38,11 +38,12 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.sonatype.nexus.security.BreadActions.ADD;
 import static org.sonatype.nexus.security.BreadActions.READ;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.16
  */
-@Named
+@Component
 @Singleton
 public class RoutingRuleHelperImpl
     implements RoutingRuleHelper
@@ -58,8 +59,8 @@ public class RoutingRuleHelperImpl
   @Inject
   public RoutingRuleHelperImpl(
       final RoutingRuleCache routingRuleCache,
-      final RepositoryManager repositoryManager,
-      final RepositoryPermissionChecker repositoryPermissionChecker)
+      @Lazy final RepositoryManager repositoryManager,
+      @Lazy final RepositoryPermissionChecker repositoryPermissionChecker)
   {
     this.routingRuleCache = checkNotNull(routingRuleCache);
     this.repositoryManager = checkNotNull(repositoryManager);
@@ -77,6 +78,7 @@ public class RoutingRuleHelperImpl
     return isAllowed(routingRule, path);
   }
 
+  @Override
   public boolean isAllowed(final RoutingRule routingRule, final String path) {
     return isAllowed(routingRule.mode(), routingRule.matchers(), path);
   }
@@ -108,14 +110,14 @@ public class RoutingRuleHelperImpl
       repositoryPermissionChecker.ensureUserHasAnyPermissionOrAdminAccess(
           permissions,
           READ,
-          repositoryManager.browse()
-      );
+          repositoryManager.browse());
     }
   }
 
   private List<Permission> getRepositoryAddPermissions() {
     if (null == repositoryAddPermissions) {
-      repositoryAddPermissions = repositoryManager.getAllSupportedRecipes().stream()
+      repositoryAddPermissions = repositoryManager.getAllSupportedRecipes()
+          .stream()
           .filter(r -> r.getType().getValue().equals(ProxyType.NAME))
           .map(r -> new RepositoryAdminPermission(r.getFormat().getValue(), "*", singletonList(ADD)))
           .collect(toList());

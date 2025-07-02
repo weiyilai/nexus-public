@@ -32,7 +32,7 @@ import static org.sonatype.nexus.logging.task.TaskLoggingMarkers.TASK_LOG_ONLY;
  * Subclasses may implement {@link Cancelable} interface if they are implemented to periodically check for
  * {@link #isCanceled()} or {@link CancelableHelper#checkCancellation()} methods.
  * <p>
- * Task implementations should be {@code @Named} components but must not be {@code @Singletons}.
+ * Task implementations should be {@code @Component} components but must not be {@code @Scope(SCOPE_SINGLETON)}.
  *
  * @since 3.0
  */
@@ -177,7 +177,7 @@ public abstract class TaskSupport
 
   /**
    * Run a task in the context of the current task logger.
-   * 
+   *
    * @param runnable the task to run
    * @param executor the executor to run the task in
    * @return a CompletableFuture that will complete when the task is done

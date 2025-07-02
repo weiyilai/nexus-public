@@ -15,18 +15,23 @@ package org.sonatype.nexus.repository.content.maintenance;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.repository.content.Asset;
 import org.sonatype.nexus.repository.content.Component;
 import org.sonatype.nexus.repository.content.fluent.FluentComponent;
+
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
+
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
 /**
  * {@link ContentMaintenanceFacet} for formats where components should be deleted along with their last asset.
  *
  * @since 3.26
  */
-@Named
+@Primary
+@Scope(SCOPE_PROTOTYPE)
+@org.springframework.stereotype.Component
 public class LastAssetMaintenanceFacet
     extends DefaultMaintenanceFacet
 {

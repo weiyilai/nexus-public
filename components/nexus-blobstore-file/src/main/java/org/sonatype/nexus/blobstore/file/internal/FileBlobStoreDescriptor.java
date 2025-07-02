@@ -19,8 +19,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -43,6 +42,10 @@ import static org.sonatype.nexus.blobstore.file.FileBlobStore.CONFIG_KEY;
 import static org.sonatype.nexus.blobstore.file.FileBlobStore.PATH_KEY;
 import static org.sonatype.nexus.formfields.FormField.MANDATORY;
 import static org.sonatype.nexus.blobstore.BlobStoreSupport.MAX_NAME_LENGTH;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * A {@link BlobStoreDescriptor} for {@link FileBlobStore}.
@@ -50,7 +53,9 @@ import static org.sonatype.nexus.blobstore.BlobStoreSupport.MAX_NAME_LENGTH;
  * @since 3.6
  */
 @AvailabilityVersion(from = "1.0")
-@Named(FileBlobStore.TYPE)
+@Component
+@Qualifier(FileBlobStore.TYPE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class FileBlobStoreDescriptor
     extends BlobStoreDescriptorSupport
 {

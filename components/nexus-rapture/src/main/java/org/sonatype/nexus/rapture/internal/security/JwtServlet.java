@@ -14,10 +14,11 @@ package org.sonatype.nexus.rapture.internal.security;
 
 import java.io.IOException;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -39,10 +40,11 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.net.HttpHeaders.X_FRAME_OPTIONS;
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
-import static org.sonatype.nexus.common.app.FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED_VALUE;
+import static org.sonatype.nexus.rapture.internal.security.SessionServlet.SESSION_MP;
 import static org.sonatype.nexus.security.JwtHelper.JWT_COOKIE_NAME;
 import static org.sonatype.nexus.servlet.XFrameOptions.DENY;
+import org.springframework.stereotype.Component;
 
 /**
  * JWT servlet, to expose end-point for configuration of Shiro authentication filter to
@@ -52,7 +54,8 @@ import static org.sonatype.nexus.servlet.XFrameOptions.DENY;
  *
  * @see JwtAuthenticationFilter
  */
-@Named
+@WebServlet(SESSION_MP)
+@Component
 @Singleton
 @FeatureFlag(name = JWT_ENABLED)
 @ConditionalOnProperty(name = JWT_ENABLED, havingValue = "true")
@@ -73,9 +76,9 @@ public class JwtServlet
 
   @Inject
   public JwtServlet(
-      @Named("${nexus-context-path}") final String contextPath,
+      @Value("${nexus-context-path:#{null}}") final String contextPath,
       final EventManager eventManager,
-      @Named(NXSESSIONID_SECURE_COOKIE_NAMED) @Value(NXSESSIONID_SECURE_COOKIE_NAMED_VALUE) final boolean cookieSecure)
+      @Value(NXSESSIONID_SECURE_COOKIE_NAMED_VALUE) final boolean cookieSecure)
   {
     this.contextPath = contextPath;
     this.eventManager = eventManager;

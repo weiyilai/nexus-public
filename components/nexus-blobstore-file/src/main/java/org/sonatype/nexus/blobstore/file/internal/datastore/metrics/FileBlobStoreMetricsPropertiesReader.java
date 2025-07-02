@@ -20,8 +20,6 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.blobstore.AccumulatingBlobStoreMetrics;
 import org.sonatype.nexus.blobstore.BlobStoreMetricsNotAvailableException;
 import org.sonatype.nexus.blobstore.file.FileBlobStore;
@@ -33,6 +31,10 @@ import com.google.common.collect.ImmutableMap;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * A {@link BlobStoreMetricsPropertiesReaderSupport} implementation that retains blobstore metrics in memory,
@@ -43,7 +45,9 @@ import static java.util.stream.Collectors.toList;
  * @deprecated legacy method for metrics stored in the blob store
  */
 @Deprecated
-@Named(FileBlobStore.TYPE)
+@Component
+@Qualifier(FileBlobStore.TYPE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class FileBlobStoreMetricsPropertiesReader
     extends BlobStoreMetricsPropertiesReaderSupport<FileBlobStore, PropertiesFile>
 {

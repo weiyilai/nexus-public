@@ -24,10 +24,9 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.InternalAccessible;
@@ -63,13 +62,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Thread.MIN_PRIORITY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link WebhookService} implementation.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class WebhookServiceImpl
     extends ComponentSupport
@@ -100,7 +100,7 @@ public class WebhookServiceImpl
   public WebhookServiceImpl(
       final Provider<CloseableHttpClient> httpClientProvider,
       final List<Webhook> webhooks,
-      @Named("${nexus.webhook.pool.size:-128}") @Value("${nexus.webhook.pool.size:128}") final int poolSize)
+      @Value("${nexus.webhook.pool.size:128}") final int poolSize)
   {
     this.httpClientProvider = checkNotNull(httpClientProvider);
     this.webhooks = checkNotNull(webhooks);

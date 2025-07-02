@@ -14,8 +14,7 @@ package org.sonatype.nexus.security.privilege;
 
 import java.util.List;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -31,6 +30,8 @@ import com.google.common.collect.ImmutableList;
 import org.apache.shiro.authz.Permission;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Wildcard {@link PrivilegeDescriptor}.
@@ -38,7 +39,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @see WildcardPermission2
  * @since 3.0
  */
-@Named(WildcardPrivilegeDescriptor.TYPE)
+@Component
+@Qualifier(WildcardPrivilegeDescriptor.TYPE)
 @Singleton
 public class WildcardPrivilegeDescriptor
     extends PrivilegeDescriptorSupport<ApiPrivilegeWildcard, ApiPrivilegeWildcardRequest>
@@ -71,9 +73,7 @@ public class WildcardPrivilegeDescriptor
             P_PATTERN,
             messages.pattern(),
             messages.patternHelp(),
-            FormField.MANDATORY
-        )
-    );
+            FormField.MANDATORY));
   }
 
   @Override
@@ -116,6 +116,6 @@ public class WildcardPrivilegeDescriptor
 
   @Override
   public void validate(final ApiPrivilegeWildcardRequest apiPrivilege) {
-    //not validating anything in particular here
+    // not validating anything in particular here
   }
 }

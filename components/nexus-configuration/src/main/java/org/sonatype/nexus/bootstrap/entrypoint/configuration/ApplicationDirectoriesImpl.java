@@ -13,9 +13,8 @@
 package org.sonatype.nexus.bootstrap.entrypoint.configuration;
 
 import java.io.File;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import com.google.common.base.Throwables;
 import org.slf4j.Logger;
@@ -25,13 +24,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link ApplicationDirectories} implementation.
  *
  * @since 2.8
  */
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 public class ApplicationDirectoriesImpl
@@ -51,8 +51,8 @@ public class ApplicationDirectoriesImpl
 
   @Inject
   public ApplicationDirectoriesImpl(
-      @Value("${karaf.base}") @Named("${karaf.base}") final String installDir,
-      @Value("${karaf.data}") @Named("${karaf.data}") final String workDir,
+      @Value("${karaf.base}") final String installDir,
+      @Value("${karaf.data}") final String workDir,
       final DirectoryHelper directoryHelper)
   {
     this.installDir = resolve(new File(installDir), false);

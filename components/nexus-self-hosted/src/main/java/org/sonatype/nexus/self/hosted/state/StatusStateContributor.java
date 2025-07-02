@@ -15,9 +15,8 @@ package org.sonatype.nexus.self.hosted.state;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ApplicationVersion;
@@ -27,13 +26,14 @@ import org.sonatype.nexus.rapture.internal.state.StatusXO;
 import com.google.common.collect.ImmutableMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Contributes {@code status} state.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class StatusStateContributor
     extends ComponentSupport

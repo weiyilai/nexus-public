@@ -23,9 +23,8 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.crypto.CryptoHelper;
 import org.sonatype.nexus.crypto.internal.error.CipherException;
@@ -38,11 +37,12 @@ import com.google.common.collect.ImmutableMap;
 import org.bouncycastle.util.encoders.Hex;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
- * Default implementation for  {@link PbeCipherFactory} . provides a simple cipher supporting PHC string format
+ * Default implementation for {@link PbeCipherFactory} . provides a simple cipher supporting PHC string format
  */
-@Named
+@Component
 @Singleton
 public class PbeCipherFactoryImpl
     implements PbeCipherFactory
@@ -92,8 +92,9 @@ public class PbeCipherFactoryImpl
 
     private final SecretKeyFactory keyFactory;
 
-    public PbeCipherImpl(final CryptoHelper cryptoHelper, final SecretEncryptionKey secretEncryptionKey)
-        throws CipherException
+    public PbeCipherImpl(
+        final CryptoHelper cryptoHelper,
+        final SecretEncryptionKey secretEncryptionKey) throws CipherException
     {
       this.random = cryptoHelper.createSecureRandom();
       this.cryptoHelper = cryptoHelper;
@@ -121,7 +122,7 @@ public class PbeCipherFactoryImpl
         byte[] iv = randomBytes(16);
         byte[] salt = randomBytes(16);
 
-        AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv); //NOSONAR
+        AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv); // NOSONAR
         KeySpec spec = new PBEKeySpec(secretEncryptionKey.getKey().toCharArray(), salt, KEY_ITERATIONS, KEY_LENGTH);
         SecretKey tmp = keyFactory.generateSecret(spec);
         SecretKey secretKey = new SecretKeySpec(tmp.getEncoded(), KEY_ALGORITHM);
@@ -147,7 +148,7 @@ public class PbeCipherFactoryImpl
         int iterations = Integer.parseInt(secret.getAttributes().get("key_iteration"));
         int length = Integer.parseInt(secret.getAttributes().get("key_len"));
 
-        AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv); //NOSONAR
+        AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv); // NOSONAR
         KeySpec spec = new PBEKeySpec(secretEncryptionKey.getKey().toCharArray(), salt, iterations, length);
         SecretKey tmp = keyFactory.generateSecret(spec);
         SecretKey secretKey = new SecretKeySpec(tmp.getEncoded(), KEY_ALGORITHM);

@@ -14,8 +14,7 @@ package org.sonatype.nexus.repository.raw.internal.cleanup;
 
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.cleanup.config.CleanupPolicyConfiguration;
 import org.sonatype.nexus.repository.raw.internal.RawFormat;
@@ -26,11 +25,14 @@ import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.IS_PREREL
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.LAST_BLOB_UPDATED_KEY;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.LAST_DOWNLOADED_KEY;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.REGEX_KEY;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.19
  */
-@Named(RawFormat.NAME)
+@Component
+@Qualifier(RawFormat.NAME)
 @Singleton
 public class RawCleanupPolicyConfiguration
     implements CleanupPolicyConfiguration

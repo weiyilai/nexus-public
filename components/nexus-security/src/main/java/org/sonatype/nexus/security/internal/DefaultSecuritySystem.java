@@ -24,10 +24,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.crypto.Cipher;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
@@ -65,6 +65,9 @@ import org.apache.shiro.realm.Realm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.LifecycleUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -73,7 +76,9 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SECURITY;
 /**
  * This implementation wraps a Shiro SecurityManager, and adds user management.
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @ManagedLifecycle(phase = SECURITY)
 @Singleton
 public class DefaultSecuritySystem
@@ -81,7 +86,9 @@ public class DefaultSecuritySystem
     implements SecuritySystem
 {
   private static final String ALL_ROLES_KEY = "all";
+
   public static final String NEXUS_AUTHORIZING_REALM = "NexusAuthorizingRealm";
+
   public static final String NEXUS_AUTHENTICATING_REALM = "NexusAuthenticatingRealm";
 
   private final EventManager eventManager;
@@ -99,20 +106,21 @@ public class DefaultSecuritySystem
   private final SecurityHelper securityHelper;
 
   @Inject
-  public DefaultSecuritySystem(final EventManager eventManager,
-                               final RealmSecurityManager realmSecurityManager,
-                               final RealmManager realmManager,
-                               final AnonymousManager anonymousManager,
-                               final Map<String, AuthorizationManager> authorizationManagers,
-                               final Map<String, UserManager> userManagers,
-                               final SecurityHelper securityHelper)
+  public DefaultSecuritySystem(
+      final EventManager eventManager,
+      final RealmSecurityManager realmSecurityManager,
+      final RealmManager realmManager,
+      final AnonymousManager anonymousManager,
+      final List<AuthorizationManager> authorizationManagersList,
+      final List<UserManager> userManagersList,
+      final SecurityHelper securityHelper)
   {
     this.eventManager = checkNotNull(eventManager);
     this.realmSecurityManager = checkNotNull(realmSecurityManager);
     this.realmManager = checkNotNull(realmManager);
     this.anonymousManager = checkNotNull(anonymousManager);
-    this.authorizationManagers = checkNotNull(authorizationManagers);
-    this.userManagers = checkNotNull(userManagers);
+    this.authorizationManagers = QualifierUtil.buildQualifierBeanMap(checkNotNull(authorizationManagersList));
+    this.userManagers = QualifierUtil.buildQualifierBeanMap(checkNotNull(userManagersList));
     this.securityHelper = checkNotNull(securityHelper);
   }
 
@@ -226,8 +234,7 @@ public class DefaultSecuritySystem
           roleMappingUserManager.setUsersRoles(
               user.getUserId(),
               user.getSource(),
-              RoleIdentifier.getRoleIdentifiersForSource(user.getSource(), user.getRoles())
-          );
+              RoleIdentifier.getRoleIdentifiersForSource(user.getSource(), user.getRoles()));
         }
         catch (UserNotFoundException e) {
           log.debug("User '{}' is not managed by the user-manager: {}", user.getUserId(), tmpUserManager.getSource());
@@ -266,8 +273,7 @@ public class DefaultSecuritySystem
           roleMappingUserManager.setUsersRoles(
               user.getUserId(),
               user.getSource(),
-              RoleIdentifier.getRoleIdentifiersForSource(user.getSource(), user.getRoles())
-          );
+              RoleIdentifier.getRoleIdentifiersForSource(user.getSource(), user.getRoles()));
         }
         catch (UserNotFoundException e) {
           log.debug("User '{}' is not managed by the user-manager: {}", user.getUserId(), tmpUserManager.getSource());
@@ -315,8 +321,10 @@ public class DefaultSecuritySystem
   }
 
   @Override
-  public void setUsersRoles(String userId, String source, Set<RoleIdentifier> roleIdentifiers)
-      throws UserNotFoundException
+  public void setUsersRoles(
+      String userId,
+      String source,
+      Set<RoleIdentifier> roleIdentifiers) throws UserNotFoundException
   {
     // TODO: this is a bit sticky, what we really want to do is just expose the RoleMappingUserManagers this way (i
     // think), maybe this is too generic
@@ -331,8 +339,7 @@ public class DefaultSecuritySystem
           roleMappingUserManager.setUsersRoles(
               userId,
               source,
-              RoleIdentifier.getRoleIdentifiersForSource(userManager.getSource(), roleIdentifiers)
-          );
+              RoleIdentifier.getRoleIdentifiersForSource(userManager.getSource(), roleIdentifiers));
         }
         catch (UserNotFoundException e) {
           log.debug("User '{}' is not managed by the user-manager: {}", userId, userManager.getSource());
@@ -406,7 +413,11 @@ public class DefaultSecuritySystem
   }
 
   @Override
-  public User getUser(String userId, String source, Set<String> roleIds) throws UserNotFoundException, NoSuchUserManagerException {
+  public User getUser(
+      String userId,
+      String source,
+      Set<String> roleIds) throws UserNotFoundException, NoSuchUserManagerException
+  {
     log.trace("Finding user: {} in source: {}", userId, source);
 
     UserManager userManager = getUserManager(source);
@@ -535,8 +546,10 @@ public class DefaultSecuritySystem
   }
 
   @Override
-  public void changePassword(String userId, String oldPassword, String newPassword)
-      throws UserNotFoundException, InvalidCredentialsException
+  public void changePassword(
+      String userId,
+      String oldPassword,
+      String newPassword) throws UserNotFoundException, InvalidCredentialsException
   {
     // first authenticate the user
     try {
@@ -596,8 +609,10 @@ public class DefaultSecuritySystem
   }
 
   private UserManager getUserManagerByRealm(final String realmName) throws NoSuchUserManagerException {
-    return userManagers.values().stream()
-        .filter(userManager -> realmName.equalsIgnoreCase(userManager.getAuthenticationRealmName())).findFirst()
+    return userManagers.values()
+        .stream()
+        .filter(userManager -> realmName.equalsIgnoreCase(userManager.getAuthenticationRealmName()))
+        .findFirst()
         .orElseThrow(() -> new NoSuchUserManagerException(realmName));
   }
 
@@ -608,7 +623,6 @@ public class DefaultSecuritySystem
     }
     return userManagers.get(source);
   }
-
 
   @Override
   public List<String> listSources() {
@@ -623,7 +637,8 @@ public class DefaultSecuritySystem
 
   private List<String> getAllRealmIds() {
     List<String> authenticationRealms = AnonymousHelper.getAuthenticationRealms(new ArrayList<>(userManagers.values()));
-    return realmManager.getAvailableRealms(true).stream()
+    return realmManager.getAvailableRealms(true)
+        .stream()
         .map(SecurityRealm::getId)
         .filter(authenticationRealms::contains)
         .map(id -> id.equals(NEXUS_AUTHORIZING_REALM) ? NEXUS_AUTHENTICATING_REALM : id)

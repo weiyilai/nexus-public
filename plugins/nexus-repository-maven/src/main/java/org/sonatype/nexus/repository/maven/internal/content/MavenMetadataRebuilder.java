@@ -20,9 +20,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.MultipleFailures;
@@ -43,12 +42,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 import static org.sonatype.nexus.repository.maven.internal.hosted.metadata.MetadataUtils.metadataPath;
+import org.springframework.stereotype.Component;
 
 /**
  * A maven2 metadata rebuilder written to take advantage of the SQL database design.
  */
 @Singleton
-@Named
+@Component
 public class MavenMetadataRebuilder
     extends ComponentSupport
     implements MetadataRebuilder
@@ -61,8 +61,8 @@ public class MavenMetadataRebuilder
 
   @Inject
   public MavenMetadataRebuilder(
-      @Named("${nexus.maven.metadata.rebuild.bufferSize:-1000}") @Value("${nexus.maven.metadata.rebuild.bufferSize:1000}") final int bufferSize,
-      @Named("${nexus.maven.metadata.rebuild.threadPoolSize:-1}") @Value("${nexus.maven.metadata.rebuild.threadPoolSize:1}") final int maxTreads)
+      @Value("${nexus.maven.metadata.rebuild.bufferSize:1000}") final int bufferSize,
+      @Value("${nexus.maven.metadata.rebuild.threadPoolSize:1}") final int maxTreads)
   {
     checkArgument(bufferSize > 0, "Buffer size must be greater than 0");
 

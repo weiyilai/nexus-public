@@ -14,22 +14,21 @@ package org.sonatype.nexus.repository.security.internal;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.security.internal.AuthenticatingRealmImpl;
 import org.sonatype.nexus.security.realm.RealmManager;
 
 import com.codahale.metrics.health.HealthCheck;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.realm.Realm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED;
@@ -37,9 +36,9 @@ import static org.sonatype.nexus.common.app.FeatureFlags.NEXUS_SECURITY_FIPS_ENA
 /**
  * Check if the default user can be used to authenticate.
  */
-@FeatureFlag(name = NEXUS_SECURITY_FIPS_ENABLED, inverse = true)
+@Component
+@Qualifier("Default Admin Credentials")
 @ConditionalOnProperty(name = NEXUS_SECURITY_FIPS_ENABLED, havingValue = "false", matchIfMissing = true)
-@Named("Default Admin Credentials")
 @Singleton
 public class DefaultUserHealthCheck
     extends HealthCheck

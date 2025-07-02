@@ -98,8 +98,8 @@ public class HttpClientFacetImplConfigTest
 
   @Test
   public void fireEventOnRemoteConnectionStatusChanged() throws Exception {
-    HttpClientFacetImpl underTest = new HttpClientFacetImpl(mock(HttpClientManager.class), Collections.emptyMap(),
-        Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
+    HttpClientFacetImpl underTest = new HttpClientFacetImpl(mock(HttpClientManager.class), Collections.emptyList(),
+        Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
     Repository repository = mock(Repository.class);
     when(repository.getName()).thenReturn("test-repository");
     underTest.attach(repository);

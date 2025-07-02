@@ -12,10 +12,13 @@
  */
 package org.sonatype.nexus.coreui;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
+import java.io.File;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.validation.executable.ExecutableValidator;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.BlobStoreDescriptor;
@@ -27,18 +30,19 @@ import org.sonatype.nexus.blobstore.api.BlobStoreException;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.blobstore.api.BlobStoreMetrics;
 import org.sonatype.nexus.blobstore.api.tasks.BlobStoreTaskService;
-import org.sonatype.nexus.blobstore.quota.BlobStoreQuota;
+import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.rapture.PasswordPlaceholder;
 import org.sonatype.nexus.repository.blobstore.BlobStoreConfigurationStore;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.security.RepositoryPermissionChecker;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 
 import static java.lang.Math.pow;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -68,8 +72,6 @@ public class BlobStoreComponentTest
   @Mock
   private BlobStoreDescriptorProvider blobStoreDescriptorProvider;
 
-  private Map<String, BlobStoreQuota> quotaFactories = new HashMap<>();
-
   @Mock
   private ApplicationDirectories applicationDirectories;
 
@@ -86,8 +88,14 @@ public class BlobStoreComponentTest
 
   @Before
   public void setup() {
-    underTest = new BlobStoreComponent(blobStoreManager, store, blobStoreDescriptorProvider, quotaFactories,
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = mock(ExecutableValidator.class, Answers.RETURNS_MOCKS);
+    underTest = new BlobStoreComponent(blobStoreManager, store, blobStoreDescriptorProvider, List.of(),
         applicationDirectories, repositoryManager, permissionChecker, blobStoreTaskService);
+  }
+
+  @After
+  public void teardown() {
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
   }
 
   @Test
@@ -95,7 +103,7 @@ public class BlobStoreComponentTest
     BlobStoreDescriptor descriptor = mock(BlobStoreDescriptor.class);
     when(descriptor.getName()).thenReturn("MyType");
     when(descriptor.getFormFields()).thenReturn(Collections.emptyList());
-    Map<String, BlobStoreDescriptor> blobStoreDescriptors = Collections.singletonMap("MyType", descriptor);
+    Map<String, BlobStoreDescriptor> blobStoreDescriptors = Map.of("MyType", descriptor);
     when(blobStoreDescriptorProvider.get()).thenReturn(blobStoreDescriptors);
 
     List<BlobStoreTypeXO> types = underTest.readTypes();
@@ -137,7 +145,7 @@ public class BlobStoreComponentTest
 
     when(blobStoreManager.create(any(BlobStoreConfiguration.class))).thenReturn(blobStore);
     when(blobStoreManager.newConfiguration()).thenReturn(mock(BlobStoreConfiguration.class));
-    when(blobStoreManager.getByName()).thenReturn(Collections.singletonMap("myblobs", blobStore));
+    when(blobStoreManager.getByName()).thenReturn(Map.of("myblobs", blobStore));
 
     BlobStoreXO createdXO = underTest.create(blobStoreXO);
 
@@ -174,12 +182,12 @@ public class BlobStoreComponentTest
   @Test
   public void testCreateBlobStoreXOWithQuota() {
     long quotaLimitBytes = (long) (10 * pow(10, 6));
-    MockBlobStoreConfiguration config = mockConfig(quotaLimitBytes);
+    MockBlobStoreConfiguration config = mockConfig("test", quotaLimitBytes);
 
     BlobStore blobStore = mock(BlobStore.class);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(config);
     when(blobStore.getMetrics()).thenReturn(mock(BlobStoreMetrics.class));
-    when(blobStoreManager.getByName()).thenReturn(Collections.singletonMap("test", blobStore));
+    when(blobStoreManager.getByName()).thenReturn(Map.of("test", blobStore));
 
     BlobStoreXO blobStoreXO = underTest.asBlobStoreXO(config);
 
@@ -187,7 +195,7 @@ public class BlobStoreComponentTest
     assertThat(blobStoreXO.getQuotaType(), is("spaceUsedQuota"));
     assertThat(blobStoreXO.getQuotaLimit(), is(10L));
 
-    config = mockConfig(1);
+    config = mockConfig("test", 1);
     blobStoreXO = underTest.asBlobStoreXO(config);
     assertThat(blobStoreXO.getQuotaLimit(), is(0L));
   }
@@ -225,7 +233,7 @@ public class BlobStoreComponentTest
                 Map.of("quotaType", "spaceUsedQuota", "quotaLimitBytes", 7)));
     BlobStore blobStore = mock(BlobStore.class);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(config);
-    when(blobStoreManager.getByName()).thenReturn(Collections.singletonMap("test", blobStore));
+    when(blobStoreManager.getByName()).thenReturn(Map.of("test", blobStore));
 
     BlobStoreXO blobStoreXO = underTest.asBlobStoreXO(config, Collections.emptyList());
 
@@ -264,7 +272,7 @@ public class BlobStoreComponentTest
 
     when(blobStoreManager.get("myblobs")).thenReturn(blobStore);
     when(blobStoreManager.newConfiguration()).thenReturn(new MockBlobStoreConfiguration());
-    when(blobStoreManager.getByName()).thenReturn(Collections.singletonMap("myblobs", blobStore));
+    when(blobStoreManager.getByName()).thenReturn(Map.of("myblobs", blobStore));
     when(blobStoreManager.update(any(BlobStoreConfiguration.class))).thenReturn(blobStore);
 
     BlobStoreXO updatedXO = underTest.update(blobStoreXO);
@@ -301,7 +309,7 @@ public class BlobStoreComponentTest
 
     when(blobStoreManager.get("myblobs")).thenReturn(blobStore);
     when(blobStoreManager.newConfiguration()).thenReturn(new MockBlobStoreConfiguration());
-    when(blobStoreManager.getByName()).thenReturn(Collections.singletonMap("myblobs", blobStore));
+    when(blobStoreManager.getByName()).thenReturn(Map.of("myblobs", blobStore));
     when(blobStoreManager.update(any(BlobStoreConfiguration.class))).thenReturn(blobStore);
 
     BlobStoreXO updatedXO = underTest.update(blobStoreXO);
@@ -326,9 +334,10 @@ public class BlobStoreComponentTest
     verify(blobStoreManager, never()).delete("used_in_move");
   }
 
-  private static MockBlobStoreConfiguration mockConfig(final long quotaLimitBytes) {
-    return new MockBlobStoreConfiguration().withAttributes(
-        Map.of("file", Map.of("path", "path"), "blobStoreQuotaConfig",
+  private static MockBlobStoreConfiguration mockConfig(final String name, final long quotaLimitBytes) {
+    return new MockBlobStoreConfiguration()
+        .withName(name)
+        .withAttributes(Map.of("file", Map.of("path", "path"), "blobStoreQuotaConfig",
             Map.of("quotaType", "spaceUsedQuota", "quotaLimitBytes", quotaLimitBytes)));
   }
 }

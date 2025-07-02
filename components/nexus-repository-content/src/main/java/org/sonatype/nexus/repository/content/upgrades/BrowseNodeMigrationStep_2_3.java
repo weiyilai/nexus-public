@@ -18,8 +18,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.StringJoiner;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.RepositoryTaskSupport;
@@ -30,8 +29,12 @@ import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BrowseNodeMigrationStep_2_3
     extends ComponentSupport
     implements DatabaseMigrationStep
@@ -77,9 +80,7 @@ public class BrowseNodeMigrationStep_2_3
     }
   }
 
-  protected String getRepositoryNames(final Connection connection)
-      throws IllegalStateException
-  {
+  protected String getRepositoryNames(final Connection connection) throws IllegalStateException {
     StringJoiner repositoryNames = new StringJoiner(",");
     try (PreparedStatement statement = connection.prepareStatement(SELECT_REPOSITORY_NAMES)) {
       try (ResultSet resultSet = statement.executeQuery()) {

@@ -14,8 +14,7 @@ package org.sonatype.nexus.repository.rest.internal;
 
 import java.util.List;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.rest.SearchMapping;
@@ -23,6 +22,8 @@ import org.sonatype.nexus.repository.rest.SearchMappings;
 import org.sonatype.nexus.repository.rest.sql.SearchField;
 
 import com.google.common.collect.ImmutableList;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.repository.rest.sql.SearchField.FORMAT;
 import static org.sonatype.nexus.repository.rest.sql.SearchField.KEYWORDS;
@@ -38,7 +39,8 @@ import static org.sonatype.nexus.repository.search.index.SearchConstants.REPOSIT
 /**
  * @since 3.7
  */
-@Named("default")
+@Component
+@Qualifier("default")
 @Singleton
 public class DefaultSearchMappings
     extends ComponentSupport

@@ -13,7 +13,7 @@
 package org.sonatype.nexus.repository.rest.internal.resources;
 
 import java.util.List;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -86,7 +86,8 @@ public class ContentSelectorsApiResource
   @RequiresPermissions("nexus:selectors:read")
   @NotCacheable
   public List<ContentSelectorApiResponse> getContentSelectors() {
-    return store.browse().stream()
+    return store.browse()
+        .stream()
         .map(ContentSelectorsApiResource::fromSelectorConfiguration)
         .collect(toList());
   }
@@ -119,8 +120,9 @@ public class ContentSelectorsApiResource
   @RequiresAuthentication
   @Validate
   @RequiresPermissions("nexus:selectors:update")
-  public void updateContentSelector(@PathParam("name") final String name,
-                                    @Valid final ContentSelectorApiUpdateRequest request)
+  public void updateContentSelector(
+      @PathParam("name") final String name,
+      @Valid final ContentSelectorApiUpdateRequest request)
   {
     SelectorConfiguration configuration = findConfigurationByNameOrThrowNotFound(name);
 
@@ -150,7 +152,9 @@ public class ContentSelectorsApiResource
             APPLICATION_JSON));
   }
 
-  private static ContentSelectorApiResponse fromSelectorConfiguration(final SelectorConfiguration selectorConfiguration) {
+  private static ContentSelectorApiResponse fromSelectorConfiguration(
+      final SelectorConfiguration selectorConfiguration)
+  {
     ContentSelectorApiResponse response = new ContentSelectorApiResponse();
     response.setName(selectorConfiguration.getName());
     response.setType(selectorConfiguration.getType());

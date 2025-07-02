@@ -12,22 +12,24 @@
  */
 package org.sonatype.nexus.internal.status;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FreezeRequest;
 import org.sonatype.nexus.common.app.FreezeService;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.text.Strings2.isBlank;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Health check that warns when the application is read-only.
  *
  * @since 3.16
  */
-@Named("Read-Only Detector")
+@Component
+@Qualifier("Read-Only Detector")
 @Singleton
 public class ReadOnlyHealthCheck
     extends HealthCheckComponentSupport

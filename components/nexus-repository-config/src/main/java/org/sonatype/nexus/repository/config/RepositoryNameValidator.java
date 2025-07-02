@@ -12,19 +12,22 @@
  */
 package org.sonatype.nexus.repository.config;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Ensure that the value matches a repository name
  *
  * @since 3.31
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RepositoryNameValidator
     extends ConstraintValidatorSupport<RepositoryName, String>
 {

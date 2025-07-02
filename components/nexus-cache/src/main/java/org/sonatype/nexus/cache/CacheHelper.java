@@ -18,12 +18,13 @@ import javax.cache.CacheManager;
 import javax.cache.configuration.Factory;
 import javax.cache.configuration.MutableConfiguration;
 import javax.cache.expiry.ExpiryPolicy;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -31,7 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 3.6
  */
 @SuppressWarnings("rawtypes")
-@Named
+@Component
 @Singleton
 public class CacheHelper
     extends ComponentSupport

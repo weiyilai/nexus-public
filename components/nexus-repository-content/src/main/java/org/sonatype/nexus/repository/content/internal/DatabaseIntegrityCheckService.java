@@ -14,9 +14,8 @@ package org.sonatype.nexus.repository.content.internal;
 
 import java.sql.Connection;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -25,11 +24,12 @@ import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.UPGRADE;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
+import org.springframework.stereotype.Component;
 
 /**
  * Checks database integrity at application startup and configures automated repairs
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = UPGRADE)
 public class DatabaseIntegrityCheckService

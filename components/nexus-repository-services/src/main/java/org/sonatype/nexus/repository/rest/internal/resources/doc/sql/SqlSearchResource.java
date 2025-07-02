@@ -12,13 +12,12 @@
  */
 package org.sonatype.nexus.repository.rest.internal.resources.doc.sql;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
@@ -45,11 +44,12 @@ import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_TABLE_SEARCH;
 import static org.sonatype.nexus.repository.search.SearchUtils.CONTINUATION_TOKEN;
 import static org.sonatype.nexus.repository.search.SearchUtils.SORT_DIRECTION;
 import static org.sonatype.nexus.repository.search.SearchUtils.SORT_FIELD;
+import org.springframework.stereotype.Component;
 
 /**
  * SQL Search REST endpoints.
  */
-@Named
+@Component
 @Singleton
 @Path(SearchResource.RESOURCE_URI)
 @ConditionalOnProperty(name = DATASTORE_TABLE_SEARCH, havingValue = "true")
@@ -69,7 +69,7 @@ public class SqlSearchResource
       final ComponentXOFactory componentXOFactory,
       final Set<SearchResourceExtension> searchResourceExtensions,
       final EventManager eventManager,
-      @Nullable final Map<String, AssetXODescriptor> assetDescriptors)
+      @Nullable final List<AssetXODescriptor> assetDescriptors)
   {
     super(searchUtils, searchResultFilterUtils, searchService, componentXOFactory, searchResourceExtensions,
         eventManager, assetDescriptors);

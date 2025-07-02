@@ -14,9 +14,8 @@ package org.sonatype.nexus.coreui.internal.wonderland;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -37,13 +36,14 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Authenticate a user's credentials.
  *
  * @since 2.7
  */
-@Named
+@Component
 @Singleton
 @Path(AuthenticateResource.RESOURCE_URI)
 public class AuthenticateResource

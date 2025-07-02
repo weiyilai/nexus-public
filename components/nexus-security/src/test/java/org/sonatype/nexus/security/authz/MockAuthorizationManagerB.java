@@ -23,9 +23,12 @@ import org.sonatype.nexus.security.privilege.Privilege;
 import org.sonatype.nexus.security.role.NoSuchRoleException;
 import org.sonatype.nexus.security.role.Role;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+
 /**
  * @see DefaultSecuritySystemTest
  */
+@Qualifier("sourceB")
 public class MockAuthorizationManagerB
     extends AbstractReadOnlyAuthorizationManager
 {

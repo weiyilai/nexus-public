@@ -14,9 +14,9 @@ package org.sonatype.nexus.repository.content.kv;
 
 import java.util.List;
 import java.util.Optional;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.property.SystemPropertiesHelper;
@@ -27,9 +27,8 @@ import org.sonatype.nexus.transaction.Transactional;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.ibatis.annotations.Param;
 
-@Named
 public class KeyValueStore<T extends KeyValueDAO>
-   extends ContentStoreSupport<T>
+    extends ContentStoreSupport<T>
 {
   private static final int DELETE_BATCH_SIZE_DEFAULT =
       SystemPropertiesHelper.getInteger("nexus.content.deleteBatchSize", 1000);
@@ -122,7 +121,11 @@ public class KeyValueStore<T extends KeyValueDAO>
   }
 
   @Transactional
-  public List<KeyValue> findByCategoryAndKeyLike(final int repositoryId, @Nullable final String category, final String keyLike) {
+  public List<KeyValue> findByCategoryAndKeyLike(
+      final int repositoryId,
+      @Nullable final String category,
+      final String keyLike)
+  {
     return dao().findByCategoryAndKeyLike(repositoryId, category, keyLike);
   }
 }

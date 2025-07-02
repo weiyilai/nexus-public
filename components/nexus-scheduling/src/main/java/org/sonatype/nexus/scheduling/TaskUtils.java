@@ -16,20 +16,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.scheduling.spi.TaskResultStateStore;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 public class TaskUtils
     extends ComponentSupport
@@ -53,7 +53,9 @@ public class TaskUtils
       final List<String> conflictingTypeIds,
       final Map<String, List<String>> conflictingConfiguration)
   {
-    Set<TaskInfo> incompatibleTasks = taskSchedulerProvider.get().listsTasks().stream()
+    Set<TaskInfo> incompatibleTasks = taskSchedulerProvider.get()
+        .listsTasks()
+        .stream()
         .filter(taskInfo -> isConflictingTask(taskId, taskInfo, conflictingTypeIds, conflictingConfiguration))
         .collect(Collectors.toSet());
 
@@ -72,23 +74,24 @@ public class TaskUtils
       final List<String> conflictingTypeIds,
       final Map<String, List<String>> conflictingConfiguration)
   {
-    //ignore tasks that aren't in the conflicting type set
+    // ignore tasks that aren't in the conflicting type set
     if (!conflictingTypeIds.contains(taskInfo.getTypeId())) {
       return false;
     }
 
-    //ignore 'this' task
+    // ignore 'this' task
     if (currentTaskId.equals(taskInfo.getId())) {
       return false;
     }
 
-    //ignore tasks that aren't running
+    // ignore tasks that aren't running
     if (!isTaskRunning(taskInfo)) {
       return false;
     }
 
-    //ignore tasks that aren't dealing with same config (i.e. don't conflict if 2 tasks dealing with diff blobstores)
-    return conflictingConfiguration.entrySet().stream()
+    // ignore tasks that aren't dealing with same config (i.e. don't conflict if 2 tasks dealing with diff blobstores)
+    return conflictingConfiguration.entrySet()
+        .stream()
         .anyMatch(entry -> entry.getValue().contains(taskInfo.getConfiguration().getString(entry.getKey())));
   }
 

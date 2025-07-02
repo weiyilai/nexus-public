@@ -82,12 +82,13 @@ public class FileKeystoreInstance
 
   private KeyStore keystore;
 
-  public FileKeystoreInstance(final CryptoHelper crypto,
-                              final KeyStoreStorage storage,
-                              final String keystoreName,
-                              final char[] keystorePassword,
-                              final String keystoreType,
-                              final Map<String, char[]> keyPasswords)
+  public FileKeystoreInstance(
+      final CryptoHelper crypto,
+      final KeyStoreStorage storage,
+      final String keystoreName,
+      final char[] keystorePassword,
+      final String keystoreType,
+      final Map<String, char[]> keyPasswords)
   {
     this.crypto = crypto;
     this.storage = storage;
@@ -129,24 +130,22 @@ public class FileKeystoreInstance
   }
 
   @Override
-  public String[] listPrivateKeys(final char[] storePassword)
-      throws KeystoreException
-  {
+  public String[] listPrivateKeys(final char[] storePassword) throws KeystoreException {
     ensureLoaded(storePassword);
     return privateKeys.toArray(new String[privateKeys.size()]);
   }
 
   @Override
-  public String[] listTrustCertificates(final char[] storePassword)
-      throws KeystoreException
-  {
+  public String[] listTrustCertificates(final char[] storePassword) throws KeystoreException {
     ensureLoaded(storePassword);
     return trustCerts.toArray(new String[trustCerts.size()]);
   }
 
   @Override
-  public void importTrustCertificate(final Certificate cert, final String alias, final char[] storePassword)
-      throws KeystoreException
+  public void importTrustCertificate(
+      final Certificate cert,
+      final String alias,
+      final char[] storePassword) throws KeystoreException
   {
     if (storePassword == null) {
       throw new NullPointerException("storePassword is null");
@@ -164,10 +163,20 @@ public class FileKeystoreInstance
   }
 
   @Override
-  public void generateKeyPair(String alias, char[] storePassword, char[] keyPassword, String keyAlgorithm,
-                              int keySize, String signatureAlgorithm, int validity, String commonName,
-                              String orgUnit, String organization, String locality, String state, String country)
-      throws KeystoreException
+  public void generateKeyPair(
+      String alias,
+      char[] storePassword,
+      char[] keyPassword,
+      String keyAlgorithm,
+      int keySize,
+      String signatureAlgorithm,
+      int validity,
+      String commonName,
+      String orgUnit,
+      String organization,
+      String locality,
+      String state,
+      String country) throws KeystoreException
   {
     if (storePassword == null) {
       throw new NullPointerException("storePassword is null");
@@ -204,9 +213,7 @@ public class FileKeystoreInstance
   }
 
   @Override
-  public void deleteEntry(final String alias, final char[] storePassword)
-      throws KeystoreException
-  {
+  public void deleteEntry(final String alias, final char[] storePassword) throws KeystoreException {
     if (storePassword == null) {
       throw new NullPointerException("storePassword is null");
     }
@@ -227,8 +234,10 @@ public class FileKeystoreInstance
   }
 
   @Override
-  public KeyManager[] getKeyManager(final String algorithm, final String alias, final char[] storePassword)
-      throws KeystoreException
+  public KeyManager[] getKeyManager(
+      final String algorithm,
+      final String alias,
+      final char[] storePassword) throws KeystoreException
   {
     ensureLoaded(storePassword);
     try {
@@ -273,9 +282,7 @@ public class FileKeystoreInstance
   }
 
   @Override
-  public TrustManager[] getTrustManager(final String algorithm, final char[] storePassword)
-      throws KeystoreException
-  {
+  public TrustManager[] getTrustManager(final String algorithm, final char[] storePassword) throws KeystoreException {
     ensureLoaded(storePassword);
     try {
       TrustManagerFactory trustFactory = crypto.createTrustManagerFactory(algorithm);
@@ -291,8 +298,10 @@ public class FileKeystoreInstance
   }
 
   @Override
-  public PrivateKey getPrivateKey(final String alias, final char[] storePassword, final char[] keyPassword)
-      throws KeystoreException
+  public PrivateKey getPrivateKey(
+      final String alias,
+      final char[] storePassword,
+      final char[] keyPassword) throws KeystoreException
   {
     ensureLoaded(storePassword);
     try {
@@ -315,9 +324,7 @@ public class FileKeystoreInstance
   }
 
   @Override
-  public Certificate getCertificate(final String alias, final char[] storePassword)
-      throws KeystoreException
-  {
+  public Certificate getCertificate(final String alias, final char[] storePassword) throws KeystoreException {
     ensureLoaded(storePassword);
     try {
       Certificate cert = keystore.getCertificate(alias);
@@ -352,14 +359,12 @@ public class FileKeystoreInstance
 
   // ==================== Internals =====================
 
-  private void loadKeystoreData(final char[] password)
-      throws KeystoreException
-  {
+  private void loadKeystoreData(final char[] password) throws KeystoreException {
     try {
       // Make sure the keystore is loadable using the provided password before resetting the instance variables.
       KeyStore tempKeystore = crypto.createKeyStore(keystoreType);
       storage.load(tempKeystore, password);
-      // Keystore could be loaded successfully.  Initialize the instance variables to reflect the new keystore.
+      // Keystore could be loaded successfully. Initialize the instance variables to reflect the new keystore.
       keystore = tempKeystore;
       privateKeys.clear();
       trustCerts.clear();
@@ -404,9 +409,7 @@ public class FileKeystoreInstance
     return true;
   }
 
-  private void ensureLoaded(final char[] storePassword)
-      throws KeystoreException
-  {
+  private void ensureLoaded(final char[] storePassword) throws KeystoreException {
     char[] password;
     if (storePassword == null) {
       password = keystorePassword;
@@ -419,19 +422,24 @@ public class FileKeystoreInstance
     }
   }
 
-  private X509Certificate generateCertificate(PublicKey publicKey, PrivateKey privateKey, String algorithm,
-                                              int validity, String commonName, String orgUnit, String organization,
-                                              String locality, String state, String country)
-      throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, CertificateEncodingException
+  private X509Certificate generateCertificate(
+      PublicKey publicKey,
+      PrivateKey privateKey,
+      String algorithm,
+      int validity,
+      String commonName,
+      String orgUnit,
+      String organization,
+      String locality,
+      String state,
+      String country) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, CertificateEncodingException
   {
     return CertificateUtil.generateCertificate(publicKey, privateKey, algorithm,
         validity, commonName, orgUnit, organization, locality, state,
         country);
   }
 
-  private void saveKeystore(final char[] password)
-      throws KeystoreException
-  {
+  private void saveKeystore(final char[] password) throws KeystoreException {
     try {
       storage.save(keystore, password);
     }

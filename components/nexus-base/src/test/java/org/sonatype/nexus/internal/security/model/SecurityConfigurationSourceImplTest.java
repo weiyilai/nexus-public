@@ -16,18 +16,14 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.inject.Named;
-
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
-import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.security.config.AdminPasswordFileManager;
 import org.sonatype.nexus.security.config.CPrivilege;
 import org.sonatype.nexus.security.config.CRole;
 import org.sonatype.nexus.security.config.CUser;
 import org.sonatype.nexus.security.config.CUserRoleMapping;
 import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
-import org.sonatype.nexus.security.config.SecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityConfigurationSource;
 import org.sonatype.nexus.security.config.memory.MemoryCUserRoleMapping;
 import org.sonatype.nexus.security.privilege.DuplicatePrivilegeException;
@@ -38,11 +34,8 @@ import org.sonatype.nexus.security.user.DuplicateUserException;
 import org.sonatype.nexus.security.user.NoSuchRoleMappingException;
 import org.sonatype.nexus.security.user.UserNotFoundException;
 import org.sonatype.nexus.testdb.DataSessionRule;
-import org.sonatype.nexus.transaction.TransactionModule;
 import org.sonatype.nexus.transaction.UnitOfWork;
 
-import com.google.inject.Guice;
-import com.google.inject.Provides;
 import org.apache.shiro.authc.credential.PasswordService;
 import org.junit.After;
 import org.junit.Before;
@@ -142,25 +135,9 @@ public class SecurityConfigurationSourceImplTest
     SecurityConfigurationSource defaultSource = mock(SecurityConfigurationSource.class);
     when(defaultSource.getConfiguration()).thenReturn(defaults);
 
-    underTest = Guice.createInjector(new TransactionModule()
-    {
-      @Provides
-      DataSessionSupplier getDataSessionSupplier() {
-        return sessionRule;
-      }
-
-      @Provides
-      @Named("static")
-      SecurityConfigurationSource getStaticSecurityConfigurationSource() {
-        return defaultSource;
-      }
-
-      @Override
-      protected void configure() {
-        super.configure();
-        bind(SecurityConfiguration.class).to(SecurityConfigurationImpl.class);
-      }
-    }).getInstance(SecurityConfigurationSourceImpl.class);
+    SecurityConfigurationImpl impl = new SecurityConfigurationImpl(sessionRule, new CPrivilegeStore(sessionRule),
+        new CRoleStore(sessionRule), new CUserRoleMappingStore(sessionRule), new CUserStore(sessionRule));
+    underTest = new SecurityConfigurationSourceImpl(impl, defaultSource);
 
     UnitOfWork.beginBatch(() -> sessionRule.openSession(DEFAULT_DATASTORE_NAME));
     when(defaultSource.getConfiguration(any())).thenReturn(defaults);

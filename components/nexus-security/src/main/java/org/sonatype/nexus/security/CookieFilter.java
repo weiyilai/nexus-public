@@ -14,22 +14,24 @@ package org.sonatype.nexus.security;
 
 import java.util.Collection;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.web.servlet.AdviceFilter;
 
 import static com.google.common.net.HttpHeaders.SET_COOKIE;
+import org.springframework.stereotype.Component;
 
 /**
  * Cookie munging filter.
  *
  * @since 2.11.2
  */
-@Named
+@WebFilter("/service/rapture/session")
+@Component
 @Singleton
 public class CookieFilter
     extends AdviceFilter
@@ -59,7 +61,7 @@ public class CookieFilter
     }
   }
 
-  private void secureCookies(HttpServletResponse response) {
+  private void secureCookies(final HttpServletResponse response) {
     final Collection<String> cookies = response.getHeaders(SET_COOKIE);
     boolean mustAdd = false;
     for (final String cookie : cookies) {

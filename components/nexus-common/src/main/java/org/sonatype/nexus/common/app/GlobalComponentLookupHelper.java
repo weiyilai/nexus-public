@@ -13,28 +13,16 @@
 package org.sonatype.nexus.common.app;
 
 import javax.annotation.Nullable;
-import javax.inject.Named;
-
-import com.google.inject.Key;
+import jakarta.inject.Named;
 
 /**
- * !!!! DEPRECATED in favor of org.sonatype.nexus.bootstrap.entrypoint.ApplicationContextProvider in
- * `nexus-extender-spring` module, though this form of injection should ONLY be used when a class is instantiated
- * outside of spring's control. And this should only happen in ONE scenario, when jetty instantiates the
- * `NexusServletContextListener`.
- * THINK TWICE before using this class in ANY other way. This class should be removed when the previous DI
- * architecture is removed. Until then changes should primarily be done on the newer "nexus.spring.only=true" impl,
- * then only brought back to this class if necessary
- * -------------------------------------------------------
- * Old javadoc
  * Helper to lookup components in global context.
  * In a few places, components need to be looked up by class-name and need to use the uber class-loader to resolve
  * classes.
  * This helper contains this logic in one place for re-use.
- * 
+ *
  * @since 3.0
  */
-@Deprecated(since = "4/1/2025", forRemoval = true)
 public interface GlobalComponentLookupHelper
 {
   /**
@@ -60,14 +48,6 @@ public interface GlobalComponentLookupHelper
    * @since 3.6.1
    */
   <T> T lookup(Class<T> clazz, String name);
-
-  /**
-   * Lookup a component by {@link Key}.
-   *
-   * @return Component reference, or {@code null} if the component was not found.
-   * @since 3.6.1
-   */
-  Object lookup(Key key);
 
   /**
    * Lookup a type by class-name.

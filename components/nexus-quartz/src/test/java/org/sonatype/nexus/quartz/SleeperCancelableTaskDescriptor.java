@@ -12,25 +12,24 @@
  */
 package org.sonatype.nexus.quartz;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * Descriptor for {@link SleeperCancelableTask}.
  */
 @AvailabilityVersion(from = "1.0")
-@Named
+@Component
 @Singleton
 public class SleeperCancelableTaskDescriptor
     extends TaskDescriptorSupport
 {
   static final String TYPE_ID = "sleeperCancelable";
 
-  public SleeperCancelableTaskDescriptor()
-  {
+  public SleeperCancelableTaskDescriptor() {
     super(TYPE_ID, SleeperCancelableTask.class, "Sleeper cancelable test", VISIBLE, EXPOSED);
   }
 }

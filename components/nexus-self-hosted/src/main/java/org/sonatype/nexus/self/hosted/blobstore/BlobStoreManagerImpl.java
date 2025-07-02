@@ -12,11 +12,12 @@
  */
 package org.sonatype.nexus.self.hosted.blobstore;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.BlobStoreDescriptor;
 import org.sonatype.nexus.blobstore.api.BlobStore;
@@ -35,14 +36,16 @@ import org.sonatype.nexus.repository.internal.blobstore.BlobStoreOverride;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.replication.ReplicationBlobStoreStatusManager;
 
-import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 /**
  * The {@link org.sonatype.nexus.blobstore.api.BlobStoreManager} implementation for Self-Hosted deployments.
  *
  * No overrides needed from the {@link BaseBlobStoreManager}, just annotations needed for DI.
  */
-@Named
+@Component
 @Singleton
 @ManagedObject
 @ManagedLifecycle(phase = Phase.STORAGE)
@@ -53,12 +56,12 @@ public class BlobStoreManagerImpl
   public BlobStoreManagerImpl(
       final EventManager eventManager, // NOSONAR
       final BlobStoreConfigurationStore store,
-      final Map<String, BlobStoreDescriptor> blobStoreDescriptors,
-      final Map<String, Provider<BlobStore>> blobStorePrototypes,
+      final @Lazy List<BlobStoreDescriptor> blobStoreDescriptors,
+      final List<Provider<BlobStore>> blobStorePrototypes,
       final FreezeService freezeService,
-      final Provider<RepositoryManager> repositoryManagerProvider,
+      final @Lazy Provider<RepositoryManager> repositoryManagerProvider,
       final NodeAccess nodeAccess,
-      @Nullable @Named("${nexus.blobstore.provisionDefaults}") final Boolean provisionDefaults,
+      @Nullable @Value("${nexus.blobstore.provisionDefaults:#{null}}") final Boolean provisionDefaults,
       @Nullable final DefaultBlobStoreProvider blobstoreProvider,
       final BlobStoreTaskService blobStoreTaskService,
       final Provider<BlobStoreOverride> blobStoreOverrideProvider,

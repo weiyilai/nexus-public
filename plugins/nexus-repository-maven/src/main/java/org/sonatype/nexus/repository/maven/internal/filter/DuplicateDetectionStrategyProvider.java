@@ -12,16 +12,16 @@
  */
 package org.sonatype.nexus.repository.maven.internal.filter;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import org.apache.maven.index.reader.Record;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -30,10 +30,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * {@link BloomFilterDuplicateDetectionStrategy}
  */
 @Singleton
-@Named
+@Component
 public class DuplicateDetectionStrategyProvider
     extends ComponentSupport
-    implements Provider<DuplicateDetectionStrategy<Record>>
+    implements FactoryBean<DuplicateDetectionStrategy<Record>>
 {
   private final String strategy;
 
@@ -46,9 +46,9 @@ public class DuplicateDetectionStrategyProvider
   @Inject
   public DuplicateDetectionStrategyProvider(
       final ApplicationDirectories applicationDirectories,
-      @Named("${nexus.maven.duplicate.detection.strategy:-BLOOM}") @Value("${nexus.maven.duplicate.detection.strategy:BLOOM}") final String strategy,
-      @Named("${nexus.maven.duplicate.detection.heap.max.gb:-1}") @Value("${nexus.maven.duplicate.detection.heap.max.gb:1}") final int maxHeapGb,
-      @Named("${nexus.maven.duplicate.detection.disk.max.gb:-10}") @Value("${nexus.maven.duplicate.detection.disk.max.gb:10}") final int maxDiskSizeGb)
+      @Value("${nexus.maven.duplicate.detection.strategy:BLOOM}") final String strategy,
+      @Value("${nexus.maven.duplicate.detection.heap.max.gb:1}") final int maxHeapGb,
+      @Value("${nexus.maven.duplicate.detection.disk.max.gb:10}") final int maxDiskSizeGb)
   {
     this.applicationDirectories = checkNotNull(applicationDirectories);
     this.strategy = checkNotNull(strategy);
@@ -57,16 +57,12 @@ public class DuplicateDetectionStrategyProvider
   }
 
   @Override
-  public DuplicateDetectionStrategy<Record> get() {
-    switch (getStrategy()) {
-      case HASH:
-        return new HashBasedDuplicateDetectionStrategy();
-      case DISK:
-        return new DiskBackedDuplicateDetectionStrategy(applicationDirectories, maxHeapGb, maxDiskSizeGb);
-      case BLOOM:
-      default:
-        return new BloomFilterDuplicateDetectionStrategy();
-    }
+  public DuplicateDetectionStrategy<Record> getObject() {
+    return switch (getStrategy()) {
+      case HASH -> new HashBasedDuplicateDetectionStrategy();
+      case DISK -> new DiskBackedDuplicateDetectionStrategy(applicationDirectories, maxHeapGb, maxDiskSizeGb);
+      default -> new BloomFilterDuplicateDetectionStrategy();
+    };
   }
 
   private Strategy getStrategy() {
@@ -79,6 +75,11 @@ public class DuplicateDetectionStrategyProvider
       duplicateStrategy = Strategy.BLOOM;
     }
     return duplicateStrategy;
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return DuplicateDetectionStrategy.class;
   }
 
   private enum Strategy

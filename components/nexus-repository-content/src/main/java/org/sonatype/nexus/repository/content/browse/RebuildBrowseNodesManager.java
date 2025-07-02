@@ -16,9 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
@@ -36,6 +35,7 @@ import com.google.common.collect.ImmutableMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
+import org.springframework.stereotype.Component;
 
 /**
  * Triggers a rebuild task for all repositories when requested. This is largely for upgrades or other early
@@ -43,7 +43,7 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
  *
  * @since 3.33
  */
-@Named
+@Component
 @ManagedLifecycle(phase = TASKS)
 @Singleton
 public class RebuildBrowseNodesManager

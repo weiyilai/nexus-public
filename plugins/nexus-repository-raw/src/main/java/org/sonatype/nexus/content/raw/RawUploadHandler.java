@@ -20,9 +20,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.importtask.ImportFileConfiguration;
@@ -37,33 +36,38 @@ import org.sonatype.nexus.repository.view.payloads.TempBlob;
 import org.sonatype.nexus.repository.view.payloads.TempBlobPayload;
 
 import com.google.common.collect.Lists;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Support for uploading raw components via UI & API
  *
  * @since 3.24
  */
-@Named(RawFormat.NAME)
+@Component
+@Qualifier(RawFormat.NAME)
 @Singleton
 public class RawUploadHandler
     extends RawUploadHandlerSupport
 {
   @Inject
-  public RawUploadHandler(final ContentPermissionChecker contentPermissionChecker,
-                          @Named("simple") final VariableResolverAdapter variableResolverAdapter,
-                          final Set<UploadDefinitionExtension> uploadDefinitionExtensions)
+  public RawUploadHandler(
+      final ContentPermissionChecker contentPermissionChecker,
+      @Qualifier("simple") final VariableResolverAdapter variableResolverAdapter,
+      final Set<UploadDefinitionExtension> uploadDefinitionExtensions)
   {
     super(contentPermissionChecker, variableResolverAdapter, uploadDefinitionExtensions, true);
   }
 
   @Override
-  protected List<Content> getResponseContents(final Repository repository, final Map<String, PartPayload> pathToPayload)
-      throws IOException
+  protected List<Content> getResponseContents(
+      final Repository repository,
+      final Map<String, PartPayload> pathToPayload) throws IOException
   {
     RawContentFacet facet = repository.facet(RawContentFacet.class);
 
     List<Content> responseContents = Lists.newArrayList();
-    for (Entry<String,PartPayload> entry : pathToPayload.entrySet()) {
+    for (Entry<String, PartPayload> entry : pathToPayload.entrySet()) {
       String path = entry.getKey();
 
       Content content = facet.put(path, entry.getValue());
@@ -81,8 +85,9 @@ public class RawUploadHandler
 
     RawContentFacet contentFacet = repository.facet(RawContentFacet.class);
     String contentType = Files.probeContentType(contentPath);
-    try (TempBlob blob = contentFacet.blobs().ingest(contentPath, contentType, RawContentFacet.HASHING,
-        configuration.isHardLinkingEnabled())) {
+    try (TempBlob blob = contentFacet.blobs()
+        .ingest(contentPath, contentType, RawContentFacet.HASHING,
+            configuration.isHardLinkingEnabled())) {
       return contentFacet.put(path, new TempBlobPayload(blob, contentType));
     }
   }

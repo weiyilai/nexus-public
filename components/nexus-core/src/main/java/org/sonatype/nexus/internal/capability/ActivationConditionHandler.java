@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.internal.capability;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.capability.CapabilityContextAware;
@@ -45,9 +45,10 @@ public class ActivationConditionHandler
   private Condition activationCondition;
 
   @Inject
-  ActivationConditionHandler(final EventManager eventManager,
-                             final Conditions conditions,
-                             @Assisted final DefaultCapabilityReference reference)
+  public ActivationConditionHandler(
+      final EventManager eventManager,
+      final Conditions conditions,
+      @Assisted final DefaultCapabilityReference reference)
   {
     this.eventManager = checkNotNull(eventManager);
     this.conditions = checkNotNull(conditions);
@@ -81,12 +82,12 @@ public class ActivationConditionHandler
         if (capabilityActivationCondition == null) {
           capabilityActivationCondition = conditions.always("Capability has no activation condition");
         }
-        activationCondition = conditions.logical().and(
-            capabilityActivationCondition,
-            conditions.nexus().active(),
-            conditions.capabilities().capabilityHasNoFailures(),
-            conditions.capabilities().capabilityHasNoDuplicates()
-        );
+        activationCondition = conditions.logical()
+            .and(
+                capabilityActivationCondition,
+                conditions.nexus().active(),
+                conditions.capabilities().capabilityHasNoFailures(),
+                conditions.capabilities().capabilityHasNoDuplicates());
         if (activationCondition instanceof CapabilityContextAware) {
           ((CapabilityContextAware) activationCondition).setContext(reference.context());
         }
@@ -95,8 +96,7 @@ public class ActivationConditionHandler
         activationCondition = conditions.never("Failed to determine activation condition");
         log.error(
             "Could not get activation condition from capability {} ({}). Considering it as non activatable",
-            reference.capability(), reference.context().id(), e
-        );
+            reference.capability(), reference.context().id(), e);
       }
       activationCondition.bind();
       eventManager.register(this);
@@ -117,8 +117,7 @@ public class ActivationConditionHandler
   public String toString() {
     return String.format(
         "Watching '%s' condition to activate/passivate capability '%s (id=%s)'",
-        activationCondition, reference.capability(), reference.context().id()
-    );
+        activationCondition, reference.capability(), reference.context().id());
   }
 
   public String explainWhyNotSatisfied() {

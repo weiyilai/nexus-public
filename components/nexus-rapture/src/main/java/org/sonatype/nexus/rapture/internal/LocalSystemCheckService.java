@@ -15,9 +15,8 @@ package org.sonatype.nexus.rapture.internal;
 import java.util.Collections;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.node.NodeAccess;
@@ -38,6 +37,7 @@ import org.springframework.beans.factory.annotation.Value;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
+import org.springframework.stereotype.Component;
 
 /**
  * Refreshes and caches the state of system {@link com.codahale.metrics.health.HealthCheck}s at the configured time
@@ -45,7 +45,7 @@ import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.St
  *
  * @since 3.16
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = SERVICES)
 public class LocalSystemCheckService
@@ -71,7 +71,7 @@ public class LocalSystemCheckService
       final PeriodicJobService jobService,
       final HealthCheckRegistry registry,
       final NodeAccess nodeAccess,
-      @Named("${nexus.healthcheck.refreshInterval:-15}") @Value("${nexus.healthcheck.refreshInterval:15}") final int refreshInterval)
+      @Value("${nexus.healthcheck.refreshInterval:15}") final int refreshInterval)
   {
     this.jobService = checkNotNull(jobService);
     this.registry = checkNotNull(registry);

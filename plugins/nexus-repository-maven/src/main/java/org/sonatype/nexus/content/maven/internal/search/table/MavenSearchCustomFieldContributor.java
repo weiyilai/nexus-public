@@ -18,8 +18,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.content.Asset;
 import org.sonatype.nexus.repository.content.search.sql.SearchCustomFieldContributor;
@@ -34,9 +33,12 @@ import static org.sonatype.nexus.repository.maven.internal.Attributes.P_BASE_VER
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_CLASSIFIER;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_EXTENSION;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_GROUP_ID;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 @Singleton
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 @ConditionalOnProperty(name = DATASTORE_CLUSTERED_ENABLED, havingValue = "true")
 public class MavenSearchCustomFieldContributor
     implements SearchCustomFieldContributor

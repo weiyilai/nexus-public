@@ -18,19 +18,42 @@ import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.transaction.TransactionIsolation;
 import org.sonatype.nexus.transaction.TransactionalStore;
 
+import com.google.common.collect.Iterables;
+import org.apache.commons.lang3.reflect.TypeUtils;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public abstract class TransactionalStoreSupport
+public abstract class TransactionalStoreSupport<DAO>
     extends StateGuardLifecycleSupport
     implements TransactionalStore<DataSession<?>>
 {
+  protected final Class<DAO> daoClass;
+
   protected final DataSessionSupplier sessionSupplier;
 
   private final String storeName;
 
-  protected TransactionalStoreSupport(final DataSessionSupplier sessionSupplier, final String storeName) {
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  protected TransactionalStoreSupport(
+      final DataSessionSupplier sessionSupplier,
+      final String storeName,
+      final Class<? extends TransactionalStoreSupport> storeParentClass)
+  {
     this.sessionSupplier = checkNotNull(sessionSupplier);
     this.storeName = checkNotNull(storeName);
+    this.daoClass = (Class) Iterables.getOnlyElement(TypeUtils.getTypeArguments(getClass(), storeParentClass).values());
+  }
+
+  @SuppressWarnings({"rawtypes"})
+  protected TransactionalStoreSupport(
+      final DataSessionSupplier sessionSupplier,
+      final String storeName,
+      final Class<? extends TransactionalStoreSupport> storeParentClass,
+      final Class<DAO> daoClass)
+  {
+    this.sessionSupplier = checkNotNull(sessionSupplier);
+    this.storeName = checkNotNull(storeName);
+    this.daoClass = daoClass;
   }
 
   @Override
@@ -47,5 +70,9 @@ public abstract class TransactionalStoreSupport
       default:
         return sessionSupplier.openSession(storeName);
     }
+  }
+
+  public Class<DAO> getDaoClass() {
+    return daoClass;
   }
 }

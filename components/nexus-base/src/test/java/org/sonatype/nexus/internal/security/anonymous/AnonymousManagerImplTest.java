@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.internal.security.anonymous;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.event.EventHelper;

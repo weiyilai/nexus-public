@@ -14,9 +14,8 @@ package org.sonatype.nexus.security;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.security.user.NoSuchUserManagerException;
@@ -29,14 +28,15 @@ import org.sonatype.nexus.security.user.UserStatus;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Helper component to map user principals to associated information.
  */
-@Named
+@Component
 @Singleton
 public class UserPrincipalsHelper
-  extends ComponentSupport
+    extends ComponentSupport
 {
   private final List<UserManager> userManagers;
 

@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.repository.apt.datastore.data;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.repository.content.kv.KeyValueStore;

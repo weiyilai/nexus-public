@@ -14,9 +14,8 @@ package org.sonatype.nexus.repository.security;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -41,8 +40,9 @@ import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_VALUE;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Repository view {@link PrivilegeDescriptor}.
@@ -50,7 +50,8 @@ import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_
  * @see RepositoryViewPermission
  * @since 3.0
  */
-@Named(RepositoryViewPrivilegeDescriptor.TYPE)
+@Component
+@Qualifier(RepositoryViewPrivilegeDescriptor.TYPE)
 @Singleton
 public class RepositoryViewPrivilegeDescriptor
     extends RepositoryPrivilegeDescriptorSupport<ApiPrivilegeRepositoryView, ApiPrivilegeRepositoryViewRequest>
@@ -103,7 +104,7 @@ public class RepositoryViewPrivilegeDescriptor
   public RepositoryViewPrivilegeDescriptor(
       final RepositoryManager repositoryManager,
       final List<Format> formats,
-      @Named(REACT_PRIVILEGES_NAMED) @Value(REACT_PRIVILEGES_NAMED_VALUE) final boolean isReactPrivileges)
+      @Value(REACT_PRIVILEGES_NAMED_VALUE) final boolean isReactPrivileges)
   {
     super(TYPE, repositoryManager, formats);
     this.formFields = ImmutableList.of(

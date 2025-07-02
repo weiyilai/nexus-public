@@ -17,14 +17,14 @@ import java.io.UncheckedIOException;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 
-import org.aopalliance.intercept.Joinpoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.doNothing;
@@ -42,7 +42,7 @@ public class TransactionSupportTest
   private Transactional spec;
 
   @Mock
-  private Joinpoint aspect;
+  private ProceedingJoinPoint aspect;
 
   @Mock(answer = CALLS_REAL_METHODS)
   private TransactionSupport tx;

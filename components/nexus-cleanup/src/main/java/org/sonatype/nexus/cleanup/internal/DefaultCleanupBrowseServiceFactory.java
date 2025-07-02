@@ -13,16 +13,19 @@
 package org.sonatype.nexus.cleanup.internal;
 
 import java.util.Objects;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.cleanup.content.search.CleanupBrowseServiceFactory;
 import org.sonatype.nexus.cleanup.content.search.CleanupComponentBrowse;
 import org.sonatype.nexus.cleanup.content.search.DefaultCleanupComponentBrowse;
 import org.sonatype.nexus.repository.Format;
 
-@Named
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+@Primary
+@Component
 @Singleton
 public class DefaultCleanupBrowseServiceFactory
     implements CleanupBrowseServiceFactory

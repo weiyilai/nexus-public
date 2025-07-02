@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.script.plugin.internal.security;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityConfiguration;
@@ -27,13 +26,14 @@ import static org.sonatype.nexus.script.plugin.internal.security.ScriptPrivilege
 import static org.sonatype.nexus.script.plugin.internal.security.ScriptPrivilegeDescriptor.P_NAME;
 import static org.sonatype.nexus.script.plugin.internal.security.ScriptPrivilegeDescriptor.TYPE;
 import static org.sonatype.nexus.security.privilege.PrivilegeDescriptorSupport.ALL;
+import org.springframework.stereotype.Component;
 
 /**
  * Script security configuration.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class ScriptSecurityContributor
     extends SecurityContributorSupport
@@ -76,8 +76,10 @@ public class ScriptSecurityContributor
     final String id = SCRIPT_ALL_PREFIX + action;
     final String description = (ALL.equals(action) ? "All" : capitalize(action)) + SCRIPT_ALL_DESCRIPTION_SUFFIX;
     final String actions =
-        (ALL.equals(action) || ACTION_READ.equals(action) || ACTION_RUN.equals(action)) ? action : (String.join(",",
-            action, ACTION_READ));
+        (ALL.equals(action) || ACTION_READ.equals(action) || ACTION_RUN.equals(action))
+            ? action
+            : (String.join(",",
+                action, ACTION_READ));
 
     return new MemoryCPrivilegeBuilder(id)
         .type(TYPE)
@@ -85,6 +87,7 @@ public class ScriptSecurityContributor
         .name(id)
         .description(description)
         .property(P_NAME, ALL)
-        .property(P_ACTIONS, actions).build();
+        .property(P_ACTIONS, actions)
+        .build();
   }
 }

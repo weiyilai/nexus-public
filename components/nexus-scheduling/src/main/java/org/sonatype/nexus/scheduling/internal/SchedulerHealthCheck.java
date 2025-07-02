@@ -14,10 +14,9 @@ package org.sonatype.nexus.scheduling.internal;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.scheduling.spi.SchedulerSPI;
 
@@ -25,6 +24,8 @@ import com.codahale.metrics.health.HealthCheck;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Scheduler health checks that reports a list of task descriptions that were recovered and had manual triggers created
@@ -32,7 +33,8 @@ import static java.lang.String.format;
  *
  * @since 3.17
  */
-@Named("Scheduler")
+@Component
+@Qualifier("Scheduler")
 @Singleton
 public class SchedulerHealthCheck
     extends HealthCheck

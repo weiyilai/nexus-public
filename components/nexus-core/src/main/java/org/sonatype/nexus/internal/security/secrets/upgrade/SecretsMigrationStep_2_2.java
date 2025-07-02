@@ -14,9 +14,8 @@ package org.sonatype.nexus.internal.security.secrets.upgrade;
 
 import java.sql.Connection;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.internal.security.secrets.task.SecretsMigrationTaskDescriptor;
@@ -25,12 +24,13 @@ import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.crypto.secrets.SecretsService.SECRETS_MIGRATION_VERSION;
+import org.springframework.stereotype.Component;
 
 /**
  * Database migration step to migrate existing secrets to secrets table using new encryption implementation (Random
  * IV/Salt & custom encryption key)
  */
-@Named
+@Component
 @Singleton
 public class SecretsMigrationStep_2_2
     extends ComponentSupport

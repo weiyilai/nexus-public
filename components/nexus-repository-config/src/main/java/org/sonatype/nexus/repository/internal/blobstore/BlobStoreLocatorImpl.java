@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.internal.blobstore;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreLocator;
@@ -27,15 +26,17 @@ import org.sonatype.nexus.repository.manager.RepositoryManager;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.BLOB_STORE_NAME;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STORAGE;
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link BlobStoreLocator} implementation.
  *
  * @since 3.34
  */
-@Named
+@Component
 @Singleton
-public class BlobStoreLocatorImpl implements BlobStoreLocator
+public class BlobStoreLocatorImpl
+    implements BlobStoreLocator
 {
 
   private final BlobStoreManager blobStoreManager;

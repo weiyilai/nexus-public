@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.internal.security.apikey;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.scheduling.Cancelable;
@@ -22,6 +21,9 @@ import org.sonatype.nexus.security.authc.apikey.ApiKeyService;
 import org.sonatype.nexus.security.usertoken.event.UserTokenPurgedEvent;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Purge orphaned API keys task.
@@ -29,7 +31,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 3.0
  * @see ApiKeyService#purgeApiKeys()
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class PurgeApiKeysTask
     extends TaskSupport
     implements Cancelable

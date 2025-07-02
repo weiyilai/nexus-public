@@ -21,31 +21,34 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.app.WebFilterPriority;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-import org.eclipse.sisu.Hidden;
+import jakarta.inject.Singleton;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 /**
  * Filter for sanitizing http header values
  *
  * @since 3.2
  */
-@Named
-@Hidden // hide from DynamicFilterChainManager because we statically install it in WebModule
+@Order(WebFilterPriority.WEB)
+@WebFilter("/*")
+@Component
 @Singleton
 public class HeaderPatternFilter
     extends ComponentSupport

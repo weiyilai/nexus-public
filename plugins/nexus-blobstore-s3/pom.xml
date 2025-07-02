@@ -148,4 +148,20 @@
 
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>dev.aspectj</groupId>
+        <artifactId>aspectj-maven-plugin</artifactId>
+        <configuration>
+          <aspectLibraries combine.self="combine">
+            <aspectLibrary>
+              <groupId>org.sonatype.nexus</groupId>
+              <artifactId>nexus-blobstore</artifactId>
+            </aspectLibrary>
+          </aspectLibraries>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

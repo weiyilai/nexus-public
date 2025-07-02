@@ -15,8 +15,7 @@ package org.sonatype.nexus.repository.webhooks;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.capability.CapabilityDescriptorSupport;
 import org.sonatype.nexus.capability.CapabilityType;
@@ -37,9 +36,12 @@ import static org.sonatype.nexus.repository.webhooks.RepositoryWebhookCapability
 import static org.sonatype.nexus.repository.webhooks.RepositoryWebhookCapabilityConfiguration.P_REPOSITORY;
 import static org.sonatype.nexus.repository.webhooks.RepositoryWebhookCapabilityConfiguration.P_SECRET;
 import static org.sonatype.nexus.repository.webhooks.RepositoryWebhookCapabilityConfiguration.P_URL;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 @AvailabilityVersion(from = "1.0")
-@Named(TYPE_ID)
+@Component
+@Qualifier(TYPE_ID)
 @Singleton
 public class RepositoryWebhookCapabilityDescriptor
     extends CapabilityDescriptorSupport<RepositoryWebhookCapabilityConfiguration>

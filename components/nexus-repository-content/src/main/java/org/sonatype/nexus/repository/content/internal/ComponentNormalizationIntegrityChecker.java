@@ -18,11 +18,11 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.kv.GlobalKeyValueStore;
 import org.sonatype.nexus.kv.NexusKeyValue;
 import org.sonatype.nexus.kv.ValueType;
@@ -38,12 +38,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
+import org.springframework.stereotype.Component;
 
 /**
  * Check if the {format}_component table has the normalized_version column. If not schedule the
  * NormalizeComponentVersionTask to run after startup is complete.
  */
-@Named
+@Component
 @Singleton
 public class ComponentNormalizationIntegrityChecker
     extends ComponentSupport
@@ -78,14 +79,14 @@ public class ComponentNormalizationIntegrityChecker
       final List<Format> formats,
       final TaskScheduler taskScheduler,
       final UpgradeTaskScheduler startupScheduler,
-      final Map<String, FormatStoreManager> managersByFormat,
+      final List<FormatStoreManager> managersByFormatList,
       final GlobalKeyValueStore globalKeyValueStore,
       final DatabaseMigrationUtility databaseMigrationUtility)
   {
     this.formats = checkNotNull(formats);
     this.taskScheduler = checkNotNull(taskScheduler);
     this.startupScheduler = checkNotNull(startupScheduler);
-    this.managersByFormat = checkNotNull(managersByFormat);
+    this.managersByFormat = QualifierUtil.buildQualifierBeanMap(checkNotNull(managersByFormatList));
     this.globalKeyValueStore = checkNotNull(globalKeyValueStore);
     this.databaseMigrationUtility = checkNotNull(databaseMigrationUtility);
   }
@@ -95,11 +96,12 @@ public class ComponentNormalizationIntegrityChecker
     log.info("validating normalized_version columns");
     alterFormats(connection);
 
-    Set<Format> formatsNeedingNormalization = formats.stream().filter(format ->
-        !managersByFormat.get(format.getValue())
+    Set<Format> formatsNeedingNormalization = formats.stream()
+        .filter(format -> !managersByFormat.get(format.getValue())
             .componentStore(DEFAULT_DATASTORE_NAME)
             .browseUnnormalized(1, null)
-            .isEmpty()).collect(toSet());
+            .isEmpty())
+        .collect(toSet());
     boolean needsNormalization = !formatsNeedingNormalization.isEmpty();
 
     if (needsNormalization) {
@@ -131,8 +133,10 @@ public class ComponentNormalizationIntegrityChecker
     }
   }
 
-  private void alter(final Connection connection, final Statement alterStatement, final Format format)
-      throws SQLException
+  private void alter(
+      final Connection connection,
+      final Statement alterStatement,
+      final Format format) throws SQLException
   {
     String formatName = format.getValue();
     String tableName = format(TABLE_NAME, formatName).toUpperCase();

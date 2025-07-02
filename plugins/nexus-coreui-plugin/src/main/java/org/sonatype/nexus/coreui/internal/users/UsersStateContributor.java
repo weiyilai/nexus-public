@@ -14,17 +14,17 @@ package org.sonatype.nexus.coreui.internal.users;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class UsersStateContributor
     extends ComponentSupport
@@ -34,7 +34,7 @@ public class UsersStateContributor
 
   @Inject
   public UsersStateContributor(
-      @Named("${nexus.react.users:-false}") @Value("${nexus.react.users:false}") final Boolean featureFlag)
+      @Value("${nexus.react.users:false}") final Boolean featureFlag)
   {
     state = ImmutableMap.of("nexus.react.users", featureFlag);
   }

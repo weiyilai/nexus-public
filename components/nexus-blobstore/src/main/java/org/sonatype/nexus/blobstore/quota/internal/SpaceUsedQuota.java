@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.blobstore.quota.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
@@ -25,13 +24,16 @@ import org.sonatype.nexus.rest.ValidationErrorsException;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.text.UnitFormatter.formatStorage;
 import static java.lang.String.format;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * A {@link BlobStoreQuota} which checks that a blob store isn't using more space the limit.
  *
  * @since 3.14
  */
-@Named(SpaceUsedQuota.ID)
+@Component
+@Qualifier(SpaceUsedQuota.ID)
 @Singleton
 public class SpaceUsedQuota
     extends BlobStoreQuotaSupport

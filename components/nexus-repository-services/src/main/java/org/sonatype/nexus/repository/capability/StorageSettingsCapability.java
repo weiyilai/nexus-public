@@ -15,10 +15,13 @@ package org.sonatype.nexus.repository.capability;
 import java.time.Duration;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.capability.CapabilitySupport;
+
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Long.parseLong;
@@ -30,7 +33,8 @@ import static org.sonatype.nexus.repository.capability.GlobalRepositorySettings.
  *
  * @since 3.16
  */
-@Named(StorageSettingsCapabilityDescriptor.TYPE_ID)
+@Component(StorageSettingsCapabilityDescriptor.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class StorageSettingsCapability
     extends CapabilitySupport<StorageSettingsCapabilityConfiguration>
 {

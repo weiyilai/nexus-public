@@ -15,8 +15,7 @@ package org.sonatype.nexus.datastore;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -26,8 +25,9 @@ import org.sonatype.nexus.distributed.event.service.api.common.DataStoreConfigur
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class DataStoreAuditor
     extends AuditorSupport

@@ -13,10 +13,9 @@
 package org.sonatype.nexus.content.maven.internal.recipe;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.content.maven.internal.index.MavenContentHostedIndexFacet;
@@ -33,12 +32,15 @@ import org.sonatype.nexus.repository.view.ViewFacet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.http.HttpHandlers.notFound;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.25
  */
 @AvailabilityVersion(from = "1.0")
-@Named(Maven2HostedRecipe.NAME)
+@Component
+@Qualifier(Maven2HostedRecipe.NAME)
 @Singleton
 public class MavenHostedRecipe
     extends MavenRecipeSupport
@@ -50,8 +52,8 @@ public class MavenHostedRecipe
 
   @Inject
   public MavenHostedRecipe(
-      @Named(HostedType.NAME) final Type type,
-      @Named(Maven2Format.NAME) final Format format,
+      @Qualifier(HostedType.NAME) final Type type,
+      @Qualifier(Maven2Format.NAME) final Format format,
       final Provider<MavenContentHostedIndexFacet> mavenIndexFacet,
       final Provider<PurgeUnusedSnapshotsFacet> mavenPurgeSnapshotsFacet)
   {

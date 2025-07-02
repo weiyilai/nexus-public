@@ -12,26 +12,28 @@
  */
 package org.sonatype.nexus.repository.security.internal;
 
+import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.security.VariableResolverAdapter;
 import org.sonatype.nexus.repository.security.VariableResolverAdapterManager;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Default implementation of {@link VariableResolverAdapterManager}.
  * 
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class VariableResolverAdapterManagerImpl
     extends ComponentSupport
@@ -45,9 +47,9 @@ public class VariableResolverAdapterManagerImpl
   private final Map<String, VariableResolverAdapter> adaptersByFormat;
 
   @Inject
-  public VariableResolverAdapterManagerImpl(final Map<String, VariableResolverAdapter> adaptersByFormat) {
-    this.adaptersByFormat = checkNotNull(adaptersByFormat);
-    this.defaultAdapter = checkNotNull(adaptersByFormat.get(DEFAULT_ADAPTER_NAME));
+  public VariableResolverAdapterManagerImpl(final List<VariableResolverAdapter> adaptersByFormatList) {
+    this.adaptersByFormat = QualifierUtil.buildQualifierBeanMap(checkNotNull(adaptersByFormatList));
+    this.defaultAdapter = checkNotNull(this.adaptersByFormat.get(DEFAULT_ADAPTER_NAME));
   }
 
   @Override

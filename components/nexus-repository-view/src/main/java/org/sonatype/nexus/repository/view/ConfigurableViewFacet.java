@@ -13,19 +13,22 @@
 package org.sonatype.nexus.repository.view;
 
 import javax.annotation.Nullable;
-import javax.inject.Named;
 
 import org.sonatype.nexus.repository.FacetSupport;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Configurable {@link ViewFacet} implementation.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ConfigurableViewFacet
     extends FacetSupport
     implements ViewFacet

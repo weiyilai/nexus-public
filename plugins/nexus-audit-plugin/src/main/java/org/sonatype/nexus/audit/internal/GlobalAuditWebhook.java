@@ -13,8 +13,7 @@
 package org.sonatype.nexus.audit.internal;
 
 import java.util.Map;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditDataRecordedEvent;
@@ -24,13 +23,14 @@ import org.sonatype.nexus.webhooks.WebhookPayload;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * Global audit {@link Webhook}.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class GlobalAuditWebhook
     extends GlobalWebhook

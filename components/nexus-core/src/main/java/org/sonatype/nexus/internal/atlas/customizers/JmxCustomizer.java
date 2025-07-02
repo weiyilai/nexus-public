@@ -21,9 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
@@ -44,6 +44,7 @@ import org.sonatype.nexus.supportzip.SupportBundleCustomizer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
@@ -52,13 +53,15 @@ import static java.util.stream.Collectors.toList;
 import static org.sonatype.nexus.common.text.Strings2.MASK;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Priority.OPTIONAL;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.JMX;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Adds JMX information (mbean+readable-attributes dump) to support bundle.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class JmxCustomizer
     extends ComponentSupport
@@ -76,7 +79,7 @@ public class JmxCustomizer
       asList("password", "secret", "token", "sign", "auth", "cred", "key", "pass");
 
   @Inject
-  public JmxCustomizer(@Named("platform") final MBeanServer server) {
+  public JmxCustomizer(@Qualifier("platform") final MBeanServer server) {
     this.server = checkNotNull(server);
     this.objectMapper = new ObjectMapper();
   }
@@ -107,8 +110,8 @@ public class JmxCustomizer
                   Object value = server.getAttribute(objectName, attr.getName());
                   attrs.put(attr.getName(), render(value));
                 }
-                catch (ReflectionException | AttributeNotFoundException | InstanceNotFoundException |
-                       MBeanException | RuntimeMBeanException e) {
+                catch (ReflectionException | AttributeNotFoundException | InstanceNotFoundException | MBeanException
+                    | RuntimeMBeanException e) {
                   log.trace("Unable to fetch attribute: {}; ignoring", attr.getName(), e);
                 }
               }
@@ -119,8 +122,8 @@ public class JmxCustomizer
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(writer, model);
           }
         }
-        catch (MalformedObjectNameException | InstanceNotFoundException | IntrospectionException | ReflectionException |
-               IOException e) {
+        catch (MalformedObjectNameException | InstanceNotFoundException | IntrospectionException | ReflectionException
+            | IOException e) {
           throw new RuntimeException(e);
         }
       }
@@ -241,7 +244,7 @@ public class JmxCustomizer
     return value.name();
   }
 
-  private boolean isAssignableFrom(Class<?> type, List<Class<?>> checkTypes) {
+  private boolean isAssignableFrom(final Class<?> type, final List<Class<?>> checkTypes) {
     for (Class<?> checkType : checkTypes) {
       if (checkType.isAssignableFrom(type)) {
         return true;

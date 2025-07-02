@@ -12,39 +12,47 @@
  */
 package org.sonatype.nexus.internal.metrics;
 
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
-import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.MediatorSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.systemchecks.ConditionallyAppliedHealthCheck;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.Mediator;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Manages {@link HealthCheck} registrations via Sisu component mediation.
  *
  * @since 2.8
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class HealthCheckMediator
-    extends ComponentSupport
-    implements Mediator<Named, HealthCheck, HealthCheckRegistry>
+    extends MediatorSupport<HealthCheck>
 {
-  public void add(final BeanEntry<Named, HealthCheck> entry, final HealthCheckRegistry registry) throws Exception {
-    HealthCheck healthCheck = entry.getValue();
-    if (healthCheck instanceof ConditionallyAppliedHealthCheck) {
-      log.debug("Delay Registry of {} Until Conditional Registration", entry.getKey().value());
-    }
-    else {
-      log.debug("Registering: {}", entry);
-      registry.register(entry.getKey().value(), healthCheck);
-    }
+  private final HealthCheckRegistry registry;
+
+  @Inject
+  public HealthCheckMediator(final HealthCheckRegistry registry) {
+    super(HealthCheck.class);
+    this.registry = checkNotNull(registry);
   }
 
-  public void remove(final BeanEntry<Named, HealthCheck> entry, final HealthCheckRegistry registry) throws Exception {
-    log.debug("Un-registering: {}", entry);
-    registry.unregister(entry.getKey().value());
+  @Override
+  protected void add(final HealthCheck healthCheck) {
+    String name = QualifierUtil.value(healthCheck).orElseGet(() -> healthCheck.getClass().getName());
+    if (healthCheck instanceof ConditionallyAppliedHealthCheck) {
+      log.debug("Delay Registry of {} Until Conditional Registration", name);
+    }
+    else {
+      log.debug("Registering: {}", healthCheck);
+      registry.register(name, healthCheck);
+    }
   }
 }

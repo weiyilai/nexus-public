@@ -17,9 +17,8 @@ import java.io.InputStream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.io.InputStreamSupplier;
@@ -30,6 +29,8 @@ import org.sonatype.nexus.repository.mime.ContentValidator;
 import org.sonatype.nexus.repository.mime.DefaultContentValidator;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Maven 2 specific {@link ContentValidator} that "hints" default content validator for some Maven specific file
@@ -37,7 +38,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 @Singleton
 public class MavenContentValidator
     extends ComponentSupport
@@ -52,18 +54,18 @@ public class MavenContentValidator
 
   @Nonnull
   @Override
-  public String determineContentType(final boolean strictContentTypeValidation,
-                                     final InputStreamSupplier contentSupplier,
-                                     @Nullable final MimeRulesSource mimeRulesSource,
-                                     @Nullable final String contentName,
-                                     @Nullable final String declaredContentType) throws IOException
+  public String determineContentType(
+      final boolean strictContentTypeValidation,
+      final InputStreamSupplier contentSupplier,
+      @Nullable final MimeRulesSource mimeRulesSource,
+      @Nullable final String contentName,
+      @Nullable final String declaredContentType) throws IOException
   {
     if (contentName != null) {
       if (contentName.endsWith(".pom")) {
         // Note: this is due fact that Tika has glob "*.pom" extension enlisted at text/plain
         return defaultContentValidator.determineContentType(
-            strictContentTypeValidation, contentSupplier, mimeRulesSource, contentName + ".xml", declaredContentType
-        );
+            strictContentTypeValidation, contentSupplier, mimeRulesSource, contentName + ".xml", declaredContentType);
       }
       else if (isHashContentType(contentName)) {
         if (strictContentTypeValidation) {
@@ -83,8 +85,7 @@ public class MavenContentValidator
     }
     // everything else goes to default for now
     return defaultContentValidator.determineContentType(
-        strictContentTypeValidation, contentSupplier, mimeRulesSource, contentName, declaredContentType
-    );
+        strictContentTypeValidation, contentSupplier, mimeRulesSource, contentName, declaredContentType);
   }
 
   private boolean isHashContentType(final String contentName) {

@@ -17,13 +17,13 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.datastore.mybatis.AbstractBytesTypeHandler;
 
 import org.quartz.JobDataMap;
+import org.springframework.stereotype.Component;
 
 /*
  * Simplified from org.quartz.impl.jdbcjobstore.StdJDBCDelegate as Nexus configures Quartz for Property style
@@ -31,7 +31,7 @@ import org.quartz.JobDataMap;
  *
  * See also org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
  */
-@Named
+@Component
 @Singleton
 public class QuartzJobDataTypeHandler
     extends AbstractBytesTypeHandler<JobDataMap>

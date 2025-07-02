@@ -19,9 +19,8 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Iterator;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.logging.task.TaskLogHome;
@@ -33,13 +32,14 @@ import org.springframework.beans.factory.annotation.Value;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.commons.io.FileUtils.iterateFiles;
+import org.springframework.stereotype.Component;
 
 /**
  * Cleanup the task log files based on how old in days they are
  *
  * @since 3.5
  */
-@Named
+@Component
 @Singleton
 public class TaskLogCleanup
     extends ComponentSupport
@@ -50,7 +50,7 @@ public class TaskLogCleanup
 
   @Inject
   public TaskLogCleanup(
-      @Named("${nexus.tasks.log.cleanup.numberOfDays:-30}") @Value("${nexus.tasks.log.cleanup.numberOfDays:30}") final Integer numberOfDays)
+      @Value("${nexus.tasks.log.cleanup.numberOfDays:30}") final Integer numberOfDays)
   {
     this.numberOfDays = checkNotNull(numberOfDays);
   }

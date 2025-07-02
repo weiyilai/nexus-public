@@ -15,6 +15,7 @@ package org.sonatype.nexus.repository.content.browse.store;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
 
 import org.sonatype.goodies.testsupport.TestSupport;
@@ -23,16 +24,13 @@ import org.sonatype.nexus.repository.content.store.AssetData;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.repository.content.browse.store.BrowseNodeManager.MAX_CHILDREN;
 
-@RunWith(MockitoJUnitRunner.class)
 public class BrowseNodeManagerTest
     extends TestSupport
 {
@@ -80,7 +78,7 @@ public class BrowseNodeManagerTest
     assertThat(hasChildren, is(true));
   }
 
-  private List<BrowseNode> generateChildrenNodes(List<Long> nodeIds, @Nullable AssetData asset) {
+  private List<BrowseNode> generateChildrenNodes(final List<Long> nodeIds, @Nullable final AssetData asset) {
     return nodeIds.stream().map(nodeId -> {
       BrowseNodeData childNode = new BrowseNodeData();
       childNode.setAssetCount(0L);

@@ -16,10 +16,9 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
@@ -33,13 +32,14 @@ import org.sonatype.goodies.common.ComponentSupport;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.springframework.stereotype.Component;
 
 /**
  * Factory of {@link ConstraintViolation}s to be used (rarely) for manual validation.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class ConstraintViolationFactory
     extends ComponentSupport
@@ -54,7 +54,7 @@ public class ConstraintViolationFactory
   /**
    * Create a violation with specified path and message.
    *
-   * @param path    violation path
+   * @param path violation path
    * @param message violation message
    * @return created violation
    */

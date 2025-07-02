@@ -22,26 +22,26 @@ import org.sonatype.nexus.datastore.api.DuplicateKeyException;
 import org.sonatype.nexus.repository.content.ContentRepository;
 import org.sonatype.nexus.repository.content.store.example.TestContentRepositoryDAO;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
 /**
  * Test {@link ContentRepositoryDAO}.
  */
-public class ContentRepositoryDAOTest
+class ContentRepositoryDAOTest
     extends ExampleContentTestSupport
 {
   @Test
-  public void testCrudOperations() throws InterruptedException {
+  void testCrudOperations() throws InterruptedException {
 
     ContentRepositoryData contentRepository1 = randomContentRepository();
     ContentRepositoryData contentRepository2 = randomContentRepository();

@@ -24,9 +24,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.content.Asset;
@@ -38,7 +37,9 @@ import org.sonatype.nexus.repository.search.normalize.VersionNumberExpander;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.time.format.DateTimeFormatter.ofPattern;
@@ -52,7 +53,8 @@ import static org.sonatype.nexus.repository.search.index.SearchConstants.*;
  *
  * @since 3.25
  */
-@Named
+@Qualifier("default")
+@Component
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class DefaultSearchDocumentProducer

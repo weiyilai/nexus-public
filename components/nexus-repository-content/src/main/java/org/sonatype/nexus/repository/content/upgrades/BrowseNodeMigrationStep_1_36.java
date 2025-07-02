@@ -23,8 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.Format;
@@ -36,6 +35,9 @@ import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Identifies repositories whose browse nodes were co-mingled with groups they were a member of and schedules them for
@@ -43,9 +45,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * Also schedules all pypi groups for rebuilding due to a relocation of metadata.
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BrowseNodeMigrationStep_1_36
-    extends ComponentSupport implements DatabaseMigrationStep
+    extends ComponentSupport
+    implements DatabaseMigrationStep
 {
   private static final String ASSET = "asset";
 
@@ -98,12 +102,12 @@ public class BrowseNodeMigrationStep_1_36
   }
 
   private Stream<String> migrateFormat(final Connection connection, final Format format) {
-      String formatName = format.getValue();
-      // We use linked here as we want to rebuild group repositories first
-      Set<Integer> repositoryIds = new LinkedHashSet<>();
-      executeStatement(repositoryIds, connection, formatName, ASSET);
-      executeStatement(repositoryIds, connection, formatName, COMPONENT);
-      return repositoryIdToName(connection, formatName, repositoryIds);
+    String formatName = format.getValue();
+    // We use linked here as we want to rebuild group repositories first
+    Set<Integer> repositoryIds = new LinkedHashSet<>();
+    executeStatement(repositoryIds, connection, formatName, ASSET);
+    executeStatement(repositoryIds, connection, formatName, COMPONENT);
+    return repositoryIdToName(connection, formatName, repositoryIds);
   }
 
   private void executeStatement(

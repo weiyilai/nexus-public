@@ -12,20 +12,20 @@
  */
 package org.sonatype.nexus.security.internal.rest;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.config.AdminPasswordFileManager;
 
 import static org.sonatype.nexus.security.internal.rest.UserApiResourceV1.RESOURCE_URI;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 public class UserApiResourceV1

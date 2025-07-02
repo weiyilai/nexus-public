@@ -15,15 +15,17 @@ package org.sonatype.nexus.common.sequence;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongSupplier;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Supplies local {@link AtomicSequence}s.
  *
  * @since 3.14
  */
-@Named("local")
+@Component
+@Qualifier("local")
 @Singleton
 public class LocalAtomicSequenceFactory
     implements AtomicSequenceFactory

@@ -70,7 +70,7 @@ public class SystemInformationGeneratorImplTest
   private DeploymentAccess deploymentAccess;
 
   @Mock
-  private Map<String, SystemInformationHelper> systemInformationHelpers;
+  private List<SystemInformationHelper> systemInformationHelpers;
 
   @Before
   public void setup() throws IOException {

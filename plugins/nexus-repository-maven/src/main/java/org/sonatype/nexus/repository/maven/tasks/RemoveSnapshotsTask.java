@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.maven.tasks;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
@@ -30,21 +29,25 @@ import static org.sonatype.nexus.repository.maven.tasks.RemoveSnapshotsTaskDescr
 import static org.sonatype.nexus.repository.maven.tasks.RemoveSnapshotsTaskDescriptor.MINIMUM_SNAPSHOT_RETAINED_COUNT;
 import static org.sonatype.nexus.repository.maven.tasks.RemoveSnapshotsTaskDescriptor.REMOVE_IF_RELEASED;
 import static org.sonatype.nexus.repository.maven.tasks.RemoveSnapshotsTaskDescriptor.SNAPSHOT_RETENTION_DAYS;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Task to remove snapshots from a Maven repository.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RemoveSnapshotsTask
     extends RepositoryTaskSupport
 {
   private final Format maven2Format;
 
   @Inject
-  public RemoveSnapshotsTask(@Named(Maven2Format.NAME) final Format maven2Format)
-  {
+  public RemoveSnapshotsTask(@Qualifier(Maven2Format.NAME) final Format maven2Format) {
     this.maven2Format = checkNotNull(maven2Format);
   }
 

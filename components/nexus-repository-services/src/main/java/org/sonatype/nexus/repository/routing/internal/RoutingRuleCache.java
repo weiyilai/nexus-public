@@ -16,9 +16,8 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.entity.EntityId;
@@ -37,6 +36,7 @@ import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * An in-memory cache of the RoutingRule assigned to a Repository. Uses events to know when to invalidate the
@@ -44,7 +44,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.17
  */
-@Named
+@Component
 @Singleton
 public class RoutingRuleCache
     extends ComponentSupport

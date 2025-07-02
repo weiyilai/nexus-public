@@ -17,8 +17,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.BlobId;
 import org.sonatype.nexus.blobstore.api.BlobStore;
@@ -27,12 +26,24 @@ import org.sonatype.nexus.blobstore.api.softdeleted.SoftDeletedBlobsStore;
 import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 
+import org.springframework.core.Ordered;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.annotation.Order;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
+@Primary
 @Priority(Integer.MAX_VALUE)
-@Named("default")
+@Component
+@Qualifier("default")
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SoftDeletedBlobIndexImpl
     extends StateGuardLifecycleSupport
     implements SoftDeletedBlobIndex

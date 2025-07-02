@@ -14,12 +14,15 @@ package org.sonatype.nexus.internal.scheduling;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.capability.CapabilitySupport;
 import org.sonatype.nexus.common.template.TemplateParameters;
 import org.sonatype.nexus.scheduling.spi.SchedulerSPI;
+
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -28,7 +31,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named(SchedulerCapabilityDescriptor.TYPE_ID)
+@Component(SchedulerCapabilityDescriptor.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SchedulerCapability
     extends CapabilitySupport<SchedulerCapabilityConfiguration>
 {

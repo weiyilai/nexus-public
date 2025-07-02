@@ -13,10 +13,9 @@
 package org.sonatype.nexus.content.maven.internal.recipe;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.content.maven.internal.index.MavenContentGroupIndexFacet;
@@ -36,12 +35,15 @@ import org.sonatype.nexus.repository.view.ViewFacet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.http.HttpHandlers.notFound;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.25
  */
 @AvailabilityVersion(from = "1.0")
-@Named(Maven2GroupRecipe.NAME)
+@Component
+@Qualifier(Maven2GroupRecipe.NAME)
 @Singleton
 public class MavenGroupRecipe
     extends MavenRecipeSupport
@@ -61,8 +63,8 @@ public class MavenGroupRecipe
 
   @Inject
   public MavenGroupRecipe(
-      @Named(GroupType.NAME) final Type type,
-      @Named(Maven2Format.NAME) final Format format,
+      @Qualifier(GroupType.NAME) final Type type,
+      @Qualifier(Maven2Format.NAME) final Format format,
       final Provider<MavenContentGroupIndexFacet> mavenGroupIndexFacet,
       final Provider<MavenGroupFacet> mavenGroupFacet,
       final Provider<PurgeUnusedSnapshotsFacet> mavenPurgeSnapshotsFacet,

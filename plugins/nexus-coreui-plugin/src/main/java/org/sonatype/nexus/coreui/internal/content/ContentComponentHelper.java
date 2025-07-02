@@ -26,12 +26,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.WebApplicationException;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.coreui.AssetXO;
@@ -80,7 +80,7 @@ import static org.sonatype.nexus.security.BreadActions.BROWSE;
  *
  * @since 3.26
  */
-@Named
+@org.springframework.stereotype.Component
 @Singleton
 public class ContentComponentHelper
     extends ComponentSupport
@@ -101,15 +101,16 @@ public class ContentComponentHelper
   @Inject
   public ContentComponentHelper(
       final MaintenanceService maintenanceService,
-      final Map<String, ComponentFinder> componentFinders,
+      final List<ComponentFinder> componentFindersList,
       final AssetPermissionChecker assetPermissionChecker,
       final SelectorFactory selectorFactory,
       final RepositoryManager repositoryManager)
   {
     this.maintenanceService = checkNotNull(maintenanceService);
-    this.componentFinders = checkNotNull(componentFinders);
+    this.componentFinders = QualifierUtil.buildQualifierBeanMap(checkNotNull(componentFindersList));
     this.assetPermissionChecker = checkNotNull(assetPermissionChecker);
-    this.defaultComponentFinder = checkNotNull(componentFinders.get("default"));
+    this.defaultComponentFinder =
+        checkNotNull(componentFinders.get("default"));
     this.selectorFactory = checkNotNull(selectorFactory);
     this.repositoryManager = checkNotNull(repositoryManager);
   }
@@ -172,14 +173,16 @@ public class ContentComponentHelper
         filterParams.put("pathFilter", "%" + queryOptions.getFilter() + "%");
       }
 
-      FluentQuery<FluentAsset> assetQuery = r.facet(ContentFacet.class).assets()
+      FluentQuery<FluentAsset> assetQuery = r.facet(ContentFacet.class)
+          .assets()
           .byFilter(filterString, filterParams);
 
       numAssets += assetQuery.count();
 
       int nextLimit = queryOptions.getLimit() - assets.size();
       if (nextLimit > 0) {
-        assetQuery.browse(nextLimit, null).stream()
+        assetQuery.browse(nextLimit, null)
+            .stream()
             .map(asset -> toAssetXO(r.getName(), r.getName(), format, asset))
             .collect(Collectors.toCollection(() -> assets));
       }

@@ -16,25 +16,26 @@ import java.util.List;
 import java.util.ListIterator;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.Handler;
 import org.sonatype.nexus.repository.view.Response;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.context.annotation.Lazy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.view.Router.LOCAL_ATTRIBUTE_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * A {@link Handler} which diverts request processing through any {@link ContributedHandler}s that are active.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class HandlerContributor
     implements Handler
@@ -46,8 +47,7 @@ public class HandlerContributor
       LOCAL_ATTRIBUTE_PREFIX + HandlerContributor.class.getName() + ".extended";
 
   @Inject
-  public HandlerContributor(final List<ContributedHandler> contributedHandlers)
-  {
+  public HandlerContributor(@Lazy final List<ContributedHandler> contributedHandlers) {
     this.contributedHandlers = checkNotNull(contributedHandlers);
   }
 

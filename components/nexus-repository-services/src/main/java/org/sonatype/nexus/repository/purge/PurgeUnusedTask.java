@@ -12,18 +12,20 @@
  */
 package org.sonatype.nexus.repository.purge;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.RepositoryTaskSupport;
 import org.sonatype.nexus.scheduling.Cancelable;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Task to purge unused components/assets of given repository.
  *
  * @since 3.0
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class PurgeUnusedTask
     extends RepositoryTaskSupport
     implements Cancelable

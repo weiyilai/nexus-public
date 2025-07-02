@@ -14,8 +14,7 @@ package org.sonatype.nexus.content.maven.internal.search.table;
 
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.repository.search.ComponentSearchResult;
@@ -27,12 +26,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import static java.util.Collections.emptyMap;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_BASE_VERSION;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * An {@link SqlSearchResultDecorator} which annotates {@link ComponentSearchResult} with the maven baseVersion.
  */
 @Singleton
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 @ConditionalOnProperty(name = DATASTORE_CLUSTERED_ENABLED, havingValue = "true")
 public class MavenSqlSearchResultDecorator
     implements SqlSearchResultDecorator

@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.security.token;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.security.SecurityHelper;
@@ -39,9 +39,10 @@ public abstract class BearerTokenManager
   private final String format;
 
   @Inject
-  public BearerTokenManager(final ApiKeyService apiKeyService,
-                            final SecurityHelper securityHelper,
-                            final String format)
+  public BearerTokenManager(
+      final ApiKeyService apiKeyService,
+      final SecurityHelper securityHelper,
+      final String format)
   {
     this.apiKeyService = checkNotNull(apiKeyService);
     this.securityHelper = checkNotNull(securityHelper);

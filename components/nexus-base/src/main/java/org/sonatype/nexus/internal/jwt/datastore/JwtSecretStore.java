@@ -15,9 +15,8 @@ package org.sonatype.nexus.internal.jwt.datastore;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.datastore.ConfigStoreSupport;
@@ -29,13 +28,16 @@ import org.sonatype.nexus.transaction.Transactional;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Implementation of {@link SecretStore} for datastore.
  *
  * @since 3.38
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 @FeatureFlag(name = JWT_ENABLED)
 @ConditionalOnProperty(name = JWT_ENABLED, havingValue = "true")

@@ -15,8 +15,7 @@ package org.sonatype.nexus.repository.maven.internal.elastic;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.repository.search.ComponentSearchResult;
@@ -25,12 +24,15 @@ import org.sonatype.nexus.repository.search.elasticsearch.ElasticSearchHit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_BASE_VERSION;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * An {@link ElasticSearchExtension} which annotations {@link ComponentSearchResult} with the maven baseVersion.
  */
 @Singleton
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 public class Maven2SearchExtension
     implements ElasticSearchExtension
 {

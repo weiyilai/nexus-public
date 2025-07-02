@@ -16,13 +16,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.rest.api.model.AbstractApiRepository;
 import org.sonatype.nexus.rest.Resource;
@@ -31,6 +31,7 @@ import org.apache.shiro.authz.annotation.RequiresAuthentication;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @since 3.26
@@ -50,19 +51,21 @@ public class RepositorySettingsApiResource
   @Inject
   public RepositorySettingsApiResource(
       final AuthorizingRepositoryManager authorizingRepositoryManager,
-      @Named("default") final ApiRepositoryAdapter defaultAdapter,
-      final Map<String, ApiRepositoryAdapter> convertersByFormat)
+      @Qualifier("default") final ApiRepositoryAdapter defaultAdapter,
+      final List<ApiRepositoryAdapter> convertersByFormatList)
   {
     this.authorizingRepositoryManager = checkNotNull(authorizingRepositoryManager);
     this.defaultAdapter = checkNotNull(defaultAdapter);
-    this.convertersByFormat = checkNotNull(convertersByFormat);
+    this.convertersByFormat = QualifierUtil.buildQualifierBeanMap(checkNotNull(convertersByFormatList));
   }
 
   @Override
   @RequiresAuthentication
   @GET
   public List<AbstractApiRepository> getRepositories() {
-    return authorizingRepositoryManager.getRepositoriesWithAdmin().stream().map(this::convert)
+    return authorizingRepositoryManager.getRepositoriesWithAdmin()
+        .stream()
+        .map(this::convert)
         .collect(Collectors.toList());
   }
 

@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.blobstore.quota.internal;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.sonatype.goodies.testsupport.TestSupport;
@@ -21,12 +21,15 @@ import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuota;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaResult;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
@@ -34,7 +37,9 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 public class BlobStoreQuotaServiceImplTest
@@ -57,19 +62,25 @@ public class BlobStoreQuotaServiceImplTest
   @Mock
   NestedAttributesMap attributes;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setup() {
+    mockedStatic = mockStatic(QualifierUtil.class);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(config);
     when(config.attributes(eq(BlobStoreQuotaSupport.ROOT_KEY))).thenReturn(attributes);
 
     when(violatedQuota.check(any())).thenReturn(new BlobStoreQuotaResult(true, "test", "test"));
     when(passingQuota.check(any())).thenReturn(new BlobStoreQuotaResult(false, "test", "test"));
 
-    Map<String, BlobStoreQuota> quotaProviders = new HashMap<>();
-    quotaProviders.put("violated", violatedQuota);
-    quotaProviders.put("passing", passingQuota);
+    when(QualifierUtil.buildQualifierBeanMap(anyList()))
+        .thenReturn(Map.of("violated", violatedQuota, "passing", passingQuota));
+    service = new BlobStoreQuotaServiceImpl(List.of());
+  }
 
-    service = new BlobStoreQuotaServiceImpl(quotaProviders);
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test

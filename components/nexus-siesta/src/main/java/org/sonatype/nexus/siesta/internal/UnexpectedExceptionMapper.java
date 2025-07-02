@@ -12,12 +12,12 @@
  */
 package org.sonatype.nexus.siesta.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
 import org.sonatype.nexus.rest.ExceptionMapperSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * Unexpected generic {@link Throwable} exception mapper.
@@ -26,11 +26,11 @@ import org.sonatype.nexus.rest.ExceptionMapperSupport;
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @Provider
 public class UnexpectedExceptionMapper
-  extends ExceptionMapperSupport<Throwable>
+    extends ExceptionMapperSupport<Throwable>
 {
   @Override
   protected Response convert(final Throwable exception, final String id) {

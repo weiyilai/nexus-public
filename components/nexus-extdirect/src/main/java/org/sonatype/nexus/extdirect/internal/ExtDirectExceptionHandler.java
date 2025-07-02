@@ -17,8 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
@@ -38,11 +37,12 @@ import org.slf4j.LoggerFactory;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 import static org.sonatype.nexus.extdirect.model.Responses.error;
 import static org.sonatype.nexus.extdirect.model.Responses.invalid;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.15
  */
-@Named
+@Component
 @ManagedLifecycle(phase = SERVICES)
 @Singleton
 public class ExtDirectExceptionHandler

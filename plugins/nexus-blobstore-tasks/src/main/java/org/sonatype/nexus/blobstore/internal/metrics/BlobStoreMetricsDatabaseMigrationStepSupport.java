@@ -16,7 +16,7 @@ import java.sql.Connection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.metrics.BlobStoreMetricsStore;
@@ -89,7 +89,8 @@ public abstract class BlobStoreMetricsDatabaseMigrationStepSupport
   }
 
   protected Stream<String> getBlobStoreConfigurations() {
-    return blobStoreConfigurationStore.list().stream()
+    return blobStoreConfigurationStore.list()
+        .stream()
         .filter(store -> blobStoreType.equals(store.getType()))
         .map(BlobStoreConfiguration::getName);
   }

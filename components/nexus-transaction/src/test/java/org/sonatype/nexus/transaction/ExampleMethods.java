@@ -14,10 +14,9 @@ package org.sonatype.nexus.transaction;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import com.google.common.base.Suppliers;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -102,7 +101,7 @@ public class ExampleMethods
 
   private int countdown;
 
-  public void setCountdownToSuccess(int countdown) {
+  public void setCountdownToSuccess(final int countdown) {
     this.countdown = countdown;
   }
 
@@ -165,13 +164,5 @@ public class ExampleMethods
   @Transactional
   public void endWorkInTransaction() {
     UnitOfWork.end();
-  }
-
-  @RetryOnIOException
-  public String canUseStereotypeAnnotation() throws IOException {
-    if (countdown-- > 0) {
-      throw new IOException();
-    }
-    return "success";
   }
 }

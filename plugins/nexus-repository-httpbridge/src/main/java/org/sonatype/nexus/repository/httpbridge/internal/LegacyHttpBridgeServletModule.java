@@ -26,14 +26,14 @@ public abstract class LegacyHttpBridgeServletModule
   protected void configureServlets() {
     // this technically makes non-group repositories visible under /content/groups,
     // but this is acceptable since their IDs are unique and it keeps things simple
-    serve("/content/groups/*", "/content/repositories/*", "/content/sites/*").with(LegacyViewServlet.class);
-    bindViewFiltersFor("/content/groups/*", "/content/repositories/*", "/content/sites/*");
+
+    // filter verified already inside of https://sonatype.atlassian.net/browse/NEXUS-47383
 
     // this makes /service/local/x/x available, as a view servlet. Note that we have to strip the last forward
     // slash so that our first group would be "/service/local/x" without the forward slash. This is needed so that
     // the following matcher group starts with the forward slash, which is needed for the NXRM to detect the endpoint.
-    serveRegex("/service/local/.*?(/.*)").with(LegacyViewServlet.class);
-    bindViewFiltersRegexFor("/service/local/.*?(/.*)");
+
+    // filter pending to work as before TODO https://sonatype.atlassian.net/browse/NEXUS-47669
   }
 
   /**
@@ -50,7 +50,7 @@ public abstract class LegacyHttpBridgeServletModule
     bindViewFilters(filterRegex(urlPattern, morePatterns));
   }
 
-  private void bindViewFilters(FilterKeyBindingBuilder filter) {
+  private void bindViewFilters(final FilterKeyBindingBuilder filter) {
     filter.through(ExhaustRequestFilter.class);
     bindSecurityFilter(filter);
   }

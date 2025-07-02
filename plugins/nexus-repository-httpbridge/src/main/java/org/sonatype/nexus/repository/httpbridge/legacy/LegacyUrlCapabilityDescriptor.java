@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.capability.CapabilityDescriptorSupport;
 import org.sonatype.nexus.capability.CapabilityType;
@@ -29,6 +28,8 @@ import org.sonatype.nexus.formfields.FormField;
 
 import static org.sonatype.nexus.capability.Tag.categoryTag;
 import static org.sonatype.nexus.capability.Tag.tags;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * {@link LegacyUrlCapability} descriptor.
@@ -36,7 +37,8 @@ import static org.sonatype.nexus.capability.Tag.tags;
  * @since 3.7
  */
 @AvailabilityVersion(from = "1.0")
-@Named(LegacyUrlCapabilityDescriptor.TYPE_ID)
+@Component
+@Qualifier(LegacyUrlCapabilityDescriptor.TYPE_ID)
 @Singleton
 public class LegacyUrlCapabilityDescriptor
     extends CapabilityDescriptorSupport<LegacyUrlCapabilityConfiguration>

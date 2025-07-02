@@ -12,26 +12,30 @@
  */
 package org.sonatype.nexus.internal.script.groovy;
 
-import groovy.lang.Binding;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
+
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.common.script.ScriptCleanupHandler;
 import org.sonatype.nexus.internal.script.ScriptServiceImpl;
 import org.sonatype.nexus.internal.script.ScriptTask;
 import org.sonatype.nexus.scheduling.TaskSupport;
 
-import javax.script.Bindings;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
-
+import groovy.lang.Binding;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class GroovyScriptEngineFactoryTest
@@ -45,8 +49,7 @@ public class GroovyScriptEngineFactoryTest
 
   @Test
   public void itWillCallTheCleanupHelperAfterExecutingTheScript() throws ScriptException {
-    GroovyScriptEngineFactory factory =
-        new GroovyScriptEngineFactory(getClass().getClassLoader(), applicationDirectories);
+    GroovyScriptEngineFactory factory = new GroovyScriptEngineFactory(applicationDirectories);
     ScriptEngine engine = factory.getScriptEngine();
     Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
     bindings.put(ScriptServiceImpl.SCRIPT_CLEANUP_HANDLER, scriptCleanupHandler);
@@ -58,8 +61,7 @@ public class GroovyScriptEngineFactoryTest
 
   @Test
   public void itWillCallTheCleanupHelperAfterExecutingTheScriptEvenWhenAnExceptionIsThrown() {
-    GroovyScriptEngineFactory factory =
-        new GroovyScriptEngineFactory(getClass().getClassLoader(), applicationDirectories);
+    GroovyScriptEngineFactory factory = new GroovyScriptEngineFactory(applicationDirectories);
     ScriptEngine engine = factory.getScriptEngine();
     Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
     bindings.put(ScriptServiceImpl.SCRIPT_CLEANUP_HANDLER, scriptCleanupHandler);
@@ -73,8 +75,7 @@ public class GroovyScriptEngineFactoryTest
 
   @Test
   public void itWillCreateANamedContextForTheExecutorOfTheGroovyScriptEngine() {
-    GroovyScriptEngineFactory factory =
-        new GroovyScriptEngineFactory(getClass().getClassLoader(), applicationDirectories);
+    GroovyScriptEngineFactory factory = new GroovyScriptEngineFactory(applicationDirectories);
     ScriptEngine engine = factory.getScriptEngine();
     Binding binding = new Binding();
     binding.setVariable("task", null);

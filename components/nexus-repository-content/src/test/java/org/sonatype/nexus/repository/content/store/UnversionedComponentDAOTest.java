@@ -12,68 +12,77 @@
  */
 package org.sonatype.nexus.repository.content.store;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test {@link ComponentDAO} with no entity versioning
  */
-public class UnversionedComponentDAOTest
+class UnversionedComponentDAOTest
     extends ComponentDAOTestSupport
 {
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     setupContent(false);
   }
 
+  @Override
   @Test
-  public void testCrudOperations() throws InterruptedException {
+  protected void testCrudOperations() throws InterruptedException {
     super.testCrudOperations();
   }
 
+  @Override
   @Test
-  public void testBrowseComponentCoordinates() {
+  protected void testBrowseComponentCoordinates() {
     super.testBrowseComponentCoordinates();
   }
 
+  @Override
   @Test
-  public void testContinuationBrowsing() {
+  protected void testContinuationBrowsing() {
     super.testContinuationBrowsing();
   }
 
+  @Override
   @Test
-  public void testDeleteAllComponents() {
+  protected void testDeleteAllComponents() {
     super.testDeleteAllComponents();
   }
 
+  @Override
   @Test
-  public void testPurgeOperation() {
+  protected void testPurgeOperation() {
     super.testPurgeOperation();
   }
 
+  @Override
   @Test
-  public void testRoundTrip() {
+  protected void testRoundTrip() {
     super.testRoundTrip();
   }
 
+  @Override
   @Test
-  public void testBrowseComponentsInRepositories() {
+  protected void testBrowseComponentsInRepositories() {
     super.testBrowseComponentsInRepositories();
   }
 
+  @Override
   @Test
-  public void testFilterClauseIsolation() {
+  protected void testFilterClauseIsolation() {
     super.testFilterClauseIsolation();
   }
 
   @Override
   @Test
-  public void testContinuationSetBrowsing() {
+  protected void testContinuationSetBrowsing() {
     super.testContinuationSetBrowsing();
   }
 
+  @Override
   @Test
-  public void testNormalizationMethods(){
+  protected void testNormalizationMethods() {
     super.testNormalizationMethods();
   }
 }

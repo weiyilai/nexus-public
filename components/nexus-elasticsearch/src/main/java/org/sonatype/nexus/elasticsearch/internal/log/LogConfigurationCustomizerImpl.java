@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.elasticsearch.internal.log;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.log.LogConfigurationCustomizer;
 
@@ -21,13 +20,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 import static org.sonatype.nexus.common.log.LoggerLevel.DEFAULT;
+import org.springframework.stereotype.Component;
 
 /**
  * ElasticSearch {@link LogConfigurationCustomizer}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class LogConfigurationCustomizerImpl

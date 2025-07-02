@@ -13,33 +13,34 @@
 package org.sonatype.nexus.coreui.internal;
 
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Value;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_MODAL_ENABLED;
-import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_MODAL_NAMED;
+import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_MODAL_NAMED_VALUE;
+import org.springframework.stereotype.Component;
 
 @Singleton
-@Named
+@Component
 public class PrivilegesModalStateContributor
-     implements StateContributor
+    implements StateContributor
 {
-   private final boolean isPrivilegesModalEnabled;
+  private final boolean isPrivilegesModalEnabled;
 
-   @Inject
-   public PrivilegesModalStateContributor(
-   @Named(REACT_PRIVILEGES_MODAL_NAMED) boolean isPrivilegesModalEnabled)
-   {
-     this.isPrivilegesModalEnabled = isPrivilegesModalEnabled;
-   }
+  @Inject
+  public PrivilegesModalStateContributor(
+      @Value(REACT_PRIVILEGES_MODAL_NAMED_VALUE) final boolean isPrivilegesModalEnabled)
+  {
+    this.isPrivilegesModalEnabled = isPrivilegesModalEnabled;
+  }
 
-   @Override
-   public Map<String, Object> getState() {
-     return ImmutableMap.of(REACT_PRIVILEGES_MODAL_ENABLED, isPrivilegesModalEnabled);
-   }
- }
+  @Override
+  public Map<String, Object> getState() {
+    return ImmutableMap.of(REACT_PRIVILEGES_MODAL_ENABLED, isPrivilegesModalEnabled);
+  }
+}

@@ -15,21 +15,21 @@ package org.sonatype.nexus.coreui.internal.node;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FreezeService;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Contributes freeze state to the UI.
  *
  * @since 3.24
  */
-@Named
+@Component
 @Singleton
 public class FreezeStateContributor
     implements StateContributor

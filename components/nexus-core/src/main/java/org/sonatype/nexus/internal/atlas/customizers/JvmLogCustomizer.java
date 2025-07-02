@@ -21,9 +21,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.log.LogManager;
@@ -35,12 +34,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.text.Strings2.MASK;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Priority.LOW;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.LOG;
+import org.springframework.stereotype.Component;
 
 /**
  * Adds jvm log file to support bundle.
  * Masks sensitive data passed as JVM arguments.
  */
-@Named
+@Component
 @Singleton
 public class JvmLogCustomizer
     extends ComponentSupport
@@ -66,7 +66,7 @@ public class JvmLogCustomizer
 
         if (logFile != null) {
           try (BufferedReader reader = new BufferedReader(new FileReader(logFile));
-               BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+              BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 
             String line;
             while ((line = reader.readLine()) != null) {
@@ -74,7 +74,8 @@ public class JvmLogCustomizer
               writer.write(redactedLine);
               writer.newLine();
             }
-          } catch (IOException e) {
+          }
+          catch (IOException e) {
             log.debug("Unable to include jvm.log file", e);
           }
         }
@@ -86,7 +87,7 @@ public class JvmLogCustomizer
       private String maybeMaskSensitiveData(final String input) {
         String result = input;
         for (String name : SENSITIVE_FIELD_NAMES) {
-          result =  result.replaceAll(name + "=\\S*", name + "=" + MASK);
+          result = result.replaceAll(name + "=\\S*", name + "=" + MASK);
         }
         return result;
       }

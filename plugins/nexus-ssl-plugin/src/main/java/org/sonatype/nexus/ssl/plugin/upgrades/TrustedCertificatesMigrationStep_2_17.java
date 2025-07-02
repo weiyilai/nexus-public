@@ -14,9 +14,8 @@ package org.sonatype.nexus.ssl.plugin.upgrades;
 
 import java.sql.Connection;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import com.sonatype.nexus.ssl.plugin.tasks.TrustedCertificatesMigrationTaskDescriptor;
 import org.sonatype.goodies.common.ComponentSupport;
@@ -24,9 +23,10 @@ import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 @Singleton
-@Named
+@Component
 public class TrustedCertificatesMigrationStep_2_17
     extends ComponentSupport
     implements DatabaseMigrationStep

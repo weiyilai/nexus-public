@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.elasticsearch.internal.files;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.internal.status.HealthCheckComponentSupport;
 
@@ -22,13 +21,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static java.lang.String.format;
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Health check that indicates if the file descriptor limit is below the recommended threshold
  *
  * @since 3.16
  */
-@Named("File Descriptors")
+@Component
+@Qualifier("File Descriptors")
 @Singleton
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class FileDescriptorHealthCheck

@@ -122,21 +122,22 @@ public class ElasticSearchIndexServiceImplIT
   BoolQueryBuilder exampleQuery = boolQuery().must(queryStringQuery("example"));
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     when(directories.getConfigDirectory("fabric")).thenReturn(testData.resolveFile("fabric"));
     when(nodeAccess.getId()).thenReturn("test-node");
 
     System.setProperty("testdir", new File(BASEDIR, "target/test-node").getPath());
 
     NodeProvider nodeProvider = new NodeProvider(directories, nodeAccess, null, null);
-    ClientProvider clientProvider = new ClientProvider(nodeProvider);
+    ClientProvider clientProvider = new ClientProvider(nodeProvider::getObject);
 
     IndexNamingPolicy indexNamingPolicy = new HashedNamingPolicy();
 
-    searchIndexService = new ElasticSearchIndexServiceImpl(clientProvider,
+    searchIndexService = new ElasticSearchIndexServiceImpl(clientProvider::getObject,
         indexNamingPolicy, List.of(), eventManager, 1000, 1, 0, CALM_TIMEOUT, 1);
+    searchIndexService.start();
 
-    searchQueryService = new ElasticSearchQueryServiceImpl(clientProvider,
+    searchQueryService = new ElasticSearchQueryServiceImpl(clientProvider::getObject,
         repositoryManager, securityHelper, searchSubjectHelper, indexNamingPolicy, false);
 
     when(repositoryConfig.isOnline()).thenReturn(true);

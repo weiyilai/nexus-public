@@ -12,11 +12,14 @@
  */
 package org.sonatype.nexus.coreui;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.common.app.FreezeService;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorFactoryImpl;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,29 +28,36 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class FreezeComponentTest
-    extends TestSupport
+class FreezeComponentTest
+    extends Test5Support
 {
+  private final ValidationConfiguration configuration = new ValidationConfiguration();
 
   FreezeComponent underTest;
 
   @Mock
   FreezeService freezeService;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     underTest = new FreezeComponent(freezeService);
+    configuration.validator(configuration.validatorFactory(new ConstraintValidatorFactoryImpl()));
+  }
+
+  @AfterEach
+  void teardown() {
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
   }
 
   @Test
-  public void read() throws Exception {
+  void read() throws Exception {
     when(freezeService.isFrozen()).thenReturn(true);
     FreezeStatusXO freezeStatusXO = underTest.read();
     assertThat(freezeStatusXO.isFrozen(), is(true));
   }
 
   @Test
-  public void testUpdateRelease() throws Exception {
+  void testUpdateRelease() throws Exception {
     FreezeStatusXO freezeStatusXO = new FreezeStatusXO();
     freezeStatusXO.setFrozen(false);
 
@@ -57,7 +67,7 @@ public class FreezeComponentTest
   }
 
   @Test
-  public void testUpdateFreeze() throws Exception {
+  void testUpdateFreeze() throws Exception {
     FreezeStatusXO freezeStatusXO = new FreezeStatusXO();
     freezeStatusXO.setFrozen(true);
 

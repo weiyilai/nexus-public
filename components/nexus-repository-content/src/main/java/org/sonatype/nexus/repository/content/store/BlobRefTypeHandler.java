@@ -17,32 +17,32 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.annotation.Nullable;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobRef;
 import org.sonatype.nexus.datastore.mybatis.handlers.ContentTypeHandler;
 
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
+import org.springframework.stereotype.Component;
 
 /**
  * MyBatis {@link ContentTypeHandler} that maps {@link BlobRef}s to/from SQL.
  *
  * @since 3.20
  */
-@Named
+@Component
 @Singleton
 public class BlobRefTypeHandler
     extends BaseTypeHandler<BlobRef>
     implements ContentTypeHandler<BlobRef>
 {
   @Override
-  public void setNonNullParameter(final PreparedStatement ps,
-                                  final int parameterIndex,
-                                  final BlobRef parameter,
-                                  final JdbcType jdbcType)
-      throws SQLException
+  public void setNonNullParameter(
+      final PreparedStatement ps,
+      final int parameterIndex,
+      final BlobRef parameter,
+      final JdbcType jdbcType) throws SQLException
   {
     ps.setString(parameterIndex, toPersistableString(parameter));
   }

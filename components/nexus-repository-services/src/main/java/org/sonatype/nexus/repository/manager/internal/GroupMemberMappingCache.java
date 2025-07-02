@@ -22,8 +22,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.event.EventAware;
@@ -34,6 +33,7 @@ import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.manager.RepositoryUpdatedEvent;
 
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * Maintain mapping of which groups a member repository is contained in
@@ -41,7 +41,7 @@ import com.google.common.eventbus.Subscribe;
  * @since 3.16
  */
 @Singleton
-@Named
+@Component
 public class GroupMemberMappingCache
     extends ComponentSupport
     implements EventAware

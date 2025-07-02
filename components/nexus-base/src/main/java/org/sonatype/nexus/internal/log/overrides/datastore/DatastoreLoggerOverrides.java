@@ -20,9 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -36,16 +35,19 @@ import org.sonatype.nexus.internal.log.LoggerOverrides;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Primary;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.STORAGE;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link LoggerOverrides} datastore implementation.
  */
-@Named
+@Component
 @Singleton
+@Primary
 @ManagedLifecycle(phase = STORAGE)
 @ConditionalOnProperty(name = DATASTORE_CLUSTERED_ENABLED, havingValue = "true")
 public class DatastoreLoggerOverrides

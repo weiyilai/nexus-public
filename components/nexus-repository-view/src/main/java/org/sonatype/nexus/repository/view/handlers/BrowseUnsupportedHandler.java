@@ -15,9 +15,8 @@ package org.sonatype.nexus.repository.view.handlers;
 import java.net.URL;
 
 import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.template.TemplateHelper;
@@ -35,6 +34,7 @@ import org.sonatype.nexus.repository.view.payloads.StringPayload;
 import com.google.common.collect.ImmutableList;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Renders browse not supported page for requests to "/" or "/index.html" for
@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class BrowseUnsupportedHandler
     extends ComponentSupport

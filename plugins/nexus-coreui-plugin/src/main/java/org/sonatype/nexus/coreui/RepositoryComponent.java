@@ -15,9 +15,8 @@ package org.sonatype.nexus.coreui;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -42,11 +41,12 @@ import com.softwarementors.extjs.djn.config.annotations.DirectPollMethod;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Repository {@link DirectComponent}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Repository")
 public class RepositoryComponent

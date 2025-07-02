@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.onboarding.internal;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.Optional;
 import org.sonatype.nexus.onboarding.OnboardingItem;

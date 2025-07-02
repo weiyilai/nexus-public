@@ -12,22 +12,24 @@
  */
 package org.sonatype.nexus.security.authz;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
+import javax.servlet.annotation.WebFilter;
 
 import org.apache.shiro.web.filter.authz.HttpMethodPermissionFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Nexus {@link HttpMethodPermissionFilter}.
  *
  * @since 3.0
  */
-@Named
+@WebFilter(filterName = NexusHttpMethodPermissionFilter.NAME)
+@Component
 @Singleton
 public class NexusHttpMethodPermissionFilter
-  extends HttpMethodPermissionFilter
+    extends HttpMethodPermissionFilter
 {
   public static final String NAME = "nx-http-permissions";
 

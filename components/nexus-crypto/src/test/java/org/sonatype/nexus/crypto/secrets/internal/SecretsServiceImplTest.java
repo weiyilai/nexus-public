@@ -26,10 +26,10 @@ import org.sonatype.nexus.crypto.internal.PbeCipherFactory;
 import org.sonatype.nexus.crypto.internal.PbeCipherFactoryImpl;
 import org.sonatype.nexus.crypto.internal.error.CipherException;
 import org.sonatype.nexus.crypto.maven.MavenCipher;
+import org.sonatype.nexus.crypto.secrets.ActiveKeyChangeEvent;
 import org.sonatype.nexus.crypto.secrets.EncryptedSecret;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretData;
-import org.sonatype.nexus.crypto.secrets.ActiveKeyChangeEvent;
 import org.sonatype.nexus.crypto.secrets.SecretsStore;
 import org.sonatype.nexus.crypto.secrets.internal.EncryptionKeyList.SecretEncryptionKey;
 

@@ -18,9 +18,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.api.rest.common.blobstore.s3.model.S3BlobStoreApiBucketConfiguration;
 import org.sonatype.nexus.api.rest.common.blobstore.s3.model.S3BlobStoreApiFailoverBucket;
@@ -44,13 +43,14 @@ import static org.sonatype.nexus.api.rest.common.blobstore.s3.S3BlobStoreApiCons
 import static org.sonatype.nexus.api.rest.common.blobstore.s3.S3BlobStoreApiConstants.FAILOVER_DEFAULT_ERROR_MESSAGE;
 import static org.sonatype.nexus.api.rest.common.blobstore.s3.S3BlobStoreApiConstants.MATCHES_PRIMARY_ERROR_MESSAGE;
 import static org.sonatype.nexus.api.rest.common.blobstore.s3.S3BlobStoreApiConstants.NON_EXISTENT_BLOB_STORE_ERROR_MESSAGE_FORMAT;
+import org.springframework.stereotype.Component;
 
 /**
  * Performs validation checks on specified {@link S3BlobStoreApiModel} object containing updates to an S3 blob store.
  *
  * @since 3.20
  */
-@Named
+@Component
 @Singleton
 public class S3BlobStoreApiUpdateValidation
 {

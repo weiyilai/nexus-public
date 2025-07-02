@@ -14,21 +14,21 @@ package org.sonatype.nexus.supportzip.datastore;
 
 import java.nio.file.Path;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Restore Helper class.
  *
  * @since 3.30
  */
-@Named
+@Component
 @Singleton
 public class RestoreHelper
     extends ComponentSupport

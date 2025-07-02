@@ -14,9 +14,8 @@ package org.sonatype.nexus.elasticsearch.internal.repository;
 
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -35,12 +34,13 @@ import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
 import static org.sonatype.nexus.repository.RepositoryTaskSupport.ALL_REPOSITORIES;
 import static org.sonatype.nexus.repository.RepositoryTaskSupport.REPOSITORY_NAME_FIELD_ID;
+import org.springframework.stereotype.Component;
 
 /**
  * This class handles the rebuilding of all Elasticsearch indexes on startup given a specified environment variable is
  * set to true.
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = TASKS)
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)

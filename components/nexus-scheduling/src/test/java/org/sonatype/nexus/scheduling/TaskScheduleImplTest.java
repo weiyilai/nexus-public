@@ -13,7 +13,8 @@
 package org.sonatype.nexus.scheduling;
 
 import java.util.List;
-import javax.inject.Provider;
+
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.event.EventManager;
@@ -71,11 +72,11 @@ public class TaskScheduleImplTest
     when(schedulerSPI.getTaskById("1")).thenReturn(taskInfo1);
     when(schedulerSPI.getTaskById("2")).thenReturn(taskInfo2);
 
-    underTest = new TaskSchedulerImpl(eventManager, taskFactory, scheduler);
   }
 
   @Test
   public void listTasks_TaskDisabled() {
+    underTest = new TaskSchedulerImpl(eventManager, taskFactory, scheduler, false);
     List<TaskInfo> taskList = underTest.listsTasks();
     assertThat(taskList.size(), is(1));
     assertThat(taskList.get(0).getTypeId(), not(REPO_MOVE_TYPE_ID));
@@ -83,13 +84,14 @@ public class TaskScheduleImplTest
 
   @Test
   public void listTasks_TaskEnabled() {
-    underTest.changeRepoBlobstoreTaskEnabled = true;
+    underTest = new TaskSchedulerImpl(eventManager, taskFactory, scheduler, true);
     List<TaskInfo> taskList = underTest.listsTasks();
     assertThat(taskList.size(), is(2));
   }
 
   @Test
   public void getTaskById_TaskDisabled() {
+    underTest = new TaskSchedulerImpl(eventManager, taskFactory, scheduler, false);
     TaskInfo taskInfo = underTest.getTaskById("1");
     assertThat(taskInfo, is(nullValue()));
 
@@ -99,7 +101,7 @@ public class TaskScheduleImplTest
 
   @Test
   public void getTaskById_TaskEnabled() {
-    underTest.changeRepoBlobstoreTaskEnabled = true;
+    underTest = new TaskSchedulerImpl(eventManager, taskFactory, scheduler, true);
 
     TaskInfo taskInfo = underTest.getTaskById("1");
     assertThat(taskInfo, is(taskInfo1));

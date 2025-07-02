@@ -12,44 +12,48 @@
  */
 package org.sonatype.nexus.coreui;
 
-import com.google.inject.Guice;
-import junitparams.Parameters;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import junitparams.JUnitParamsRunner;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.validation.ValidationModule;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+
+import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.validation.group.Create;
+
+import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorFactoryImpl;
+import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@RunWith(JUnitParamsRunner.class)
-public class RepositoryXOTest
-    extends TestSupport
+class RepositoryXOTest
+    extends Test5Support
 {
+  private ValidationConfiguration configuration = new ValidationConfiguration();
+
   private Validator validator;
 
-  @Before
-  public void setup() {
-    validator =
-        Guice.createInjector(new ValidationModule(), new TestRepositoryManagerModule())
-            .getInstance(Validator.class);
+  @BeforeEach
+  void setup() {
+    validator = configuration.validator(configuration.validatorFactory(new ConstraintValidatorFactoryImpl()));
+  }
+
+  @AfterEach
+  void teardown() {
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
   }
 
   @Test
-  public void nameIsAlwaysRequired() {
+  void nameIsAlwaysRequired() {
     RepositoryXO repositoryXO = new RepositoryXO();
     repositoryXO.setAttributes(Map.of("any", Map.of("any", "any")));
     repositoryXO.setOnline(true);
@@ -58,9 +62,9 @@ public class RepositoryXOTest
     assertThat(violations.iterator().next().getPropertyPath().toString(), is("name"));
   }
 
-  @Test
-  @Parameters(method = "invalidAttributes")
-  public void attributesAreAlwaysRequiredAndCannotBeEmpty(Map<String, Map<String, Object>> attributes) {
+  @ParameterizedTest
+  @MethodSource("invalidAttributes")
+  void attributesAreAlwaysRequiredAndCannotBeEmpty(final Map<String, Map<String, Object>> attributes) {
     RepositoryXO repositoryXO = new RepositoryXO();
     repositoryXO.setName("foo");
     repositoryXO.setOnline(true);
@@ -71,13 +75,13 @@ public class RepositoryXOTest
     assertThat(violations.iterator().next().getPropertyPath().toString(), is("attributes"));
   }
 
-  private Object[] invalidAttributes() {
-    return new Object[]{null, Collections.emptyMap()};
+  static Map<String, Object>[] invalidAttributes() {
+    return new Map[]{Map.of(), null};
   }
 
-  @Test
-  @Parameters(method = "invalidNames")
-  public void nameShouldNotValidate(String name) {
+  @ParameterizedTest
+  @MethodSource("invalidNames")
+  void nameShouldNotValidate(final String name) {
     RepositoryXO repositoryXO = new RepositoryXO();
     repositoryXO.setName(name);
     repositoryXO.setOnline(true);
@@ -87,18 +91,19 @@ public class RepositoryXOTest
     assertThat(violations.iterator().next().getPropertyPath().toString(), is("name"));
   }
 
-  private Object[] invalidNames() {
-    List<Object> noValid = new ArrayList<>("#.,* #'\\/?<>| \r\n\t,+@&å©不βخ".chars()
+  static String[] invalidNames() {
+    List<String> invalid = "#.,* #'\\/?<>| \r\n\t,+@&å©不βخ".chars()
         .mapToObj(c -> (char) c)
-        .collect(Collectors.toList())); // NOSONAR
-    noValid.add("_leadingUnderscore");
-    noValid.add("..");
-    return noValid.toArray();
+        .map(String::valueOf)
+        .collect(Collectors.toList()); // NOSONAR
+    invalid.add("_leadingUnderscore");
+    invalid.add("..");
+    return invalid.toArray(String[]::new);
   }
 
-  @Test
-  @Parameters(method = "validNames")
-  public void nameShouldBeValid(String name) {
+  @ParameterizedTest
+  @ValueSource(strings = {"Foo_1.2-3", "foo.", "-0.", "a", "1"})
+  void nameShouldBeValid(final String name) {
     RepositoryXO repositoryXO = new RepositoryXO();
     repositoryXO.setName(name);
     repositoryXO.setOnline(true);
@@ -107,12 +112,8 @@ public class RepositoryXOTest
     assertThat(violations.isEmpty(), is(true));
   }
 
-  private Object[] validNames() {
-    return new Object[]{"Foo_1.2-3", "foo.", "-0.", "a", "1"};
-  }
-
   @Test
-  public void recipeFieldIsOnlyRequiredOnCreation() {
+  void recipeFieldIsOnlyRequiredOnCreation() {
     RepositoryXO repositoryXO = new RepositoryXO();
     repositoryXO.setName("bob");
     repositoryXO.setAttributes(Map.of("any", Map.of("any", "any")));
@@ -126,8 +127,8 @@ public class RepositoryXOTest
   }
 
   @Test
-  @Parameters(method = "nonUniqueNames")
-  public void nameShouldBeValidatedAsCaseInsensitivelyUniqueOnCreation(String repoName) {
+  @ValueSource(strings = {"Foo", "bAr", "baZ"})
+  void nameShouldBeValidatedAsCaseInsensitivelyUniqueOnCreation(final String repoName) {
     RepositoryXO repositoryXO = new RepositoryXO();
     repositoryXO.setAttributes(Map.of("any", Map.of()));
     repositoryXO.setOnline(true);
@@ -138,9 +139,5 @@ public class RepositoryXOTest
     assertThat(violations.size(), is(1));
     assertThat(violations.iterator().next().getPropertyPath().toString(), is("name"));
     assertThat(violations.iterator().next().getMessage(), is("Name is already used, must be unique (ignoring case)"));
-  }
-
-  private Object[] nonUniqueNames() {
-    return new Object[]{"Foo", "bAr", "baZ"};
   }
 }

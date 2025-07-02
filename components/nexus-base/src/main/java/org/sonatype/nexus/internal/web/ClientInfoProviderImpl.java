@@ -13,28 +13,27 @@
 package org.sonatype.nexus.internal.web;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 
 import org.sonatype.nexus.security.ClientInfo;
 import org.sonatype.nexus.security.ClientInfoProvider;
 import org.sonatype.nexus.security.UserIdHelper;
 
 import com.google.common.net.HttpHeaders;
-import com.google.inject.OutOfScopeException;
-import com.google.inject.ProvisionException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link ClientInfoProvider}
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class ClientInfoProviderImpl
     implements ClientInfoProvider
@@ -46,7 +45,7 @@ public class ClientInfoProviderImpl
   private final ThreadLocal<String> userId = new ThreadLocal<>();
 
   @Inject
-  public ClientInfoProviderImpl(final Provider<HttpServletRequest> httpRequestProvider) {
+  public ClientInfoProviderImpl(@Context final Provider<HttpServletRequest> httpRequestProvider) {
     this.httpRequestProvider = checkNotNull(httpRequestProvider);
   }
 
@@ -63,7 +62,8 @@ public class ClientInfoProviderImpl
           .path(request.getServletPath())
           .build();
     }
-    catch (ProvisionException | OutOfScopeException e) {
+    // TODO verify request type
+    catch (Exception e) {
       /*
        * This happens when called out of scope of http request.
        * Create fake ClientInfo with the custom User Id and Remote address.

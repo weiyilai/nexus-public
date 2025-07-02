@@ -14,8 +14,7 @@ package org.sonatype.nexus.siesta;
 
 import java.util.List;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -28,8 +27,9 @@ import com.google.common.collect.Lists;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @Path("/echo")
 public class EchoResource
@@ -37,8 +37,9 @@ public class EchoResource
 {
   @GET
   @Produces({APPLICATION_XML, APPLICATION_JSON})
-  public List<String> get(@QueryParam("foo") String foo,
-                          @QueryParam("bar") Integer bar)
+  public List<String> get(
+      @QueryParam("foo") String foo,
+      @QueryParam("bar") Integer bar)
   {
     final List<String> result = Lists.newArrayList();
     if (foo != null) {

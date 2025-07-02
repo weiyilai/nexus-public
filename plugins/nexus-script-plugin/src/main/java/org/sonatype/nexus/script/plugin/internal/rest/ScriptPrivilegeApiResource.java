@@ -12,9 +12,9 @@
  */
 package org.sonatype.nexus.script.plugin.internal.rest;
 
-import java.util.Map;
+import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -44,10 +44,11 @@ public class ScriptPrivilegeApiResource
     implements Resource, ScriptPrivilegeApiResourceDoc
 {
   @Inject
-  public ScriptPrivilegeApiResource(final SecuritySystem securitySystem,
-                                    final Map<String, PrivilegeDescriptor> privilegeDescriptors)
+  public ScriptPrivilegeApiResource(
+      final SecuritySystem securitySystem,
+      final List<PrivilegeDescriptor> privilegeDescriptorsList)
   {
-    super(securitySystem, privilegeDescriptors);
+    super(securitySystem, privilegeDescriptorsList);
   }
 
   @Override
@@ -64,8 +65,9 @@ public class ScriptPrivilegeApiResource
   @RequiresAuthentication
   @RequiresPermissions("nexus:privileges:update")
   @Path("script/{privilegeName}")
-  public void updatePrivilege(@PathParam("privilegeName") final String privilegeName,
-                              final ApiPrivilegeScriptRequest privilege)
+  public void updatePrivilege(
+      @PathParam("privilegeName") final String privilegeName,
+      final ApiPrivilegeScriptRequest privilege)
   {
     doUpdate(privilegeName, ScriptPrivilegeDescriptor.TYPE, privilege);
   }

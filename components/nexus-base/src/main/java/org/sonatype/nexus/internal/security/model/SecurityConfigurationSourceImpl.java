@@ -15,11 +15,8 @@ package org.sonatype.nexus.internal.security.model;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
@@ -30,6 +27,11 @@ import org.sonatype.nexus.security.config.CUserRoleMapping;
 import org.sonatype.nexus.security.config.SecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityConfigurationSource;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
 
@@ -38,7 +40,9 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
  *
  * @since 3.21
  */
-@Named("default")
+@Primary
+@Component
+@Qualifier("default")
 @ManagedLifecycle(phase = SCHEMAS)
 @Singleton
 public class SecurityConfigurationSourceImpl
@@ -52,7 +56,7 @@ public class SecurityConfigurationSourceImpl
   @Inject
   public SecurityConfigurationSourceImpl(
       final SecurityConfigurationImpl securityConfiguration,
-      @Named("static") @Nullable final SecurityConfigurationSource securityDefaults)
+      @Qualifier("static") @Nullable final SecurityConfigurationSource securityDefaults)
   {
     this.securityConfiguration = checkNotNull(securityConfiguration);
     this.securityDefaults = securityDefaults;

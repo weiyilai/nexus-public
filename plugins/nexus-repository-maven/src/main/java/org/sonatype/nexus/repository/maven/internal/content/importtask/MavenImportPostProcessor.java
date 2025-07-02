@@ -15,8 +15,7 @@ package org.sonatype.nexus.repository.maven.internal.content.importtask;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.Repository;
@@ -26,6 +25,8 @@ import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.content.importtask.ImportPostProcessor;
 import org.sonatype.nexus.repository.maven.MavenPath.HashType;
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Provides some post processing capabilities for assets that could have hash files that need blobUpdated date to match
@@ -34,14 +35,16 @@ import org.sonatype.nexus.repository.maven.internal.Maven2Format;
  * @since 3.29
  */
 @Singleton
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 public class MavenImportPostProcessor
     extends ComponentSupport
     implements ImportPostProcessor
 {
   @Override
   public void attributePostProcessing(
-      final Repository repository, final Asset asset)
+      final Repository repository,
+      final Asset asset)
   {
     for (HashType type : HashType.values()) {
       updateHashFile('.' + type.getExt(), asset, repository);
@@ -53,7 +56,8 @@ public class MavenImportPostProcessor
       final Asset asset,
       final Repository repository)
   {
-    Optional<FluentAsset> hashAsset = repository.facet(ContentFacet.class).assets()
+    Optional<FluentAsset> hashAsset = repository.facet(ContentFacet.class)
+        .assets()
         .path(asset.path() + hashFileExtension)
         .find();
 

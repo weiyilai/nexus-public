@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.raw;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.raw.internal.RawFormat;
@@ -23,13 +22,19 @@ import org.sonatype.nexus.repository.routing.RoutingRuleStore;
 import org.sonatype.nexus.repository.types.GroupType;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.repository.types.ProxyType;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Adapter to expose raw specific repository configuration for the repositories REST API.
  *
  * @since 3.41
  */
-@Named(RawFormat.NAME)
+@Component
+@Qualifier(RawFormat.NAME)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RawRepositoryAdapter
     extends SimpleApiRepositoryAdapter
 {

@@ -12,21 +12,21 @@
  */
 package org.sonatype.nexus.script.plugin.internal.rest;
 
-import java.util.Map;
+import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.internal.rest.SecurityApiResourceV1;
 import org.sonatype.nexus.security.privilege.PrivilegeDescriptor;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 @Path(ScriptPrivilegeApiResourceV1.RESOURCE_URI)
 public class ScriptPrivilegeApiResourceV1
@@ -37,7 +37,7 @@ public class ScriptPrivilegeApiResourceV1
   @Inject
   public ScriptPrivilegeApiResourceV1(
       final SecuritySystem securitySystem,
-      final Map<String, PrivilegeDescriptor> privilegeDescriptors)
+      final List<PrivilegeDescriptor> privilegeDescriptors)
   {
     super(securitySystem, privilegeDescriptors);
   }

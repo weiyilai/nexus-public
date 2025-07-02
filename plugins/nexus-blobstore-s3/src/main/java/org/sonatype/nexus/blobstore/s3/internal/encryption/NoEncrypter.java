@@ -12,22 +12,27 @@
  */
 package org.sonatype.nexus.blobstore.s3.internal.encryption;
 
-import javax.inject.Named;
-
 import com.amazonaws.services.s3.model.AbstractPutObjectRequest;
 import com.amazonaws.services.s3.model.CopyObjectRequest;
 import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Adds no encryption to a S3 request.
  *
  * @since 3.19
  */
-@Named(NoEncrypter.ID)
+@Component
+@Qualifier(NoEncrypter.ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class NoEncrypter
     implements S3Encrypter
 {
   public static final String ID = "none";
+
   public static final String NAME = "None";
 
   public static final NoEncrypter INSTANCE = new NoEncrypter();

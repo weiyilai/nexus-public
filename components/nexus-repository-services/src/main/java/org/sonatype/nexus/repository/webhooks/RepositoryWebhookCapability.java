@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.inject.Named;
+
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -30,10 +30,15 @@ import org.sonatype.nexus.repository.capability.RepositoryConditions;
 import org.sonatype.nexus.webhooks.WebhookService;
 import org.sonatype.nexus.webhooks.WebhookSubscription;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.capability.CapabilityType.capabilityType;
 
-@Named(RepositoryWebhookCapability.TYPE_ID)
+@Component(RepositoryWebhookCapability.TYPE_ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RepositoryWebhookCapability
     extends CapabilitySupport<RepositoryWebhookCapabilityConfiguration>
     implements Taggable

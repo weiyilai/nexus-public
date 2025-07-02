@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.api.rest.common.status;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -37,11 +36,12 @@ import static org.sonatype.nexus.common.log.ExceptionSummarizer.sameType;
 import static org.sonatype.nexus.common.log.ExceptionSummarizer.summarize;
 import static org.sonatype.nexus.common.log.ExceptionSummarizer.warn;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.15
  */
-@Named
+@Component
 @Singleton
 @Path(StatusResource.RESOURCE_URI)
 @Produces(APPLICATION_JSON)

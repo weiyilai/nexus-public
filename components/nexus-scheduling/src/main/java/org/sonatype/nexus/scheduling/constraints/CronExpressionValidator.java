@@ -14,15 +14,18 @@ package org.sonatype.nexus.scheduling.constraints;
 
 import java.util.Date;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.scheduling.schedule.ScheduleFactory;
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
 
+import org.springframework.context.annotation.Lazy;
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link CronExpression} validator.
@@ -30,7 +33,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @see ScheduleFactory#cron(Date, String)
  * @since 3.0
  */
-@Named
+@Lazy
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class CronExpressionValidator
     extends ConstraintValidatorSupport<CronExpression, String>
 {

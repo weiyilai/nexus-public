@@ -13,6 +13,7 @@
 package org.sonatype.nexus.repository.content.store.internal;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
@@ -21,6 +22,7 @@ import org.sonatype.nexus.blobstore.api.BlobId;
 import org.sonatype.nexus.blobstore.api.BlobRef;
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.datastore.mybatis.ContinuationArrayList;
 import org.sonatype.nexus.repository.content.store.AssetBlobData;
@@ -29,19 +31,23 @@ import org.sonatype.nexus.repository.content.store.FormatStoreManager;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 
 import com.google.common.collect.ImmutableMap;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -79,9 +85,12 @@ public class AssetBlobCleanupTaskTest
 
   ContinuationArrayList<AssetBlobData> firstPage;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @SuppressWarnings({"unchecked", "rawtypes"})
   @Before
   public void setUp() {
+    mockedStatic = mockStatic(QualifierUtil.class);
     when(blobRefMissingStore.getStore()).thenReturn("missing");
     when(blobRefBecomesUsed.getStore()).thenReturn("default");
     when(blobRefBecomesUsed.getBlobId()).thenReturn(mock(BlobId.class));
@@ -116,12 +125,18 @@ public class AssetBlobCleanupTaskTest
 
     when(blobStoreManager.get("default")).thenReturn(blobStore);
     when(blobStore.delete(any(), any())).thenReturn(true);
+    when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(ImmutableMap.of("raw", formatStoreManager));
+  }
+
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test
   public void testUnusedBlobsAreDeleted() throws Exception {
     setBatchDeleteIgnoreFinalField("raw");
-    AssetBlobCleanupTask task = new AssetBlobCleanupTask(ImmutableMap.of("raw", formatStoreManager), blobStoreManager);
+    AssetBlobCleanupTask task = new AssetBlobCleanupTask(List.of(formatStoreManager), blobStoreManager);
 
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     taskConfiguration.setString(FORMAT_FIELD_ID, "raw");
@@ -170,7 +185,7 @@ public class AssetBlobCleanupTaskTest
   @Test
   public void testDefaultBatchSize() throws Exception {
     setBatchDeleteIgnoreFinalField("raw");
-    AssetBlobCleanupTask task = new AssetBlobCleanupTask(ImmutableMap.of("raw", formatStoreManager), blobStoreManager);
+    AssetBlobCleanupTask task = new AssetBlobCleanupTask(List.of(formatStoreManager), blobStoreManager);
 
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     taskConfiguration.setString(FORMAT_FIELD_ID, "raw");
@@ -188,7 +203,7 @@ public class AssetBlobCleanupTaskTest
   @Test
   public void testExecutorServiceShutdown() throws Exception {
     setBatchDeleteIgnoreFinalField(null);
-    AssetBlobCleanupTask task = spy(new AssetBlobCleanupTask(ImmutableMap.of("raw", formatStoreManager), blobStoreManager));
+    AssetBlobCleanupTask task = spy(new AssetBlobCleanupTask(List.of(formatStoreManager), blobStoreManager));
 
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     taskConfiguration.setString(FORMAT_FIELD_ID, "raw");
@@ -217,7 +232,7 @@ public class AssetBlobCleanupTaskTest
   public void testUnusedBlobsAreDeletedBatch() throws Exception {
     setBatchDeleteIgnoreFinalField(null);
 
-    AssetBlobCleanupTask task = new AssetBlobCleanupTask(ImmutableMap.of("raw", formatStoreManager), blobStoreManager);
+    AssetBlobCleanupTask task = new AssetBlobCleanupTask(List.of(formatStoreManager), blobStoreManager);
 
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     taskConfiguration.setString(FORMAT_FIELD_ID, "raw");

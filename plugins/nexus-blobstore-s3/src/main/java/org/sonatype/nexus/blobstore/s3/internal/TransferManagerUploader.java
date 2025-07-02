@@ -14,32 +14,40 @@ package org.sonatype.nexus.blobstore.s3.internal;
 
 import java.io.InputStream;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Uploads a file with the TransferManager.
+ *
  * @since 3.7
  * @deprecated replaced with {@link MultipartUploader}
  */
+@ConditionalOnProperty(name = "nexus.s3.uploaderName", havingValue = "transfer-manager-uploader")
 @Deprecated
-@Named("transfer-manager-uploader")
+@Component
+@Qualifier("transfer-manager-uploader")
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class TransferManagerUploader
     implements S3Uploader
 {
-
+  @Override
   public void upload(final AmazonS3 s3, final String bucket, final String key, final InputStream contents) {
     try {
       TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3).build();
       transferManager.upload(bucket, key, contents, new ObjectMetadata())
           .waitForCompletion();
-    } catch (InterruptedException e) {
+    }
+    catch (InterruptedException e) {
       throw new BlobStoreException("error uploading blob", e, null);
     }
   }

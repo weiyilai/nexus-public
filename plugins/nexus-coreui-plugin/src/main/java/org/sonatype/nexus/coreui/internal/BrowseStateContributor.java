@@ -20,9 +20,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.rapture.StateContributor;
 import org.sonatype.nexus.repository.browse.node.BrowseNodeConfiguration;
@@ -37,9 +36,10 @@ import org.springframework.beans.factory.annotation.Value;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.RepositoryTaskSupport.ALL_REPOSITORIES;
 import static org.sonatype.nexus.repository.browse.node.RebuildBrowseNodesTaskDescriptor.REPOSITORY_NAME_FIELD_ID;
+import org.springframework.stereotype.Component;
 
 @Singleton
-@Named
+@Component
 public class BrowseStateContributor
     implements StateContributor
 {
@@ -55,7 +55,7 @@ public class BrowseStateContributor
   public BrowseStateContributor(
       final BrowseNodeConfiguration browseNodeConfiguration,
       final TaskScheduler taskScheduler,
-      @Named("${nexus.coreui.state.rebuildingRepositoryTasksCacheTTL:-60}") @Value("${nexus.coreui.state.rebuildingRepositoryTasksCacheTTL:60}") long rebuildingRepositoriesCacheTTL)
+      @Value("${nexus.coreui.state.rebuildingRepositoryTasksCacheTTL:60}") long rebuildingRepositoriesCacheTTL)
   {
     this.browseNodeConfiguration = checkNotNull(browseNodeConfiguration);
     this.taskScheduler = checkNotNull(taskScheduler);

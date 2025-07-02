@@ -14,13 +14,15 @@ package org.sonatype.nexus.repository.apt.datastore.internal.hosted;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.inject.Named;
 
 import org.sonatype.nexus.repository.Facet;
 import org.sonatype.nexus.repository.apt.datastore.AptContentFacet;
 import org.sonatype.nexus.repository.apt.datastore.internal.snapshot.AptSnapshotFacetSupport;
 import org.sonatype.nexus.repository.apt.internal.snapshot.SnapshotItem;
 import org.sonatype.nexus.repository.apt.internal.snapshot.SnapshotItem.ContentSpecifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Implementation of snapshots for apt hosted repository.
@@ -28,7 +30,8 @@ import org.sonatype.nexus.repository.apt.internal.snapshot.SnapshotItem.ContentS
  * @since 3.31
  */
 @Facet.Exposed
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AptHostedSnapshotFacet
     extends AptSnapshotFacetSupport
 {

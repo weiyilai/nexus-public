@@ -16,8 +16,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import javax.annotation.Nonnull;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.apt.datastore.AptContentFacet;
@@ -43,13 +42,14 @@ import static org.sonatype.nexus.repository.apt.internal.ReleaseName.RELEASE_GPG
 import static org.sonatype.nexus.repository.http.HttpMethods.GET;
 import static org.sonatype.nexus.repository.http.HttpMethods.HEAD;
 import static org.sonatype.nexus.repository.http.HttpMethods.POST;
+import org.springframework.stereotype.Component;
 
 /**
  * Apt handlers
  *
  * @since 3.31
  */
-@Named
+@Component
 @Singleton
 public class AptHostedHandler
     extends ComponentSupport
@@ -85,9 +85,10 @@ public class AptHostedHandler
     return content.isPresent() ? HttpResponses.ok(content.get()) : HttpResponses.notFound(path);
   }
 
-  private Response doPost(final Context context,
-                          final String path,
-                          final AptContentFacet contentFacet) throws IOException
+  private Response doPost(
+      final Context context,
+      final String path,
+      final AptContentFacet contentFacet) throws IOException
   {
     final AptHostedFacet hostedFacet = context.getRepository().facet(AptHostedFacet.class);
     if ("rebuild-indexes".equals(path)) {
@@ -104,9 +105,8 @@ public class AptHostedHandler
         long payloadSize = payload.getSize();
         String contentType = payload.getContentType();
 
-        hostedFacet.
-            put(assetPath, new StreamPayload(tempBlob, payloadSize, contentType),
-                new PackageInfo(controlFile));
+        hostedFacet.put(assetPath, new StreamPayload(tempBlob, payloadSize, contentType),
+            new PackageInfo(controlFile));
       }
       return HttpResponses.created();
     }
@@ -115,8 +115,7 @@ public class AptHostedHandler
     }
   }
 
-  private boolean isMetadataRebuildRequired(final String path, final AptContentFacet contentFacet)
-  {
+  private boolean isMetadataRebuildRequired(final String path, final AptContentFacet contentFacet) {
     if (StringUtils.startsWith(path, "dists")
         && StringUtils.endsWithAny(path, INRELEASE, RELEASE, RELEASE_GPG, "/Packages")) {
       String inReleasePath = "dists/" + contentFacet.getDistribution() + "/" + INRELEASE;

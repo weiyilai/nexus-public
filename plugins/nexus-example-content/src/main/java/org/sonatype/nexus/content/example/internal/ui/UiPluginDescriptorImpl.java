@@ -13,14 +13,18 @@
 package org.sonatype.nexus.content.example.internal.ui;
 
 import javax.annotation.Priority;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.rapture.UiPluginDescriptorSupport;
 
-@Named
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+@Component
 @Singleton
 @Priority(Integer.MAX_VALUE - 200)
+@Order(Ordered.HIGHEST_PRECEDENCE + 200)
 public class UiPluginDescriptorImpl
     extends UiPluginDescriptorSupport
 {

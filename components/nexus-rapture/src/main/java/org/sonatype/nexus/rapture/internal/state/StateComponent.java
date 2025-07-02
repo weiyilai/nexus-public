@@ -19,10 +19,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.node.NodeAccess;
 import org.sonatype.nexus.common.text.Strings2;
@@ -37,8 +35,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.softwarementors.extjs.djn.config.annotations.DirectAction;
 import com.softwarementors.extjs.djn.config.annotations.DirectPollMethod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -47,23 +45,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "rapture_State")
 public class StateComponent
     extends DirectComponentSupport
 {
-  private static final Logger log = LoggerFactory.getLogger(StateComponent.class);
-
   /**
-   * Randomly generated identifier on each boot to identify the running instance of the server and detect server reboots.
+   * Randomly generated identifier on each boot to identify the running instance of the server and detect server
+   * reboots.
    */
   private final String serverId;
 
-  private final List<Provider<StateContributor>> stateContributors;
+  private final List<StateContributor> stateContributors;
 
   @Inject
-  public StateComponent(final List<Provider<StateContributor>> stateContributors, final NodeAccess nodeAccess) {
+  public StateComponent(@Lazy final List<StateContributor> stateContributors, final NodeAccess nodeAccess) {
     this.stateContributors = checkNotNull(stateContributors);
     // special key on serverId hints UI event listeners to ignore serverId changes
     final String prefix = checkNotNull(nodeAccess).isClustered() ? "ignore." : "";
@@ -82,9 +79,9 @@ public class StateComponent
       values.put(key, null);
     }
 
-    for (Provider<StateContributor> contributor : stateContributors) {
+    for (StateContributor contributor : stateContributors) {
       try {
-        Map<String, Object> stateValues = contributor.get().getState();
+        Map<String, Object> stateValues = contributor.getState();
         if (stateValues != null) {
           for (Entry<String, Object> entry : stateValues.entrySet()) {
             if (!Strings2.isBlank(entry.getKey())) {
@@ -109,10 +106,11 @@ public class StateComponent
   /**
    * Include value in state unless its hash is unchanged.
    */
-  private void maybeSend(final Map<String, Object> values,
-                         final Map<String, String> hashes,
-                         final String key,
-                         final Object value)
+  private void maybeSend(
+      final Map<String, Object> values,
+      final Map<String, String> hashes,
+      final String key,
+      final Object value)
   {
     values.remove(key);
     String hash = hash(value);
@@ -133,7 +131,7 @@ public class StateComponent
    * Calculate (opaque) hash for given non-null value.
    */
   @Nullable
-  private static String hash(@Nullable final Object value) {
+  private String hash(@Nullable final Object value) {
     if (value != null) {
       // TODO: consider using Object.hashCode() and getting state contributors to ensure values have proper impls?
       // TODO: ... or something else which is more efficient than object->gson->sha1?

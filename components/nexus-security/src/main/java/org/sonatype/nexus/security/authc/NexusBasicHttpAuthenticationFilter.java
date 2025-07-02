@@ -14,11 +14,11 @@ package org.sonatype.nexus.security.authc;
 
 import java.io.IOException;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.sonatype.nexus.security.SecurityFilter.ATTR_USER_ID;
 import static org.sonatype.nexus.security.SecurityFilter.ATTR_USER_PRINCIPAL;
+import org.springframework.stereotype.Component;
 
 /**
  * Nexus security filter providing HTTP BASIC authentication support.
@@ -43,7 +44,8 @@ import static org.sonatype.nexus.security.SecurityFilter.ATTR_USER_PRINCIPAL;
  *
  * @since 3.0
  */
-@Named
+@WebFilter(filterName = NexusBasicHttpAuthenticationFilter.NAME)
+@Component
 @Singleton
 public class NexusBasicHttpAuthenticationFilter
     extends BasicHttpAuthenticationFilter
@@ -76,8 +78,10 @@ public class NexusBasicHttpAuthenticationFilter
    * Disable session creation for all BASIC auth requests.
    */
   @Override
-  public boolean onPreHandle(final ServletRequest request, final ServletResponse response, final Object mappedValue)
-      throws Exception
+  public boolean onPreHandle(
+      final ServletRequest request,
+      final ServletResponse response,
+      final Object mappedValue) throws Exception
   {
     // Basic auth should never create sessions; we do not want session overhead for non-user clients that supply
     // credentials
@@ -90,8 +94,10 @@ public class NexusBasicHttpAuthenticationFilter
    * Permissive {@link AuthorizationException} 401 and 403 handling.
    */
   @Override
-  protected void cleanup(final ServletRequest request, final ServletResponse response, Exception failure)
-      throws ServletException, IOException
+  protected void cleanup(
+      final ServletRequest request,
+      final ServletResponse response,
+      Exception failure) throws ServletException, IOException
   {
     // decode target exception
     Throwable cause = failure;
@@ -128,11 +134,11 @@ public class NexusBasicHttpAuthenticationFilter
   }
 
   @Override
-  protected boolean onLoginSuccess(AuthenticationToken token,
-                                   Subject subject,
-                                   ServletRequest request,
-                                   ServletResponse response)
-      throws Exception
+  protected boolean onLoginSuccess(
+      final AuthenticationToken token,
+      final Subject subject,
+      final ServletRequest request,
+      final ServletResponse response) throws Exception
   {
     if (request instanceof HttpServletRequest) {
       // Prefer the subject principal over the token's, as these could be different for token-based auth

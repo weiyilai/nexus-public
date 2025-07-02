@@ -29,10 +29,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.constraints.NotNull;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.entity.Continuations;
 import org.sonatype.nexus.common.event.EventManager;
@@ -77,6 +77,7 @@ import org.sonatype.nexus.transaction.Transactional;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.model.Model;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -103,13 +104,17 @@ import static org.sonatype.nexus.repository.maven.internal.Attributes.AssetKind.
 import static org.sonatype.nexus.repository.maven.internal.Constants.METADATA_FILENAME;
 import static org.sonatype.nexus.repository.maven.internal.MavenModels.readModel;
 import static org.sonatype.nexus.repository.maven.internal.hosted.metadata.MetadataUtils.metadataPath;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 
 /**
  * A {@link MavenContentFacet} that persists to a {@link ContentFacet}.
  *
  * @since 3.25
  */
-@Named(Maven2Format.NAME)
+@org.springframework.stereotype.Component
+@Qualifier(Maven2Format.NAME)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenContentFacetImpl
     extends ContentFacetSupport
     implements MavenContentFacet
@@ -151,15 +156,15 @@ public class MavenContentFacetImpl
 
   @Inject
   public MavenContentFacetImpl(
-      @Named(Maven2Format.NAME) final FormatStoreManager formatStoreManager,
-      final Map<String, MavenPathParser> mavenPathParsers,
+      @Qualifier(Maven2Format.NAME) final FormatStoreManager formatStoreManager,
+      final List<MavenPathParser> mavenPathParsersList,
       final MetadataRebuilder metadataRebuilder,
       final MavenMetadataContentValidator metadataValidator,
       final EventManager eventManager,
-      @Named("${nexus.maven.metadata.validation.enabled:-true}") @Value("${nexus.maven.metadata.validation.enabled:true}") final boolean metadataValidationEnabled)
+      @Value("${nexus.maven.metadata.validation.enabled:true}") final boolean metadataValidationEnabled)
   {
     super(formatStoreManager);
-    this.mavenPathParsers = checkNotNull(mavenPathParsers);
+    this.mavenPathParsers = QualifierUtil.buildQualifierBeanMap(checkNotNull(mavenPathParsersList));
     this.metadataRebuilder = checkNotNull(metadataRebuilder);
     this.metadataValidator = metadataValidator;
     this.eventManager = eventManager;

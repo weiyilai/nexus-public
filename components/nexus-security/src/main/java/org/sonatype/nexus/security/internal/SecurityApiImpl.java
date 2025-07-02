@@ -17,9 +17,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.security.SecurityApi;
@@ -38,11 +37,12 @@ import com.google.common.collect.Sets;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.security.user.UserManager.DEFAULT_SOURCE;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class SecurityApiImpl
     extends ComponentSupport

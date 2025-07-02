@@ -25,8 +25,8 @@ describe('AdminRepositoriesDirectoryPage', () => {
     givenUserLoggedIn();
 
     givenBundleActiveStates({
-      'org.sonatype.nexus.plugins.nexus-coreui-plugin': true,
-      'com.sonatype.nexus.plugins.nexus-pro-datastore-plugin': true
+      'nexus-coreui-plugin': true,
+      'nexus-pro-datastore-plugin': true
     });
 
     givenExtJSState({

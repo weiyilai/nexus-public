@@ -36,7 +36,6 @@ import org.sonatype.nexus.repository.content.store.example.TestContentRepository
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.summingInt;
 import static java.util.stream.Collectors.toList;
@@ -48,16 +47,16 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
 /**
  * Support class for ComponentDao tests.
  */
-public class ComponentDAOTestSupport
+public abstract class ComponentDAOTestSupport
     extends ExampleContentTestSupport
 {
   private int repositoryId;
@@ -79,7 +78,7 @@ public class ComponentDAOTestSupport
     generateRandomPaths(100);
   }
 
-  public void testCrudOperations() throws InterruptedException {
+  protected void testCrudOperations() throws InterruptedException {
 
     ComponentData component1 = randomComponent(repositoryId);
     ComponentData component2 = randomComponent(repositoryId);
@@ -126,7 +125,7 @@ public class ComponentDAOTestSupport
       dao.createComponent(component2, entityVersionEnabled);
       dao.createComponent(component3, entityVersionEnabled);
 
-      //browse all components
+      // browse all components
       Continuation<Component> components = browseComponents(dao, repositoryId, null, 10, null);
       assertThat(components, contains(
           allOf(sameCoordinates(component1), sameKind(component1), sameAttributes(component1)),
@@ -137,7 +136,7 @@ public class ComponentDAOTestSupport
       assertEntityVersion(dao, component2, entityVersionEnabled ? 1 : null);
       assertEntityVersion(dao, component3, entityVersionEnabled ? 1 : null);
 
-      //browse by kind
+      // browse by kind
       assertThat(browseComponents(dao, repositoryId, anotherKind, 10, null),
           contains(allOf(sameCoordinates(component2), sameKind(component2), sameAttributes(component2)),
               allOf(sameCoordinates(component3), sameKind(component3), sameAttributes(component3))));
@@ -321,7 +320,7 @@ public class ComponentDAOTestSupport
     }
   }
 
-  public void testBrowseComponentCoordinates() {
+  protected void testBrowseComponentCoordinates() {
 
     // scatter components and assets
     generateRandomRepositories(10);
@@ -337,13 +336,11 @@ public class ComponentDAOTestSupport
           .collect(summingInt(r -> countComponents(dao, r))), is(10));
 
       // now gather them back by browsing
-      generatedRepositories().forEach(r ->
-          dao.browseNamespaces(r.repositoryId).forEach(ns ->
-              dao.browseNames(r.repositoryId, ns).forEach(n ->
-                  dao.browseVersions(r.repositoryId, ns, n).forEach(v ->
-                      browsedComponents.add(
-                          dao.readCoordinate(r.repositoryId, ns, n, v).get())
-                  ))));
+      generatedRepositories().forEach(r -> dao.browseNamespaces(r.repositoryId)
+          .forEach(ns -> dao.browseNames(r.repositoryId, ns)
+              .forEach(n -> dao.browseVersions(r.repositoryId, ns, n)
+                  .forEach(v -> browsedComponents.add(
+                      dao.readCoordinate(r.repositoryId, ns, n, v).get())))));
     }
 
     // we should have the same components, but maybe in a different order
@@ -354,7 +351,7 @@ public class ComponentDAOTestSupport
             .collect(toList())));
   }
 
-  public void testContinuationBrowsing() {
+  protected void testContinuationBrowsing() {
 
     generateRandomNamespaces(1000);
     generateRandomNames(1000);
@@ -393,7 +390,7 @@ public class ComponentDAOTestSupport
     }
   }
 
-  public void testDeleteAllComponents() {
+  protected void testDeleteAllComponents() {
 
     // scatter components and assets
     generateRandomRepositories(1);
@@ -429,7 +426,7 @@ public class ComponentDAOTestSupport
     }
   }
 
-  public void testPurgeOperation() {
+  protected void testPurgeOperation() {
     ComponentData component1 = randomComponent(repositoryId);
     ComponentData component2 = randomComponent(repositoryId);
     component2.setVersion(component1.version() + ".2"); // make sure versions are different
@@ -497,7 +494,7 @@ public class ComponentDAOTestSupport
     }
   }
 
-  public void testRoundTrip() {
+  protected void testRoundTrip() {
     ComponentData component1 = randomComponent(repositoryId);
     ComponentData component2 = randomComponent(repositoryId);
     component2.setVersion(component1.version() + ".2"); // make sure versions are different
@@ -528,7 +525,7 @@ public class ComponentDAOTestSupport
     }
   }
 
-  public void testBrowseComponentsInRepositories() {
+  protected void testBrowseComponentsInRepositories() {
     ContentRepositoryData anotherContentRepository = randomContentRepository();
     createContentRepository(anotherContentRepository);
     int anotherRepositoryId = anotherContentRepository.repositoryId;
@@ -551,13 +548,13 @@ public class ComponentDAOTestSupport
       ComponentDAO dao = session.access(TestComponentDAO.class);
 
       assertThat(
-          dao.browseComponentsInRepositories(newHashSet(repositoryId, anotherRepositoryId), 10, null),
+          dao.browseComponentsInRepositories(Set.of(repositoryId, anotherRepositoryId), 10, null),
           emptyIterable());
 
       dao.createComponent(component1, entityVersionEnabled);
 
       Continuation<Component> components =
-          dao.browseComponentsInRepositories(newHashSet(repositoryId, anotherRepositoryId), 10, null);
+          dao.browseComponentsInRepositories(Set.of(repositoryId, anotherRepositoryId), 10, null);
       assertThat(components,
           contains(allOf(sameCoordinates(component1), sameKind(component1),
               sameAttributes(component1))));
@@ -566,8 +563,8 @@ public class ComponentDAOTestSupport
 
       dao.createComponent(component2, entityVersionEnabled);
 
-      //browse all components
-      components = dao.browseComponentsInRepositories(newHashSet(repositoryId, anotherRepositoryId), 10, null);
+      // browse all components
+      components = dao.browseComponentsInRepositories(Set.of(repositoryId, anotherRepositoryId), 10, null);
       assertThat(
           components,
           contains(allOf(sameCoordinates(component1), sameKind(component1), sameAttributes(component1)),
@@ -578,7 +575,7 @@ public class ComponentDAOTestSupport
     }
   }
 
-  public void testFilterClauseIsolation() {
+  protected void testFilterClauseIsolation() {
     ContentRepositoryData anotherContentRepository = randomContentRepository();
     createContentRepository(anotherContentRepository);
     int anotherRepositoryId = anotherContentRepository.repositoryId;
@@ -600,7 +597,7 @@ public class ComponentDAOTestSupport
     }
   }
 
-  public void testContinuationSetBrowsing() {
+  protected void testContinuationSetBrowsing() {
 
     final int namespaceCount = 4;
     final int nameCount = 4;
@@ -644,13 +641,15 @@ public class ComponentDAOTestSupport
 
       browseSets.stream().map(set -> createHashableComponentSetData(set.namespace, set.name)).forEach(set -> {
         List<Component> retrievedComponents = new ArrayList<>();
-        Continuation<Component> setComponents = browseComponentsBySet(dao, repositoryId, set.namespace(), set.name(), pageLimit, null);
+        Continuation<Component> setComponents =
+            browseComponentsBySet(dao, repositoryId, set.namespace(), set.name(), pageLimit, null);
         retrievedComponents.addAll(setComponents);
         assertTrue(setComponents.size() > 0);
         while (!setComponents.isEmpty()) {
           // verify we got the expected slice
 
-          setComponents = browseComponentsBySet(dao, repositoryId, set.namespace(), set.name(), pageLimit, setComponents.nextContinuationToken());
+          setComponents = browseComponentsBySet(dao, repositoryId, set.namespace(), set.name(), pageLimit,
+              setComponents.nextContinuationToken());
           retrievedComponents.addAll(setComponents);
           assertSameEntityVersion(setComponents, entityVersionEnabled ? 1 : null);
         }
@@ -664,49 +663,55 @@ public class ComponentDAOTestSupport
     }
   }
 
-  public void testNormalizationMethods(){
-    ContentRepositoryData randomContentRepository= randomContentRepository();
+  protected void testNormalizationMethods() {
+    ContentRepositoryData randomContentRepository = randomContentRepository();
     createContentRepository(randomContentRepository);
-    ComponentData component1 = randomComponent(randomContentRepository.repositoryId , "artifact-1");
-    ComponentData component2 = randomComponent(randomContentRepository.repositoryId , "artifact-2");
+    ComponentData component1 = randomComponent(randomContentRepository.repositoryId, "artifact-1");
+    ComponentData component2 = randomComponent(randomContentRepository.repositoryId, "artifact-2");
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       ComponentDAO dao = session.access(TestComponentDAO.class);
 
-      dao.createComponent(component1 , entityVersionEnabled);
-      dao.createComponent(component2 , entityVersionEnabled);
+      dao.createComponent(component1, entityVersionEnabled);
+      dao.createComponent(component2, entityVersionEnabled);
 
-      //unnormalized should be empty/0 , since there is no unnormalized records
-      Continuation<ComponentData> unnormalizedBrowse = dao.browseUnnormalized(10 , null);
-      assertThat(unnormalizedBrowse , hasSize(0));
+      // unnormalized should be empty/0 , since there is no unnormalized records
+      Continuation<ComponentData> unnormalizedBrowse = dao.browseUnnormalized(10, null);
+      assertThat(unnormalizedBrowse, hasSize(0));
 
       int count = dao.countUnnormalized();
-      assertThat(count , is(0));
+      assertThat(count, is(0));
 
-      //updating normalized_version
+      // updating normalized_version
       component1.setNormalizedVersion("0000000001.0000000000.0000000000.a");
       component2.setNormalizedVersion("0000000001.0000000000.0000000001.b");
 
-      dao.updateComponentNormalizedVersion(component1 , entityVersionEnabled);
-      dao.updateComponentNormalizedVersion(component2 , entityVersionEnabled);
+      dao.updateComponentNormalizedVersion(component1, entityVersionEnabled);
+      dao.updateComponentNormalizedVersion(component2, entityVersionEnabled);
 
-      assertNormalizedVersion(dao , component1 , "0000000001.0000000000.0000000000.a");
-      assertNormalizedVersion(dao , component2 , "0000000001.0000000000.0000000001.b");
+      assertNormalizedVersion(dao, component1, "0000000001.0000000000.0000000000.a");
+      assertNormalizedVersion(dao, component2, "0000000001.0000000000.0000000001.b");
     }
   }
 
-  private void assertNormalizedVersion(final ComponentDAO dao, final ComponentData component, final String expectedNormalizedVersion) {
-    Optional<Component> maybeComponent = dao.readCoordinate(component.repositoryId, component.namespace(), component.name(), component.version());
+  private void assertNormalizedVersion(
+      final ComponentDAO dao,
+      final ComponentData component,
+      final String expectedNormalizedVersion)
+  {
+    Optional<Component> maybeComponent =
+        dao.readCoordinate(component.repositoryId, component.namespace(), component.name(), component.version());
 
     assertTrue(maybeComponent.isPresent());
-    assertThat(maybeComponent.get().normalizedVersion() , is(expectedNormalizedVersion));
+    assertThat(maybeComponent.get().normalizedVersion(), is(expectedNormalizedVersion));
   }
 
   // This overrides the necessary methods to allow effective hashing for sets. Ideally this would be included
   // within the base class, but as none of the DAO objects currently implement hashcode and rely on object reference
   // for equality, doing so would then require overrides in all subclasses and potentially cause other problems.
-  protected ComponentSetData createHashableComponentSetData(String namespace, String name) {
-    ComponentSetData set = new ComponentSetData() {
+  protected ComponentSetData createHashableComponentSetData(final String namespace, final String name) {
+    ComponentSetData set = new ComponentSetData()
+    {
       @Override
       public boolean equals(final Object o) {
         if (this == o) {
@@ -792,8 +797,12 @@ public class ComponentDAOTestSupport
     assertThat(component.get().entityVersion(), is(expectedEntityVersion));
   }
 
-  private static void assertSameEntityVersion(final Collection<Component> components, final Integer expectedEntityVersion) {
-    assertThat(components.stream().map(Component::entityVersion)
+  private static void assertSameEntityVersion(
+      final Collection<Component> components,
+      final Integer expectedEntityVersion)
+  {
+    assertThat(components.stream()
+        .map(Component::entityVersion)
         .allMatch(entityVersion -> Objects.equals(entityVersion, expectedEntityVersion)), is(true));
   }
 

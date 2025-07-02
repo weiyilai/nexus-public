@@ -13,35 +13,40 @@
 package org.sonatype.nexus.security.realm;
 
 import org.sonatype.nexus.security.AbstractSecurityTest;
+import org.sonatype.nexus.security.AbstractSecurityTest.BaseSecurityConfiguration;
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.user.User;
 
 import com.google.common.collect.ImmutableList;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Import;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+@Import(BaseSecurityConfiguration.class)
 public class OrderingRealmsTest
     extends AbstractSecurityTest
 {
   @Test
-  public void testOrderedGetUser() throws Exception {
+  void testOrderedGetUser() throws Exception {
     SecuritySystem securitySystem = this.lookup(SecuritySystem.class);
     RealmManager realmManager = lookup(RealmManager.class);
     realmManager.setConfiguredRealmIds(ImmutableList.of("MockRealmA", "MockRealmB"));
 
     User jcoder = securitySystem.getUser("jcoder");
-    Assert.assertNotNull(jcoder);
+    assertNotNull(jcoder);
 
     // make sure jcoder is from MockUserManagerA
-    Assert.assertEquals("MockUserManagerA", jcoder.getSource());
+    assertEquals("MockUserManagerA", jcoder.getSource());
 
     // now change the order
     realmManager.setConfiguredRealmIds(ImmutableList.of("MockRealmB", "MockRealmA"));
 
     jcoder = securitySystem.getUser("jcoder");
-    Assert.assertNotNull(jcoder);
+    assertNotNull(jcoder);
 
     // make sure jcoder is from MockUserManagerA
-    Assert.assertEquals("MockUserManagerB", jcoder.getSource());
+    assertEquals("MockUserManagerB", jcoder.getSource());
   }
 }

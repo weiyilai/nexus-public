@@ -17,8 +17,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.io.SanitizingJsonOutputStream;
@@ -28,13 +27,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.ImmutableList;
+import org.springframework.stereotype.Component;
 
 /**
  * Should be used to hide sensitive data like password in the {@link Map}.
  *
  * @since 3.29
  */
-@Named
+@Component
 @Singleton
 public class PasswordSanitizing<T extends Map<String, ?>>
     extends ComponentSupport
@@ -60,7 +60,9 @@ public class PasswordSanitizing<T extends Map<String, ?>>
 
   public static final String REPLACEMENT = "**REDACTED**";
 
-  private final TypeReference<T> typeReference = new TypeReference<T>() { };
+  private final TypeReference<T> typeReference = new TypeReference<T>()
+  {
+  };
 
   private final ObjectWriter attributesJsonWriter = new ObjectMapper().writerFor(typeReference);
 

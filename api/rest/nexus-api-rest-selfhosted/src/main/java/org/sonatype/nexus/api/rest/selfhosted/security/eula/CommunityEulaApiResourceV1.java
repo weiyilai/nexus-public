@@ -12,19 +12,19 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.security.eula;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.kv.GlobalKeyValueStore;
 
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * v1 api for community eula
  */
-@Named
+@Component
 @Singleton
 @Path(CommunityEulaApiResourceV1.RESOURCE_URI)
 public class CommunityEulaApiResourceV1

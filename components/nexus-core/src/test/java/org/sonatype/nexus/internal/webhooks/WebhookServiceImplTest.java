@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.audit.InitiatorProvider;

@@ -27,24 +27,24 @@ import java.security.Security;
 import java.security.Signature;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKeyFactory;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.CryptoHelper;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.sonatype.nexus.common.app.FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED_NAMED_VALUE;
 
 /**
@@ -52,7 +52,7 @@ import static org.sonatype.nexus.common.app.FeatureFlags.NEXUS_SECURITY_FIPS_ENA
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class CryptoHelperImpl
     extends ComponentSupport
@@ -61,9 +61,7 @@ public class CryptoHelperImpl
   private final Provider provider;
 
   @Inject
-  public CryptoHelperImpl(
-      @Named(NEXUS_SECURITY_FIPS_ENABLED_NAMED) @Value(NEXUS_SECURITY_FIPS_ENABLED_NAMED_VALUE) final boolean nexusSecurityFipsEnabled)
-  {
+  public CryptoHelperImpl(@Value(NEXUS_SECURITY_FIPS_ENABLED_NAMED_VALUE) final boolean nexusSecurityFipsEnabled) {
     this.provider = configureProvider(nexusSecurityFipsEnabled);
   }
 

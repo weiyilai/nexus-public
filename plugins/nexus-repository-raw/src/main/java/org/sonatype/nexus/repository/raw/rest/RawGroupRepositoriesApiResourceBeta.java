@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.raw.rest;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.repository.rest.api.RepositoriesApiResourceBeta;
@@ -23,6 +22,7 @@ import org.sonatype.nexus.rest.APIConstants;
 import io.swagger.annotations.Api;
 
 import static org.sonatype.nexus.repository.raw.rest.RawGroupRepositoriesApiResourceBeta.RESOURCE_URI;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
@@ -30,7 +30,7 @@ import static org.sonatype.nexus.repository.raw.rest.RawGroupRepositoriesApiReso
  *             instead. Support backward compatibility.
  */
 @Api(hidden = true)
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 @Deprecated

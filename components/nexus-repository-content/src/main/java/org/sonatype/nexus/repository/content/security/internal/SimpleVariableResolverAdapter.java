@@ -14,8 +14,7 @@ package org.sonatype.nexus.repository.content.security.internal;
 
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.content.security.AssetVariableResolverSupport;
@@ -23,13 +22,16 @@ import org.sonatype.nexus.repository.search.AssetSearchResult;
 import org.sonatype.nexus.repository.search.ComponentSearchResult;
 import org.sonatype.nexus.repository.view.Request;
 import org.sonatype.nexus.selector.VariableSourceBuilder;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Simple implementation that will expose the path/format variable resolvers.
  *
  * @since 3.24
  */
-@Named("simple")
+@Component
+@Qualifier("simple")
 @Singleton
 public class SimpleVariableResolverAdapter
     extends AssetVariableResolverSupport

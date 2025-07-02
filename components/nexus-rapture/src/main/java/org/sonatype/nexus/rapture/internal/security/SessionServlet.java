@@ -14,10 +14,11 @@ package org.sonatype.nexus.rapture.internal.security;
 
 import java.io.IOException;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,6 +39,7 @@ import static com.google.common.net.HttpHeaders.X_FRAME_OPTIONS;
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static org.sonatype.nexus.common.app.FeatureFlags.SESSION_ENABLED;
 import static org.sonatype.nexus.servlet.XFrameOptions.DENY;
+import org.springframework.stereotype.Component;
 
 /**
  * Session servlet, to expose end-point for configuration of Shiro authentication filter to
@@ -47,13 +49,16 @@ import static org.sonatype.nexus.servlet.XFrameOptions.DENY;
  *
  * @see SessionAuthenticationFilter
  */
-@Named
+@WebServlet(SessionServlet.SESSION_MP)
+@Component
 @Singleton
 @FeatureFlag(name = SESSION_ENABLED)
 @ConditionalOnProperty(name = SESSION_ENABLED, havingValue = "true")
 public class SessionServlet
     extends HttpServlet
 {
+  public static final String SESSION_MP = "/service/rapture/session";
+
   private static final Logger log = LoggerFactory.getLogger(SessionServlet.class);
 
   private final EventManager eventManager;

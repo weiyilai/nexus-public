@@ -14,15 +14,15 @@ package org.sonatype.nexus.content.maven.upgrade;
 
 import java.util.Optional;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
+import org.springframework.stereotype.Component;
 
 /**
  * Re-index for new search normalization format.
  *
  * @since 3.37
  */
-@Named
+@Component
 @Singleton
 public class MavenUpgrade_1_4 // NOSONAR
     extends MavenIndexUpgrade

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.datastore.mybatis.ContinuationArrayList;
 import org.sonatype.nexus.kv.GlobalKeyValueStore;
@@ -35,12 +36,16 @@ import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationUtility;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -115,22 +120,32 @@ public class ComponentNormalizationIntegrityCheckerTest
 
   private ComponentNormalizationIntegrityChecker checker;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setUp() throws SQLException {
+    mockedStatic = Mockito.mockStatic(QualifierUtil.class);
+    when(QualifierUtil.buildQualifierBeanMap(anyList()))
+        .thenReturn(Map.of(MAVEN2_FORMAT, mavenStoreManager, RAW_FORMAT, rawStoreManager));
+
+    when(statement.execute(ADD_INDEX_TO_RAW)).thenReturn(true);
     checker = new ComponentNormalizationIntegrityChecker(
         formats,
         taskScheduler,
         startupScheduler,
-        managersByFormat,
+        List.of(mavenStoreManager, rawStoreManager),
         globalKeyValueStore,
         databaseMigrationUtility);
 
     when(connection.createStatement()).thenReturn(statement);
 
-    when(managersByFormat.get(MAVEN2_FORMAT)).thenReturn(mavenStoreManager);
     when(mavenStoreManager.componentStore(DEFAULT_DATASTORE_NAME)).thenReturn(mavenComponentStore);
-    when(managersByFormat.get(RAW_FORMAT)).thenReturn(rawStoreManager);
     when(rawStoreManager.componentStore(DEFAULT_DATASTORE_NAME)).thenReturn(rawComponentStore);
+  }
+
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test
@@ -198,9 +213,11 @@ public class ComponentNormalizationIntegrityCheckerTest
 
   private void mockHasUnnormalizedData(ComponentStore componentStore) {
     Continuation<ComponentData> continuationWithASingleElement = new ContinuationArrayList()
-    {{
-      add(new ComponentData());
-    }};
+    {
+      {
+        add(new ComponentData());
+      }
+    };
     when(componentStore.browseUnnormalized(1, null)).thenReturn(continuationWithASingleElement);
   }
 

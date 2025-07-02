@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.freeze;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -38,11 +37,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.6
  */
-@Named
+@Component
 @Singleton
 @Path(FreezeResource.RESOURCE_URI)
 @Produces(APPLICATION_JSON)

@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.internal.app;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ManagedLifecycle.Phase;
@@ -24,13 +23,14 @@ import org.sonatype.nexus.jmx.reflect.ManagedObject;
 import org.sonatype.nexus.jmx.reflect.ManagedOperation;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * JMX controller to manage the Nexus application lifecycle.
  *
  * @since 3.16
  */
-@Named
+@Component
 @Singleton
 @ManagedObject
 public class ManagedLifecycleBean

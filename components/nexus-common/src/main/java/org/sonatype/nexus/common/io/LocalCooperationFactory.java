@@ -17,15 +17,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Supplies local {@link Cooperation} points.
  *
  * @since 3.14
  */
-@Named("local")
+@Component
+@Qualifier("local")
 @Singleton
 public class LocalCooperationFactory
     extends ScopedCooperationFactorySupport

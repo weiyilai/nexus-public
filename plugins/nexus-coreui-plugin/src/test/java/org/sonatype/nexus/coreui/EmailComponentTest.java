@@ -12,25 +12,34 @@
  */
 package org.sonatype.nexus.coreui;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.email.EmailConfiguration;
 import org.sonatype.nexus.email.EmailManager;
 import org.sonatype.nexus.rapture.PasswordPlaceholder;
 
-import static org.mockito.Mockito.*;
+import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorFactoryImpl;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class EmailComponentTest
     extends TestSupport
 {
   private static final String ADDRESS = "you@somewhere.com";
+
+  private ValidationConfiguration configuration = new ValidationConfiguration();
 
   @Mock
   private EmailManager emailManager;
@@ -53,6 +62,13 @@ public class EmailComponentTest
     when(emailConfiguration.isStartTlsRequired()).thenReturn(true);
     when(emailConfiguration.isSslOnConnectEnabled()).thenReturn(true);
     when(emailConfiguration.getSubjectPrefix()).thenReturn("prefix");
+
+    configuration.validator(configuration.validatorFactory(new ConstraintValidatorFactoryImpl()));
+  }
+
+  @After
+  public void teardown() {
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
   }
 
   @Test
@@ -123,7 +139,6 @@ public class EmailComponentTest
         false, "localhost", 25,
         "foo", password, "nexus@example.org",
         null, false, false,
-        false, false, false
-    );
+        false, false, false);
   }
 }

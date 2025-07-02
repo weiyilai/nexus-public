@@ -12,20 +12,20 @@
  */
 package org.sonatype.nexus.internal.scheduling;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityContributor;
 import org.sonatype.nexus.security.config.SecurityContributorSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * Scheduling security configuration.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class SchedulingSecurityContributor
     extends SecurityContributorSupport

@@ -12,11 +12,12 @@
  */
 package org.sonatype.nexus.bootstrap.entrypoint.configuration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionSelector;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,9 +44,9 @@ public class NexusPropertiesVerifierTest
   @Before
   public void setUp() {
     // Treat the nexusProperties like a simple map
-    doAnswer(invocation -> properties.get((String) invocation.getArgument(0)))
+    doAnswer(invocation -> properties.get(invocation.getArgument(0)))
         .when(nexusProperties)
-        .get(anyString());
+        .getProperty(anyString());
     doAnswer(invocation -> properties.put(invocation.getArgument(0), invocation.getArgument(1)))
         .when(nexusProperties)
         .put(anyString(), anyString());
@@ -76,7 +77,7 @@ public class NexusPropertiesVerifierTest
 
     nexusPropertiesVerifier.verify(nexusProperties);
 
-    assertThat(nexusProperties.get(NEXUS_ANALYTICS), is(Boolean.TRUE.toString()));
+    assertThat(nexusProperties.getProperty(NEXUS_ANALYTICS), is(Boolean.TRUE.toString()));
   }
 
   @Test
@@ -87,7 +88,7 @@ public class NexusPropertiesVerifierTest
 
     nexusPropertiesVerifier.verify(nexusProperties);
 
-    assertThat(nexusProperties.get(NEXUS_ANALYTICS), is(Boolean.FALSE.toString()));
+    assertThat(nexusProperties.getProperty(NEXUS_ANALYTICS), is(Boolean.FALSE.toString()));
   }
 
   public void mockRequiredProperties() {

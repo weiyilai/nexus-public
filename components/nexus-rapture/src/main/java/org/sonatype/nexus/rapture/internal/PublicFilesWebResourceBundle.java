@@ -18,9 +18,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.mime.MimeSupport;
@@ -29,8 +28,9 @@ import org.sonatype.nexus.webresources.WebResource;
 import org.sonatype.nexus.webresources.WebResourceBundle;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class PublicFilesWebResourceBundle
     extends ComponentSupport

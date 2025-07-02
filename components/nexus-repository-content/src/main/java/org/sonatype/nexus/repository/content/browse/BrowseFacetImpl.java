@@ -23,10 +23,10 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.packageurl.PackageUrl;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.common.stateguard.Guarded;
@@ -48,6 +48,7 @@ import org.sonatype.nexus.repository.ossindex.PackageUrlService;
 
 import com.google.common.base.Stopwatch;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -55,13 +56,15 @@ import static java.lang.Math.max;
 import static org.sonatype.nexus.repository.FacetSupport.State.STARTED;
 import static org.sonatype.nexus.repository.content.store.InternalIds.internalComponentId;
 import static org.sonatype.nexus.scheduling.CancelableHelper.checkCancellation;
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
 /**
  * Default {@link BrowseFacet} implementation.
  *
  * @since 3.26
  */
-@Named
+@Scope(SCOPE_PROTOTYPE)
+@org.springframework.stereotype.Component
 public class BrowseFacetImpl
     extends FacetSupport
     implements BrowseFacet
@@ -90,13 +93,15 @@ public class BrowseFacetImpl
 
   @Inject
   public BrowseFacetImpl(
-      final Map<String, FormatStoreManager> formatStoreManagersByFormat,
-      final Map<String, BrowseNodeGenerator> browseNodeGeneratorsByFormat,
+      final List<FormatStoreManager> formatStoreManagersByFormatList,
+      final List<BrowseNodeGenerator> browseNodeGeneratorsByFormatList,
       final PackageUrlService packageUrlService,
-      @Named("${nexus.browse.rebuild.pageSize:-1000}") @Value("${nexus.browse.rebuild.pageSize:1000}") final int pageSize)
+      @Value("${nexus.browse.rebuild.pageSize:1000}") final int pageSize)
   {
-    this.formatStoreManagersByFormat = checkNotNull(formatStoreManagersByFormat);
-    this.browseNodeGeneratorsByFormat = checkNotNull(browseNodeGeneratorsByFormat);
+    this.formatStoreManagersByFormat =
+        QualifierUtil.buildQualifierBeanMap(checkNotNull(formatStoreManagersByFormatList));
+    this.browseNodeGeneratorsByFormat =
+        QualifierUtil.buildQualifierBeanMap(checkNotNull(browseNodeGeneratorsByFormatList));
     this.packageUrlService = checkNotNull(packageUrlService);
     this.pageSize = max(pageSize, 1);
   }
@@ -129,7 +134,7 @@ public class BrowseFacetImpl
 
   @Guarded(by = STARTED)
   @Override
-  public void addPathsToAssets(Collection<EntityId> assetIds) {
+  public void addPathsToAssets(final Collection<EntityId> assetIds) {
     FluentAssets lookup = facet(ContentFacet.class).assets();
 
     Map<Integer, Integer> componentsProcessed = newComponentCache();

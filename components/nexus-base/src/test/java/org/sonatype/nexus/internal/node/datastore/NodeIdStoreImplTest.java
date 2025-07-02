@@ -14,12 +14,8 @@ package org.sonatype.nexus.internal.node.datastore;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.event.EventManager;
-import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.testdb.DataSessionRule;
-import org.sonatype.nexus.transaction.TransactionModule;
 
-import com.google.inject.Guice;
-import com.google.inject.Provides;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,18 +37,8 @@ public class NodeIdStoreImplTest
 
   @Before
   public void setup() {
-    underTest = Guice.createInjector(new TransactionModule()
-    {
-      @Provides
-      DataSessionSupplier getDataSessionSupplier() {
-        return sessionRule;
-      }
-
-      @Provides
-      EventManager getEventManager() {
-        return eventManager;
-      }
-    }).getInstance(NodeIdStoreImpl.class);
+    underTest = new NodeIdStoreImpl(sessionRule);
+    underTest.setDependencies(eventManager);
   }
 
   @Test

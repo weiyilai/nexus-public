@@ -12,18 +12,20 @@
  */
 package org.sonatype.nexus.datastore.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.script.ScriptCleanupHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Stub DataStore implementation of {@link ScriptCleanupHandler}.
  *
  * @since 3.24
  */
-@Named("datastore")
+@Component
+@Qualifier("datastore")
 @Singleton
 public class ScriptCleanupHandlerImpl
     extends ComponentSupport

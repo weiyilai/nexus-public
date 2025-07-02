@@ -15,8 +15,7 @@ package org.sonatype.nexus.security.internal;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -29,13 +28,14 @@ import org.sonatype.nexus.security.privilege.PrivilegeUpdatedEvent;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link Privilege} auditor.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class PrivilegeAuditor
     extends AuditorSupport
@@ -65,7 +65,7 @@ public class PrivilegeAuditor
       attributes.put("name", privilege.getName());
       attributes.put("type", privilege.getType());
 
-      for (Entry<String,String> entry : privilege.getProperties().entrySet()) {
+      for (Entry<String, String> entry : privilege.getProperties().entrySet()) {
         attributes.put("property." + entry.getKey(), entry.getValue());
       }
 

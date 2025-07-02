@@ -35,10 +35,11 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.FileAppender;
-import org.eclipse.sisu.inject.BeanLocator;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.springframework.context.ApplicationContext;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 import static java.util.Arrays.asList;
@@ -63,6 +64,9 @@ import static org.sonatype.nexus.internal.log.LogbackLogManager.getLogFor;
 public class LogbackLogManagerTest
     extends TestSupport
 {
+  @Mock
+  private ApplicationContext applicationContext;
+
   private String fooLoggerName;
 
   private String barLoggerName;
@@ -85,8 +89,10 @@ public class LogbackLogManagerTest
       configuration.setLoggerLevel(barLoggerName, LoggerLevel.DEFAULT);
     };
 
-    LogbackLogManager underTest =
-        new LogbackLogManager(mock(EventManager.class), mock(BeanLocator.class), new MemoryLoggerOverrides());
+    when(applicationContext.getBeansOfType(LogConfigurationCustomizer.class)).thenReturn(Map.of("", customizer));
+
+    LogbackLogManager underTest = new LogbackLogManager(mock(EventManager.class), new MemoryLoggerOverrides());
+    underTest.setApplicationContext(applicationContext);
 
     LoggerContext context = LogbackLogManager.loggerContext();
 
@@ -96,9 +102,6 @@ public class LogbackLogManagerTest
 
     // start the manager
     underTest.start();
-
-    // manually apply customizer (normally handled by mediator)
-    underTest.registerCustomization(customizer);
 
     // verify customization was applied
     assertThat(context.getLogger(fooLoggerName).getLevel(), is(Level.DEBUG));
@@ -111,10 +114,12 @@ public class LogbackLogManagerTest
   public void testRegisterCustomization_overridesOverrideCustomizer() throws Exception {
     LogConfigurationCustomizer customizer =
         configuration -> configuration.setLoggerLevel(fooLoggerName, LoggerLevel.DEBUG);
+    when(applicationContext.getBeansOfType(LogConfigurationCustomizer.class)).thenReturn(Map.of("", customizer));
 
     MemoryLoggerOverrides overrides = new MemoryLoggerOverrides();
     overrides.set(fooLoggerName, LoggerLevel.ERROR);
-    LogbackLogManager underTest = new LogbackLogManager(mock(EventManager.class), mock(BeanLocator.class), overrides);
+    LogbackLogManager underTest = new LogbackLogManager(mock(EventManager.class), overrides);
+    underTest.setApplicationContext(applicationContext);
 
     LoggerContext context = LogbackLogManager.loggerContext();
 
@@ -123,9 +128,6 @@ public class LogbackLogManagerTest
 
     // start the manager
     underTest.start();
-
-    // manually apply customizer (normally handled by mediator)
-    underTest.registerCustomization(customizer);
 
     // verify customization was applied
     assertThat(context.getLogger(fooLoggerName).getLevel(), is(Level.ERROR));
@@ -165,8 +167,10 @@ public class LogbackLogManagerTest
     DatastoreLoggerOverrides overrides = new DatastoreLoggerOverrides(
         mock(ApplicationDirectories.class), store, eventManager);
 
-    LogbackLogManager underTest = new LogbackLogManager(eventManager, mock(BeanLocator.class), overrides);
+    LogbackLogManager underTest = new LogbackLogManager(eventManager, overrides);
+    underTest.setApplicationContext(applicationContext);
 
+    underTest.start();
     overrides.start();
 
     ArgumentCaptor<LoggerOverridesReloadEvent> eventCaptor = ArgumentCaptor.forClass(LoggerOverridesReloadEvent.class);
@@ -182,8 +186,8 @@ public class LogbackLogManagerTest
   @Test
   public void testLoggerOverridesEventProcessed() {
     EventManager eventManager = new SimpleEventManager();
-    LogbackLogManager underTest = new LogbackLogManager(eventManager, mock(BeanLocator.class),
-        mock(DatastoreLoggerOverrides.class));
+    LogbackLogManager underTest = new LogbackLogManager(eventManager, mock(DatastoreLoggerOverrides.class));
+    underTest.setApplicationContext(applicationContext);
     String testName = "test";
     String testLevel = "TRACE";
 
@@ -208,8 +212,8 @@ public class LogbackLogManagerTest
   public void testResetRootLoggerEventProcessed() {
     EventManager eventManager = new SimpleEventManager();
     LoggerContext context = LogbackLogManager.loggerContext();
-    LogbackLogManager underTest = new LogbackLogManager(eventManager, mock(BeanLocator.class),
-        mock(DatastoreLoggerOverrides.class));
+    LogbackLogManager underTest = new LogbackLogManager(eventManager, mock(DatastoreLoggerOverrides.class));
+    underTest.setApplicationContext(applicationContext);
     eventManager.register(underTest);
 
     // change ROOT log level
@@ -232,7 +236,8 @@ public class LogbackLogManagerTest
     EventManager eventManager = new SimpleEventManager();
     LoggerContext context = LogbackLogManager.loggerContext();
     LoggerOverrides memoryLoggerOverrides = new MemoryLoggerOverrides();
-    LogbackLogManager underTest = new LogbackLogManager(eventManager, mock(BeanLocator.class), memoryLoggerOverrides);
+    LogbackLogManager underTest = new LogbackLogManager(eventManager, memoryLoggerOverrides);
+    underTest.setApplicationContext(applicationContext);
     eventManager.register(underTest);
 
     // send event with updating 2 loggers
@@ -261,10 +266,11 @@ public class LogbackLogManagerTest
   }
 
   @Test
-  public void testLoggerLevelWhenLogNotFound() {
+  public void testLoggerLevelWhenLogNotFound() throws Exception {
     EventManager eventManager = new SimpleEventManager();
-    LogbackLogManager underTest = spy(new LogbackLogManager(eventManager, mock(BeanLocator.class),
-        mock(DatastoreLoggerOverrides.class)));
+    LogbackLogManager underTest = spy(new LogbackLogManager(eventManager, mock(DatastoreLoggerOverrides.class)));
+    underTest.setApplicationContext(applicationContext);
+    underTest.start();
     String testFileName = "foo";
 
     when(underTest.getAllLogFiles(testFileName)).thenReturn(Collections.emptySet());
@@ -275,11 +281,12 @@ public class LogbackLogManagerTest
   }
 
   @Test
-  public void testNoLogWhenFileFound() {
+  public void testNoLogWhenFileFound() throws Exception {
     EventManager eventManager = new SimpleEventManager();
-    LogbackLogManager underTest = spy(new LogbackLogManager(eventManager, mock(BeanLocator.class),
-        mock(DatastoreLoggerOverrides.class)));
+    LogbackLogManager underTest = spy(new LogbackLogManager(eventManager, mock(DatastoreLoggerOverrides.class)));
+    underTest.setApplicationContext(applicationContext);
     String testFileName = "foo";
+    underTest.start();
 
     when(underTest.getAllLogFiles(testFileName)).thenReturn(ImmutableSet.of(new File(testFileName)));
 

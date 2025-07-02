@@ -23,10 +23,10 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import javax.inject.Provider;
 import javax.validation.ConstraintViolation;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.FreezeService;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.event.EventAware;
@@ -57,6 +57,7 @@ import org.sonatype.nexus.repository.view.ViewFacet;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
+import jakarta.inject.Provider;
 import org.joda.time.DateTime;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -117,7 +118,7 @@ public class BaseRepositoryManager
       final ConfigurationStore store,
       final RepositoryFactory factory,
       final Provider<ConfigurationFacet> configFacet,
-      final Map<String, Recipe> recipes,
+      final List<Recipe> recipesList,
       final RepositoryAdminSecurityContributor securityContributor,
       final List<DefaultRepositoriesContributor> defaultRepositoriesContributors,
       final FreezeService freezeService,
@@ -131,7 +132,7 @@ public class BaseRepositoryManager
     this.store = checkNotNull(store);
     this.factory = checkNotNull(factory);
     this.configFacet = checkNotNull(configFacet);
-    this.recipes = checkNotNull(recipes);
+    this.recipes = QualifierUtil.buildQualifierBeanMap(checkNotNull(recipesList));
     this.securityContributor = checkNotNull(securityContributor);
     this.defaultRepositoriesContributors = checkNotNull(defaultRepositoriesContributors);
     this.freezeService = checkNotNull(freezeService);
@@ -579,13 +580,16 @@ public class BaseRepositoryManager
       RemoteConnectionStatusType statusType =
           RemoteConnectionStatusType.values()[event.getRemoteConnectionStatusTypeOrdinal()];
       // restore RemoteConnectionStatus from event
-      log.warn("Consume distributed RepositoryRemoteConnectionStatusEvent: repository={}, type={}",
+      log.debug("Consume distributed RepositoryRemoteConnectionStatusEvent: repository={}, type={}",
           repositoryName, statusType);
       RemoteConnectionStatus status = new RemoteConnectionStatus(statusType, event.getReason())
           .setBlockedUntil(new DateTime(event.getBlockedUntilMillis()))
           .setRequestUrl(event.getRequestUrl());
 
-      repository(repositoryName).facet(HttpClientFacet.class).setStatus(status);
+      Repository repository = repository(repositoryName);
+      if (repository.isStarted()) {
+        repository.facet(HttpClientFacet.class).setStatus(status);
+      }
     }
   }
 

@@ -16,13 +16,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
-import org.sonatype.nexus.common.app.BindAsLifecycleSupport;
 import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -35,25 +32,32 @@ import org.quartz.impl.jdbcjobstore.StdJDBCDelegate;
 import org.quartz.spi.JobStore;
 import org.quartz.utils.ConnectionProvider;
 import org.quartz.utils.DBConnectionManager;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link JobStore} implementation that uses JDBC.
  *
  * @since 3.19
  */
+@Lazy
 @FeatureFlag(name = "nexus.quartz.jobstore.jdbc")
 @ConditionalOnProperty(name = "nexus.quartz.jobstore.jdbc", havingValue = "true")
 @ManagedLifecycle(phase = SCHEMAS)
-@Named
+@Component
 @Singleton
 @Priority(Integer.MAX_VALUE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class JobStoreJdbcProvider
     extends LifecycleSupport
-    implements Provider<JobStore>
+    implements FactoryBean<JobStore>
 {
   private static final String QUARTZ_DS = "quartzDS";
 
@@ -69,7 +73,7 @@ public class JobStoreJdbcProvider
   public JobStoreJdbcProvider(
       final ConnectionProvider connectionProvider,
       final NodeAccess nodeAccess,
-      @Named(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED) @Value(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean datastoreClustered)
+      @Value(FeatureFlags.DATASTORE_CLUSTERED_ENABLED_NAMED_VALUE) final boolean datastoreClustered)
   {
     this.connectionProvider = connectionProvider;
     this.nodeAccess = nodeAccess;
@@ -90,8 +94,9 @@ public class JobStoreJdbcProvider
     }
   }
 
+  @Lazy
   @Override
-  public JobStore get() {
+  public JobStore getObject() throws Exception {
     JobStore localRef = jobStore;
     if (localRef == null) {
       synchronized (this) {
@@ -102,6 +107,11 @@ public class JobStoreJdbcProvider
       }
     }
     return localRef;
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return JobStore.class;
   }
 
   private JobStore createJobStore() {
@@ -142,18 +152,5 @@ public class JobStoreJdbcProvider
       default:
         return StdJDBCDelegate.class.getName();
     }
-  }
-
-  /**
-   * Provider implementations are not automatically exposed under additional interfaces.
-   * This small module is a workaround to expose this provider as a (managed) lifecycle.
-   */
-  @FeatureFlag(name = "nexus.quartz.jobstore.jdbc")
-  @ConditionalOnProperty(name = "nexus.quartz.jobstore.jdbc", havingValue = "true")
-  @Named
-  private static class BindAsLifecycle // NOSONAR
-      extends BindAsLifecycleSupport<JobStoreJdbcProvider>
-  {
-    // empty
   }
 }

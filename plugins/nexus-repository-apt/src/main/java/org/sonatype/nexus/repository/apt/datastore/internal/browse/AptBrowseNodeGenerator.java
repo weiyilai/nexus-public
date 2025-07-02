@@ -15,8 +15,7 @@ package org.sonatype.nexus.repository.apt.datastore.internal.browse;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.apt.AptFormat;
 import org.sonatype.nexus.repository.browse.node.BrowsePath;
@@ -26,6 +25,7 @@ import org.sonatype.nexus.repository.content.Component;
 import org.sonatype.nexus.repository.content.browse.DefaultBrowseNodeGenerator;
 
 import com.google.common.base.Splitter;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -34,7 +34,8 @@ import static org.sonatype.nexus.repository.browse.node.BrowsePath.SLASH;
 /**
  * @since 3.31
  */
-@Named(AptFormat.NAME)
+@org.springframework.stereotype.Component
+@Qualifier(AptFormat.NAME)
 @Singleton
 public class AptBrowseNodeGenerator
     extends DefaultBrowseNodeGenerator

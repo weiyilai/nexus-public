@@ -14,15 +14,18 @@ package org.sonatype.nexus.repository.content.upgrades;
 
 import java.sql.Connection;
 import java.util.Optional;
-import javax.inject.Named;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Placeholder step, no-op, original step was moved to BrowseNodeMigrationStep_1_34 to retain proper order
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BrowseNodeMigrationStep_1_32
     extends ComponentSupport
     implements DatabaseMigrationStep
@@ -34,6 +37,6 @@ public class BrowseNodeMigrationStep_1_32
 
   @Override
   public void migrate(final Connection connection) throws Exception {
-    //no-op simply placeholder so version doesn't get lost
+    // no-op simply placeholder so version doesn't get lost
   }
 }

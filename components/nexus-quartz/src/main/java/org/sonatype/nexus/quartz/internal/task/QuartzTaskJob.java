@@ -18,9 +18,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Mutex;
@@ -54,6 +53,9 @@ import static org.sonatype.nexus.quartz.internal.task.QuartzTaskUtils.updateJobD
 import static org.sonatype.nexus.scheduling.TaskState.RUNNING;
 import static org.sonatype.nexus.scheduling.TaskState.RUNNING_BLOCKED;
 import static org.sonatype.nexus.scheduling.TaskState.RUNNING_STARTING;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Quartz {@link Job} wrapping a Nexus {@link Task}.
@@ -64,7 +66,8 @@ import static org.sonatype.nexus.scheduling.TaskState.RUNNING_STARTING;
  */
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class QuartzTaskJob
     extends ComponentSupport
     implements InterruptableJob
@@ -88,10 +91,11 @@ public class QuartzTaskJob
   private Task task;
 
   @Inject
-  public QuartzTaskJob(final EventManager eventManager,
-                       final Provider<QuartzSchedulerSPI> scheduler,
-                       final TaskFactory taskFactory,
-                       final BaseUrlManager baseUrlManager)
+  public QuartzTaskJob(
+      final EventManager eventManager,
+      final Provider<QuartzSchedulerSPI> scheduler,
+      final TaskFactory taskFactory,
+      final BaseUrlManager baseUrlManager)
   {
     this.eventManager = checkNotNull(eventManager);
     this.scheduler = checkNotNull(scheduler);
@@ -261,12 +265,13 @@ public class QuartzTaskJob
     // AND are same type
     // AND are RUNNING
     // AND are not blocked
-    return scheduler.get().listsTasks().stream()
+    return scheduler.get()
+        .listsTasks()
+        .stream()
         .filter(t -> !task.getId().equals(t.getId())
             && task.taskConfiguration().getTypeId().equals(t.getConfiguration().getTypeId())
             && t.getCurrentState().getState().isRunning()
-            && notStartingOrBlocked(t.getCurrentState().getRunState())
-        )
+            && notStartingOrBlocked(t.getCurrentState().getRunState()))
         .collect(Collectors.toList());
   }
 

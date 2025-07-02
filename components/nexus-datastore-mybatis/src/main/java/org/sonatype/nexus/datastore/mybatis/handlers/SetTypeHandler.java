@@ -23,7 +23,7 @@ import org.apache.ibatis.type.TypeHandler;
  *
  * @since 3.21
  */
-// not @Named because we register this manually
+// not @Component
 public class SetTypeHandler
     extends AbstractRawJsonTypeHandler<Set<?>>
 {

@@ -16,9 +16,8 @@ import java.net.URL;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.template.TemplateHelper;
@@ -27,6 +26,9 @@ import org.sonatype.nexus.scheduling.TaskInfo;
 import org.sonatype.nexus.scheduling.TaskNotificationMessageGenerator;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -37,7 +39,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 3.22
  */
 @Singleton
-@Named(DefaultTaskNotificationMessageGenerator.ID)
+@Component
+@Qualifier(DefaultTaskNotificationMessageGenerator.ID)
+@Primary
 public class DefaultTaskNotificationMessageGenerator
     extends ComponentSupport
     implements TaskNotificationMessageGenerator

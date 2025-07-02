@@ -14,9 +14,8 @@ package org.sonatype.nexus.self.hosted.datastore;
 
 import java.io.File;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -31,13 +30,14 @@ import org.springframework.beans.factory.annotation.Value;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
+import org.springframework.stereotype.Component;
 
 /**
  * Enable H2 web console.
  *
  * @since 3.27
  */
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = TASKS)
 public class H2WebConsole
@@ -55,8 +55,8 @@ public class H2WebConsole
   @Inject
   public H2WebConsole(
       final ApplicationDirectories applicationDirectories,
-      @Named("${nexus.h2.httpListenerEnabled:-false}") @Value("${nexus.h2.httpListenerEnabled:false}") final boolean httpListenerEnabled,
-      @Named("${nexus.h2.httpListenerPort:-8082}") @Value("${nexus.h2.httpListenerPort:8082}") final int httpListenerPort,
+      @Value("${nexus.h2.httpListenerEnabled:false}") final boolean httpListenerEnabled,
+      @Value("${nexus.h2.httpListenerPort:8082}") final int httpListenerPort,
       final NodeAccess nodeAccess)
   {
     checkNotNull(applicationDirectories);

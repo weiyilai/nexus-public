@@ -12,15 +12,15 @@
  */
 package org.sonatype.nexus.repository.content.search.upgrade;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.facet.ContentFacet;
 import org.sonatype.nexus.repository.search.index.SearchUpdateService;
 import org.sonatype.nexus.repository.types.GroupType;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class SearchUpdateServiceImpl
     implements SearchUpdateService

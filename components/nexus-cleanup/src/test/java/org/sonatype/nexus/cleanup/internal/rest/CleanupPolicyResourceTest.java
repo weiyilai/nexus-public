@@ -15,23 +15,28 @@ package org.sonatype.nexus.cleanup.internal.rest;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 import javax.ws.rs.core.Response;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.cleanup.config.CleanupPolicyConfiguration;
+import org.sonatype.nexus.cleanup.config.DefaultCleanupPolicyConfiguration;
 import org.sonatype.nexus.cleanup.internal.preview.CsvCleanupPreviewContentWriter;
 import org.sonatype.nexus.cleanup.preview.CleanupPreviewHelper;
 import org.sonatype.nexus.cleanup.rest.CleanupPolicyRequestValidator;
 import org.sonatype.nexus.cleanup.storage.CleanupPolicyStorage;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import static java.util.Collections.singleton;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -41,6 +46,7 @@ import static org.hamcrest.core.StringEndsWith.endsWith;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.hamcrest.text.IsEmptyString.isEmptyOrNullString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 public class CleanupPolicyResourceTest
@@ -52,7 +58,6 @@ public class CleanupPolicyResourceTest
   @Mock
   private List<Format> formats;
 
-  @Mock
   private Map<String, CleanupPolicyConfiguration> cleanupFormatConfigurationMap;
 
   @Mock
@@ -79,9 +84,15 @@ public class CleanupPolicyResourceTest
 
   private final String repositoryName = "test-repo";
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setUp() throws Exception {
-    when(cleanupFormatConfigurationMap.get("default")).thenReturn(mock(CleanupPolicyConfiguration.class));
+    mockedStatic = mockStatic(QualifierUtil.class);
+    cleanupFormatConfigurationMap =
+        Map.of(DefaultCleanupPolicyConfiguration.NAME, mock(CleanupPolicyConfiguration.class));
+    when(QualifierUtil.buildQualifierBeanMap(Mockito.<List<CleanupPolicyConfiguration>>any()))
+        .thenReturn(cleanupFormatConfigurationMap);
     Repository repository = mock(Repository.class);
     when(repositoryManager.get(repositoryName)).thenReturn(repository);
     when(repository.getName()).thenReturn(repositoryName);
@@ -90,13 +101,18 @@ public class CleanupPolicyResourceTest
     cleanupPolicyValidators = singleton(cleanupPolicyValidator);
   }
 
+  @After
+  public void tearDown() {
+    mockedStatic.close();
+  }
+
   @Test
   public void testPreviewContentCsv() {
     underTest =
         new CleanupPolicyResource(
             cleanupPolicyStorage,
             formats,
-            cleanupFormatConfigurationMap,
+            List.of(),
             cleanupPreviewHelper,
             repositoryManager,
             eventManager,

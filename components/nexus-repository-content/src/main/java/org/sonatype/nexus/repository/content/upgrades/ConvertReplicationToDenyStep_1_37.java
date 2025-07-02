@@ -17,8 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.util.Optional;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,11 +26,15 @@ import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 import org.sonatype.nexus.common.db.DatabaseCheck;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Convert REPLICATION_ONLY write policy to DENY.
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ConvertReplicationToDenyStep_1_37
     implements DatabaseMigrationStep
 {
@@ -45,7 +48,7 @@ public class ConvertReplicationToDenyStep_1_37
 
   @Inject
   public ConvertReplicationToDenyStep_1_37(
-    final DatabaseCheck databaseCheck) 
+      final DatabaseCheck databaseCheck)
   {
     this.mapper = new ObjectMapper();
     this.databaseCheck = databaseCheck;
@@ -85,7 +88,8 @@ public class ConvertReplicationToDenyStep_1_37
             }
           }
         }
-      } catch (SQLException | JsonProcessingException e) {
+      }
+      catch (SQLException | JsonProcessingException e) {
         throw new RuntimeException(e);
       }
     }
@@ -94,10 +98,11 @@ public class ConvertReplicationToDenyStep_1_37
   private int getTotalRowCount(Connection connection) throws SQLException {
     String countQuery = "SELECT COUNT(id) FROM repository";
     try (PreparedStatement ps = connection.prepareStatement(countQuery);
-         ResultSet rs = ps.executeQuery()) {
+        ResultSet rs = ps.executeQuery()) {
       if (rs.next()) {
         return rs.getInt(1);
-      } else {
+      }
+      else {
         throw new SQLException("Failed to count rows in repository table");
       }
     }
@@ -107,7 +112,8 @@ public class ConvertReplicationToDenyStep_1_37
     try (PreparedStatement ps = connection.prepareStatement(UPDATE_ATTRIBUTES_BY_ID)) {
       if (!databaseCheck.isPostgresql()) {
         ps.setBytes(1, attributes);
-      } else {
+      }
+      else {
         ps.setString(1, new String(attributes, UTF_8));
       }
       ps.setString(2, id);

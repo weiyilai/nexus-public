@@ -12,19 +12,19 @@
  */
 package com.sonatype.nexus.ssl.plugin.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.net.ssl.SSLContext;
-
-import org.sonatype.nexus.ssl.TrustStore;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.httpclient.SSLContextSelector;
+import org.sonatype.nexus.ssl.TrustStore;
 
 import org.apache.http.protocol.HttpContext;
+import org.springframework.context.annotation.Lazy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * An {@link SSLContextSelector} that will make use of Nexus SSL TrustStore depending on value of
@@ -32,7 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class HttpContextAttributeSSLContextSelector
     extends ComponentSupport
@@ -41,7 +41,7 @@ public class HttpContextAttributeSSLContextSelector
   private final TrustStore trustStore;
 
   @Inject
-  public HttpContextAttributeSSLContextSelector(final TrustStore trustStore) {
+  public HttpContextAttributeSSLContextSelector(@Lazy final TrustStore trustStore) {
     this.trustStore = checkNotNull(trustStore);
   }
 

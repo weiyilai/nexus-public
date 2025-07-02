@@ -12,21 +12,25 @@
  */
 package org.sonatype.nexus.repository.apt.datastore;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.apt.AptFormat;
 import org.sonatype.nexus.repository.content.director.ContentDirector;
 import org.sonatype.nexus.repository.content.fluent.FluentComponent;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
 /**
  * Allow staging functionality for Apt,
+ *
  * @see <a href="https://links.sonatype.com//products/nxrm3/docs/staging">Staging</a> for more details.
  *
  * @since 3.31
  */
-@Named(AptFormat.NAME)
+@Component
+@Qualifier(AptFormat.NAME)
 @Singleton
 public class AptContentDirector
     implements ContentDirector

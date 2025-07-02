@@ -14,9 +14,6 @@ package org.sonatype.nexus.api.rest.selfhosted.status;
 
 import java.util.SortedMap;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -26,8 +23,11 @@ import org.sonatype.nexus.rest.Resource;
 
 import com.codahale.metrics.health.HealthCheck.Result;
 import com.codahale.metrics.health.HealthCheckRegistry;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -36,7 +36,7 @@ import static org.sonatype.nexus.rest.APIConstants.INTERNAL_API_PREFIX;
 /**
  * @since 3.20
  */
-@Named
+@Component
 @Singleton
 @Path(HealthCheckResource.RESOURCE_URI)
 @Produces(APPLICATION_JSON)
@@ -49,7 +49,7 @@ public class HealthCheckResource
   private HealthCheckRegistry registry;
 
   @Inject
-  public HealthCheckResource(HealthCheckRegistry registry) {
+  public HealthCheckResource(final HealthCheckRegistry registry) {
     this.registry = checkNotNull(registry);
   }
 

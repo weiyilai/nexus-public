@@ -16,9 +16,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
@@ -42,7 +42,6 @@ import static org.sonatype.nexus.repository.content.AttributesHelper.applyAttrib
  *
  * @since 3.21
  */
-@Named
 public class ContentRepositoryStore<T extends ContentRepositoryDAO>
     extends ContentStoreEventSupport<T>
 {
@@ -170,7 +169,7 @@ public class ContentRepositoryStore<T extends ContentRepositoryDAO>
    * @return repository attributes if found
    */
   @Transactional
-  public List<Map<String, Object>> readAllContentRepositoryIds(final List<String> repositoryFormats){
+  public List<Map<String, Object>> readAllContentRepositoryIds(final List<String> repositoryFormats) {
     return dao().readAllContentRepositoryIds(repositoryFormats);
   }
 }

@@ -12,13 +12,13 @@
  */
 package org.sonatype.nexus.siesta.internal;
 
-import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.sonatype.nexus.siesta.SiestaTestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 
+import jakarta.inject.Provider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -29,7 +29,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 
 class AuthorizationExceptionMapperTest
-    extends SiestaTestSupport
+    extends Test5Support
 {
   @Mock
   private HttpServletRequest httpRequest;

@@ -12,14 +12,16 @@
  */
 package org.sonatype.nexus.internal.metrics;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.FreezeService;
 
 import com.codahale.metrics.Metric;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -28,10 +30,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.6
  */
-@Named("readonly")
+@Component
+@Qualifier("readonly")
 @Singleton
 public class ReadOnlyMetricProvider
-    implements Provider<Metric>
+    implements FactoryBean<Metric>
 {
   private final Provider<FreezeService> freezeServiceProvider;
 
@@ -40,7 +43,12 @@ public class ReadOnlyMetricProvider
     this.freezeServiceProvider = checkNotNull(freezeServiceProvider);
   }
 
-  public Metric get() {
+  public Metric getObject() {
     return new ReadOnlyMetricSet(freezeServiceProvider);
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return Metric.class;
   }
 }

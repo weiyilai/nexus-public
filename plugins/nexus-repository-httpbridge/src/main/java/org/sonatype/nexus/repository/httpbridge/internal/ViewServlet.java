@@ -14,12 +14,13 @@ package org.sonatype.nexus.repository.httpbridge.internal;
 
 import java.io.IOException;
 import java.util.Enumeration;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -49,6 +50,7 @@ import org.apache.shiro.authz.AuthorizationException;
 import org.jboss.logging.MDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -57,11 +59,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
+@WebServlet(urlPatterns = ViewServlet.MOUNT_POINT)
+@Component
 @Singleton
 public class ViewServlet
     extends HttpServlet
 {
+  public static final String MOUNT_POINT = "/repository/*";
+
   private static final Logger log = LoggerFactory.getLogger(ViewServlet.class);
 
   @VisibleForTesting

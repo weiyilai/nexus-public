@@ -17,9 +17,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
@@ -32,8 +31,9 @@ import org.sonatype.nexus.supportzip.SupportBundleCustomizer;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Priority.OPTIONAL;
 import static org.sonatype.nexus.supportzip.SupportBundle.ContentSource.Type.ARCHIVEDLOG;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 public class ArchivedLogCustomizer
     extends ComponentSupport

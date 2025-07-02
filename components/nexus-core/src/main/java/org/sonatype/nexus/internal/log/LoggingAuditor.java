@@ -14,8 +14,7 @@ package org.sonatype.nexus.internal.log;
 
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -26,13 +25,14 @@ import org.sonatype.nexus.common.log.LoggersResetEvent;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * Logging auditor.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class LoggingAuditor
     extends AuditorSupport

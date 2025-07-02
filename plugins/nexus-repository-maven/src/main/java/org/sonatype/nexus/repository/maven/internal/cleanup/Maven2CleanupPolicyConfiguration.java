@@ -14,8 +14,7 @@ package org.sonatype.nexus.repository.maven.internal.cleanup;
 
 import java.util.Map;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.cleanup.config.CleanupPolicyConfiguration;
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
@@ -28,13 +27,16 @@ import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.LAST_DOWN
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.REGEX_KEY;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.RETAIN_KEY;
 import static org.sonatype.nexus.cleanup.config.CleanupPolicyConstants.RETAIN_SORT_BY_KEY;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Defines which cleanup policy fields to display for maven.
  *
  * @since 3.14
  */
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 @Singleton
 public class Maven2CleanupPolicyConfiguration
     implements CleanupPolicyConfiguration

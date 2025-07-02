@@ -18,9 +18,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.event.EventAware;
@@ -50,6 +49,10 @@ import org.sonatype.nexus.security.role.RoleUpdatedEvent;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.distributed.event.service.api.EventType.CREATED;
@@ -61,8 +64,10 @@ import static org.sonatype.nexus.security.internal.DefaultRealmConstants.DEFAULT
 /**
  * Default {@link AuthorizationManager}.
  */
-@Named(DEFAULT_USER_SOURCE)
+@Component
+@Qualifier(DEFAULT_USER_SOURCE)
 @Singleton
+@Primary
 public class AuthorizationManagerImpl
     extends ComponentSupport
     implements AuthorizationManager, EventAware
@@ -79,7 +84,7 @@ public class AuthorizationManagerImpl
   public AuthorizationManagerImpl(
       final SecurityConfigurationManager configuration,
       final EventManager eventManager,
-      final List<PrivilegeDescriptor> privilegeDescriptors)
+      @Lazy final List<PrivilegeDescriptor> privilegeDescriptors)
   {
     this.configuration = configuration;
     this.eventManager = eventManager;

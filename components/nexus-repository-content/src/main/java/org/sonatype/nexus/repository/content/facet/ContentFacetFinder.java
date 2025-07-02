@@ -17,8 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.event.EventAware;
@@ -34,13 +33,14 @@ import com.google.common.eventbus.Subscribe;
 
 import static java.util.Optional.ofNullable;
 import static org.sonatype.nexus.repository.content.store.InternalIds.contentRepositoryId;
+import org.springframework.stereotype.Component;
 
 /**
  * Provides various methods for finding {@link ContentFacet}s and their repositories.
  *
  * @since 3.26
  */
-@Named
+@Component
 @Singleton
 public class ContentFacetFinder
     extends ComponentSupport
@@ -101,8 +101,9 @@ public class ContentFacetFinder
     Repository repository = event.getRepository();
     String format = repository.getFormat().getValue();
 
-    repository.optionalFacet(ContentFacet.class).ifPresent(
-        facet -> repositoriesByContentId.put(cacheKey(format, facet.contentRepositoryId()), repository));
+    repository.optionalFacet(ContentFacet.class)
+        .ifPresent(
+            facet -> repositoriesByContentId.put(cacheKey(format, facet.contentRepositoryId()), repository));
   }
 
   @AllowConcurrentEvents
@@ -111,8 +112,9 @@ public class ContentFacetFinder
     Repository repository = event.getRepository();
     String format = repository.getFormat().getValue();
 
-    repository.optionalFacet(ContentFacet.class).ifPresent(
-        facet -> repositoriesByContentId.remove(cacheKey(format, facet.contentRepositoryId())));
+    repository.optionalFacet(ContentFacet.class)
+        .ifPresent(
+            facet -> repositoriesByContentId.remove(cacheKey(format, facet.contentRepositoryId())));
   }
 
   /**

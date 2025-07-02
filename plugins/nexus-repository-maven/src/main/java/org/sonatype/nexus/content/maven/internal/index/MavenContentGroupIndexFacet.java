@@ -14,8 +14,7 @@ package org.sonatype.nexus.content.maven.internal.index;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.repository.group.GroupFacet;
 import org.sonatype.nexus.repository.maven.MavenIndexFacet;
@@ -24,13 +23,17 @@ import org.sonatype.nexus.repository.maven.internal.filter.DuplicateDetectionStr
 import org.sonatype.nexus.repository.maven.internal.filter.DuplicateDetectionStrategyProvider;
 
 import org.apache.maven.index.reader.Record;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Group implementation of {@link MavenIndexFacet}.
  *
  * @since 3.26
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenContentGroupIndexFacet
     extends MavenContentIndexFacetSupport
 {
@@ -39,14 +42,15 @@ public class MavenContentGroupIndexFacet
   @Inject
   public MavenContentGroupIndexFacet(
       final MavenIndexPublisher mavenIndexPublisher,
-      final DuplicateDetectionStrategyProvider duplicateDetectionStrategyProvider) {
+      final DuplicateDetectionStrategyProvider duplicateDetectionStrategyProvider)
+  {
     super(mavenIndexPublisher);
     this.duplicateDetectionStrategyProvider = duplicateDetectionStrategyProvider;
   }
 
   @Override
   public void publishIndex() throws IOException {
-    try (DuplicateDetectionStrategy<Record> strategy = duplicateDetectionStrategyProvider.get()) {
+    try (DuplicateDetectionStrategy<Record> strategy = duplicateDetectionStrategyProvider.getObject()) {
       mavenIndexPublisher.publishGroupIndex(getRepository(), facet(GroupFacet.class).leafMembers(), strategy);
     }
   }

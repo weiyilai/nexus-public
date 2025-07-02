@@ -12,8 +12,7 @@
  */
 package org.sonatype.nexus.repository.config;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.common.text.Strings2;
@@ -21,13 +20,17 @@ import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Ensure that the value matches a repository name
  *
  * @since 3.31
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RepositoryTypeHostedValidator
     extends ConstraintValidatorSupport<RepositoryTypeHosted, String>
 {
@@ -45,7 +48,7 @@ public class RepositoryTypeHostedValidator
       return false;
     }
     else {
-      //let the notblank validator do its job
+      // let the notblank validator do its job
       return true;
     }
   }

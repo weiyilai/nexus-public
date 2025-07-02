@@ -30,7 +30,7 @@ import org.apache.ibatis.type.TypeHandler;
  *
  * @since 3.20
  */
-// not @Named because we register this manually
+// not @Component
 public class NestedAttributesMapTypeHandler
     extends AbstractJsonTypeHandler<NestedAttributesMap>
 {

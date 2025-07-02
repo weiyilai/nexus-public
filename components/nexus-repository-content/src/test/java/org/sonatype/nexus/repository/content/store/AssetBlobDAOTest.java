@@ -18,6 +18,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 import org.sonatype.nexus.blobstore.api.BlobRef;
@@ -31,8 +32,7 @@ import org.sonatype.nexus.repository.config.internal.ConfigurationData;
 import org.sonatype.nexus.repository.content.AssetBlob;
 import org.sonatype.nexus.repository.content.store.example.TestAssetBlobDAO;
 
-import com.google.common.collect.ImmutableMap;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -41,17 +41,17 @@ import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.testcommon.matchers.NexusMatchers.time;
 
 /**
  * Test {@link AssetBlobDAO}.
  */
-public class AssetBlobDAOTest
+class AssetBlobDAOTest
     extends ExampleContentTestSupport
 {
   private static final String NODE_ID = "ab761d55-5d9c22b6-3f38315a-75b3db34-0922a4d5";
@@ -59,7 +59,7 @@ public class AssetBlobDAOTest
   private static final String BLOB_ID = "a8f3f56f-e895-4b6e-984a-1cf1f5107d36";
 
   @Test
-  public void testCrudOperations() {
+  void testCrudOperations() {
 
     AssetBlobData assetBlob1 = randomAssetBlob();
     assetBlob1.setExternalMetadata(
@@ -101,7 +101,7 @@ public class AssetBlobDAOTest
       duplicate.setBlobRef(assetBlob1.blobRef());
       duplicate.setBlobSize(1234);
       duplicate.setContentType("text/html");
-      duplicate.setChecksums(ImmutableMap.of());
+      duplicate.setChecksums(Map.of());
       duplicate.setBlobCreated(UTC.now());
       dao.createAssetBlob(duplicate);
 
@@ -146,7 +146,7 @@ public class AssetBlobDAOTest
   }
 
   @Test
-  public void testBrowseAll() {
+  void testBrowseAll() {
     AssetBlobData assetBlob1 = randomAssetBlob();
     AssetBlobData assetBlob2 = randomAssetBlob();
 
@@ -170,7 +170,7 @@ public class AssetBlobDAOTest
   }
 
   @Test
-  public void testBrowseWithinDuration() {
+  void testBrowseWithinDuration() {
     OffsetDateTime now = UTC.now();
     OffsetDateTime blobCreated1 = now.minusDays(10);
     OffsetDateTime blobCreated2 = now.minusDays(5);
@@ -189,7 +189,7 @@ public class AssetBlobDAOTest
   }
 
   @Test
-  public void testBlob() {
+  void testBlob() {
     AssetBlobData assetBlob1 = randomAssetBlob();
     BlobRef blobRef1 = assetBlob1.blobRef();
 
@@ -206,7 +206,7 @@ public class AssetBlobDAOTest
   }
 
   @Test
-  public void testExistsLegacyAssetBlobs() throws Exception {
+  void testExistsLegacyAssetBlobs() throws Exception {
     final int TOTAL_ASSETS = 20;
     final int LEGACY_ASSETS = 15;
     prepareLegacyFormatAssetBlobs(TOTAL_ASSETS, LEGACY_ASSETS);
@@ -220,7 +220,7 @@ public class AssetBlobDAOTest
   }
 
   @Test
-  public void testBrowseLegacyAssetBlobs() throws Exception {
+  void testBrowseLegacyAssetBlobs() throws Exception {
     final int TOTAL_ASSETS = 20;
     final int LEGACY_ASSETS = 15;
     prepareLegacyFormatAssetBlobs(TOTAL_ASSETS, LEGACY_ASSETS);
@@ -234,7 +234,7 @@ public class AssetBlobDAOTest
   }
 
   @Test
-  public void testBrowseLegacyAssetBlobsPaging() throws Exception {
+  void testBrowseLegacyAssetBlobsPaging() throws Exception {
     final int TOTAL_ASSETS = 20;
     final int PAGE_SIZE = 5;
     prepareLegacyFormatAssetBlobs(TOTAL_ASSETS, TOTAL_ASSETS);
@@ -260,7 +260,7 @@ public class AssetBlobDAOTest
   }
 
   @Test
-  public void testUpdateLegacyBlobRefs() throws Exception {
+  void testUpdateLegacyBlobRefs() throws Exception {
     final int TOTAL_ASSETS = 20;
     final int LEGACY_ASSETS = 15;
     prepareLegacyFormatAssetBlobs(TOTAL_ASSETS, LEGACY_ASSETS);
@@ -278,7 +278,7 @@ public class AssetBlobDAOTest
   }
 
   @Test
-  public void testUpdateSingleLegacyBlob() throws Exception {
+  void testUpdateSingleLegacyBlob() throws Exception {
     final int TOTAL_ASSETS = 2;
     final int LEGACY_ASSETS = 1;
     prepareLegacyFormatAssetBlobs(TOTAL_ASSETS, LEGACY_ASSETS);
@@ -295,7 +295,7 @@ public class AssetBlobDAOTest
   }
 
   @Test
-  public void testGetRepositoryName() {
+  void testGetRepositoryName() {
     generateConfiguration();
     ConfigurationData configurationData = generatedConfigurations().get(0);
     EntityId repositoryId = configurationData.getRepositoryId();
@@ -314,7 +314,7 @@ public class AssetBlobDAOTest
   }
 
   @Test
-  public void testGetPath() {
+  void testGetPath() {
     generateConfiguration();
     ConfigurationData configurationData = generatedConfigurations().get(0);
     EntityId repositoryId = configurationData.getRepositoryId();
@@ -333,7 +333,7 @@ public class AssetBlobDAOTest
   }
 
   @Test
-  public void testSetExternalMetadata() {
+  void testSetExternalMetadata() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetBlobDAO dao = session.access(TestAssetBlobDAO.class);
 

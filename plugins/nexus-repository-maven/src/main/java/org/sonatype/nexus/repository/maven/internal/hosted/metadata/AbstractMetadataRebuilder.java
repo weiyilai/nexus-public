@@ -22,8 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.MultipleFailures;
@@ -60,8 +59,8 @@ public abstract class AbstractMetadataRebuilder
 
   @Inject
   public AbstractMetadataRebuilder(
-      @Named("${nexus.maven.metadata.rebuild.bufferSize:-1000}") @Value("${nexus.maven.metadata.rebuild.bufferSize:1000}") final int bufferSize,
-      @Named("${nexus.maven.metadata.rebuild.timeoutSeconds:-60}") @Value("${nexus.maven.metadata.rebuild.timeoutSeconds:60}") final int timeoutSeconds)
+      @Value("${nexus.maven.metadata.rebuild.bufferSize:1000}") final int bufferSize,
+      @Value("${nexus.maven.metadata.rebuild.timeoutSeconds:60}") final int timeoutSeconds)
   {
     this.bufferSize = bufferSize;
     this.timeoutSeconds = timeoutSeconds;

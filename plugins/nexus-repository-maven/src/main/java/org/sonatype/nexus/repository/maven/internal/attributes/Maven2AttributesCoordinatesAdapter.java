@@ -14,15 +14,17 @@ package org.sonatype.nexus.repository.maven.internal.attributes;
 
 import java.util.Map;
 import java.util.TreeMap;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.repository.application.scan.AttributesCoordinatesAdapter;
 import org.sonatype.nexus.repository.maven.internal.Attributes;
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
 @Singleton
 public class Maven2AttributesCoordinatesAdapter
     implements AttributesCoordinatesAdapter

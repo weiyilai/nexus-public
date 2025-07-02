@@ -13,15 +13,25 @@
 package org.sonatype.nexus.validation;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.ValidatorFactory;
+import javax.validation.constraints.NotNull;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
+import org.sonatype.nexus.validation.internal.SpringConstraintValidatorFactory;
 
-import com.google.inject.Guice;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.context.ApplicationContext;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 public class ConstraintViolationFactoryTest
     extends TestSupport
@@ -32,11 +42,26 @@ public class ConstraintViolationFactoryTest
 
   private static final String ANY_PATH = "foo";
 
+  private ValidationConfiguration configuration = new ValidationConfiguration();
+
+  @Mock
+  private ApplicationContext context;
+
+  @InjectMocks
+  private SpringConstraintValidatorFactory constraintValidatorFactory;
+
   private ConstraintViolationFactory cvf;
 
   @Before
   public void setUp() throws Exception {
-    cvf = Guice.createInjector(new ValidationModule()).getInstance(ConstraintViolationFactory.class);
+    when(context.getBean(any(Class.class))).thenThrow(new NoSuchBeanDefinitionException(NotNull.class));
+    ValidatorFactory factory = configuration.validatorFactory(constraintValidatorFactory);
+    cvf = new ConstraintViolationFactory(() -> configuration.validator(factory));
+  }
+
+  @After
+  public void teardown() {
+    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
   }
 
   @Test

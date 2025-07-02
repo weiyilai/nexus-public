@@ -22,9 +22,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.security.config.CRole;
 import org.sonatype.nexus.security.config.CUser;
@@ -40,13 +39,16 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import static java.util.function.Function.identity;
 import static org.sonatype.nexus.security.user.UserManager.DEFAULT_SOURCE;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Write/Read {@link CRole} data to/from a JSON file.
  *
  * @since 3.29
  */
-@Named("securityUserExport")
+@Component
+@Qualifier("securityUserExport")
 @Singleton
 public class SecurityUserExport
     extends JsonExporter

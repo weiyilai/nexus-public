@@ -31,7 +31,7 @@ import org.apache.commons.mail.Email;
 import org.apache.commons.mail.SimpleEmail;
 import org.mockito.MockedStatic;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 import javax.net.ssl.SSLContext;
 import java.util.function.Function;
 

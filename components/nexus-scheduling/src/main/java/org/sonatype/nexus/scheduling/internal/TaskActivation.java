@@ -15,9 +15,8 @@ package org.sonatype.nexus.scheduling.internal;
 import java.util.concurrent.Future;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.Freezable;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -26,17 +25,21 @@ import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskInfo;
 import org.sonatype.nexus.scheduling.spi.SchedulerSPI;
 
+import org.springframework.core.annotation.Order;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
+import org.springframework.stereotype.Component;
 
 /**
  * Manages activation/passivation of the scheduler.
  *
  * @since 3.0
  */
-@Named
+@Component
 @ManagedLifecycle(phase = TASKS)
 @Priority(Integer.MIN_VALUE) // start scheduler at the end of this phase
+@Order
 @Singleton
 public class TaskActivation
     extends StateGuardLifecycleSupport
@@ -73,7 +76,8 @@ public class TaskActivation
     frozen = true;
     if (isStarted()) {
       scheduler.pause();
-      scheduler.listsTasks().stream()
+      scheduler.listsTasks()
+          .stream()
           .filter(this::cancelOnFreeze)
           .filter(taskInfo -> !maybeCancel(taskInfo))
           .forEach(taskInfo -> log.warn("Unable to cancel task: {}", taskInfo.getName()));

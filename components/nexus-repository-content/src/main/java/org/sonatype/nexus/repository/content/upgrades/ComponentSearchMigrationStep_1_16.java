@@ -14,14 +14,18 @@ package org.sonatype.nexus.repository.content.upgrades;
 
 import java.sql.Connection;
 import java.util.Optional;
-import javax.inject.Named;
 
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
- * This migration step was deleted and is no longer available since the component_search table was deleted in a later step
+ * This migration step was deleted and is no longer available since the component_search table was deleted in a later
+ * step
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ComponentSearchMigrationStep_1_16
     implements DatabaseMigrationStep
 {

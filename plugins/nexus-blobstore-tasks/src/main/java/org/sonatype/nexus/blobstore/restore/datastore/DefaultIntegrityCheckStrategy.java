@@ -19,9 +19,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.Blob;
@@ -40,7 +39,9 @@ import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.content.fluent.FluentAssets;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.time.LocalDate.now;
@@ -53,7 +54,8 @@ import static org.sonatype.nexus.common.hash.HashAlgorithm.SHA1;
  *
  * @since 3.29
  */
-@Named(DefaultIntegrityCheckStrategy.DEFAULT_NAME)
+@Component
+@Qualifier(DefaultIntegrityCheckStrategy.DEFAULT_NAME)
 @Singleton
 public class DefaultIntegrityCheckStrategy
     extends ComponentSupport
@@ -94,7 +96,7 @@ public class DefaultIntegrityCheckStrategy
 
   @Inject
   public DefaultIntegrityCheckStrategy(
-      @Named("${nexus.blobstore.restore.integrityCheck.batchSize:-1000}") @Value("${nexus.blobstore.restore.integrityCheck.batchSize:1000}") final int browseBatchSize)
+      @Value("${nexus.blobstore.restore.integrityCheck.batchSize:1000}") final int browseBatchSize)
   {
     checkArgument(browseBatchSize > 0);
     this.browseBatchSize = browseBatchSize;

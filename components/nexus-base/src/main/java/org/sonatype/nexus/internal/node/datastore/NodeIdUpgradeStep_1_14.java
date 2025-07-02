@@ -15,17 +15,20 @@ package org.sonatype.nexus.internal.node.datastore;
 import java.sql.Connection;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Originally migrated the legacy on disk node identifier to the database where it may be used to identify a single
  * node, or a cluster. Now a no-op {@see NodeIdInitializerimpl}
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class NodeIdUpgradeStep_1_14
     extends ComponentSupport
     implements DatabaseMigrationStep

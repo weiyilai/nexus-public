@@ -18,22 +18,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.mime.MimeSupport;
 import org.sonatype.nexus.webresources.FileWebResource;
 import org.sonatype.nexus.webresources.WebResource;
-import org.sonatype.nexus.webresources.WebResourceBundle;
 import org.sonatype.nexus.webresources.WebResourceService;
 
 import com.google.common.collect.Maps;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.Mediator;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link WebResourceService} implementation.
@@ -41,7 +38,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 2.8
  */
 @Singleton
-@Named
+@Component
 public class WebResourceServiceImpl
     extends ComponentSupport
     implements WebResourceService
@@ -72,7 +69,7 @@ public class WebResourceServiceImpl
     }
   }
 
-  private void addResource(final WebResource resource) {
+  void addResource(final WebResource resource) {
     String path = resource.getPath();
     log.trace("Adding resource: {} -> {}", path, resource);
     final WebResource old = resourcePaths.put(path, resource);
@@ -114,40 +111,5 @@ public class WebResourceServiceImpl
     }
 
     return resource;
-  }
-
-  @Named
-  static class ResourceBundleMediator
-      implements Mediator<Named, WebResourceBundle, WebResourceServiceImpl>
-  {
-    @Override
-    public void add(BeanEntry<Named, WebResourceBundle> entry, WebResourceServiceImpl watcher) throws Exception {
-      List<WebResource> resources = entry.getValue().getResources();
-      if (resources != null) {
-        for (WebResource resource : resources) {
-          watcher.addResource(resource);
-        }
-      }
-    }
-
-    @Override
-    public void remove(BeanEntry<Named, WebResourceBundle> entry, WebResourceServiceImpl watcher) throws Exception {
-      // no-op
-    }
-  }
-
-  @Named
-  static class ResourceMediator
-      implements Mediator<Named, WebResource, WebResourceServiceImpl>
-  {
-    @Override
-    public void add(BeanEntry<Named, WebResource> entry, WebResourceServiceImpl watcher) throws Exception {
-      watcher.addResource(entry.getValue());
-    }
-
-    @Override
-    public void remove(BeanEntry<Named, WebResource> entry, WebResourceServiceImpl watcher) throws Exception {
-      // no-op
-    }
   }
 }

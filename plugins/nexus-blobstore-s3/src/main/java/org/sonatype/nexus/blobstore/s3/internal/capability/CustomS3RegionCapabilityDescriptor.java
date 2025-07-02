@@ -16,8 +16,7 @@ package org.sonatype.nexus.blobstore.s3.internal.capability;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -33,8 +32,11 @@ import com.google.common.collect.ImmutableList;
 
 import static org.sonatype.nexus.capability.Tag.categoryTag;
 import static org.sonatype.nexus.capability.Tag.tags;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
-@Named(CustomS3RegionCapabilityDescriptor.TYPE_ID)
+@Component
+@Qualifier(CustomS3RegionCapabilityDescriptor.TYPE_ID)
 @Singleton
 @AvailabilityVersion(from = "2.4")
 public class CustomS3RegionCapabilityDescriptor
@@ -63,29 +65,34 @@ public class CustomS3RegionCapabilityDescriptor
   @SuppressWarnings("rawtypes")
   private final List<FormField> formFields;
 
-  public CustomS3RegionCapabilityDescriptor()
-  {
+  public CustomS3RegionCapabilityDescriptor() {
     formFields = ImmutableList.of(
         new StringTextFormField(
             CustomS3RegionCapabilityConfiguration.REGIONS,
             messages.regionsLabel(),
             messages.regionsHelp(),
-            FormField.MANDATORY
-        )
-    );
+            FormField.MANDATORY));
   }
 
   @Override
-  public CapabilityType type() { return TYPE_NAME; }
+  public CapabilityType type() {
+    return TYPE_NAME;
+  }
 
   @Override
-  public String name() { return messages.name(); }
+  public String name() {
+    return messages.name();
+  }
 
   @Override
-  public List<FormField> formFields() { return formFields; }
+  public List<FormField> formFields() {
+    return formFields;
+  }
 
   @Override
-  public Set<Tag> getTags() { return tags(categoryTag("S3")); }
+  public Set<Tag> getTags() {
+    return tags(categoryTag("S3"));
+  }
 
   @Override
   protected CustomS3RegionCapabilityConfiguration createConfig(final Map<String, String> properties) {

@@ -12,15 +12,14 @@
  */
 package org.sonatype.nexus.internal.security;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityContributor;
 import org.sonatype.nexus.security.config.SecurityContributorSupport;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.sonatype.nexus.security.Roles.ADMIN_ROLE_ID;
@@ -31,7 +30,7 @@ import static org.sonatype.nexus.security.Roles.ANONYMOUS_ROLE_ID;
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class NexusSecurityContributor
     extends SecurityContributorSupport
@@ -105,7 +104,7 @@ public class NexusSecurityContributor
 
   @Inject
   public NexusSecurityContributor(
-      @Named("${nexus.security.default.anonymous:-true}") @Value("${nexus.security.default.anonymous:true}") final boolean anonymousRoleEnabled)
+      @Value("${nexus.security.default.anonymous:true}") final boolean anonymousRoleEnabled)
   {
     this.anonymousRoleEnabled = anonymousRoleEnabled;
   }

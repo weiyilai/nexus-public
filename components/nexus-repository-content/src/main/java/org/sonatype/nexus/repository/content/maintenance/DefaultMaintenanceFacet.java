@@ -15,7 +15,6 @@ package org.sonatype.nexus.repository.content.maintenance;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Named;
 
 import org.sonatype.nexus.repository.FacetSupport;
 import org.sonatype.nexus.repository.content.Asset;
@@ -27,13 +26,19 @@ import org.sonatype.nexus.repository.content.fluent.FluentComponent;
 import org.sonatype.nexus.repository.content.store.ComponentStore;
 
 import com.google.common.collect.ImmutableSet;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
+
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
 /**
  * Default {@link ContentMaintenanceFacet} for formats that don't need additional bookkeeping.
  *
  * @since 3.26
  */
-@Named
+@Scope(SCOPE_PROTOTYPE)
+@org.springframework.stereotype.Component
+@Primary
 public class DefaultMaintenanceFacet
     extends FacetSupport
     implements ContentMaintenanceFacet

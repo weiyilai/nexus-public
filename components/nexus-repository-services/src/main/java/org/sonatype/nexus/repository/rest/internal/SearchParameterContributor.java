@@ -16,9 +16,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.rest.SearchMapping;
 import org.sonatype.nexus.repository.rest.SearchMappingsService;
@@ -31,11 +30,12 @@ import io.swagger.models.parameters.QueryParameter;
 
 import static io.swagger.models.HttpMethod.GET;
 import static java.util.stream.Collectors.toList;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.7
  */
-@Named
+@Component
 @Singleton
 public class SearchParameterContributor
     extends ParameterContributor<QueryParameter>
@@ -45,8 +45,7 @@ public class SearchParameterContributor
   private static final List<String> PATHS = ImmutableList.of(
       SearchResource.RESOURCE_URI,
       SearchResource.RESOURCE_URI + SearchResource.SEARCH_ASSET_URI,
-      SearchResource.RESOURCE_URI + SearchResource.SEARCH_AND_DOWNLOAD_URI
-  );
+      SearchResource.RESOURCE_URI + SearchResource.SEARCH_AND_DOWNLOAD_URI);
 
   @Inject
   public SearchParameterContributor(final SearchMappingsService searchMappings) {

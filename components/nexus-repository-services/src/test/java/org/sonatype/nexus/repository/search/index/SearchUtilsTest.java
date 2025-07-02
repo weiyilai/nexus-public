@@ -12,24 +12,29 @@
  */
 package org.sonatype.nexus.repository.search.index;
 
+import java.util.List;
 import java.util.Map;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.repository.rest.SearchMapping;
 import org.sonatype.nexus.repository.rest.SearchMappings;
 import org.sonatype.nexus.repository.rest.api.RepositoryManagerRESTAdapter;
 import org.sonatype.nexus.repository.rest.sql.SearchField;
 import org.sonatype.nexus.repository.search.SearchUtils;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class SearchUtilsTest
     extends TestSupport
@@ -45,16 +50,19 @@ public class SearchUtilsTest
 
   SearchUtils underTest;
 
+  private MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setup() {
+    mockedStatic = mockStatic(QualifierUtil.class);
+    when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(Map.of(
+        "default", new SearchMappingTest()));
+    underTest = new SearchUtils(repositoryManagerRESTAdapter, List.of());
+  }
 
-    Map<String, SearchMappings> searchMappings = ImmutableMap.of(
-        "default", () -> ImmutableList.of(
-            new SearchMapping(SHA1_ALIAS, VALID_SHA1_ATTRIBUTE_NAME, "", SearchField.SHA1)
-        )
-    );
-
-    underTest = new SearchUtils(repositoryManagerRESTAdapter, searchMappings);
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test
@@ -98,5 +106,14 @@ public class SearchUtilsTest
     underTest.getRepository(repositoryId);
 
     verify(repositoryManagerRESTAdapter).getReadableRepository(repositoryId);
+  }
+
+  private static class SearchMappingTest
+      implements SearchMappings
+  {
+    @Override
+    public Iterable<SearchMapping> get() {
+      return List.of(new SearchMapping(SHA1_ALIAS, VALID_SHA1_ATTRIBUTE_NAME, "", SearchField.SHA1));
+    }
   }
 }

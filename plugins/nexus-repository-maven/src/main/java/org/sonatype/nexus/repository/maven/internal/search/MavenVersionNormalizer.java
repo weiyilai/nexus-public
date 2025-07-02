@@ -14,7 +14,6 @@ package org.sonatype.nexus.repository.maven.internal.search;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.inject.Named;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.text.Strings2;
@@ -24,6 +23,10 @@ import org.sonatype.nexus.repository.search.normalize.VersionNumberExpander;
 
 import static org.sonatype.nexus.common.text.Strings2.isBlank;
 import static org.sonatype.nexus.content.maven.internal.search.Maven2ComponentFinder.SNAPSHOT_TIMESTAMP;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Translates maven version number into a string that when sorted lexically matches some maven rules for version
@@ -49,13 +52,15 @@ import static org.sonatype.nexus.content.maven.internal.search.Maven2ComponentFi
  * <li>1-alpha2-beta < 1-alpha2 (multiple qualifiers in relation to each other)</li>
  * <li>2.0.a < 2.0.0.a (normalization process considers these the same)</li>
  * <li>2.1.0.1-alpha < 2.1.0.1 (too many numeric version parts)</li>
- * <li>2.1.a < 2.1-a  (???)</li>
+ * <li>2.1.a < 2.1-a (???)</li>
  * </ol>
  * </p>
  *
  * @since 3.37
  */
-@Named(Maven2Format.NAME)
+@Component
+@Qualifier(Maven2Format.NAME)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenVersionNormalizer
     extends ComponentSupport
     implements VersionNormalizer

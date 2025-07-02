@@ -23,8 +23,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.common.collect.AttributesMap;
 import org.sonatype.nexus.common.entity.DetachedEntityId;
@@ -75,18 +74,24 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 import static org.sonatype.nexus.repository.view.ContentTypes.TEXT_PLAIN;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Maven2 specific implementation of {@link GroupFacetImpl} using the content store.
  *
  * @since 3.27
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MavenContentGroupFacetImpl
     extends GroupFacetImpl
     implements MavenGroupFacet, EventAware.Asynchronous
 {
   private static final String PATH_PREFIX = "/";
+
   private final RepositoryMetadataMerger repositoryMetadataMerger;
 
   private final ArchetypeCatalogMerger archetypeCatalogMerger;
@@ -95,7 +100,7 @@ public class MavenContentGroupFacetImpl
   public MavenContentGroupFacetImpl(
       final RepositoryManager repositoryManager,
       final ConstraintViolationFactory constraintViolationFactory,
-      @Named(GroupType.NAME) final Type groupType,
+      @Qualifier(GroupType.NAME) final Type groupType,
       RepositoryCacheInvalidationService repositoryCacheInvalidationService)
   {
     super(repositoryManager, constraintViolationFactory, groupType, repositoryCacheInvalidationService);
@@ -150,7 +155,8 @@ public class MavenContentGroupFacetImpl
   @Nullable
   @Override
   public Content mergeAndCache(
-      final MavenPath mavenPath, final Map<Repository, Response> responses) throws IOException
+      final MavenPath mavenPath,
+      final Map<Repository, Response> responses) throws IOException
   {
     return merge(
         mavenPath,
@@ -159,14 +165,14 @@ public class MavenContentGroupFacetImpl
         (tempBlob, contentType) -> {
           log.trace("Caching merged content");
           return cache(mavenPath, tempBlob, contentType);
-        }
-    );
+        });
   }
 
   @Nullable
   @Override
   public Content mergeWithoutCaching(
-      final MavenPath mavenPath, final Map<Repository, Response> responses) throws IOException
+      final MavenPath mavenPath,
+      final Map<Repository, Response> responses) throws IOException
   {
     return merge(mavenPath, responses, Function.identity(), (in, contentType) -> {
       // load bytes in memory to make content re-usable; metadata shouldn't be too large
@@ -195,7 +201,10 @@ public class MavenContentGroupFacetImpl
             .put(mavenPath.hash(entry.getKey()), new StringPayload(entry.getValue().toString(), TEXT_PLAIN));
       }
 
-      getRepository().facet(ContentFacet.class).assets().path(prependIfMissing(mavenPath.getPath(), "/")).find()
+      getRepository().facet(ContentFacet.class)
+          .assets()
+          .path(prependIfMissing(mavenPath.getPath(), "/"))
+          .find()
           .ifPresent(a -> a.markAsCached(content));
 
       return content;
@@ -206,7 +215,10 @@ public class MavenContentGroupFacetImpl
     }
 
     // Handle exception by forcing re-merge on next request and retrieving content from TempBlob
-    getRepository().facet(ContentFacet.class).assets().path(prependIfMissing(mavenPath.getPath(), "/")).find()
+    getRepository().facet(ContentFacet.class)
+        .assets()
+        .path(prependIfMissing(mavenPath.getPath(), "/"))
+        .find()
         .ifPresent(FluentAsset::markAsStale);
 
     try (InputStream in = tempBlob.get()) {
@@ -243,8 +255,7 @@ public class MavenContentGroupFacetImpl
         getRepository().facet(MavenContentFacet.class).getMavenPathParser().isRepositoryMetadata(mavenPath)
             || mavenPath.getFileName().equals(Constants.ARCHETYPE_CATALOG_FILENAME),
         "Not handled by Maven2GroupFacet merge: %s",
-        mavenPath
-    );
+        mavenPath);
   }
 
   @Nullable
@@ -252,8 +263,7 @@ public class MavenContentGroupFacetImpl
       final MavenPath mavenPath,
       final Map<Repository, Response> responses,
       final Function<InputStream, T> streamFunction,
-      final ContentFunction<T> contentFunction)
-      throws IOException
+      final ContentFunction<T> contentFunction) throws IOException
   {
     checkMergeHandled(mavenPath);
     // we do not cache subordinates/hashes, they are created as side-effect of cache
@@ -345,9 +355,9 @@ public class MavenContentGroupFacetImpl
     event.getRepository().ifPresent(repository -> {
       for (int assetId : event.getAssetIds()) {
         repository.facet(ContentFacet.class)
-        .assets()
-        .find(new DetachedEntityId(valueOf(assetId)))
-        .ifPresent(asset -> maybeEvict(repository, asset, true));
+            .assets()
+            .find(new DetachedEntityId(valueOf(assetId)))
+            .ifPresent(asset -> maybeEvict(repository, asset, true));
       }
     });
   }
@@ -369,7 +379,8 @@ public class MavenContentGroupFacetImpl
                 getRepository().getName(), mavenPath.getPath(), e);
           }
         }
-        getRepository().facet(ContentFacet.class).assets()
+        getRepository().facet(ContentFacet.class)
+            .assets()
             .path(prependIfMissing(mavenPath.main().getPath(), PATH_PREFIX))
             .find()
             .ifPresent(FluentAsset::markAsStale);

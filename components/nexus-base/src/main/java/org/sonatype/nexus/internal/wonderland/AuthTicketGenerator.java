@@ -12,22 +12,26 @@
  */
 package org.sonatype.nexus.internal.wonderland;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.RandomBytesGenerator;
 
 import com.google.common.io.BaseEncoding;
+import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Generates random authentication tickets.
  *
  * @since 2.7
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AuthTicketGenerator
     extends ComponentSupport
 {
@@ -42,7 +46,7 @@ public class AuthTicketGenerator
   @Inject
   public AuthTicketGenerator(
       final RandomBytesGenerator randomBytes,
-      @Named(CPREFIX + ".defaultSize:-66}") final int defaultSize)
+      @Value(CPREFIX + ".defaultSize:66}") final int defaultSize)
   {
     this.randomBytes = checkNotNull(randomBytes);
     this.defaultSize = defaultSize;

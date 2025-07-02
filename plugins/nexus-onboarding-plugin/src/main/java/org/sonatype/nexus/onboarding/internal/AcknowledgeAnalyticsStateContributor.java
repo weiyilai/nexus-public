@@ -16,9 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.capability.CapabilityReferenceFilterBuilder.CapabilityReferenceFilter;
 import org.sonatype.nexus.capability.CapabilityRegistry;
@@ -27,13 +26,14 @@ import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import static org.sonatype.nexus.capability.CapabilityType.capabilityType;
+import org.springframework.stereotype.Component;
 
 /**
  * State contributor defining whether acknowledgement of the analytics submission state is required.
  *
  * @since 3.35
  */
-@Named
+@Component
 @Singleton
 public class AcknowledgeAnalyticsStateContributor
     implements StateContributor

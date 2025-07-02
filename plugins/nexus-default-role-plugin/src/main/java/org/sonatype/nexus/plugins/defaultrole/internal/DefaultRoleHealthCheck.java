@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.plugins.defaultrole.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.plugins.defaultrole.DefaultRoleRealm;
 import org.sonatype.nexus.security.SecuritySystem;
@@ -25,13 +24,16 @@ import com.codahale.metrics.health.HealthCheck;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.security.user.UserManager.DEFAULT_SOURCE;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Will throw up a health check error when the default role in the realm isn't available
  *
  * @since 3.22
  */
-@Named("DefaultRoleRealm")
+@Component
+@Qualifier("DefaultRoleRealm")
 @Singleton
 public class DefaultRoleHealthCheck
     extends HealthCheck

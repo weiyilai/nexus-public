@@ -17,8 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -30,9 +29,12 @@ import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.FormField;
 
 import static java.util.Collections.singletonList;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 @AvailabilityVersion(from = "1.0")
-@Named(OnboardingCapability.TYPE_ID)
+@Component
+@Qualifier(OnboardingCapability.TYPE_ID)
 @Singleton
 public class OnboardingCapabilityDescriptor
     extends CapabilityDescriptorSupport<OnboardingCapabilityConfiguration>

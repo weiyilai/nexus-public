@@ -17,9 +17,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.encoding.EncodingUtil;
 import org.sonatype.nexus.extdirect.DirectComponent;
@@ -36,13 +35,14 @@ import com.softwarementors.extjs.djn.config.annotations.DirectAction;
 import com.softwarementors.extjs.djn.config.annotations.DirectMethod;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Browse {@link DirectComponent}.
  *
  * @since 3.6
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "coreui_Browse")
 public class BrowseComponent

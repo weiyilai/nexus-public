@@ -28,15 +28,20 @@ public class ClusteredJobStoreJdbcStoreProviderTest
     extends AbstractJobStoreTest
 {
   @Rule
-  public DataSessionRule sessionRule = new DataSessionRule().handle(new QuartzJobDataTypeHandler()).access(QuartzDAO.class);
+  public DataSessionRule sessionRule =
+      new DataSessionRule().handle(new QuartzJobDataTypeHandler()).access(QuartzDAO.class);
 
   private JobStore jobStore;
 
   @Override
   protected JobStore createJobStore(final String name) {
-
-    jobStore =
-        new JobStoreJdbcProvider(new ConfigStoreConnectionProvider(sessionRule), new SimpleNodeAccess(), true).get();
+    try {
+      jobStore = new JobStoreJdbcProvider(new ConfigStoreConnectionProvider(sessionRule), new SimpleNodeAccess(), true)
+          .getObject();
+    }
+    catch (Exception e) {
+      throw new RuntimeException(e);
+    }
     jobStore.setInstanceId("CLUSTERED_TEST");
     jobStore.setInstanceName(name);
 

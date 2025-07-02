@@ -15,9 +15,8 @@ package org.sonatype.nexus.quartz.internal.store;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.datastore.api.DataStore;
@@ -26,13 +25,14 @@ import org.quartz.utils.ConnectionProvider;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
+import org.springframework.stereotype.Component;
 
 /**
  * Supplies JDBC connections to Quartz from the shared config {@link DataStore}.
  *
  * @since 3.19
  */
-@Named
+@Component
 @Singleton
 public class ConfigStoreConnectionProvider
     implements ConnectionProvider

@@ -12,7 +12,6 @@
  */
 package org.sonatype.nexus.internal.capability.storage;
 
-import java.util.List;
 import java.util.Map;
 
 import org.sonatype.goodies.lifecycle.Lifecycle;
@@ -65,18 +64,4 @@ public interface CapabilityStorage
       final boolean enabled,
       final String notes,
       final Map<String, String> properties);
-
-  /**
-   * Find capability duplicates.
-   *
-   * @return duplicates capability identities grouped by capability
-   */
-  Map<CapabilityStorageItem, List<CapabilityIdentity>> browseCapabilityDuplicates();
-
-  /**
-   * Check capability duplicate records exists in the storage.
-   *
-   * @return {@code true} if duplicates were found
-   */
-  boolean isDuplicatesFound();
 }

@@ -14,8 +14,8 @@ package org.sonatype.nexus.script.plugin.internal.rest;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
@@ -68,11 +68,10 @@ public class ScriptPrivilegeApiResourceTest
     when(scriptManager.get(any())).thenReturn(mock(Script.class));
     when(scriptManager.get("invalid")).thenReturn(null);
 
-    Map<String, PrivilegeDescriptor> privilegeDescriptors = new HashMap<>();
-    privilegeDescriptors.put(ApplicationPrivilegeDescriptor.TYPE, new ApplicationPrivilegeDescriptor(false));
-    privilegeDescriptors.put(WildcardPrivilegeDescriptor.TYPE, new WildcardPrivilegeDescriptor());
-    privilegeDescriptors.put(ScriptPrivilegeDescriptor.TYPE, new ScriptPrivilegeDescriptor(scriptManager, false));
-
+    List<PrivilegeDescriptor> privilegeDescriptors = new LinkedList<>();
+    privilegeDescriptors.add(new ApplicationPrivilegeDescriptor(false));
+    privilegeDescriptors.add(new WildcardPrivilegeDescriptor());
+    privilegeDescriptors.add(new ScriptPrivilegeDescriptor(scriptManager, false));
     underTest = new ScriptPrivilegeApiResource(securitySystem, privilegeDescriptors);
   }
 
@@ -141,10 +140,11 @@ public class ScriptPrivilegeApiResourceTest
         "run");
   }
 
-  private void assertPrivilege(Privilege privilege,
-                               String name,
-                               String description,
-                               String... properties)
+  private void assertPrivilege(
+      Privilege privilege,
+      String name,
+      String description,
+      String... properties)
   {
     assertThat(privilege, notNullValue());
     assertThat(privilege.getName(), is(name));
@@ -157,11 +157,12 @@ public class ScriptPrivilegeApiResourceTest
     }
   }
 
-  private Privilege createPrivilege(String type,
-                                    String name,
-                                    String description,
-                                    boolean readOnly,
-                                    String... properties)
+  private Privilege createPrivilege(
+      String type,
+      String name,
+      String description,
+      boolean readOnly,
+      String... properties)
   {
     Privilege privilege = new Privilege();
     privilege.setType(type);

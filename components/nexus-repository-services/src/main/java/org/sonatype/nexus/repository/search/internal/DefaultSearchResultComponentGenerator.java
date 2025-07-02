@@ -14,21 +14,25 @@ package org.sonatype.nexus.repository.search.internal;
 
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.search.ComponentSearchResult;
 import org.sonatype.nexus.repository.search.query.SearchResultComponentGeneratorSupport;
 import org.sonatype.nexus.repository.security.ContentPermissionChecker;
 import org.sonatype.nexus.repository.security.VariableResolverAdapterManager;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
 /**
  * @since 3.14
  */
+@Primary
 @Singleton
-@Named
+@Component
+@Qualifier(DefaultSearchResultComponentGenerator.DEFAULT_SEARCH_RESULT_COMPONENT_GENERATOR_KEY)
 public class DefaultSearchResultComponentGenerator
     extends SearchResultComponentGeneratorSupport
 {

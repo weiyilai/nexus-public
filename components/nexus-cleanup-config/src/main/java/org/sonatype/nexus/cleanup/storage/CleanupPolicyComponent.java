@@ -14,9 +14,8 @@ package org.sonatype.nexus.cleanup.storage;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.extdirect.DirectComponent;
 import org.sonatype.nexus.extdirect.DirectComponentSupport;
@@ -37,13 +36,14 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.sonatype.nexus.security.BreadActions.ADD;
 import static org.sonatype.nexus.security.BreadActions.READ;
+import org.springframework.stereotype.Component;
 
 /**
  * Cleanup policies config {@link DirectComponent}.
  *
  * @since 3.14
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "cleanup_CleanupPolicy")
 public class CleanupPolicyComponent
@@ -56,9 +56,10 @@ public class CleanupPolicyComponent
   private final RepositoryPermissionChecker repositoryPermissionChecker;
 
   @Inject
-  public CleanupPolicyComponent(final CleanupPolicyStorage cleanupPolicyStorage,
-                                final RepositoryManager repositoryManager,
-                                final RepositoryPermissionChecker repositoryPermissionChecker)
+  public CleanupPolicyComponent(
+      final CleanupPolicyStorage cleanupPolicyStorage,
+      final RepositoryManager repositoryManager,
+      final RepositoryPermissionChecker repositoryPermissionChecker)
   {
     this.cleanupPolicyStorage = checkNotNull(cleanupPolicyStorage);
     this.repositoryManager = checkNotNull(repositoryManager);
@@ -84,7 +85,8 @@ public class CleanupPolicyComponent
   }
 
   private List<CleanupPolicyXO> getAllByFormat(final String format) {
-    return cleanupPolicyStorage.getAllByFormat(format).stream()
+    return cleanupPolicyStorage.getAllByFormat(format)
+        .stream()
         .map(CleanupPolicyXO::fromCleanupPolicy)
         .collect(toList());
   }
@@ -94,7 +96,6 @@ public class CleanupPolicyComponent
     repositoryPermissionChecker.ensureUserHasAnyPermissionOrAdminAccess(
         singletonList(permission),
         READ,
-        repositoryManager.browse()
-    );
+        repositoryManager.browse());
   }
 }

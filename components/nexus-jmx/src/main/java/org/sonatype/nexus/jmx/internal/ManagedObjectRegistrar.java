@@ -12,28 +12,37 @@
  */
 package org.sonatype.nexus.jmx.internal;
 
-import java.lang.annotation.Annotation;
 import java.util.Hashtable;
-import java.util.function.Supplier;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
+import javax.management.InstanceNotFoundException;
+import javax.management.IntrospectionException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import javax.management.ReflectionException;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
+import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.jmx.MBean;
 import org.sonatype.nexus.jmx.ObjectNameEntry;
 import org.sonatype.nexus.jmx.reflect.ManagedObject;
 import org.sonatype.nexus.jmx.reflect.ReflectionMBeanBuilder;
 
 import com.google.common.base.Strings;
-import com.google.inject.Key;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.EagerSingleton;
-import org.eclipse.sisu.Mediator;
-import org.eclipse.sisu.inject.BeanLocator;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -42,73 +51,78 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
-@EagerSingleton
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ManagedObjectRegistrar
     extends ComponentSupport
+    implements ApplicationContextAware
 {
-  @Inject
-  public ManagedObjectRegistrar(final BeanLocator beanLocator,
-                                final MBeanServer server)
-  {
-    checkNotNull(beanLocator);
-    checkNotNull(server);
+  private MBeanServer server;
 
-    beanLocator.watch(Key.get(Object.class), new ManageObjectMediator(), server);
+  @Inject
+  public ManagedObjectRegistrar(final MBeanServer server) {
+    this.server = checkNotNull(server);
   }
 
-  private class ManageObjectMediator
-      implements Mediator<Annotation, Object, MBeanServer>
-  {
-    @Override
-    public void add(final BeanEntry<Annotation, Object> entry, final MBeanServer server) throws Exception {
-      ManagedObject descriptor = descriptor(entry);
-      if (descriptor == null) {
-        return;
-      }
+  @Override
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    registerManagedObjects(applicationContext);
+  }
 
-      try {
-        ObjectName name = objectName(descriptor, entry);
-        log.debug("Registering: {} -> {}", name, entry);
-        MBean mbean = mbean(descriptor, entry);
-        server.registerMBean(mbean, name);
-      }
-      catch (Exception e) {
-        log.warn("Failed to export: {}; ignoring", entry, e);
-      }
+  @EventListener
+  public void onApplicationEvent(final ContextRefreshedEvent event) {
+    log.trace("onApplicationEvent {}", event);
+    registerManagedObjects(event.getApplicationContext());
+  }
+
+  private void registerManagedObjects(final ApplicationContext applicationContext) {
+    applicationContext
+        .getBeansWithAnnotation(ManagedObject.class)
+        .values()
+        .forEach(this::registerObject);
+  }
+
+  private void registerObject(final Object managedObject) {
+    ManagedObject descriptor = descriptor(managedObject);
+    if (descriptor == null) {
+      return;
     }
 
-    @Override
-    public void remove(final BeanEntry<Annotation, Object> entry, final MBeanServer server) throws Exception {
-      ManagedObject descriptor = descriptor(entry);
-      if (descriptor == null) {
-        return;
-      }
+    try {
+      ObjectName name = objectName(descriptor, managedObject);
+      if (!registered(name)) {
+        log.debug("Registering: {} -> {}", name, managedObject.getClass().getSimpleName());
+        MBean mbean = mbean(descriptor, managedObject);
 
-      try {
-        ObjectName name = objectName(descriptor, entry);
-        log.debug("Un-registering: {} -> {}", name, entry);
-        server.unregisterMBean(name);
+        server.registerMBean(mbean, name);
       }
-      catch (Exception e) {
-        log.warn("Failed to un-export: {}; ignoring", entry, e);
-      }
+    }
+    catch (Exception e) {
+      log.warn("Failed to export: {}; ignoring", managedObject.getClass().getSimpleName(), e);
+    }
+  }
+
+  private boolean registered(final ObjectName name) throws IntrospectionException, ReflectionException {
+    try {
+      server.getMBeanInfo(name);
+      return true;
+    }
+    catch (InstanceNotFoundException e) {
+      return false;
     }
   }
 
   @Nullable
-  private ManagedObject descriptor(final BeanEntry<Annotation, Object> entry) {
-    Class<?> type = entry.getImplementationClass();
+  private static ManagedObject descriptor(final Object managedObject) {
+    Class<?> type = managedObject.getClass();
     return type.getAnnotation(ManagedObject.class);
   }
 
   /**
-   * Determine {@link ObjectName} for given {@link BeanEntry}.
+   * Determine {@link ObjectName} for given managed Object.
    */
-  private ObjectName objectName(final ManagedObject descriptor, final BeanEntry<Annotation, Object> entry)
-      throws Exception
-  {
-    Class<?> type = entry.getImplementationClass();
+  private static ObjectName objectName(final ManagedObject descriptor, final Object managedObject) throws Exception {
+    Class<?> type = managedObject.getClass();
 
     // default domain to package if missing
     String domain = descriptor.domain();
@@ -125,10 +139,10 @@ public class ManagedObjectRegistrar
     }
 
     // set object-name 'type'
-    entries.put("type", type(descriptor, entry));
+    entries.put("type", type(descriptor, managedObject));
 
     // optionally set object-name 'name'
-    String name = name(descriptor, entry);
+    String name = name(descriptor, managedObject);
     if (name != null) {
       entries.put("name", name);
     }
@@ -139,16 +153,17 @@ public class ManagedObjectRegistrar
   /**
    * Determine object-name 'type' value.
    */
-  private String type(final ManagedObject descriptor, final BeanEntry<Annotation, Object> entry) {
+  private static String type(final ManagedObject descriptor, final Object managedObject) {
     String type = Strings.emptyToNull(descriptor.type());
     if (type == null) {
-      if (descriptor.typeClass() != null && descriptor.typeClass() != Void.class /*default*/) {
+      if (descriptor.typeClass() != null && descriptor.typeClass() != Void.class /* default */) {
         type = descriptor.typeClass().getSimpleName();
       }
       else {
         // TODO: Consider inspecting @Typed?
-        // TODO: It would really be nice if we could infer the proper intf type of simple components, but this may be too complex?
-        type = entry.getImplementationClass().getSimpleName();
+        // TODO: It would really be nice if we could infer the proper intf type of simple components, but this may be
+        // too complex?
+        type = managedObject.getClass().getSimpleName();
       }
     }
     return type;
@@ -158,55 +173,54 @@ public class ManagedObjectRegistrar
    * Determine object-name 'name' value.
    */
   @Nullable
-  private String name(final ManagedObject descriptor, final BeanEntry<Annotation, Object> entry) {
+  private static String name(final ManagedObject descriptor, final Object managedObject) {
     String name = Strings.emptyToNull(descriptor.name());
+
     if (name == null) {
-      Class<?> type = entry.getImplementationClass();
-
-      // use @Named entry-key if possible, this will be filled in by sisu
-      if (entry.getKey() instanceof Named) {
-        Named named = (Named) entry.getKey();
-
-        // if named-value is NOT the same as the impl-type-name then use it
-        // ie. if org.sonatype.nexus.FooImpl == org.sonatype.nexus.FooImpl, then leave name as null
-        if (!type.getName().equals(named.value())) {
-          name = Strings.emptyToNull(named.value());
-        }
-      }
-
-      // else lookup @Named directly unable to determine from entry-key
-      if (name == null) {
-        Named named = entry.getImplementationClass().getAnnotation(Named.class);
-        if (named != null) {
-          name = Strings.emptyToNull(named.value());
+      // try various annotations
+      List<Function<Object, Optional<String>>> nameSources =
+          List.of(QualifierUtil::value, ManagedObjectRegistrar::getJakartaNamed, ManagedObjectRegistrar::getJavaxNamed);
+      for (Function<Object, Optional<String>> nameSource : nameSources) {
+        name = nameSource.apply(managedObject)
+            .filter(Strings2::notBlank)
+            .orElse(null);
+        if (name != null) {
+          break;
         }
       }
     }
     return name;
   }
 
+  @Nullable
+  private static Optional<String> getJakartaNamed(final Object managedObject) {
+    return Optional.ofNullable(managedObject)
+        .map(Object::getClass)
+        .map(clazz -> clazz.getAnnotation(Named.class))
+        .map(Named::value);
+  }
+
+  @Nullable
+  private static Optional<String> getJavaxNamed(final Object managedObject) {
+    return Optional.ofNullable(managedObject)
+        .map(Object::getClass)
+        .map(clazz -> clazz.getAnnotation(javax.inject.Named.class))
+        .map(javax.inject.Named::value);
+  }
+
   /**
-   * Construct mbean for given {@link BeanEntry} discovering its attributes and operations.
+   * Construct mbean for given managed Object discovering its attributes and operations.
    */
-  private MBean mbean(final ManagedObject descriptor, final BeanEntry<Annotation, Object> entry) throws Exception {
-    Class<?> type = entry.getImplementationClass();
+  private static MBean mbean(final ManagedObject descriptor, final Object managedObject) throws Exception {
+    Class<?> type = managedObject.getClass();
 
     ReflectionMBeanBuilder builder = new ReflectionMBeanBuilder(type);
 
     // attach manged target
-    builder.target(new Supplier<Object>()
-    {
-      @Override
-      public Object get() {
-        return entry.getProvider().get();
-      }
-    });
+    builder.target(() -> managedObject);
 
     // allow custom description, or expose what sisu tells us
     String description = Strings.emptyToNull(descriptor.description());
-    if (description == null) {
-      description = entry.getDescription();
-    }
     builder.description(description);
 
     // discover managed members

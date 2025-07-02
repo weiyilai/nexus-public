@@ -13,10 +13,9 @@
 package org.sonatype.nexus.internal.app;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
@@ -29,13 +28,14 @@ import com.google.common.base.Strings;
 import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link BaseUrlManager}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 public class BaseUrlManagerImpl
     extends ComponentSupport
@@ -50,7 +50,7 @@ public class BaseUrlManagerImpl
   @Inject
   public BaseUrlManagerImpl(
       final Provider<HttpServletRequest> requestProvider,
-      @Named("${org.sonatype.nexus.internal.app.BaseUrlManagerImpl.force:-false}") @Value("${org.sonatype.nexus.internal.app.BaseUrlManagerImpl.force:false}") final boolean force)
+      @Value("${org.sonatype.nexus.internal.app.BaseUrlManagerImpl.force:false}") final boolean force)
   {
     this.requestProvider = checkNotNull(requestProvider);
     this.force = force;

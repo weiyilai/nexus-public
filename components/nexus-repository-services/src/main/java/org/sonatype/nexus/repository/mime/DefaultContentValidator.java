@@ -19,9 +19,8 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.io.InputStreamSupplier;
@@ -33,6 +32,9 @@ import org.sonatype.nexus.repository.view.ContentTypes;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.google.common.net.MediaType;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -41,7 +43,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named(DefaultContentValidator.NAME)
+@Primary
+@Component
+@Qualifier(DefaultContentValidator.NAME)
 @Singleton
 public class DefaultContentValidator
     extends ComponentSupport
@@ -62,11 +66,12 @@ public class DefaultContentValidator
 
   @Nonnull
   @Override
-  public String determineContentType(final boolean strictContentTypeValidation,
-                                     final InputStreamSupplier contentSupplier,
-                                     @Nullable final MimeRulesSource mimeRulesSource,
-                                     @Nullable final String contentName,
-                                     @Nullable final String declaredContentType) throws IOException
+  public String determineContentType(
+      final boolean strictContentTypeValidation,
+      final InputStreamSupplier contentSupplier,
+      @Nullable final MimeRulesSource mimeRulesSource,
+      @Nullable final String contentName,
+      @Nullable final String declaredContentType) throws IOException
   {
     checkNotNull(contentSupplier);
     final String declaredBaseContentType = mediaTypeWithoutParameters(declaredContentType);
@@ -87,8 +92,7 @@ public class DefaultContentValidator
       nameAssumedMimeTypes.addAll(
           mimeSupport.guessMimeTypesListFromPath(
               contentName,
-              mimeRulesSource != null ? mimeRulesSource : MimeRulesSource.NOOP)
-      );
+              mimeRulesSource != null ? mimeRulesSource : MimeRulesSource.NOOP));
       adjustIfHtml(nameAssumedMimeTypes);
       log.debug("Mime support assumes {} as {}", contentName, nameAssumedMimeTypes);
 
@@ -98,8 +102,7 @@ public class DefaultContentValidator
         if (strictContentTypeValidation && intersection.isEmpty()) {
           throw new InvalidContentException(
               String.format("Detected content type %s, but expected %s: %s",
-                  contentDetectedMimeTypes, nameAssumedMimeTypes, contentName)
-          );
+                  contentDetectedMimeTypes, nameAssumedMimeTypes, contentName));
         }
       }
     }
@@ -141,8 +144,9 @@ public class DefaultContentValidator
       return mediaType.withoutParameters().toString();
     }
     catch (IllegalArgumentException e) {
-      //https://maven.oracle.com is sending out incomplete content-type header, so lets try to clean it up and reprocess
-      //i.e. 'Application/jar;charset='
+      // https://maven.oracle.com is sending out incomplete content-type header, so lets try to clean it up and
+      // reprocess
+      // i.e. 'Application/jar;charset='
       int idx = declaredMediaType.indexOf(';');
       if (idx >= 0) {
         String parsedDeclaredMediaType = declaredMediaType.substring(0, idx);

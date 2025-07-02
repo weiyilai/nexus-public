@@ -15,7 +15,6 @@ package org.sonatype.nexus.content.raw.internal.recipe;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import javax.inject.Named;
 
 import org.sonatype.nexus.common.template.EscapeHelper;
 import org.sonatype.nexus.content.raw.RawContentFacet;
@@ -25,13 +24,17 @@ import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.matchers.token.TokenMatcher;
 
 import com.google.common.collect.ImmutableSet;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Raw proxy facet.
  *
  * @since 3.24
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RawProxyFacet
     extends ContentProxyFacetSupport
 {

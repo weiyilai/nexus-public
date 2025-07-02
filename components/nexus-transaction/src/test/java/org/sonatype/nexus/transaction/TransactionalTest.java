@@ -16,9 +16,9 @@ import java.io.IOException;
 import java.util.ConcurrentModificationException;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.transaction.ExampleMethods.ExampleNestedStore;
 
 import com.google.common.base.Suppliers;
-import com.google.inject.Guice;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +42,7 @@ import static org.sonatype.nexus.transaction.Transactional.DEFAULT_REASON;
 public class TransactionalTest
     extends TestSupport
 {
-  ExampleMethods methods = Guice.createInjector(new TransactionModule()).getInstance(ExampleMethods.class);
+  ExampleMethods methods = new ExampleMethods(new ExampleNestedStore());
 
   @Mock
   TransactionalSession<Transaction> session;
@@ -238,12 +238,9 @@ public class TransactionalTest
 
   @Test
   public void testNested() throws Exception {
-
-    methods.outer();
-    methods.outer();
-    methods.outer();
-
     InOrder order = inOrder(session, tx);
+
+    methods.outer();
     order.verify(session).getTransaction();
     order.verify(tx).reason(DEFAULT_REASON);
     order.verify(tx).begin();
@@ -254,6 +251,9 @@ public class TransactionalTest
     order.verify(tx).commit();
     order.verify(tx).end();
     order.verify(session).close();
+    verifyNoMoreInteractions(session, tx);
+
+    methods.outer();
     order.verify(session).getTransaction();
     order.verify(tx).reason(DEFAULT_REASON);
     order.verify(tx).begin();
@@ -264,6 +264,8 @@ public class TransactionalTest
     order.verify(tx).commit();
     order.verify(tx).end();
     order.verify(session).close();
+
+    methods.outer();
     order.verify(session).getTransaction();
     order.verify(tx).reason(DEFAULT_REASON);
     order.verify(tx).begin();
@@ -650,31 +652,5 @@ public class TransactionalTest
       order.verify(session).close();
       verifyNoMoreInteractions(session, tx);
     }
-  }
-
-  @Test
-  public void testCanUseStereotypeAnnotation() throws Exception {
-    when(tx.allowRetry(any(Exception.class))).thenReturn(true);
-
-    methods.setCountdownToSuccess(3);
-    methods.canUseStereotypeAnnotation();
-
-    InOrder order = inOrder(session, tx);
-    order.verify(session).getTransaction();
-    order.verify(tx).reason(DEFAULT_REASON);
-    order.verify(tx).begin();
-    order.verify(tx).rollback();
-    order.verify(tx).allowRetry(any(IOException.class));
-    order.verify(tx).begin();
-    order.verify(tx).rollback();
-    order.verify(tx).allowRetry(any(IOException.class));
-    order.verify(tx).begin();
-    order.verify(tx).rollback();
-    order.verify(tx).allowRetry(any(IOException.class));
-    order.verify(tx).begin();
-    order.verify(tx).commit();
-    order.verify(tx).end();
-    order.verify(session).close();
-    verifyNoMoreInteractions(session, tx);
   }
 }

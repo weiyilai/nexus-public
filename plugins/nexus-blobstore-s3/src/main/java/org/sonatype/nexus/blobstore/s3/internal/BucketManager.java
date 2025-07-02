@@ -14,8 +14,7 @@ package org.sonatype.nexus.blobstore.s3.internal;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.StorageLocationManager;
@@ -42,13 +41,17 @@ import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.buil
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.insufficientCreatePermissionsError;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.invalidIdentityError;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.unexpectedError;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Creates and deletes buckets for the {@link S3BlobStore}.
  *
  * @since 3.16
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BucketManager
     extends ComponentSupport
     implements StorageLocationManager

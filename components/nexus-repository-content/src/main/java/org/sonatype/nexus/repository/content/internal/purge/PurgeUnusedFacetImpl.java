@@ -12,8 +12,6 @@
  */
 package org.sonatype.nexus.repository.content.internal.purge;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.repository.FacetSupport;
 import org.sonatype.nexus.repository.content.facet.ContentFacet;
@@ -24,11 +22,15 @@ import org.sonatype.nexus.repository.purge.PurgeUnusedFacet;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.sonatype.nexus.repository.FacetSupport.State.STARTED;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.24
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class PurgeUnusedFacetImpl
     extends FacetSupport
     implements PurgeUnusedFacet

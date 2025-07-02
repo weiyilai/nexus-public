@@ -19,6 +19,9 @@ import org.sonatype.goodies.common.ComponentSupport;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static java.util.Collections.singletonList;
 
@@ -29,6 +32,8 @@ import static java.util.Collections.singletonList;
  *
  * @since 3.0
  */
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class RangeParser
     extends ComponentSupport
 {
@@ -45,7 +50,7 @@ class RangeParser
    * Range: bytes=-500 (the last 500 bytes, per the RFC)
    *
    * @return {@code null} if the requested range cannot be satisfied given the size of the content, or an empty list in
-   * the case of parsing errors
+   *         the case of parsing errors
    */
   public List<Range<Long>> parseRangeSpec(final String rangeHeader, long size) {
     Range<Long> content = Range.closed(0L, size - 1L);

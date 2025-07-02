@@ -27,7 +27,7 @@ import org.apache.ibatis.type.TypeHandler;
  *
  * @since 3.19
  */
-// not @Named because we register this manually
+// not @Component
 public class AttributesTypeHandler
     extends AbstractJsonTypeHandler<Map<String, ?>>
 {

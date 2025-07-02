@@ -14,9 +14,8 @@ package org.sonatype.nexus.api.rest.selfhosted.system;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -32,9 +31,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.sonatype.nexus.rest.APIConstants.BETA_API_PREFIX;
 
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+
 @Produces(APPLICATION_JSON)
 @Path(SystemInformationResource.PATH)
-@Named
+@Component
 @Singleton
 public class SystemInformationResource
     extends ComponentSupport
@@ -45,7 +47,7 @@ public class SystemInformationResource
   private final NodeHeartbeatManager nodeHeartbeatManager;
 
   @Inject
-  public SystemInformationResource(final NodeHeartbeatManager nodeHeartbeatManager) {
+  public SystemInformationResource(@Lazy final NodeHeartbeatManager nodeHeartbeatManager) {
     this.nodeHeartbeatManager = checkNotNull(nodeHeartbeatManager);
   }
 

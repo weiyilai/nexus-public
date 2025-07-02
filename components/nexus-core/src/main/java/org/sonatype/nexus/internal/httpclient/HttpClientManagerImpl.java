@@ -20,10 +20,9 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.Mutex;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -54,20 +53,25 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
 import static org.sonatype.nexus.logging.task.TaskLoggingMarkers.OUTBOUND_REQUESTS_LOG_ONLY;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Default {@link HttpClientManager}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @ManagedLifecycle(phase = SERVICES)
 @Priority(Integer.MAX_VALUE) // make sure this starts early
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @Singleton
 public class HttpClientManagerImpl
     extends StateGuardLifecycleSupport
@@ -103,7 +107,7 @@ public class HttpClientManagerImpl
   public HttpClientManagerImpl(
       final EventManager eventManager,
       final HttpClientConfigurationStore store,
-      @Named("initial") final Provider<HttpClientConfiguration> defaults,
+      @Qualifier("initial") final Provider<HttpClientConfiguration> defaults,
       final SharedHttpClientConnectionManager sharedConnectionManager,
       final DefaultsCustomizer defaultsCustomizer)
   {

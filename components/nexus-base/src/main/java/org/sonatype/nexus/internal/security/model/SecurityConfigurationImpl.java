@@ -16,13 +16,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
-import org.sonatype.nexus.datastore.api.DataAccess;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.datastore.api.DuplicateKeyException;
@@ -40,10 +39,11 @@ import org.sonatype.nexus.security.user.NoSuchRoleMappingException;
 import org.sonatype.nexus.security.user.UserNotFoundException;
 import org.sonatype.nexus.transaction.Transactional;
 import org.sonatype.nexus.transaction.TransactionalStore;
-import org.sonatype.nexus.transaction.UnitOfWork;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.shiro.util.CollectionUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
@@ -54,97 +54,83 @@ import static org.sonatype.nexus.security.user.UserManager.DEFAULT_SOURCE;
  *
  * @since 3.21
  */
-@Named("mybatis")
+@Component
+@Qualifier("mybatis")
 @Singleton
 public class SecurityConfigurationImpl
     extends StateGuardLifecycleSupport
-    implements TransactionalStore<DataSession<?>>, SecurityConfiguration
+    implements SecurityConfiguration, TransactionalStore<DataSession<?>>
 {
   private final DataSessionSupplier sessionSupplier;
 
-  @Inject
-  public SecurityConfigurationImpl(final DataSessionSupplier sessionSupplier) {
-    this.sessionSupplier = checkNotNull(sessionSupplier);
-  }
+  private final CPrivilegeStore privilegeStore;
 
-  // SESSION
+  private final CRoleStore roleStore;
+
+  private final CUserRoleMappingStore userRoleMappingStore;
+
+  private final CUserStore userStore;
+
+  @Inject
+  public SecurityConfigurationImpl(
+      final DataSessionSupplier sessionSupplier,
+      final CPrivilegeStore privilegeStore,
+      final CRoleStore roleStore,
+      final CUserRoleMappingStore userRoleMappingStore,
+      final CUserStore userStore)
+  {
+    this.sessionSupplier = checkNotNull(sessionSupplier);
+    this.privilegeStore = checkNotNull(privilegeStore);
+    this.roleStore = checkNotNull(roleStore);
+    this.userRoleMappingStore = checkNotNull(userRoleMappingStore);
+    this.userStore = checkNotNull(userStore);
+  }
 
   @Override
   public DataSession<?> openSession() {
     return sessionSupplier.openSession(DEFAULT_DATASTORE_NAME);
   }
 
-  private DataSession<?> thisSession() {
-    return UnitOfWork.currentSession();
-  }
-
-  private <T extends DataAccess> T dao(final Class<T> daoClass) {
-    return thisSession().access(daoClass);
-  }
-
-  private CPrivilegeDAO privilegeDAO() {
-    return dao(CPrivilegeDAO.class);
-  }
-
-  private CRoleDAO roleDAO() {
-    return dao(CRoleDAO.class);
-  }
-
-  private CUserDAO userDAO() {
-    return dao(CUserDAO.class);
-  }
-
-  private CUserRoleMappingDAO userRoleMappingDAO() {
-    return dao(CUserRoleMappingDAO.class);
-  }
-
   // PRIVILEGES
-
-  @Transactional
   @Override
   public List<CPrivilege> getPrivileges() {
-    return ImmutableList.copyOf(privilegeDAO().browse());
+    return ImmutableList.copyOf(privilegeStore.browse());
   }
 
-  @Transactional
   @Override
   public CPrivilege getPrivilege(final String id) {
     checkNotNull(id);
 
-    return privilegeDAO().read(id).orElse(null);
+    return privilegeStore.read(id).orElse(null);
   }
 
   @Nullable
-  @Transactional
   @Override
   public CPrivilege getPrivilegeByName(final String name) {
     return Optional.of(name)
-        .flatMap(n -> privilegeDAO().readByName(n))
+        .flatMap(n -> privilegeStore.readByName(n))
         .orElse(null);
   }
 
-  @Transactional
   @Override
   public List<CPrivilege> getPrivileges(final Set<String> ids) {
     if (CollectionUtils.isEmpty(ids)) {
       return Collections.emptyList();
     }
 
-    return privilegeDAO().findByIds(ids);
+    return privilegeStore.findByIds(ids);
   }
 
-  @Transactional
   @Override
   public CPrivilege newPrivilege() {
     return new CPrivilegeData();
   }
 
-  @Transactional
   @Override
   public CPrivilege addPrivilege(final CPrivilege privilege) {
     checkNotNull(privilege);
     try {
-      privilegeDAO().create(convert(privilege));
+      privilegeStore.create(convert(privilege));
       return privilege;
     }
     catch (DuplicateKeyException e) {
@@ -152,18 +138,16 @@ public class SecurityConfigurationImpl
     }
   }
 
-  @Transactional
   @Override
   public void updatePrivilege(final CPrivilege privilege) {
     checkNotNull(privilege);
 
     privilege.setVersion(privilege.getVersion() + 1);
-    if (!privilegeDAO().update(convert(privilege))) {
+    if (!privilegeStore.update(convert(privilege))) {
       throw new NoSuchPrivilegeException(privilege.getId());
     }
   }
 
-  @Transactional
   @Override
   public void updatePrivilegeByName(final CPrivilege privilege) {
     Optional.of(privilege)
@@ -171,112 +155,98 @@ public class SecurityConfigurationImpl
           p.setVersion(p.getVersion() + 1);
           return p;
         })
-        .filter(p -> privilegeDAO().updateByName(convert(p)))
+        .filter(p -> privilegeStore.updateByName(convert(p)))
         .orElseThrow(() -> new NoSuchPrivilegeException(privilege.getName()));
   }
 
-  @Transactional
   @Override
   public boolean removePrivilege(final String id) {
     checkNotNull(id);
 
-    if (!privilegeDAO().delete(id)) {
+    if (!privilegeStore.delete(id)) {
       throw new NoSuchPrivilegeException(id);
     }
     return true;
   }
 
-  @Transactional
   @Override
   public boolean removePrivilegeByName(final String name) {
     return Optional.of(name)
-        .map(n -> privilegeDAO().deleteByName(n))
+        .map(n -> privilegeStore.deleteByName(n))
         .filter(Boolean.TRUE::equals)
         .orElseThrow(() -> new NoSuchPrivilegeException(name));
   }
 
   // ROLES
-
-  @Transactional
   @Override
   public List<CRole> getRoles() {
-    return ImmutableList.copyOf(roleDAO().browse());
+    return ImmutableList.copyOf(roleStore.browse());
   }
 
-  @Transactional
   @Override
   public CRole getRole(final String id) {
     checkNotNull(id);
 
-    return roleDAO().read(id).orElse(null);
+    return roleStore.read(id).orElse(null);
   }
 
-  @Transactional
   @Override
   public CRole newRole() {
     return new CRoleData();
   }
 
-  @Transactional
   @Override
   public void addRole(final CRole role) {
     try {
-      roleDAO().create(convert(role));
+      roleStore.create(convert(role));
     }
     catch (DuplicateKeyException e) {
       throw new DuplicateRoleException(role.getId());
     }
   }
 
-  @Transactional
   @Override
   public void updateRole(final CRole role) {
     checkNotNull(role);
 
     role.setVersion(role.getVersion() + 1);
-    if (!roleDAO().update(convert(role))) {
+    if (!roleStore.update(convert(role))) {
       throw new NoSuchRoleException(role.getId());
     }
   }
 
-  @Transactional
   @Override
   public boolean removeRole(final String id) {
     checkNotNull(id);
 
-    if (!roleDAO().delete(id)) {
+    if (!roleStore.delete(id)) {
       throw new NoSuchRoleException(id);
     }
     return true;
   }
 
   // USERS
-
-  @Transactional
   @Override
   public List<CUser> getUsers() {
-    return ImmutableList.copyOf(userDAO().browse());
+    return ImmutableList.copyOf(userStore.browse());
   }
 
-  @Transactional
   @Override
   public CUser getUser(final String id) {
     checkNotNull(id);
 
-    return userDAO().read(id).orElse(null);
+    return userStore.read(id).orElse(null);
   }
 
-  @Transactional
   @Override
   public CUser newUser() {
     return new CUserData();
   }
 
-  @Transactional
   public void addUser(final CUser user) {
     checkNotNull(user);
     try {
-      userDAO().create(convert(user));
+      userStore.create(convert(user));
     }
     catch (DuplicateKeyException e) {
       throw new DuplicateUserException(user.getId());
@@ -292,23 +262,21 @@ public class SecurityConfigurationImpl
     addRoleMapping(user.getId(), roles, DEFAULT_SOURCE);
   }
 
-  @Transactional
   @Override
-  public void addRoleMapping(final String userId, final Set<String> roles, String source) {
+  public void addRoleMapping(final String userId, final Set<String> roles, final String source) {
     CUserRoleMappingData mapping = new CUserRoleMappingData();
     mapping.setUserId(userId);
     mapping.setSource(source);
     mapping.setRoles(roles);
-    userRoleMappingDAO().create(mapping);
+    userRoleMappingStore.create(mapping);
   }
 
-  @Transactional
   @Override
   public void updateUser(final CUser user) throws UserNotFoundException {
     checkNotNull(user);
 
     user.setVersion(user.getVersion() + 1);
-    if (!userDAO().update(convert(user))) {
+    if (!userStore.update(convert(user))) {
       throw new UserNotFoundException(user.getId());
     }
   }
@@ -321,27 +289,26 @@ public class SecurityConfigurationImpl
 
     updateUser(user);
 
-    Optional<CUserRoleMappingData> existingMapping = userRoleMappingDAO().read(user.getId(), DEFAULT_SOURCE);
+    Optional<CUserRoleMappingData> existingMapping = userRoleMappingStore.read(user.getId(), DEFAULT_SOURCE);
     if (existingMapping.isPresent()) {
       CUserRoleMappingData mapping = existingMapping.get();
       mapping.setRoles(roles);
-      userRoleMappingDAO().update(mapping);
+      userRoleMappingStore.update(mapping);
     }
     else {
       CUserRoleMappingData mapping = new CUserRoleMappingData();
       mapping.setUserId(user.getId());
       mapping.setSource(DEFAULT_SOURCE);
       mapping.setRoles(roles);
-      userRoleMappingDAO().create(mapping);
+      userRoleMappingStore.create(mapping);
     }
   }
 
-  @Transactional
   @Override
   public boolean removeUser(final String id) {
     checkNotNull(id);
 
-    if (userDAO().delete(id)) {
+    if (userStore.delete(id)) {
       removeUserRoleMapping(id, DEFAULT_SOURCE);
       return true;
     }
@@ -349,56 +316,49 @@ public class SecurityConfigurationImpl
   }
 
   // USER-ROLE MAPPINGS
-
-  @Transactional
   @Override
   public List<CUserRoleMapping> getUserRoleMappings() {
-    return ImmutableList.copyOf(userRoleMappingDAO().browse());
+    return ImmutableList.copyOf(userRoleMappingStore.browse());
   }
 
-  @Transactional
   @Override
-  public CUserRoleMapping getUserRoleMapping(String userId, String source) {
+  public CUserRoleMapping getUserRoleMapping(final String userId, final String source) {
     checkNotNull(userId);
     checkNotNull(source);
 
-    return userRoleMappingDAO().read(userId, source).orElse(null);
+    return userRoleMappingStore.read(userId, source).orElse(null);
   }
 
-  @Transactional
   @Override
   public CUserRoleMapping newUserRoleMapping() {
     return new CUserRoleMappingData();
   }
 
-  @Transactional
   @Override
   public void addUserRoleMapping(final CUserRoleMapping mapping) {
     checkNotNull(mapping);
 
-    userRoleMappingDAO().create(convert(mapping));
+    userRoleMappingStore.create(convert(mapping));
   }
 
-  @Transactional
   @Override
   public void updateUserRoleMapping(final CUserRoleMapping mapping) throws NoSuchRoleMappingException {
     checkNotNull(mapping);
 
-    if (!userRoleMappingDAO().update(convert(mapping))) {
+    if (!userRoleMappingStore.update(convert(mapping))) {
       throw new NoSuchRoleMappingException(mapping.getUserId());
     }
   }
 
-  @Transactional
   @Override
   public boolean removeUserRoleMapping(final String userId, final String source) {
     checkNotNull(userId);
     checkNotNull(source);
 
-    return userRoleMappingDAO().delete(userId, source);
+    return userRoleMappingStore.delete(userId, source);
   }
 
-  private CPrivilegeData convert(final CPrivilege privilege) {
+  private static CPrivilegeData convert(final CPrivilege privilege) {
     if (privilege instanceof CPrivilegeData) {
       return (CPrivilegeData) privilege;
     }
@@ -413,7 +373,7 @@ public class SecurityConfigurationImpl
     return privilegeData;
   }
 
-  private CRoleData convert(final CRole role) {
+  private static CRoleData convert(final CRole role) {
     if (role instanceof CRoleData) {
       return (CRoleData) role;
     }
@@ -428,7 +388,7 @@ public class SecurityConfigurationImpl
     return roleData;
   }
 
-  private CUserData convert(final CUser user) {
+  private static CUserData convert(final CUser user) {
     if (user instanceof CUserData) {
       return (CUserData) user;
     }
@@ -443,7 +403,7 @@ public class SecurityConfigurationImpl
     return userData;
   }
 
-  private CUserRoleMappingData convert(final CUserRoleMapping mapping) {
+  private static CUserRoleMappingData convert(final CUserRoleMapping mapping) {
     if (mapping instanceof CUserRoleMappingData) {
       return (CUserRoleMappingData) mapping;
     }

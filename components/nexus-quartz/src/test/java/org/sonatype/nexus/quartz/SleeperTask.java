@@ -15,14 +15,16 @@ package org.sonatype.nexus.quartz;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.scheduling.TaskSupport;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Simple sleeper task that is not cancelable.
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SleeperTask
     extends TaskSupport
 {

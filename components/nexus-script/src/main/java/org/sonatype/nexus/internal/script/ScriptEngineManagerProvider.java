@@ -15,14 +15,16 @@ package org.sonatype.nexus.internal.script;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
 import org.sonatype.goodies.common.ComponentSupport;
+
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -31,11 +33,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @since 3.0
  */
-@Named
+@Primary
+@Component
 @Singleton
 public class ScriptEngineManagerProvider
     extends ComponentSupport
-    implements Provider<ScriptEngineManager>
+    implements FactoryBean<ScriptEngineManager>
 {
   public static final String DEFAULT_LANGUAGE = "groovy";
 
@@ -49,7 +52,7 @@ public class ScriptEngineManagerProvider
   }
 
   @Override
-  public ScriptEngineManager get() {
+  public ScriptEngineManager getObject() {
     // limit detection of engines to the runtime's default engines, other engines should register via guice
     ScriptEngineManager engineManager = new ScriptEngineManager(ClassLoader.getSystemClassLoader());
 
@@ -92,5 +95,10 @@ public class ScriptEngineManagerProvider
     log.info("Default language: {}", DEFAULT_LANGUAGE);
 
     return engineManager;
+  }
+
+  @Override
+  public Class<?> getObjectType() {
+    return ScriptEngineManager.class;
   }
 }

@@ -12,15 +12,17 @@
  */
 package org.sonatype.nexus.repository.maven.internal.search;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.search.BlankValueSearchQueryFilter;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Maven classifier attribute should be ignored from the search request if it is empty.
  */
-@Named("assets.attributes.maven2.classifier")
+@Component
+@Qualifier("assets.attributes.maven2.classifier")
 @Singleton
 public class MavenClassifierBlankValueFilter
     implements BlankValueSearchQueryFilter

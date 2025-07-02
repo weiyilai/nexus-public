@@ -20,9 +20,8 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -56,8 +55,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @ManagedLifecycle(phase = SERVICES)
 public class SecretsServiceImpl
@@ -109,9 +109,9 @@ public class SecretsServiceImpl
       final SecretsStore secretsStore,
       final EncryptionKeySource encryptionKeySource,
       final DatabaseCheck databaseCheck,
-      @Named("${nexus.mybatis.cipher.password:-changeme}") @Value("${nexus.mybatis.cipher.password:changeme}") final String legacyPassword,
-      @Named("${nexus.mybatis.cipher.salt:-changeme}") @Value("${nexus.mybatis.cipher.salt:changeme}") final String legacySalt,
-      @Named("${nexus.mybatis.cipher.iv:-0123456789ABCDEF}") @Value("${nexus.mybatis.cipher.iv:0123456789ABCDEF}") final String legacyIv)
+      @Value("${nexus.mybatis.cipher.password:changeme}") final String legacyPassword,
+      @Value("${nexus.mybatis.cipher.salt:changeme}") final String legacySalt,
+      @Value("${nexus.mybatis.cipher.iv:0123456789ABCDEF}") final String legacyIv)
   {
     this.legacyCipher = checkNotNull(legacyCipherFactory).create(legacyPassword, legacySalt, legacyIv);// NOSONAR
     this.mavenCipher = checkNotNull(mavenCipher);// NOSONAR

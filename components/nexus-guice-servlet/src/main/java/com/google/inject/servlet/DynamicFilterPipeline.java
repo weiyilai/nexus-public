@@ -17,8 +17,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.RequestDispatcher;
@@ -41,7 +41,7 @@ import static com.google.inject.servlet.DynamicServletPipeline.DUMMY_INJECTOR;
  * Includes patched methods from {@link ManagedFilterPipeline} where delegating isn't possible.
  */
 @Singleton
-// don't use @Named, keep as implicit JIT-binding
+// don't use @Component
 final class DynamicFilterPipeline
     extends ManagedFilterPipeline
 {

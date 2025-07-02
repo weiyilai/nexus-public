@@ -13,8 +13,7 @@
 package org.sonatype.nexus.repository.routing;
 
 import java.util.Map;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.audit.AuditData;
 import org.sonatype.nexus.audit.AuditorSupport;
@@ -22,12 +21,13 @@ import org.sonatype.nexus.common.event.EventAware;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link RoutingRule} auditor.
  *
  */
-@Named
+@Component
 @Singleton
 public class RoutingRuleAuditor
     extends AuditorSupport

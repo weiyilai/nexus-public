@@ -47,7 +47,7 @@ import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTOR
 import static org.sonatype.nexus.repository.content.store.VersionedAssetDAOTest.browseAssets;
 import static org.sonatype.nexus.repository.content.store.VersionedAssetDAOTest.countAssets;
 
-public class AssetStoreTestSupport
+public abstract class AssetStoreTestSupport
     extends ExampleContentTestSupport
 {
   @Mock
@@ -66,7 +66,7 @@ public class AssetStoreTestSupport
 
   private boolean entityVersioningEnabled;
 
-  public void initialiseStores(boolean entityVersioningEnabled) {
+  protected void initialiseStores(final boolean entityVersioningEnabled) {
     this.entityVersioningEnabled = entityVersioningEnabled;
     ContentRepositoryData contentRepository = randomContentRepository();
     createContentRepository(contentRepository);
@@ -91,7 +91,7 @@ public class AssetStoreTestSupport
     }
   }
 
-  public void testDeleteAsset() {
+  protected void testDeleteAsset() {
     generateRandomPaths(100);
     AssetData asset1 = randomAsset(repositoryId);
     AssetData asset2 = randomAsset(repositoryId);
@@ -121,71 +121,70 @@ public class AssetStoreTestSupport
     asset5.setPath(asset1.path() + "/5");
 
     inTx(() -> {
-          TestAssetDAO assetDAO = underTest.dao();
+      TestAssetDAO assetDAO = underTest.dao();
 
-          assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), emptyIterable());
+      assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), emptyIterable());
 
-          createComponents(component1, component2);
-          Stream.of(asset1, asset2, asset3, asset4, asset5)
-              .forEach(underTest::createAsset);
+      createComponents(component1, component2);
+      Stream.of(asset1, asset2, asset3, asset4, asset5)
+          .forEach(underTest::createAsset);
 
-          assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), contains(
-              allOf(samePath(asset1), sameKind(asset1), sameAttributes(asset1)),
-              allOf(samePath(asset2), sameKind(asset2), sameAttributes(asset2)),
-              allOf(samePath(asset3), sameKind(asset3), sameAttributes(asset3)),
-              allOf(samePath(asset4), sameKind(asset4), sameAttributes(asset4)),
-              allOf(samePath(asset5), sameKind(asset5), sameAttributes(asset5))));
+      assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), contains(
+          allOf(samePath(asset1), sameKind(asset1), sameAttributes(asset1)),
+          allOf(samePath(asset2), sameKind(asset2), sameAttributes(asset2)),
+          allOf(samePath(asset3), sameKind(asset3), sameAttributes(asset3)),
+          allOf(samePath(asset4), sameKind(asset4), sameAttributes(asset4)),
+          allOf(samePath(asset5), sameKind(asset5), sameAttributes(asset5))));
 
       assertEntityVersion(component1.componentId, entityVersioningEnabled ? 3 : null);
-          assertEntityVersion(component2.componentId,  entityVersioningEnabled ? 4 : null);
+      assertEntityVersion(component2.componentId, entityVersioningEnabled ? 4 : null);
 
-          assertTrue(underTest.deleteAsset(asset1));
-          assertThat(countAssets(assetDAO, repositoryId), Matchers.is(4));
-          assertEntityVersion(component1.componentId,  entityVersioningEnabled ? 4 : null);
-          assertEntityVersion(component2.componentId,  entityVersioningEnabled ? 4 : null);
+      assertTrue(underTest.deleteAsset(asset1));
+      assertThat(countAssets(assetDAO, repositoryId), Matchers.is(4));
+      assertEntityVersion(component1.componentId, entityVersioningEnabled ? 4 : null);
+      assertEntityVersion(component2.componentId, entityVersioningEnabled ? 4 : null);
 
-          assertTrue(underTest.deleteAsset(asset2));
+      assertTrue(underTest.deleteAsset(asset2));
 
-          assertThat(countAssets(assetDAO, repositoryId), Matchers.is(3));
-          assertEntityVersion(component1.componentId,  entityVersioningEnabled ? 5 : null);
-          assertEntityVersion(component2.componentId,  entityVersioningEnabled ? 4 : null);
+      assertThat(countAssets(assetDAO, repositoryId), Matchers.is(3));
+      assertEntityVersion(component1.componentId, entityVersioningEnabled ? 5 : null);
+      assertEntityVersion(component2.componentId, entityVersioningEnabled ? 4 : null);
 
-          assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), contains(
-              allOf(samePath(asset3), sameKind(asset3), sameAttributes(asset3)),
-              allOf(samePath(asset4), sameKind(asset4), sameAttributes(asset4)),
-              allOf(samePath(asset5), sameKind(asset5), sameAttributes(asset5))));
+      assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), contains(
+          allOf(samePath(asset3), sameKind(asset3), sameAttributes(asset3)),
+          allOf(samePath(asset4), sameKind(asset4), sameAttributes(asset4)),
+          allOf(samePath(asset5), sameKind(asset5), sameAttributes(asset5))));
 
-          assertTrue(underTest.deleteAsset(asset3));
+      assertTrue(underTest.deleteAsset(asset3));
 
-          assertThat(countAssets(assetDAO, repositoryId), Matchers.is(2));
-          assertEntityVersion(component1.componentId,  entityVersioningEnabled ? 5 : null);
-          assertEntityVersion(component2.componentId,  entityVersioningEnabled ? 5 : null);
+      assertThat(countAssets(assetDAO, repositoryId), Matchers.is(2));
+      assertEntityVersion(component1.componentId, entityVersioningEnabled ? 5 : null);
+      assertEntityVersion(component2.componentId, entityVersioningEnabled ? 5 : null);
 
-          assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), contains(
-              allOf(samePath(asset4), sameKind(asset4), sameAttributes(asset4)),
-              allOf(samePath(asset5), sameKind(asset5), sameAttributes(asset5))));
+      assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), contains(
+          allOf(samePath(asset4), sameKind(asset4), sameAttributes(asset4)),
+          allOf(samePath(asset5), sameKind(asset5), sameAttributes(asset5))));
 
-          assertTrue(underTest.deleteAsset(asset4));
+      assertTrue(underTest.deleteAsset(asset4));
 
-          assertThat(countAssets(assetDAO, repositoryId), Matchers.is(1));
-          assertEntityVersion(component1.componentId,  entityVersioningEnabled ? 5 : null);
-          assertEntityVersion(component2.componentId,  entityVersioningEnabled ? 6 : null);
+      assertThat(countAssets(assetDAO, repositoryId), Matchers.is(1));
+      assertEntityVersion(component1.componentId, entityVersioningEnabled ? 5 : null);
+      assertEntityVersion(component2.componentId, entityVersioningEnabled ? 6 : null);
 
-          assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), contains(
-              allOf(samePath(asset5), sameKind(asset5), sameAttributes(asset5))));
+      assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), contains(
+          allOf(samePath(asset5), sameKind(asset5), sameAttributes(asset5))));
 
-          assertTrue(underTest.deleteAsset(asset5));
+      assertTrue(underTest.deleteAsset(asset5));
 
-          assertThat(countAssets(assetDAO, repositoryId), Matchers.is(0));
-          assertEntityVersion(component1.componentId,  entityVersioningEnabled ? 5 : null);
-          assertEntityVersion(component2.componentId,  entityVersioningEnabled ? 7 : null);
+      assertThat(countAssets(assetDAO, repositoryId), Matchers.is(0));
+      assertEntityVersion(component1.componentId, entityVersioningEnabled ? 5 : null);
+      assertEntityVersion(component2.componentId, entityVersioningEnabled ? 7 : null);
 
-          assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), emptyIterable());
-        }
-    );
+      assertThat(browseAssets(assetDAO, repositoryId, null, 10, null), emptyIterable());
+    });
   }
 
-  public void testBrowseUpdatedAssetsDifferentDates() {
+  protected void testBrowseUpdatedAssetsDifferentDates() {
     OffsetDateTime time = OffsetDateTime.now();
     AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
     AssetData asset2 = generateAsset(repositoryId, "/asset2/asset2.jar");
@@ -252,7 +251,7 @@ public class AssetStoreTestSupport
     });
   }
 
-  public void testBrowseUpdatedAssetsIdenticalDates() {
+  protected void testBrowseUpdatedAssetsIdenticalDates() {
     OffsetDateTime time1 = OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS);
     AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
     AssetData asset2 = generateAsset(repositoryId, "/asset2/asset2.jar");
@@ -298,7 +297,7 @@ public class AssetStoreTestSupport
     });
   }
 
-  public void testDeleteAssetsByPaths() {
+  protected void testDeleteAssetsByPaths() {
     ComponentData component1 = randomComponent(repositoryId);
     ComponentData component2 = randomComponent(repositoryId);
     component2.setVersion(component1.version() + ".2"); // make sure versions are different
@@ -367,7 +366,7 @@ public class AssetStoreTestSupport
     });
   }
 
-  protected void createComponents(ComponentData... components) {
+  protected void createComponents(final ComponentData... components) {
     stream(components).forEach(componentStore::createComponent);
   }
 

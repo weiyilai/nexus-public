@@ -23,7 +23,7 @@ import org.apache.ibatis.type.JdbcType;
 /**
  * Type handler for use with {@code ::tsvector}<br/>
  *
- * Not @Named to avoid injection
+ * Not @Component to avoid injection
  */
 public class QuotingTypeHandler
     extends BaseTypeHandler<String>

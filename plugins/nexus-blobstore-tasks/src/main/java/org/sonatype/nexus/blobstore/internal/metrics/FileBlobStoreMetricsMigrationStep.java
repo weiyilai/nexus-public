@@ -12,15 +12,15 @@
  */
 package org.sonatype.nexus.blobstore.internal.metrics;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.file.FileBlobStore;
+import org.springframework.stereotype.Component;
 
 /**
  * Migration step to move metrics from properties files in the blob store to the DB
  */
-@Named
+@Component
 @Singleton
 public class FileBlobStoreMetricsMigrationStep
     extends BlobStoreMetricsDatabaseMigrationStepSupport

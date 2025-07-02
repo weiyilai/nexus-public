@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -35,6 +34,8 @@ import static org.sonatype.nexus.capability.Tag.categoryTag;
 import static org.sonatype.nexus.capability.Tag.tags;
 import static org.sonatype.nexus.formfields.FormField.MANDATORY;
 import static org.sonatype.nexus.repository.capability.GlobalRepositorySettings.DEFAULT_LAST_DOWNLOADED_INTERVAL;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * {@link StorageSettingsCapabilityDescriptor} descriptor.
@@ -42,7 +43,8 @@ import static org.sonatype.nexus.repository.capability.GlobalRepositorySettings.
  * @since 3.16
  */
 @AvailabilityVersion(from = "1.0")
-@Named(StorageSettingsCapabilityDescriptor.TYPE_ID)
+@Component
+@Qualifier(StorageSettingsCapabilityDescriptor.TYPE_ID)
 @Singleton
 public class StorageSettingsCapabilityDescriptor
     extends CapabilityDescriptorSupport<StorageSettingsCapabilityConfiguration>
@@ -75,11 +77,9 @@ public class StorageSettingsCapabilityDescriptor
             StorageSettingsCapabilityConfiguration.LAST_DOWNLOADED_INTERVAL,
             messages.assetLabel(),
             messages.lastDownloadedIntervalLabel(),
-            MANDATORY
-        )
-        .withInitialValue(DEFAULT_LAST_DOWNLOADED_INTERVAL.toHours())
-        .withMinimumValue(1)
-    );
+            MANDATORY)
+                .withInitialValue(DEFAULT_LAST_DOWNLOADED_INTERVAL.toHours())
+                .withMinimumValue(1));
   }
 
   @Override

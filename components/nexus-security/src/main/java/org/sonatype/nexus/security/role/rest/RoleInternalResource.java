@@ -14,9 +14,8 @@ package org.sonatype.nexus.security.role.rest;
 
 import java.util.Comparator;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -38,8 +37,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.sonatype.nexus.security.role.rest.RoleApiResource.SOURCE_NOT_FOUND;
+import org.springframework.stereotype.Component;
 
-@Named
+@Component
 @Singleton
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
@@ -65,12 +65,18 @@ public class RoleInternalResource
       @QueryParam("search") final String search)
   {
     if (StringUtils.isEmpty(source)) {
-      return securitySystem.listRoles().stream().map(RoleXOResponse::fromRole)
-          .sorted(Comparator.comparing(RoleXOResponse::getId)).collect(toList());
+      return securitySystem.listRoles()
+          .stream()
+          .map(RoleXOResponse::fromRole)
+          .sorted(Comparator.comparing(RoleXOResponse::getId))
+          .collect(toList());
     }
     try {
-      return securitySystem.searchRoles(source, search).stream().map(RoleXOResponse::fromRole)
-          .sorted(Comparator.comparing(RoleXOResponse::getId)).collect(toList());
+      return securitySystem.searchRoles(source, search)
+          .stream()
+          .map(RoleXOResponse::fromRole)
+          .sorted(Comparator.comparing(RoleXOResponse::getId))
+          .collect(toList());
     }
     catch (NoSuchAuthorizationManagerException e) {
       throw buildBadSourceException(source);

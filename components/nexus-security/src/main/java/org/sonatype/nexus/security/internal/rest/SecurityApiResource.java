@@ -17,13 +17,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.rest.Resource;
 import org.sonatype.nexus.security.user.ConfiguredUsersUserManager;
 import org.sonatype.nexus.security.user.UserManager;
@@ -43,8 +44,8 @@ public class SecurityApiResource
   private final Map<String, UserManager> userManagers;
 
   @Inject
-  public SecurityApiResource(final Map<String, UserManager> userManagers) {
-    this.userManagers = userManagers;
+  public SecurityApiResource(final List<UserManager> userManagersList) {
+    this.userManagers = QualifierUtil.buildQualifierBeanMap(userManagersList);
   }
 
   @Override
@@ -52,7 +53,10 @@ public class SecurityApiResource
   @Path("user-sources")
   @RequiresPermissions("nexus:users:read")
   public List<ApiUserSource> getUserSources() {
-    return userManagers.values().stream().filter(um -> !ConfiguredUsersUserManager.SOURCE.equals(um.getSource()))
-        .map(um -> new ApiUserSource(um)).collect(Collectors.toList());
+    return userManagers.values()
+        .stream()
+        .filter(um -> !ConfiguredUsersUserManager.SOURCE.equals(um.getSource()))
+        .map(um -> new ApiUserSource(um))
+        .collect(Collectors.toList());
   }
 }

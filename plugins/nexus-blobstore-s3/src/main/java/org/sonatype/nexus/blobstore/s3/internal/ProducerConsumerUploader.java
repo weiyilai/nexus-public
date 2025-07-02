@@ -25,9 +25,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 import org.sonatype.nexus.blobstore.s3.internal.ProducerConsumerUploader.ChunkReader.Chunk;
@@ -51,6 +50,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.annotation.Timed;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -61,6 +61,8 @@ import static java.util.Optional.of;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.STORAGE;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Uploads are published to a queue via the calling thread.
@@ -68,10 +70,12 @@ import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.St
  *
  * @since 3.28
  */
+@ConditionalOnProperty(name = "nexus.s3.uploaderName", havingValue = "producerConsumerUploader", matchIfMissing = true)
 @Singleton
 @ManagedObject
 @ManagedLifecycle(phase = STORAGE)
-@Named("producerConsumerUploader")
+@Component
+@Qualifier("producerConsumerUploader")
 public class ProducerConsumerUploader
     extends StateGuardLifecycleSupport
     implements S3Uploader
@@ -98,8 +102,8 @@ public class ProducerConsumerUploader
 
   @Inject
   public ProducerConsumerUploader(
-      @Named("${nexus.s3.producerConsumerUploader.chunksize:-10485760}") @Value("${nexus.s3.producerConsumerUploader.chunksize:10485760}") final int chunkSize,
-      @Named("${nexus.s3.producerConsumerUploader.parallelism:-0}") @Value("${nexus.s3.producerConsumerUploader.parallelism:0}") final int numberOfThreads,
+      @Value("${nexus.s3.producerConsumerUploader.chunksize:10485760}") final int chunkSize,
+      @Value("${nexus.s3.producerConsumerUploader.parallelism:0}") final int numberOfThreads,
       final MetricRegistry registry)
   {
     checkArgument(numberOfThreads >= 0, "Must use a non-negative parallelism");

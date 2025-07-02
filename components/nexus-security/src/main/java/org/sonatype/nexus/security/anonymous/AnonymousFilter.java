@@ -15,12 +15,9 @@ package org.sonatype.nexus.security.anonymous;
 import java.util.Date;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.nexus.common.event.EventManager;
@@ -28,12 +25,16 @@ import org.sonatype.nexus.security.ClientInfo;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.net.HttpHeaders;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
 import org.apache.shiro.web.servlet.AdviceFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.newSetFromMap;
@@ -44,7 +45,8 @@ import static java.util.Collections.newSetFromMap;
  * @see AnonymousManager
  * @since 3.0
  */
-@Named
+@WebFilter(filterName = AnonymousFilter.NAME)
+@Component
 @Singleton
 public class AnonymousFilter
     extends AdviceFilter
@@ -58,12 +60,12 @@ public class AnonymousFilter
   private static final Logger log = LoggerFactory.getLogger(AnonymousFilter.class);
 
   private final Provider<AnonymousManager> anonymousManager;
-  
+
   private final Provider<EventManager> eventManager;
-  
+
   // keep a record of the most recent accesses
   private final Set<ClientInfo> cache = newSetFromMap(
-      CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).<ClientInfo, Boolean> build().asMap());
+      CacheBuilder.newBuilder().maximumSize(CACHE_SIZE).<ClientInfo, Boolean>build().asMap());
 
   @Inject
   public AnonymousFilter(final Provider<AnonymousManager> anonymousManager, final Provider<EventManager> eventManager) {
@@ -82,7 +84,7 @@ public class AnonymousFilter
       subject = manager.buildSubject();
       ThreadContext.bind(subject);
       log.trace("Bound anonymous subject: {}", subject);
-      
+
       // fire an event if we haven't already seen this ClientInfo since the server started
       if (request instanceof HttpServletRequest) {
         String userId = manager.getConfiguration().getUserId();
@@ -104,8 +106,10 @@ public class AnonymousFilter
   }
 
   @Override
-  public void afterCompletion(final ServletRequest request, final ServletResponse response, final Exception exception)
-      throws Exception
+  public void afterCompletion(
+      final ServletRequest request,
+      final ServletResponse response,
+      final Exception exception) throws Exception
   {
     Subject subject = (Subject) request.getAttribute(ORIGINAL_SUBJECT);
     if (subject != null) {
@@ -114,7 +118,7 @@ public class AnonymousFilter
     }
   }
 
-  private boolean isAnonymousUser(AnonymousManager manager, Subject subject) {
+  private boolean isAnonymousUser(final AnonymousManager manager, final Subject subject) {
     if (manager == null || manager.getConfiguration() == null || manager.getConfiguration().getUserId() == null) {
       return false;
     }

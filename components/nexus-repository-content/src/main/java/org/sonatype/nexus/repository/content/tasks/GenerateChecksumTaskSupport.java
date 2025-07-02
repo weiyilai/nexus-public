@@ -18,8 +18,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.blobstore.api.BlobId;
@@ -74,7 +73,7 @@ public abstract class GenerateChecksumTaskSupport
 
   @Inject
   public void init(
-      @Named("${nexus.calculateChecksums.bufferSize:-32768}") @Value("${nexus.calculateChecksums.bufferSize:32768}") final int bufferSize,
+      @Value("${nexus.calculateChecksums.bufferSize:32768}") final int bufferSize,
       final BlobStoreManager blobStoreManager) throws NoSuchAlgorithmException
   {
     // Ensure at least a 4K buffer

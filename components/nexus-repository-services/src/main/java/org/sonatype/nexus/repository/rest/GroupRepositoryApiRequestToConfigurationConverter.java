@@ -12,8 +12,6 @@
  */
 package org.sonatype.nexus.repository.rest;
 
-import javax.inject.Named;
-
 import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.rest.api.AbstractRepositoryApiRequestToConfigurationConverter;
 import org.sonatype.nexus.repository.rest.api.model.GroupAttributes;
@@ -24,11 +22,15 @@ import static org.sonatype.nexus.repository.config.ConfigurationConstants.BLOB_S
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.GROUP_WRITE_MEMBER;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STORAGE;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STRICT_CONTENT_TYPE_VALIDATION;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * @since 3.20
  */
-@Named
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class GroupRepositoryApiRequestToConfigurationConverter<T extends GroupRepositoryApiRequest>
     extends AbstractRepositoryApiRequestToConfigurationConverter<T>
 {

@@ -28,10 +28,9 @@ import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static org.jboss.resteasy.plugins.server.servlet.ServletUtil.extractHttpHeaders;
 import static org.jboss.resteasy.plugins.server.servlet.ServletUtil.extractUriInfo;
-import static org.sonatype.nexus.siesta.SiestaModule.MOUNT_POINT;
 
 /**
- * Resource Method finder for all the resources loaded through the {@link SiestaModule}, {@link SiestaServlet}
+ * Resource Method finder for all the resources loaded through the {@link SiestaServlet}
  * and {@link ComponentContainer}.
  *
  * @since 3.20
@@ -42,15 +41,17 @@ public class SiestaResourceMethodFinder
 
   private ResteasyDeployment deployment;
 
-  public SiestaResourceMethodFinder(final ComponentContainerImpl componentContainer,
-                                    final ResteasyDeployment deployment)
+  public SiestaResourceMethodFinder(
+      final ComponentContainerImpl componentContainer,
+      final ResteasyDeployment deployment)
   {
     this.componentContainer = requireNonNull(componentContainer);
     this.deployment = requireNonNull(deployment);
   }
 
-  public String getResourceMethodPath(final HttpServletRequest request,
-                                      final HttpServletResponse response)
+  public String getResourceMethodPath(
+      final HttpServletRequest request,
+      final HttpServletResponse response)
   {
     StringBuilder buffer = new StringBuilder();
     ResourceMethodInvoker method = getResourceMethod(request, response);
@@ -68,8 +69,9 @@ public class SiestaResourceMethodFinder
     return cleanForwardSlashes(buffer.toString());
   }
 
-  public ResourceMethodInvoker getResourceMethod(final HttpServletRequest request,
-                                                 final HttpServletResponse response)
+  public ResourceMethodInvoker getResourceMethod(
+      final HttpServletRequest request,
+      final HttpServletResponse response)
   {
     HttpRequest httpRequest = new HttpServletInputMessage(
         request,
@@ -77,18 +79,18 @@ public class SiestaResourceMethodFinder
         request.getServletContext(),
         null,
         extractHttpHeaders(request),
-        extractUriInfo(request, MOUNT_POINT),
+        extractUriInfo(request, SiestaServlet.REST_SERVICE_MP),
         request.getMethod(),
         (SynchronousDispatcher) this.componentContainer.getDispatcher());
 
     return (ResourceMethodInvoker) deployment.getRegistry().getResourceInvoker(httpRequest);
   }
 
-  private String maybePrependWithForwardSlash(final String value) {
+  private static String maybePrependWithForwardSlash(final String value) {
     return value.startsWith("/") ? value : "/" + value;
   }
 
-  private String cleanForwardSlashes(final String s) {
+  private static String cleanForwardSlashes(final String s) {
     return s.replaceAll("//", "/");
   }
 }

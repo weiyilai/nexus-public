@@ -12,11 +12,11 @@
  */
 package org.sonatype.nexus.blobstore.s3.internal;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.log.LogConfigurationCustomizer;
 import org.sonatype.nexus.common.log.LoggerLevel;
+import org.springframework.stereotype.Component;
 
 /**
  * Configures S3 loggers.
@@ -24,7 +24,7 @@ import org.sonatype.nexus.common.log.LoggerLevel;
  * @since 3.14
  */
 @Singleton
-@Named
+@Component
 public class S3LogConfigurationCustomizer
     implements LogConfigurationCustomizer
 {

@@ -23,9 +23,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.BlobStoreUtil;
 import org.sonatype.nexus.common.hash.HashAlgorithm;
@@ -38,10 +37,13 @@ import static com.google.common.collect.Iterables.size;
 import static java.util.function.Function.identity;
 import static org.apache.commons.io.FilenameUtils.separatorsToSystem;
 
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+
 /**
  * @since 3.15
  */
-@Named
+@Component
 @Singleton
 public class BlobStoreUtilImpl
     implements BlobStoreUtil
@@ -49,7 +51,7 @@ public class BlobStoreUtilImpl
   private final RepositoryManager repositoryManager;
 
   @Inject
-  public BlobStoreUtilImpl(final RepositoryManager repositoryManager) {
+  public BlobStoreUtilImpl(@Lazy final RepositoryManager repositoryManager) {
     this.repositoryManager = checkNotNull(repositoryManager);
   }
 
@@ -82,7 +84,8 @@ public class BlobStoreUtilImpl
 
   @Override
   public Map<HashAlgorithm, HashCode> toHashObjects(final Map<String, String> checksums) {
-    return checksums.keySet().stream()
+    return checksums.keySet()
+        .stream()
         .map(HashAlgorithm::getHashAlgorithm)
         .filter(Optional::isPresent)
         .map(Optional::get)

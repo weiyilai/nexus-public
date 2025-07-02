@@ -13,8 +13,7 @@
 package org.sonatype.nexus.plugins.defaultrole;
 
 import javax.annotation.Nullable;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.security.anonymous.AnonymousHelper;
 
@@ -25,16 +24,19 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.eclipse.sisu.Description;
+import org.sonatype.nexus.common.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Realm that adds the specified role to all authenticated users
  *
  * @since 3.22
  */
-@Named(DefaultRoleRealm.NAME)
+@Component
+@Qualifier(DefaultRoleRealm.NAME)
 @Singleton
 @Description("Default Role Realm")
 public class DefaultRoleRealm

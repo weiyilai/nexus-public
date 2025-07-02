@@ -13,9 +13,8 @@
 package org.sonatype.nexus.api.extdirect.selfhosted.atlas;
 
 import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.atlas.SystemInformationGenerator;
 import org.sonatype.nexus.extdirect.DirectComponent;
@@ -28,11 +27,12 @@ import com.softwarementors.extjs.djn.config.annotations.DirectMethod;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
 
 /**
  * System Information {@link DirectComponent}.
  */
-@Named
+@Component
 @Singleton
 @DirectAction(action = "atlas_SystemInformation")
 public class SystemInformationComponent

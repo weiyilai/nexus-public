@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.blobstore.file;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
@@ -23,6 +22,7 @@ import io.swagger.annotations.Api;
 
 import static org.sonatype.nexus.api.rest.selfhosted.blobstore.file.FileBlobStoreApiResourceBeta.RESOURCE_URI;
 import static org.sonatype.nexus.rest.APIConstants.BETA_API_PREFIX;
+import org.springframework.stereotype.Component;
 
 /**
  * beta endpoint for File BlobStore REST API
@@ -31,7 +31,7 @@ import static org.sonatype.nexus.rest.APIConstants.BETA_API_PREFIX;
  * @deprecated moving to {@link FileBlobStoreApiResourceV1}
  */
 @Api(hidden = true)
-@Named
+@Component
 @Singleton
 @Path(RESOURCE_URI)
 @Deprecated

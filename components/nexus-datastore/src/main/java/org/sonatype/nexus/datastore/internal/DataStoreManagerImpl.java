@@ -14,16 +14,18 @@ package org.sonatype.nexus.datastore.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.annotation.Nullable;
 import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.event.EventHelper;
 import org.sonatype.nexus.common.event.EventManager;
@@ -44,15 +46,22 @@ import org.sonatype.nexus.distributed.event.service.api.common.DataStoreConfigur
 import org.sonatype.nexus.jmx.reflect.ManagedObject;
 import org.sonatype.nexus.transaction.TransactionIsolation;
 
-import com.google.inject.Key;
-import org.eclipse.sisu.BeanEntry;
-import org.eclipse.sisu.Mediator;
-import org.eclipse.sisu.inject.BeanLocator;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.Optional.ofNullable;
+import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.STORAGE;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
 import static org.sonatype.nexus.common.text.Strings2.lower;
@@ -62,21 +71,17 @@ import static org.sonatype.nexus.common.text.Strings2.lower;
  *
  * @since 3.19
  */
-@Named
+@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
+@Component
 @Singleton
 @Priority(MAX_VALUE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @ManagedLifecycle(phase = STORAGE)
 @ManagedObject
 public class DataStoreManagerImpl
     extends StateGuardLifecycleSupport
-    implements DataStoreManager, DataSessionSupplier
+    implements DataStoreManager, DataSessionSupplier, ApplicationContextAware
 {
-  private static final Key<Class<DataAccess>> DATA_ACCESS_KEY = new Key<Class<DataAccess>>()
-  {
-    /**/};
-
-  private static final DataAccessMediator DATA_ACCESS_MEDIATOR = new DataAccessMediator();
-
   private final boolean enabled;
 
   private final Map<String, DataStoreDescriptor> dataStoreDescriptors;
@@ -87,8 +92,6 @@ public class DataStoreManagerImpl
 
   private final Provider<DataStoreUsageChecker> usageChecker;
 
-  private final BeanLocator beanLocator;
-
   private final Map<String, DataStore<?>> dataStores = new ConcurrentHashMap<>();
 
   private final DataStoreRestorer restorer;
@@ -97,24 +100,24 @@ public class DataStoreManagerImpl
 
   private volatile boolean frozen;
 
+  private ApplicationContext applicationContext;
+
   @Inject
   public DataStoreManagerImpl(
       final EventManager eventManager,
-      final Map<String, DataStoreDescriptor> dataStoreDescriptors,
-      final Map<String, Provider<DataStore<?>>> dataStorePrototypes,
+      final List<DataStoreDescriptor> dataStoreDescriptorsList,
+      @Qualifier("jdbc") final Provider<DataStore<?>> jdbcPrototype,
       final DataStoreConfigurationManager configurationManager,
       final Provider<DataStoreUsageChecker> usageChecker,
-      @Nullable final DataStoreRestorer restorer,
-      final BeanLocator beanLocator)
+      @Nullable final DataStoreRestorer restorer)
   {
     this.enabled = true;
 
     this.eventManager = checkNotNull(eventManager);
-    this.dataStoreDescriptors = checkNotNull(dataStoreDescriptors);
-    this.dataStorePrototypes = checkNotNull(dataStorePrototypes);
+    this.dataStoreDescriptors = QualifierUtil.buildQualifierBeanMap(checkNotNull(dataStoreDescriptorsList));
+    this.dataStorePrototypes = Map.of("jdbc", jdbcPrototype);
     this.configurationManager = checkNotNull(configurationManager);
     this.usageChecker = checkNotNull(usageChecker);
-    this.beanLocator = checkNotNull(beanLocator);
     this.restorer = restorer;
   }
 
@@ -195,8 +198,7 @@ public class DataStoreManagerImpl
     log.debug("Starting {}", store);
     store.start();
 
-    // register the appropriate access types with the store
-    beanLocator.watch(DATA_ACCESS_KEY, DATA_ACCESS_MEDIATOR, store);
+    register(applicationContext, store);
 
     synchronized (dataStores) {
       if (frozen) {
@@ -360,19 +362,23 @@ public class DataStoreManagerImpl
   }
 
   /**
-   * Dynamically registers/unregisters {@link DataAccess} types with their associated stores.
+   * Dynamically registers {@link DataAccess} types with their associated stores.
    */
-  private static class DataAccessMediator
-      implements Mediator<Named, Class<DataAccess>, DataStore<?>>
-  {
-    @Override
-    public void add(final BeanEntry<Named, Class<DataAccess>> entry, final DataStore<?> store) {
-      store.register(entry.getValue());
-    }
+  @EventListener
+  public void on(final ContextRefreshedEvent event) {
+    dataStores.values().forEach(store -> register(event.getApplicationContext(), store));
+  }
 
-    @Override
-    public void remove(final BeanEntry<Named, Class<DataAccess>> entry, final DataStore<?> store) {
-      store.unregister(entry.getValue());
-    }
+  private void register(final ApplicationContext applicationContext, final DataStore<?> store) {
+    applicationContext.getBeansOfType(DataAccess.class)
+        .values()
+        .stream()
+        .map(DataAccess::getClass)
+        .forEach(store::register);
+  }
+
+  @Override
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+    this.applicationContext = applicationContext;
   }
 }

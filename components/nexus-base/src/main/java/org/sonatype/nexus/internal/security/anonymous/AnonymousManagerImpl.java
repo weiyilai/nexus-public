@@ -12,10 +12,9 @@
  */
 package org.sonatype.nexus.internal.security.anonymous;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Mutex;
@@ -35,13 +34,15 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Default {@link AnonymousManagerImpl}.
  *
  * @since 3.0
  */
-@Named
+@Component
 @Singleton
 @ManagedObject
 public class AnonymousManagerImpl
@@ -62,7 +63,7 @@ public class AnonymousManagerImpl
   public AnonymousManagerImpl(
       final EventManager eventManager,
       final AnonymousConfigurationStore store,
-      @Named("initial") final Provider<AnonymousConfiguration> defaults)
+      @Qualifier("initial") final Provider<AnonymousConfiguration> defaults)
   {
     this.eventManager = checkNotNull(eventManager);
     this.store = checkNotNull(store);

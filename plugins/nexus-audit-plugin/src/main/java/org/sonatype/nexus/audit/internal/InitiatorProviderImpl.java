@@ -12,22 +12,22 @@
  */
 package org.sonatype.nexus.audit.internal;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.audit.InitiatorProvider;
 import org.sonatype.nexus.security.ClientInfo;
 import org.sonatype.nexus.security.ClientInfoProvider;
 import org.sonatype.nexus.security.UserIdHelper;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link InitiatorProvider} implementation.
  *
  * @since 3.1
  */
-@Named
+@Component
 @Singleton
 public class InitiatorProviderImpl
     extends ComponentSupport

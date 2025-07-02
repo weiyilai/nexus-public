@@ -12,21 +12,27 @@
  */
 package org.sonatype.nexus.internal.metrics;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import java.util.List;
+import java.util.Map;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.systemchecks.ConditionallyAppliedHealthCheck;
 
 import com.codahale.metrics.health.HealthCheckRegistry;
-import org.eclipse.sisu.BeanEntry;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
+import org.springframework.stereotype.Component;
 
-@Named
+@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
+@Component
 @Singleton
 @ManagedLifecycle(phase = SERVICES)
 public class ConditionallyAppliedHealthCheckRegistrar
@@ -34,22 +40,21 @@ public class ConditionallyAppliedHealthCheckRegistrar
 {
   private final HealthCheckRegistry healthCheckRegistry;
 
-  private final Iterable<BeanEntry<Named, ConditionallyAppliedHealthCheck>> conditionallyAppliedHealthChecks;
+  private final Map<String, ConditionallyAppliedHealthCheck> conditionallyAppliedHealthChecks;
 
   @Inject
   public ConditionallyAppliedHealthCheckRegistrar(
       final HealthCheckRegistry healthCheckRegistry,
-      final Iterable<BeanEntry<Named, ConditionallyAppliedHealthCheck>> conditionallyAppliedHealthChecks)
+      final List<ConditionallyAppliedHealthCheck> conditionallyAppliedHealthChecksList)
   {
     this.healthCheckRegistry = checkNotNull(healthCheckRegistry);
-    this.conditionallyAppliedHealthChecks = checkNotNull(conditionallyAppliedHealthChecks);
+    this.conditionallyAppliedHealthChecks =
+        QualifierUtil.buildQualifierBeanMap(checkNotNull(conditionallyAppliedHealthChecksList));
   }
 
   @Override
   protected void doStart() throws Exception {
-    conditionallyAppliedHealthChecks.forEach(healthCheckBeanEntry -> {
-      String name = healthCheckBeanEntry.getKey().value();
-      ConditionallyAppliedHealthCheck check = healthCheckBeanEntry.getValue();
+    conditionallyAppliedHealthChecks.forEach((name, check) -> {
       if (check.shouldApply()) {
         healthCheckRegistry.register(name, check);
       }
@@ -58,8 +63,7 @@ public class ConditionallyAppliedHealthCheckRegistrar
 
   @Override
   protected void doStop() throws Exception {
-    conditionallyAppliedHealthChecks.forEach(healthCheckBeanEntry -> {
-      String name = healthCheckBeanEntry.getKey().value();
+    conditionallyAppliedHealthChecks.forEach((name, check) -> {
       healthCheckRegistry.unregister(name);
     });
   }

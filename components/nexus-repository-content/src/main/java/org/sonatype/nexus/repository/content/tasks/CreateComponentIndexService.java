@@ -15,9 +15,8 @@ package org.sonatype.nexus.repository.content.tasks;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
@@ -26,13 +25,14 @@ import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationUtility;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
+import org.springframework.stereotype.Component;
 
 /**
  * Service to remove the older component indexes on repository_id, namespace, name. And add new indexes on
  * repository_id, namespace, name AND version.
  */
 @Singleton
-@Named
+@Component
 public class CreateComponentIndexService
     extends ComponentSupport
 {

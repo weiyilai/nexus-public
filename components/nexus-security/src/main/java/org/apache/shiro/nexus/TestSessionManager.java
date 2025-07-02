@@ -12,14 +12,14 @@
  */
 package org.apache.shiro.nexus;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
 
 import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.session.mgt.SessionValidationScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Custom {@link SessionManager} for tests.
@@ -31,7 +31,7 @@ public class TestSessionManager
 
   @Inject
   public void configureProperties(
-      @Named("${shiro.globalSessionTimeout:-" + DEFAULT_GLOBAL_SESSION_TIMEOUT + "}") final long globalSessionTimeout)
+      @Value("${shiro.globalSessionTimeout:" + DEFAULT_GLOBAL_SESSION_TIMEOUT + "}") final long globalSessionTimeout)
   {
     setGlobalSessionTimeout(globalSessionTimeout);
   }

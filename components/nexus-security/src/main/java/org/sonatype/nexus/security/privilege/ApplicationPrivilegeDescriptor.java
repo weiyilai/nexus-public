@@ -14,9 +14,8 @@ package org.sonatype.nexus.security.privilege;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.i18n.I18N;
 import org.sonatype.goodies.i18n.MessageBundle;
@@ -35,8 +34,9 @@ import org.apache.shiro.authz.Permission;
 import org.springframework.beans.factory.annotation.Value;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED;
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_VALUE;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Application {@link PrivilegeDescriptor}.
@@ -44,7 +44,8 @@ import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_
  * @see ApplicationPermission
  * @since 3.0
  */
-@Named(ApplicationPrivilegeDescriptor.TYPE)
+@Component
+@Qualifier(ApplicationPrivilegeDescriptor.TYPE)
 @Singleton
 public class ApplicationPrivilegeDescriptor
     extends PrivilegeDescriptorSupport<ApiPrivilegeApplication, ApiPrivilegeApplicationRequest>
@@ -87,7 +88,7 @@ public class ApplicationPrivilegeDescriptor
 
   @Inject
   public ApplicationPrivilegeDescriptor(
-      @Named(REACT_PRIVILEGES_NAMED) @Value(REACT_PRIVILEGES_NAMED_VALUE) final boolean isReactPrivileges)
+      @Value(REACT_PRIVILEGES_NAMED_VALUE) final boolean isReactPrivileges)
   {
     super(TYPE);
     this.formFields = ImmutableList.of(

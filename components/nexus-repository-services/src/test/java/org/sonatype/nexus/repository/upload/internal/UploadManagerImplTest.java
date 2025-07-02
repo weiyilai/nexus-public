@@ -14,7 +14,6 @@ package org.sonatype.nexus.repository.upload.internal;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,6 +21,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
@@ -43,18 +43,23 @@ import org.sonatype.nexus.rest.ValidationErrorXO;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 
 import org.apache.commons.fileupload.FileUploadException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import com.google.common.collect.Lists;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.isNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -104,8 +109,11 @@ public class UploadManagerImplTest
   @Captor
   ArgumentCaptor<ComponentUpload> componentUploadCaptor;
 
+  MockedStatic<QualifierUtil> mockedStatic;
+
   @Before
   public void setup() {
+    mockedStatic = Mockito.mockStatic(QualifierUtil.class);
     when(handlerA.supportsApiUpload()).thenReturn(true);
     when(handlerB.supportsApiUpload()).thenReturn(true);
     when(handlerA.getDefinition()).thenReturn(uploadA);
@@ -121,17 +129,20 @@ public class UploadManagerImplTest
     when(repository.getConfiguration()).thenReturn(configuration);
     when(configuration.isOnline()).thenReturn(true);
 
-    Map<String, UploadHandler> handlers = new HashMap<>();
-    handlers.put("a", handlerA);
-    handlers.put("b", handlerB);
-
-    underTest = new UploadManagerImpl(handlers, blobStoreAwareMultipartHelper, uploadComponentProcessor, eventManager,
+    when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(Map.of("a", handlerA, "b", handlerB));
+    underTest = new UploadManagerImpl(List.of(handlerA, handlerB), blobStoreAwareMultipartHelper,
+        uploadComponentProcessor, eventManager,
         Collections.emptySet());
+  }
+
+  @After
+  public void tearDown() {
+    mockedStatic.close();
   }
 
   @Test
   public void testGetAvailable() {
-    assertThat(underTest.getAvailableDefinitions(), contains(uploadA, uploadB));
+    assertThat(underTest.getAvailableDefinitions(), containsInAnyOrder(uploadA, uploadB));
   }
 
   @Test
@@ -223,7 +234,9 @@ public class UploadManagerImplTest
       fail("Expected exception to be thrown");
     }
     catch (ValidationErrorsException exception) {
-      List<String> messages = exception.getValidationErrors().stream().map(ValidationErrorXO::getMessage)
+      List<String> messages = exception.getValidationErrors()
+          .stream()
+          .map(ValidationErrorXO::getMessage)
           .collect(Collectors.toList());
       assertThat(messages, contains(message));
     }

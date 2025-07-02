@@ -16,10 +16,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.blobstore.group.BlobStoreGroup;
@@ -29,11 +28,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 
 import static java.lang.String.format;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Inform on the health of all BlobStores based on their lifecycle state.
  */
-@Named("Blob Stores Ready")
+@Component
+@Qualifier("Blob Stores Ready")
 @Singleton
 public class BlobStoreStateHealthCheck
     extends HealthCheck
@@ -41,8 +43,7 @@ public class BlobStoreStateHealthCheck
   private final Provider<BlobStoreManager> blobStoreManagerProvider;
 
   @Inject
-  public BlobStoreStateHealthCheck(final Provider<BlobStoreManager> blobStoreManagerProvider)
-  {
+  public BlobStoreStateHealthCheck(final Provider<BlobStoreManager> blobStoreManagerProvider) {
     this.blobStoreManagerProvider = Preconditions.checkNotNull(blobStoreManagerProvider);
   }
 
@@ -70,6 +71,6 @@ public class BlobStoreStateHealthCheck
         Iterators.size(blobStoreManagerProvider.get().browse().iterator()),
         String.join("<br>", blobStores));
 
-    return blobStores.isEmpty() ? Result.healthy(message): Result.unhealthy(message);
+    return blobStores.isEmpty() ? Result.healthy(message) : Result.unhealthy(message);
   }
 }

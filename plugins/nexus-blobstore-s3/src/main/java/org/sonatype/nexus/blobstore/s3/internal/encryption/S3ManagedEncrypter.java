@@ -15,24 +15,30 @@ package org.sonatype.nexus.blobstore.s3.internal.encryption;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import javax.inject.Named;
-
 import com.amazonaws.services.s3.model.AbstractPutObjectRequest;
 import com.amazonaws.services.s3.model.CopyObjectRequest;
 import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import static java.util.Optional.ofNullable;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Adds S3 managed encryption to S3 requests.
+ * 
  * @since 3.19
  */
-@Named(S3ManagedEncrypter.ID)
+@Component
+@Qualifier(S3ManagedEncrypter.ID)
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class S3ManagedEncrypter
     implements S3Encrypter
 {
   public static final String ID = "s3ManagedEncryption";
+
   public static final String NAME = "S3 Managed Encryption";
 
   @Override
