@@ -12,14 +12,24 @@
  */
 
 import React from 'react';
-import classNames from 'classnames';
+import { useSref, useRouter } from '@uirouter/react';
 import { NxList } from '@sonatype/react-shared-components';
-import DirectoryListItem from './DirectoryListItem';
+import useIsVisible from '../../../router/useIsVisible';
+import classNames from 'classnames';
 
-import './DirectoryList.scss';
+export default function DirectoryListItem({ text, description, routeName, params, className, ...props }) {
+  const routerState = useRouter().stateRegistry.get(routeName);
+  const isVisible = useIsVisible(routerState.data.visibilityRequirements);
+  const { href } = useSref(routeName, params);
 
-export default function DirectoryList({ className, ...props}) {
-  return <NxList className={classNames('nxrm-directory-list', className)} {...props} />
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <NxList.LinkItem href={href} className={classNames('nxrm-directory-list-item', className)} {...props}>
+      <NxList.Text>{text}</NxList.Text>
+      <NxList.Subtext>{description}</NxList.Subtext>
+    </NxList.LinkItem>
+  );
 }
-
-DirectoryList.DirectoryListItem = DirectoryListItem;

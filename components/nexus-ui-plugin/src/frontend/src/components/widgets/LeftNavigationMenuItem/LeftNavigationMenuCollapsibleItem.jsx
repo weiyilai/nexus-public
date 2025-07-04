@@ -12,54 +12,48 @@
  */
 
 import React from 'react';
-import { faLink } from '@fortawesome/free-solid-svg-icons';
-import { NxGlobalSidebar2NavigationLink } from '@sonatype/react-shared-components';
 import PropTypes from 'prop-types';
-import useNavigationLinkState from '../../hooks/useNavigationLinkState';
-import classnames from 'classnames';
+import { NavigationLinkWithCollapsibleList } from '../NavigationLinkWithCollapsibleList/NavigationLinkWithCollapsibleList';
+import { useNavigationLinkState } from '../../../router/useNavigationLinkState';
 
 /**
  * Left navigation menu item
  *
  * @param name router state name
  * @param text the text to be shown for the link
- * @param icon the icon to be shown for the link
+ * @param icon the icon to be used for the link
  * @param selectedState optional, router state to use for isActive logic. This needs to point to a parent state
  * when the Menu Item should be active for multiple child states.
  * @param params optional, route parameters - needed in order for left nav link to work after refreshing. This is
  * only needed for List/Details pages that are not using ui-router to handle details parameters. This will not be needed
  * once all details pages are using ui-router.
  */
-export default function LeftNavigationMenuItem({ name, text, icon, selectedState, params, ...props }) {
+export function LeftNavigationMenuCollapsibleItem({ name, text, icon, selectedState, params, children, ...props }) {
   const { isVisible, href, isSelected } = useNavigationLinkState(name, selectedState, params);
 
   if (!isVisible) {
     return null;
   }
 
-  if (!href) {
-    console.warn(`LeftNavigationMenuItem -> failed to resolve link information from route name "${name}"`);
-  }
-
-  const classNames = classnames('nxrm-left-nav__link', {
-    'nxrm-left-nav__link--no-icon': !icon,
-  });
   return (
-    <NxGlobalSidebar2NavigationLink
-      className={classNames}
+    <NavigationLinkWithCollapsibleList
       text={text}
       isSelected={isSelected}
       href={href}
-      icon={icon || faLink}
+      icon={icon}
+      name={name}
       {...props}
-    />
+    >
+      {children}
+    </NavigationLinkWithCollapsibleList>
   );
 }
 
-LeftNavigationMenuItem.propTypes = {
+LeftNavigationMenuCollapsibleItem.propTypes = {
   name: PropTypes.string.isRequired,
   text: PropTypes.string.isRequired,
   icon: PropTypes.object,
   selectedState: PropTypes.string,
   params: PropTypes.object,
+  children: PropTypes.node
 };

@@ -61,3 +61,10 @@ export * from './components/layout';
 
 export * from './components/pages/admin/Usage/HistoricalUsageColumns';
 export { default as UnsavedChangesModal } from './components/widgets/UnsavedChangesModal/UnsavedChangesModal';
+
+export { DirectoryList } from './components/widgets/DirectoryList/DirectoryList';
+export { DirectoryPage } from './components/widgets/DirectoryPage/DirectoryPage';
+export { NavigationLinkWithCollapsibleList } from './components/widgets/NavigationLinkWithCollapsibleList/NavigationLinkWithCollapsibleList';
+export { LeftNavigationMenuItem } from './components/widgets/LeftNavigationMenuItem/LeftNavigationMenuItem';
+export { LeftNavigationMenuCollapsibleItem } from './components/widgets/LeftNavigationMenuItem/LeftNavigationMenuCollapsibleItem';
+export { LeftNavigationMenuCollapsibleChildItem } from './components/widgets/LeftNavigationMenuItem/LeftNavigationMenuCollapsibleChildItem';

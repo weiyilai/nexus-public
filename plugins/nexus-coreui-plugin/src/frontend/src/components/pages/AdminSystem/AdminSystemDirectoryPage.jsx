@@ -12,11 +12,9 @@
  */
 
 import UIStrings from '../../../constants/UIStrings';
-import DirectoryList from '../../DirectoryList/DirectoryList';
+import { DirectoryList, DirectoryPage } from '@sonatype/nexus-ui-plugin';
 import React from 'react';
 import { ROUTE_NAMES } from '../../../routerConfig/routeNames/routeNames';
-import DirectoryPage from '../../DirectoryPage/DirectoryPage';
-
 
 export default function AdminSystemDirectoryPage() {
   const ADMIN = ROUTE_NAMES.ADMIN;

@@ -12,10 +12,9 @@
  */
 
 import React from 'react';
+import { DirectoryList, DirectoryPage } from '@sonatype/nexus-ui-plugin';
 import { ROUTE_NAMES } from '../../../routerConfig/routeNames/routeNames';
-import DirectoryPage from '../../DirectoryPage/DirectoryPage';
 import UIStrings from '../../../constants/UIStrings';
-import DirectoryList from '../../DirectoryList/DirectoryList';
 
 export default function AdminSupportDirectoryPage() {
   return (

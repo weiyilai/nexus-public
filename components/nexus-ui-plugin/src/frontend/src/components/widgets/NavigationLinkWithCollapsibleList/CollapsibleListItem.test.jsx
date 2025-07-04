@@ -19,7 +19,7 @@ describe('CollapsibleListItem', () => {
   let renderComponent;
   beforeAll(() => {
     const minimalProps = { text: 'base text', href: 'base href' };
-    renderComponent = props => render(<CollapsibleListItem {...minimalProps} {...props}></CollapsibleListItem>);
+    renderComponent = (props) => render(<CollapsibleListItem {...minimalProps} {...props}></CollapsibleListItem>);
   });
 
   it('renders the link', () => {

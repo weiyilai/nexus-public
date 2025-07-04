@@ -12,9 +12,8 @@
  */
 
 import React from 'react';
-import DirectoryList from '../../DirectoryList/DirectoryList';
+import { DirectoryList, DirectoryPage } from '@sonatype/nexus-ui-plugin';
 import UIStrings from '../../../constants/UIStrings';
-import DirectoryPage from '../../DirectoryPage/DirectoryPage';
 import { ROUTE_NAMES } from '../../../routerConfig/routeNames/routeNames';
 
 export default function AdminRepositoriesDirectoryPage() {

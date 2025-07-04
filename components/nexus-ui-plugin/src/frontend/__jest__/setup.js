@@ -35,3 +35,54 @@ Range.prototype.getBoundingClientRect = jest.fn(() => {
     right: 100
   };
 });
+
+// ExtJS Mocks
+global.Ext = {
+  getApplication: jest.fn().mockReturnValue({
+    getStore: jest.fn().mockReturnValue({
+      on: jest.fn(),
+      un: jest.fn()
+    }),
+    getController: jest.fn().mockReturnValue({
+      on: jest.fn(),
+      un: jest.fn()
+    })
+  }),
+  // keep it async so it's closer to real world behavior, but no need to wait longer than we have to
+  defer: (callback) => setTimeout(callback, 0),
+  isEmpty: jest.fn().mockImplementation((value) => {
+    if (value === undefined || value === null) {
+      return true;
+    } else if (typeof value?.length === 'number') {
+      return value.length === 0;
+    } else {
+      return false;
+    }
+  }),
+  widget: jest.fn()
+};
+
+// ExtJS NX Mocks
+global.NX = {
+  Messages: {
+    success: jest.fn(),
+    error: jest.fn()
+  },
+  Permissions: {
+    check: jest.fn()
+  },
+  app: {
+    Application: {
+      bundleActive: jest.fn()
+    }
+  },
+  State: {
+    getValue: jest.fn(),
+    getUser: jest.fn(),
+    getEdition: jest.fn()
+  },
+  Security: {
+    hasUser: jest.fn(),
+    askToAuthenticate: jest.fn()
+  }
+};

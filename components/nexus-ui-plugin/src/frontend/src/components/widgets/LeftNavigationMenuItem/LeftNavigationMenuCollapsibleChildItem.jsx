@@ -11,58 +11,41 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-import { faLink } from '@fortawesome/free-solid-svg-icons';
 import React from 'react';
 import PropTypes from 'prop-types';
-import NavigationLinkWithCollapsibleList from '../NavigationLinkWithCollapsibleList/NavigationLinkWithCollapsibleList';
-import useNavigationLinkState from '../../hooks/useNavigationLinkState';
+import { NavigationLinkWithCollapsibleList } from '../NavigationLinkWithCollapsibleList/NavigationLinkWithCollapsibleList';
+import { useNavigationLinkState } from '../../../router/useNavigationLinkState';
 
 /**
  * Left navigation menu item
  *
  * @param name router state name
- * @param text the text to be shown for the link
- * @param icon the icon to be used for the link
+ * @param text the text to be displayed for the link
  * @param selectedState optional, router state to use for isActive logic. This needs to point to a parent state
  * when the Menu Item should be active for multiple child states.
  * @param params optional, route parameters - needed in order for left nav link to work after refreshing. This is
  * only needed for List/Details pages that are not using ui-router to handle details parameters. This will not be needed
  * once all details pages are using ui-router.
  */
-export default function LeftNavigationMenuCollapsibleItem({
-  name,
-  text,
-  icon,
-  selectedState,
-  params,
-  children,
-  ...props
-}) {
+export function LeftNavigationMenuCollapsibleChildItem({ name, text, selectedState, params, ...props }) {
   const { isVisible, href, isSelected } = useNavigationLinkState(name, selectedState, params);
 
   if (!isVisible) {
     return null;
   }
 
-  return (
-    <NavigationLinkWithCollapsibleList
-      text={text}
-      isSelected={isSelected}
-      href={href}
-      icon={icon}
-      name={name}
-      {...props}
-    >
-      {children}
-    </NavigationLinkWithCollapsibleList>
-  );
+  if (!href) {
+    console.warn(
+      `LeftNavigationMenuCollapsibleChildItem -> failed to resolve link information from route name "${name}"`
+    );
+  }
+
+  return <NavigationLinkWithCollapsibleList.ListItem text={text} isSelected={isSelected} href={href} {...props} />;
 }
 
-LeftNavigationMenuCollapsibleItem.propTypes = {
+LeftNavigationMenuCollapsibleChildItem.propTypes = {
   name: PropTypes.string.isRequired,
   text: PropTypes.string.isRequired,
-  icon: PropTypes.object,
   selectedState: PropTypes.string,
-  params: PropTypes.object,
-  children: PropTypes.node,
+  params: PropTypes.object
 };

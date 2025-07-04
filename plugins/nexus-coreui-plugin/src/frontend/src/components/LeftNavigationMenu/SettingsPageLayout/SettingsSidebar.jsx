@@ -13,12 +13,13 @@
 import React from 'react';
 import { NxH3, NxPageSidebar } from '@sonatype/react-shared-components';
 import { useCurrentStateAndParams } from '@uirouter/react';
-
-import LeftNavigationMenuCollapsibleItem from '../LeftNavigationMenuCollapsibleItem';
-import LeftNavigationMenuCollapsibleChildItem from '../LeftNavigationMenuCollapsibleChildItem';
+import {
+  LeftNavigationMenuItem,
+  LeftNavigationMenuCollapsibleItem,
+  LeftNavigationMenuCollapsibleChildItem
+} from '@sonatype/nexus-ui-plugin';
 
 import './SettingsPageLayout.scss';
-import LeftNavigationMenuItem from '../LeftNavigationMenuItem';
 import { ROUTE_NAMES } from '../../../routerConfig/routeNames/routeNames';
 import UIStrings from '../../../constants/UIStrings';
 
@@ -26,60 +27,60 @@ export default function SettingsSidebar() {
   const ADMIN = ROUTE_NAMES.ADMIN;
 
   const {
-    state: { name: currentPageName },
+    state: { name: currentPageName }
   } = useCurrentStateAndParams();
 
   return (
-    <NxPageSidebar className='nxrm-settings'>
+    <NxPageSidebar className="nxrm-settings">
       <NxH3>Settings</NxH3>
       {/* === Repository -- Collapsible Menu === */}
       <LeftNavigationMenuCollapsibleItem
         name={ADMIN.REPOSITORY.DIRECTORY}
         text={UIStrings.REPOSITORY_DIRECTORY.MENU.text}
-        data-analytics-id='nxrm-global-secondary-navbar-repository'
+        data-analytics-id="nxrm-global-secondary-navbar-repository"
       >
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.REPOSITORY.REPOSITORIES.ROOT}
           text={UIStrings.REPOSITORIES.MENU.text}
           params={{ itemId: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-repository-repositories'
+          data-analytics-id="nxrm-global-secondary-navbar-repository-repositories"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.REPOSITORY.BLOBSTORES.LIST}
           text={UIStrings.BLOB_STORES.MENU.text}
-          selectedState='admin.repository.blobstores'
-          data-analytics-id='nxrm-global-secondary-navbar-repository-blobstores'
+          selectedState="admin.repository.blobstores"
+          data-analytics-id="nxrm-global-secondary-navbar-repository-blobstores"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.REPOSITORY.DATASTORE.ROOT}
           text={UIStrings.DATASTORE_CONFIGURATION.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-repository-datastore'
+          data-analytics-id="nxrm-global-secondary-navbar-repository-datastore"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.REPOSITORY.PROPRIETARY.ROOT}
           text={UIStrings.PROPRIETARY_REPOSITORIES.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-repository-proprietary'
+          data-analytics-id="nxrm-global-secondary-navbar-repository-proprietary"
         />
         <LeftNavigationMenuCollapsibleChildItem
           selectedState={ADMIN.REPOSITORY.SELECTORS.ROOT}
           name={ADMIN.REPOSITORY.SELECTORS.LIST}
           text={UIStrings.CONTENT_SELECTORS.MENU.text}
           params={{ itemId: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-repository-selectors'
+          data-analytics-id="nxrm-global-secondary-navbar-repository-selectors"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.REPOSITORY.CLEANUPPOLICIES.LIST}
           text={UIStrings.CLEANUP_POLICIES.MENU.text}
           params={{ itemId: null }}
           selectedState={ADMIN.REPOSITORY.CLEANUPPOLICIES.ROOT}
-          data-analytics-id='nxrm-global-secondary-navbar-repository-cleanuppolicies'
+          data-analytics-id="nxrm-global-secondary-navbar-repository-cleanuppolicies"
         />
         <LeftNavigationMenuCollapsibleChildItem
           selectedState={ADMIN.REPOSITORY.ROUTINGRULES.ROOT}
           name={ADMIN.REPOSITORY.ROUTINGRULES.LIST}
           text={UIStrings.ROUTING_RULES.MENU.text}
           params={{ itemId: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-repository-routingrules'
+          data-analytics-id="nxrm-global-secondary-navbar-repository-routingrules"
         />
       </LeftNavigationMenuCollapsibleItem>
 
@@ -87,65 +88,65 @@ export default function SettingsSidebar() {
       <LeftNavigationMenuCollapsibleItem
         name={ADMIN.SECURITY.DIRECTORY}
         text={UIStrings.ADMIN_SECURITY_DIRECTORY.MENU.text}
-        data-analytics-id='nxrm-global-secondary-navbar-security'
+        data-analytics-id="nxrm-global-secondary-navbar-security"
       >
         <LeftNavigationMenuCollapsibleChildItem
           selectedState={ADMIN.SECURITY.PRIVILEGES.ROOT}
           name={ADMIN.SECURITY.PRIVILEGES.LIST}
           text={UIStrings.PRIVILEGES.MENU.text}
           params={{ itemId: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-security-privileges'
+          data-analytics-id="nxrm-global-secondary-navbar-security-privileges"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SECURITY.ROLES.LIST}
           selectedState={ADMIN.SECURITY.ROLES.ROOT}
           text={UIStrings.ROLES.MENU.text}
           params={{ itemId: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-security-roles'
+          data-analytics-id="nxrm-global-secondary-navbar-security-roles"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SECURITY.USERS.ROOT}
           text={UIStrings.USERS.MENU.text}
           params={{ itemId: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-security-users'
+          data-analytics-id="nxrm-global-secondary-navbar-security-users"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SECURITY.ANONYMOUS.ROOT}
           text={UIStrings.ANONYMOUS_SETTINGS.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-security-anonymous'
+          data-analytics-id="nxrm-global-secondary-navbar-security-anonymous"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SECURITY.ATLASSIANCROWD.ROOT}
           text={UIStrings.CROWD_SETTINGS.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-security-atlassiancrowd'
+          data-analytics-id="nxrm-global-secondary-navbar-security-atlassiancrowd"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SECURITY.LDAP.ROOT}
           text={UIStrings.LDAP_SERVERS.MENU.text}
           params={{ itemId: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-security-ldap'
+          data-analytics-id="nxrm-global-secondary-navbar-security-ldap"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SECURITY.REALMS.ROOT}
           text={UIStrings.REALMS.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-security-realms'
+          data-analytics-id="nxrm-global-secondary-navbar-security-realms"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SECURITY.SAML.ROOT}
           text={UIStrings.SAML_CONFIGURATION.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-security-saml'
+          data-analytics-id="nxrm-global-secondary-navbar-security-saml"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SECURITY.SSLCERTIFICATES.LIST}
           text={UIStrings.SSL_CERTIFICATES.MENU.text}
           params={{ itemId: null }}
           selectedState={ADMIN.SECURITY.SSLCERTIFICATES.ROOT}
-          data-analytics-id='nxrm-global-secondary-navbar-security-sslcertificates'
+          data-analytics-id="nxrm-global-secondary-navbar-security-sslcertificates"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SECURITY.USERTOKEN.ROOT}
           text={UIStrings.USER_TOKEN_CONFIGURATION.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-security-usertoken'
+          data-analytics-id="nxrm-global-secondary-navbar-security-usertoken"
         />
       </LeftNavigationMenuCollapsibleItem>
 
@@ -153,41 +154,41 @@ export default function SettingsSidebar() {
       <LeftNavigationMenuCollapsibleItem
         name={ADMIN.SUPPORT.DIRECTORY}
         text={UIStrings.ADMIN_SUPPORT_DIRECTORY.MENU.text}
-        data-analytics-id='nxrm-global-secondary-navbar-support'
+        data-analytics-id="nxrm-global-secondary-navbar-support"
       >
         <LeftNavigationMenuCollapsibleChildItem
           selectedState={ADMIN.SUPPORT.LOGGING.ROOT}
           name={ADMIN.SUPPORT.LOGGING.LIST}
           text={UIStrings.LOGGING.MENU.text}
           params={{ itemId: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-support-logging'
+          data-analytics-id="nxrm-global-secondary-navbar-support-logging"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SUPPORT.LOGS.ROOT}
           text={UIStrings.LOGS.MENU.text}
           params={{ itemId: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-support-logs'
+          data-analytics-id="nxrm-global-secondary-navbar-support-logs"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SUPPORT.STATUS.ROOT}
           text={UIStrings.METRIC_HEALTH.MENU.text}
           params={{ itemId: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-support-status'
+          data-analytics-id="nxrm-global-secondary-navbar-support-status"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SUPPORT.SUPPORTREQUEST.ROOT}
           text={UIStrings.SUPPORT_REQUEST.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-support-supportrequest'
+          data-analytics-id="nxrm-global-secondary-navbar-support-supportrequest"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SUPPORT.SUPPORTZIP.ROOT}
           text={UIStrings.SUPPORT_ZIP.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-support-supportzip'
+          data-analytics-id="nxrm-global-secondary-navbar-support-supportzip"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SUPPORT.SYSTEMINFORMATION.ROOT}
           text={UIStrings.SYSTEM_INFORMATION.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-support-systeminformation'
+          data-analytics-id="nxrm-global-secondary-navbar-support-systeminformation"
         />
       </LeftNavigationMenuCollapsibleItem>
 
@@ -195,56 +196,56 @@ export default function SettingsSidebar() {
       <LeftNavigationMenuCollapsibleItem
         name={ADMIN.SYSTEM.DIRECTORY}
         text={UIStrings.ADMIN_SYSTEM_DIRECTORY.MENU.text}
-        data-analytics-id='nxrm-global-secondary-navbar-system'
+        data-analytics-id="nxrm-global-secondary-navbar-system"
       >
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SYSTEM.API.ROOT}
           text={UIStrings.API.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-system-api'
+          data-analytics-id="nxrm-global-secondary-navbar-system-api"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SYSTEM.CAPABILITIES.ROOT}
           text={UIStrings.CAPABILITIES.MENU.text}
           params={{ id: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-system-capabilities'
+          data-analytics-id="nxrm-global-secondary-navbar-system-capabilities"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SYSTEM.EMAILSERVER.ROOT}
           text={UIStrings.EMAIL_SERVER.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-security-emailserver'
+          data-analytics-id="nxrm-global-secondary-navbar-security-emailserver"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SYSTEM.HTTP.ROOT}
           text={UIStrings.HTTP.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-system-http'
+          data-analytics-id="nxrm-global-secondary-navbar-system-http"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SYSTEM.LICENSING.ROOT}
           text={UIStrings.LICENSING.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-system-licensing'
+          data-analytics-id="nxrm-global-secondary-navbar-system-licensing"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SYSTEM.NODES.ROOT}
           text={UIStrings.NODES.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-system-nodes'
+          data-analytics-id="nxrm-global-secondary-navbar-system-nodes"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SYSTEM.TASKS.ROOT}
           text={UIStrings.TASKS.MENU.text}
           params={{ taskId: null }}
-          data-analytics-id='nxrm-global-secondary-navbar-system-tasks'
+          data-analytics-id="nxrm-global-secondary-navbar-system-tasks"
         />
         <LeftNavigationMenuCollapsibleChildItem
           name={ADMIN.SYSTEM.UPGRADE.ROOT}
           text={UIStrings.UPGRADE.MENU.text}
-          data-analytics-id='nxrm-global-secondary-navbar-system-upgrade'
+          data-analytics-id="nxrm-global-secondary-navbar-system-upgrade"
         />
       </LeftNavigationMenuCollapsibleItem>
 
       <LeftNavigationMenuItem
         text={UIStrings.IQ_SERVER.MENU.text}
         name={ADMIN.IQ.ROOT}
-        data-analytics-id='nxrm-global-secondary-navbar-iq'
+        data-analytics-id="nxrm-global-secondary-navbar-iq"
       />
     </NxPageSidebar>
   );

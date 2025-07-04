@@ -13,15 +13,15 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import NavigationLinkWithCollapsibleList from './NavigationLinkWithCollapsibleList';
+import { NavigationLinkWithCollapsibleList } from './NavigationLinkWithCollapsibleList';
 import { faAirFreshener } from '@fortawesome/free-solid-svg-icons';
 import userEvent from '@testing-library/user-event';
 import { UIRouter, useCurrentStateAndParams } from '@uirouter/react';
-import { getRouter } from '../../routerConfig/routerConfig';
+import { getTestRouter } from '../../../router/testRouter';
 
 jest.mock('@uirouter/react', () => ({
   ...jest.requireActual('@uirouter/react'),
-  useCurrentStateAndParams: jest.fn(),
+  useCurrentStateAndParams: jest.fn()
 }));
 
 describe('NavigationLinkWithCollapsibleList', () => {
@@ -30,9 +30,9 @@ describe('NavigationLinkWithCollapsibleList', () => {
     const minimalProps = { text: 'base text', href: 'base href', icon: faAirFreshener, name: 'router.other.name' };
     renderComponent = (props, children = 'this are some children items') => {
       useCurrentStateAndParams.mockReturnValue({
-        state: { name: 'router.name' },
+        state: { name: 'router.name' }
       });
-      const router = getRouter();
+      const router = getTestRouter();
       return render(
         <UIRouter router={router}>
           <NavigationLinkWithCollapsibleList {...minimalProps} {...props}>
@@ -56,7 +56,7 @@ describe('NavigationLinkWithCollapsibleList', () => {
     expect(expandableList).not.toBeInTheDocument();
   });
 
-  it('opens the list on chevron click and collapses it on second click',  () => {
+  it('opens the list on chevron click and collapses it on second click', () => {
     renderComponent();
     const dropdownButton = screen.getByRole('button', { name: /expand menu/i });
     let expandableList = screen.queryByRole('list');

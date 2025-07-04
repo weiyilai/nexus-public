@@ -21,15 +21,14 @@ import './NavigationLinkWithCollapsibleList.scss';
 import CollapsibleListItem from './CollapsibleListItem';
 import { useCurrentStateAndParams } from '@uirouter/react';
 
-const NavigationLinkWithCollapsibleList = ({ children, text, isSelected, href, icon, name, ...props }) => {
+export function NavigationLinkWithCollapsibleList({ children, text, isSelected, href, icon, name, ...props }) {
   const {
-    state: { name: currentPageName },
+    state: { name: currentPageName }
   } = useCurrentStateAndParams();
   const [isExpanded, setIsExpanded] = useState(currentPageName?.startsWith(name));
   const chevronIcon = isExpanded ? faChevronUp : faChevronDown;
 
-
-  const onChevronClick = e => {
+  const onChevronClick = (e) => {
     e.stopPropagation();
     e.preventDefault();
     setIsExpanded(!isExpanded);
@@ -38,13 +37,13 @@ const NavigationLinkWithCollapsibleList = ({ children, text, isSelected, href, i
   const uniqueId = `collapsible-list-${text}`;
 
   const itemText = (
-    <div className='nxrm-navigation-expandable-link__text'>
+    <div className="nxrm-navigation-expandable-link__text">
       {text}
       <button
         aria-label={isExpanded ? 'Collapse Menu' : 'Expand Menu'}
         aria-expanded={isExpanded}
         aria-controls={uniqueId}
-        className='nxrm-navigation-expandable-link__chevron'
+        className="nxrm-navigation-expandable-link__chevron"
         onClick={onChevronClick}
       >
         <NxFontAwesomeIcon icon={chevronIcon} />
@@ -53,12 +52,12 @@ const NavigationLinkWithCollapsibleList = ({ children, text, isSelected, href, i
   );
 
   const linkClassnames = classnames('nxrm-navigation-expandable-link__navigation-link', {
-    hideIcon: !icon,
+    hideIcon: !icon
   });
 
   const wrapperClasses = classnames('nxrm-navigation-expandable-link', {
     open: isExpanded,
-    collapsed: !isExpanded,
+    collapsed: !isExpanded
   });
 
   useEffect(() => {
@@ -78,7 +77,7 @@ const NavigationLinkWithCollapsibleList = ({ children, text, isSelected, href, i
         {...props}
       />
       <ul
-        className='nxrm-navigation-expandable-link__expandable-list'
+        className="nxrm-navigation-expandable-link__expandable-list"
         aria-hidden={!isExpanded}
         id={uniqueId}
         // Inert is a fairly new standard attribute that prevents the browser from rendering the element and its children
@@ -90,7 +89,7 @@ const NavigationLinkWithCollapsibleList = ({ children, text, isSelected, href, i
       </ul>
     </div>
   );
-};
+}
 
 NavigationLinkWithCollapsibleList.ListItem = CollapsibleListItem;
 
@@ -100,7 +99,5 @@ NavigationLinkWithCollapsibleList.propTypes = {
   icon: PropTypes.object,
   isSelected: PropTypes.bool,
   text: PropTypes.oneOfType([PropTypes.string, PropTypes.element]).isRequired,
-  name: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired
 };
-
-export default NavigationLinkWithCollapsibleList;

@@ -11,33 +11,29 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
+import PropTypes from 'prop-types';
 import React from 'react';
-import { UIView, useCurrentStateAndParams } from '@uirouter/react';
-import { Page } from '@sonatype/nexus-ui-plugin';
-import { NxH1, NxP, NxTile } from '@sonatype/react-shared-components';
+import { NxTextLink } from '@sonatype/react-shared-components';
 
-export default function DirectoryPage(
-    { routeName, text, description, children, ...attr }
-) {
-  const { state } = useCurrentStateAndParams();
-
-  if (state.name !== routeName) {
-    return <UIView />;
-  }
-
+const CollapsibleListItem = ({ text, href, isSelected, ...props }) => {
   return (
-    <Page {...attr}>
-      <NxH1>
+    <li className="nxrm-navigation-expandable-link__expandable-list__item">
+      <NxTextLink
+        href={href}
+        className={`nxrm-navigation-expandable-link__expandable-list__navigation-link ${isSelected ? 'selected' : ''}`}
+        {...props}
+      >
         {text}
-      </NxH1>
-
-      <NxP>{description}</NxP>
-
-      <NxTile>
-        <NxTile.Content>
-          {children}
-        </NxTile.Content>
-      </NxTile>
-    </Page>
+      </NxTextLink>
+    </li>
   );
-}
+};
+
+CollapsibleListItem.propTypes = {
+  href: PropTypes.string.isRequired,
+  isSelected: PropTypes.bool,
+  props: PropTypes.any,
+  text: PropTypes.oneOfType([PropTypes.string, PropTypes.element]).isRequired
+};
+
+export default CollapsibleListItem;

@@ -14,9 +14,9 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { UIRouter } from '@uirouter/react';
-import { getRouter } from '../../routerConfig/routerConfig';
-import LeftNavigationMenuCollapsibleItem from './LeftNavigationMenuCollapsibleItem';
+import { LeftNavigationMenuCollapsibleChildItem } from './LeftNavigationMenuCollapsibleChildItem';
 import { faLink } from '@fortawesome/free-solid-svg-icons';
+import { getTestRouter } from '././../../../router/testRouter';
 
 // This is used by the API view, it's not really something we need to
 // test here, but importing it trips up jest, it's simplest to just bypass it
@@ -25,19 +25,19 @@ jest.mock('swagger-ui-react', () => {
   return jest.fn().mockReturnValue(null);
 });
 
-describe('LeftNavigationMenuCollapsibleItem', () => {
+describe('LeftNavigationMenuCollapsibleChildItem', () => {
   const Application = global.NX.app.Application;
   const Permissions = global.NX.Permissions;
   let router;
 
   beforeEach(() => {
-    router = getRouter();
+    router = getTestRouter();
     givenActiveBundles();
     givenNoPermissions();
   });
 
   it('renders link using default optional props', () => {
-    renderComponent({ name: 'browse.welcome', text: 'Dashboard', icon: {faLink} });
+    renderComponent({ name: 'browse.welcome', text: 'Dashboard', icon: { faLink } });
     const allLinks = screen.getAllByRole('link');
     expect(allLinks.length).toEqual(1);
 
@@ -46,21 +46,21 @@ describe('LeftNavigationMenuCollapsibleItem', () => {
 
   it('renders link as selected when current router state is the same as provided name prop', async () => {
     await router.stateService.go('browse.welcome');
-    renderComponent({ name: 'browse.welcome', text: 'Dashboard', icon: {faLink} });
+    renderComponent({ name: 'browse.welcome', text: 'Dashboard', icon: { faLink } });
     assertLinkVisible('Dashboard', 'http://localhost/#browse/welcome', true);
   });
 
   it('renders link as selected when router state is not the same but matches selectedState prop', async () => {
     givenPermissions({ 'nexus:search:read': true });
     await router.stateService.go('browse.search.generic');
-    renderComponent({ name: 'browse.welcome', selectedState: 'browse', text: 'Dashboard', icon: {faLink} });
+    renderComponent({ name: 'browse.welcome', selectedState: 'browse', text: 'Dashboard', icon: { faLink } });
     assertLinkVisible('Dashboard', 'http://localhost/#browse/welcome', true);
   });
 
   it('renders link as not selected when router state does not match and selectedState prop is not provided', async () => {
     givenPermissions({ 'nexus:search:read': true });
     await router.stateService.go('browse.search.generic');
-    renderComponent({ name: 'browse.welcome', text: 'Dashboard', icon: {faLink} });
+    renderComponent({ name: 'browse.welcome', text: 'Dashboard', icon: { faLink } });
     assertLinkVisible('Dashboard', 'http://localhost/#browse/welcome');
   });
 
@@ -71,26 +71,26 @@ describe('LeftNavigationMenuCollapsibleItem', () => {
       name: 'browse.search.generic',
       params: { keyword: ':foo' },
       text: 'Search',
-      icon: {faLink}
+      icon: { faLink }
     });
     assertLinkVisible('Search', 'http://localhost/#browse/search/generic:foo', true);
   });
 
   it('does not render link if visibility requirements are not met', () => {
-    renderComponent({ name: 'browse.search.generic' });
+    renderComponent({ name: 'browse.search.generic', text: 'Dashboard', icon: { faLink } });
     assertLinkNotVisible();
   });
 
   function renderComponent(props) {
     return render(
       <UIRouter router={router}>
-        <LeftNavigationMenuCollapsibleItem {...props} />
+        <LeftNavigationMenuCollapsibleChildItem {...props} />
       </UIRouter>
     );
   }
 
   function givenActiveBundles(activeBundleState = getDefaultActiveBundleState()) {
-    Application.bundleActive.mockImplementation(key => activeBundleState[key] ?? false);
+    Application.bundleActive.mockImplementation((key) => activeBundleState[key] ?? false);
   }
 
   function getDefaultActiveBundleState() {
@@ -104,7 +104,7 @@ describe('LeftNavigationMenuCollapsibleItem', () => {
   }
 
   function givenPermissions(permissionLookup) {
-    Permissions.check.mockImplementation(key => {
+    Permissions.check.mockImplementation((key) => {
       return permissionLookup[key] ?? false;
     });
   }

@@ -11,29 +11,15 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-import PropTypes from 'prop-types';
 import React from 'react';
-import { NxTextLink } from '@sonatype/react-shared-components';
+import classNames from 'classnames';
+import { NxList } from '@sonatype/react-shared-components';
+import DirectoryListItem from './DirectoryListItem';
 
-const CollapsibleListItem = ({ text, href, isSelected, ...props }) => {
-  return (
-    <li className='nxrm-navigation-expandable-link__expandable-list__item'>
-      <NxTextLink
-        href={href}
-        className={`nxrm-navigation-expandable-link__expandable-list__navigation-link ${isSelected ? 'selected' : ''}`}
-        {...props}
-      >
-        {text}
-      </NxTextLink>
-    </li>
-  );
-};
+import './DirectoryList.scss';
 
-CollapsibleListItem.propTypes = {
-  href: PropTypes.string.isRequired,
-  isSelected: PropTypes.bool,
-  props: PropTypes.any,
-  text: PropTypes.oneOfType([PropTypes.string, PropTypes.element]).isRequired,
-};
+export function DirectoryList({ className, ...props }) {
+  return <NxList className={classNames('nxrm-directory-list', className)} {...props} />;
+}
 
-export default CollapsibleListItem;
+DirectoryList.DirectoryListItem = DirectoryListItem;

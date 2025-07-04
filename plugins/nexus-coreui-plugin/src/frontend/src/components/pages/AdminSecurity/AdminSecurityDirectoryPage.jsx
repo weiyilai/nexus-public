@@ -12,9 +12,8 @@
  */
 
 import React from 'react';
-import DirectoryPage from '../../DirectoryPage/DirectoryPage';
+import { DirectoryList, DirectoryPage } from '@sonatype/nexus-ui-plugin';
 import UIStrings from '../../../constants/UIStrings';
-import DirectoryList from '../../DirectoryList/DirectoryList';
 import { ROUTE_NAMES } from '../../../routerConfig/routeNames/routeNames';
 
 export default function AdminSecurityDirectoryPage() {
