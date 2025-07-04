@@ -12,14 +12,18 @@
  */
 package org.sonatype.nexus.coreui;
 
+import javax.validation.Validator;
+
 import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.common.app.FreezeService;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension.ValidationExecutor;
 
 import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorFactoryImpl;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,10 +32,13 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(ValidationExtension.class)
 class FreezeComponentTest
     extends Test5Support
 {
-  private final ValidationConfiguration configuration = new ValidationConfiguration();
+  @ValidationExecutor
+  private final Validator validator =
+      new ValidationConfiguration().validatorFactory(new ConstraintValidatorFactoryImpl()).getValidator();
 
   FreezeComponent underTest;
 
@@ -41,12 +48,6 @@ class FreezeComponentTest
   @BeforeEach
   void setup() {
     underTest = new FreezeComponent(freezeService);
-    configuration.validator(configuration.validatorFactory(new ConstraintValidatorFactoryImpl()));
-  }
-
-  @AfterEach
-  void teardown() {
-    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
   }
 
   @Test

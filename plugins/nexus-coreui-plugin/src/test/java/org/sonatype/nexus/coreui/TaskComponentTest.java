@@ -19,7 +19,6 @@ import java.util.Map;
 import javax.validation.Validator;
 
 import org.sonatype.goodies.testsupport.Test5Support;
-import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.scheduling.CurrentState;
 import org.sonatype.nexus.scheduling.ExternalTaskState;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
@@ -29,12 +28,12 @@ import org.sonatype.nexus.scheduling.TaskState;
 import org.sonatype.nexus.scheduling.schedule.Manual;
 import org.sonatype.nexus.scheduling.schedule.Schedule;
 import org.sonatype.nexus.scheduling.schedule.Weekly;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
 import jakarta.inject.Provider;
-import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorFactoryImpl;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
 
@@ -48,12 +47,10 @@ import static org.mockito.Mockito.when;
 /**
  * Tests {@link TaskComponent}.
  */
+@ExtendWith(ValidationExtension.class)
 class TaskComponentTest
     extends Test5Support
 {
-  private ValidationConfiguration configuration = new ValidationConfiguration();
-
-  private TaskComponent component;
 
   @Mock(answer = Answers.RETURNS_DEEP_STUBS)
   private TaskScheduler scheduler;
@@ -66,15 +63,11 @@ class TaskComponentTest
 
   private final Provider<Validator> validatorProvider = () -> validator;
 
-  @BeforeEach
-  void setUp() {
-    configuration.validator(configuration.validatorFactory(new ConstraintValidatorFactoryImpl()));
-    component = new TaskComponent(scheduler, validatorProvider, false);
-  }
+  private TaskComponent component;
 
-  @AfterEach
-  void teardown() {
-    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
+  @BeforeEach
+  public void setup() {
+    component = new TaskComponent(scheduler, validatorProvider, false);
   }
 
   @Test

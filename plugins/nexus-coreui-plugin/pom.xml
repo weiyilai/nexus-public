@@ -84,6 +84,12 @@
 
     <dependency>
       <groupId>org.sonatype.nexus</groupId>
+      <artifactId>nexus-test-common</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.sonatype.nexus</groupId>
       <artifactId>nexus-testsupport</artifactId>
       <scope>test</scope>
     </dependency>
@@ -111,7 +117,6 @@
       <artifactId>JUnitParams</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
   <build>

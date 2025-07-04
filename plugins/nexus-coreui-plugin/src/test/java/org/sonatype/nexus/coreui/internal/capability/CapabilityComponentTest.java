@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.sonatype.goodies.testsupport.Test5Support;
-import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.capability.Capability;
 import org.sonatype.nexus.capability.CapabilityContext;
 import org.sonatype.nexus.capability.CapabilityDescriptor;
@@ -26,12 +25,12 @@ import org.sonatype.nexus.capability.CapabilityReference;
 import org.sonatype.nexus.capability.CapabilityRegistry;
 import org.sonatype.nexus.capability.CapabilityType;
 import org.sonatype.nexus.rapture.PasswordPlaceholder;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
 import com.google.common.base.Predicate;
-import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorFactoryImpl;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -51,11 +50,10 @@ import static org.mockito.Mockito.when;
 /**
  * Tests {@link CapabilityComponent}.
  */
+@ExtendWith(ValidationExtension.class)
 class CapabilityComponentTest
     extends Test5Support
 {
-  private final ValidationConfiguration configuration = new ValidationConfiguration();
-
   @Mock
   private CapabilityDescriptorRegistry capabilityDescriptorRegistry;
 
@@ -99,12 +97,6 @@ class CapabilityComponentTest
     lenient().when(capabilityRegistry.update(any(), anyBoolean(), any(), any())).thenReturn(capabilityReference);
     when(capabilityDescriptor.type()).thenReturn(mock(CapabilityType.class));
     when(capability.isPasswordProperty(any())).thenAnswer(i -> "password".equals(i.getArgument(0)));
-    configuration.validator(configuration.validatorFactory(new ConstraintValidatorFactoryImpl()));
-  }
-
-  @AfterEach
-  void teardown() {
-    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
   }
 
   @Test

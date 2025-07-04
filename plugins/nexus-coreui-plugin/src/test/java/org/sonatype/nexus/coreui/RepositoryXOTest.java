@@ -22,12 +22,13 @@ import javax.validation.Validator;
 
 import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension.ValidationExecutor;
 import org.sonatype.nexus.validation.group.Create;
 
 import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorFactoryImpl;
 import org.junit.Test;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -35,22 +36,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
+@ExtendWith(ValidationExtension.class)
 class RepositoryXOTest
     extends Test5Support
 {
-  private ValidationConfiguration configuration = new ValidationConfiguration();
-
-  private Validator validator;
-
-  @BeforeEach
-  void setup() {
-    validator = configuration.validator(configuration.validatorFactory(new ConstraintValidatorFactoryImpl()));
-  }
-
-  @AfterEach
-  void teardown() {
-    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
-  }
+  @ValidationExecutor
+  private final Validator validator =
+      new ValidationConfiguration().validatorFactory(new ConstraintValidatorFactoryImpl()).getValidator();
 
   @Test
   void nameIsAlwaysRequired() {

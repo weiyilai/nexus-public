@@ -12,7 +12,6 @@
  */
 package org.sonatype.nexus.coreui.service;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,10 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import javax.validation.executable.ExecutableValidator;
 
 import org.sonatype.goodies.testsupport.Test5Support;
-import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
 import org.sonatype.nexus.common.app.GlobalComponentLookupHelper;
@@ -47,20 +44,19 @@ import org.sonatype.nexus.repository.security.RepositoryPermissionChecker;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.security.SecurityHelper;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
 import com.google.common.collect.ImmutableMap;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import static java.util.Collections.emptySet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -77,6 +73,7 @@ import static org.sonatype.nexus.coreui.service.RepositoryUiService.INVALID_BLOB
 /**
  * Test for {@link RepositoryUiService}
  */
+@ExtendWith(ValidationExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class RepositoryUiServiceTest
     extends Test5Support
@@ -137,19 +134,6 @@ class RepositoryUiServiceTest
 
   @Mock
   private Map<String, Object> storage;
-
-  @BeforeAll
-  static void initValidator() {
-    ExecutableValidator executableValidator = mock(ExecutableValidator.class);
-    when(executableValidator.validateParameters(any(), any(Method.class), any(), any(Class.class)))
-        .thenReturn(emptySet());
-    ValidationConfiguration.EXECUTABLE_VALIDATOR = executableValidator;
-  }
-
-  @AfterAll
-  static void cleanupValidator() {
-    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
-  }
 
   @BeforeEach
   void setup() {
@@ -305,13 +289,13 @@ class RepositoryUiServiceTest
   }
 
   private Configuration givenRepoConfiguration(
-      String repoName,
-      String formatValue,
-      String recipeName,
-      String blobStoreName,
-      String versionPolicy,
-      String typeValue,
-      boolean isOnline)
+      final String repoName,
+      final String formatValue,
+      final String recipeName,
+      final String blobStoreName,
+      final String versionPolicy,
+      final String typeValue,
+      final boolean isOnline)
   {
     Configuration c = new SimpleConfiguration();
     Recipe recipe = Mockito.mock(Recipe.class);
@@ -369,7 +353,7 @@ class RepositoryUiServiceTest
     return params;
   }
 
-  private static Object getAttribute(final Configuration repository, String path) {
+  private static Object getAttribute(final Configuration repository, final String path) {
     Object currentValue = repository.getAttributes();
     String[] parts = path.split("\\.");
 

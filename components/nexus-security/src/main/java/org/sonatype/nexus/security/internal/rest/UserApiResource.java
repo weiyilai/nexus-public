@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import jakarta.inject.Inject;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -49,6 +49,7 @@ import org.sonatype.nexus.security.user.UserSearchCriteria;
 import org.sonatype.nexus.validation.Validate;
 
 import com.google.common.annotations.VisibleForTesting;
+import jakarta.inject.Inject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;

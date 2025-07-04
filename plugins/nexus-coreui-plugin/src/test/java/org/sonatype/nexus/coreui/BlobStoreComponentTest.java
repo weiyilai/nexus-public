@@ -18,9 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.executable.ExecutableValidator;
-
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.blobstore.BlobStoreDescriptor;
 import org.sonatype.nexus.blobstore.BlobStoreDescriptorProvider;
 import org.sonatype.nexus.blobstore.MockBlobStoreConfiguration;
@@ -28,19 +26,17 @@ import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
-import org.sonatype.nexus.blobstore.api.BlobStoreMetrics;
 import org.sonatype.nexus.blobstore.api.tasks.BlobStoreTaskService;
-import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.rapture.PasswordPlaceholder;
 import org.sonatype.nexus.repository.blobstore.BlobStoreConfigurationStore;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.security.RepositoryPermissionChecker;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Answers;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
@@ -60,8 +56,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(ValidationExtension.class)
 public class BlobStoreComponentTest
-    extends TestSupport
+    extends Test5Support
 {
   @Mock
   private BlobStoreManager blobStoreManager;
@@ -86,16 +83,10 @@ public class BlobStoreComponentTest
 
   private BlobStoreComponent underTest;
 
-  @Before
+  @BeforeEach
   public void setup() {
-    ValidationConfiguration.EXECUTABLE_VALIDATOR = mock(ExecutableValidator.class, Answers.RETURNS_MOCKS);
     underTest = new BlobStoreComponent(blobStoreManager, store, blobStoreDescriptorProvider, List.of(),
         applicationDirectories, repositoryManager, permissionChecker, blobStoreTaskService);
-  }
-
-  @After
-  public void teardown() {
-    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
   }
 
   @Test
@@ -141,7 +132,6 @@ public class BlobStoreComponentTest
 
     BlobStore blobStore = mock(BlobStore.class);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(expectedConfig);
-    when(blobStore.getMetrics()).thenReturn(mock(BlobStoreMetrics.class));
 
     when(blobStoreManager.create(any(BlobStoreConfiguration.class))).thenReturn(blobStore);
     when(blobStoreManager.newConfiguration()).thenReturn(mock(BlobStoreConfiguration.class));
@@ -185,8 +175,6 @@ public class BlobStoreComponentTest
     MockBlobStoreConfiguration config = mockConfig("test", quotaLimitBytes);
 
     BlobStore blobStore = mock(BlobStore.class);
-    when(blobStore.getBlobStoreConfiguration()).thenReturn(config);
-    when(blobStore.getMetrics()).thenReturn(mock(BlobStoreMetrics.class));
     when(blobStoreManager.getByName()).thenReturn(Map.of("test", blobStore));
 
     BlobStoreXO blobStoreXO = underTest.asBlobStoreXO(config);
@@ -232,7 +220,6 @@ public class BlobStoreComponentTest
             Map.of("file", Map.of("path", "path"), "blobStoreQuotaConfig",
                 Map.of("quotaType", "spaceUsedQuota", "quotaLimitBytes", 7)));
     BlobStore blobStore = mock(BlobStore.class);
-    when(blobStore.getBlobStoreConfiguration()).thenReturn(config);
     when(blobStoreManager.getByName()).thenReturn(Map.of("test", blobStore));
 
     BlobStoreXO blobStoreXO = underTest.asBlobStoreXO(config, Collections.emptyList());
@@ -268,7 +255,6 @@ public class BlobStoreComponentTest
 
     BlobStore blobStore = mock(BlobStore.class);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(existingConfig);
-    when(blobStore.getMetrics()).thenReturn(mock(BlobStoreMetrics.class));
 
     when(blobStoreManager.get("myblobs")).thenReturn(blobStore);
     when(blobStoreManager.newConfiguration()).thenReturn(new MockBlobStoreConfiguration());
@@ -305,7 +291,6 @@ public class BlobStoreComponentTest
         .withAttributes(existingAttributes);
     BlobStore blobStore = mock(BlobStore.class);
     when(blobStore.getBlobStoreConfiguration()).thenReturn(existingConfig);
-    when(blobStore.getMetrics()).thenReturn(mock(BlobStoreMetrics.class));
 
     when(blobStoreManager.get("myblobs")).thenReturn(blobStore);
     when(blobStoreManager.newConfiguration()).thenReturn(new MockBlobStoreConfiguration());

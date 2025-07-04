@@ -12,17 +12,21 @@
  */
 package org.sonatype.nexus.coreui;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import javax.validation.Validator;
+
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.email.EmailConfiguration;
 import org.sonatype.nexus.email.EmailManager;
 import org.sonatype.nexus.rapture.PasswordPlaceholder;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension.ValidationExecutor;
 
 import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorFactoryImpl;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -30,16 +34,20 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(ValidationExtension.class)
 public class EmailComponentTest
-    extends TestSupport
+    extends Test5Support
 {
   private static final String ADDRESS = "you@somewhere.com";
 
-  private ValidationConfiguration configuration = new ValidationConfiguration();
+  @ValidationExecutor
+  private final Validator validator =
+      new ValidationConfiguration().validatorFactory(new ConstraintValidatorFactoryImpl()).getValidator();
 
   @Mock
   private EmailManager emailManager;
@@ -49,26 +57,19 @@ public class EmailComponentTest
 
   private EmailConfiguration emailConfiguration;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     emailConfiguration = mock(EmailConfiguration.class);
-    when(emailManager.getConfiguration()).thenReturn(emailConfiguration);
-    when(emailConfiguration.isEnabled()).thenReturn(false);
-    when(emailConfiguration.getHost()).thenReturn("localhost");
-    when(emailConfiguration.getPort()).thenReturn(25);
-    when(emailConfiguration.getFromAddress()).thenReturn("nexus@example.org");
-    when(emailConfiguration.getUsername()).thenReturn("foo");
-    when(emailConfiguration.isStartTlsEnabled()).thenReturn(true);
-    when(emailConfiguration.isStartTlsRequired()).thenReturn(true);
-    when(emailConfiguration.isSslOnConnectEnabled()).thenReturn(true);
-    when(emailConfiguration.getSubjectPrefix()).thenReturn("prefix");
-
-    configuration.validator(configuration.validatorFactory(new ConstraintValidatorFactoryImpl()));
-  }
-
-  @After
-  public void teardown() {
-    ValidationConfiguration.EXECUTABLE_VALIDATOR = null;
+    lenient().when(emailManager.getConfiguration()).thenReturn(emailConfiguration);
+    lenient().when(emailConfiguration.isEnabled()).thenReturn(false);
+    lenient().when(emailConfiguration.getHost()).thenReturn("localhost");
+    lenient().when(emailConfiguration.getPort()).thenReturn(25);
+    lenient().when(emailConfiguration.getFromAddress()).thenReturn("nexus@example.org");
+    lenient().when(emailConfiguration.getUsername()).thenReturn("foo");
+    lenient().when(emailConfiguration.isStartTlsEnabled()).thenReturn(true);
+    lenient().when(emailConfiguration.isStartTlsRequired()).thenReturn(true);
+    lenient().when(emailConfiguration.isSslOnConnectEnabled()).thenReturn(true);
+    lenient().when(emailConfiguration.getSubjectPrefix()).thenReturn("prefix");
   }
 
   @Test

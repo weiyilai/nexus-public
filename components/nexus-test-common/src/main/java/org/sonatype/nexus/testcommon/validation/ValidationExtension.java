@@ -25,6 +25,7 @@ import javax.validation.executable.ExecutableValidator;
 
 import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -60,9 +61,6 @@ public class ValidationExtension
     else if (method != null && Modifier.isStatic(method.getModifiers())) {
       setExecutable(checkNotNull(method.invoke(null)));
     }
-    else if (field == null) {
-      setExecutable(null);
-    }
   }
 
   @Override
@@ -85,12 +83,15 @@ public class ValidationExtension
     else if (method != null && !Modifier.isStatic(method.getModifiers())) {
       setExecutable(checkNotNull(method.invoke(context.getRequiredTestInstance())));
     }
+    else if (ValidationConfiguration.EXECUTABLE_VALIDATOR == null) {
+      setExecutable(null);
+    }
   }
 
   private static Field validationField(final ExtensionContext context) {
     Class<?> testClazz = context.getRequiredTestClass();
 
-    for (Field field : testClazz.getFields()) {
+    for (Field field : FieldUtils.getAllFields(testClazz)) {
       ValidationExecutor executor = field.getAnnotation(ValidationExecutor.class);
       if (executor != null) {
         field.setAccessible(true);
