@@ -39,8 +39,11 @@ public class BrowseNodeMigrationStep_1_38
     this.formats = formats;
   }
 
-  private static String CREATE_PARENT_ID_INDEX = "CREATE INDEX IF NOT EXISTS " +
-      "idx_%s_browse_node_parent_id ON %s_browse_node (parent_id);";
+  private static final String CREATE_PARENT_ID_INDEX_PG = "CREATE INDEX CONCURRENTLY IF NOT EXISTS ";
+
+  private static final String CREATE_PARENT_ID_INDEX_H2 = "CREATE INDEX IF NOT EXISTS ";
+
+  private static final String INDEX_NAME = "idx_%s_browse_node_parent_id ON %s_browse_node (parent_id);";
 
   @Override
   public Optional<String> version() {
@@ -49,8 +52,12 @@ public class BrowseNodeMigrationStep_1_38
 
   @Override
   public void migrate(final Connection connection) throws Exception {
+    String finalIndexClause = isH2(connection)
+        ? CREATE_PARENT_ID_INDEX_H2 + INDEX_NAME
+        : CREATE_PARENT_ID_INDEX_PG + INDEX_NAME;
+
     formats.forEach(format -> executeStatement(connection,
-        String.format(CREATE_PARENT_ID_INDEX, format.getValue(), format.getValue())));
+        String.format(finalIndexClause, format.getValue(), format.getValue())));
   }
 
   private void executeStatement(final Connection connection, final String sqlStatement) {
@@ -61,5 +68,10 @@ public class BrowseNodeMigrationStep_1_38
       log.error("Failed to apply browse_node index change ('{}')", sqlStatement, e);
       throw new RuntimeException(e);
     }
+  }
+
+  @Override
+  public boolean canExecuteInTransaction() {
+    return false; // PostgreSQL does not support concurrent index creation in a transaction
   }
 }

@@ -53,6 +53,8 @@
     CREATE INDEX IF NOT EXISTS idx_${format}_browse_node_component_id
         ON ${format}_browse_node (component_id);
     --
+    -- This index was added via an upgrade step task BrowseNodeMigrationStep_1_38, this is why this is commented out
+    -- CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_${format}_browse_node_parent_id ON ${format}_browse_node (parent_id);
   </insert>
 
   <resultMap id="browseNodeResult" type="BrowseNodeData">
