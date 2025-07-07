@@ -1215,14 +1215,11 @@
                     <exclude>commons-vfs:commons-vfs</exclude>
 
                     <!--
-                    Ban beanutils pre-1.9 which includes embedded commons-collections.
+                    Ban all old commons-beanutils
                     -->
-                    <exclude>commons-beanutils:commons-beanutils:(,1.9]</exclude>
-                    <!--
-                    Ban older commons-beanutils-core use 1.9 simple module instead.
-                    -->
+                    <exclude>commons-beanutils:commons-beanutils</exclude>
                     <exclude>commons-beanutils:commons-beanutils-core</exclude>
-
+                    <exclude>commons-collections:commons-collections</exclude>
                     <!--
                     Security hazard: osvdb-68314
                     -->
