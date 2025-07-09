@@ -1280,6 +1280,8 @@ Ext.define('NX.coreui.app.PluginStrings', {
     Tasks_Update_Success: 'Task updated: {0}',
     Task_TaskSettingsForm_Enabled_FieldLabel: 'Task enabled',
     Task_TaskSettingsForm_Enabled_HelpText: 'This flag determines if the task is currently active.  To disable this task for a period of time, de-select this checkbox.',
+    Task_TaskSettingsForm_Top_Panel_HelpText: 'This task generates recovery plans to reconcile blobstores and their associated repositories. To apply generated plans, run the "Repair - Execute Recovery Plan(s) to Reconcile Component DB with BlobStore" task. You can view created plans using the /v1/reconcile/plan API',
+    Task_TaskSettingsForm_Bottom_Panel_HelpText: 'Tasks do not run automatically after creation. You must manually run the task after saving.',
     Task_TaskSettingsForm_Name_FieldLabel: 'Task name',
     Task_TaskSettingsForm_Name_HelpText: 'A name for the scheduled task',
     Task_TaskSettingsForm_Email_FieldLabel: 'Notification email',

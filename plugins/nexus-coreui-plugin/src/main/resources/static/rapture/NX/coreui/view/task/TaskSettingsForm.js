@@ -43,6 +43,15 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
         name: 'typeId'
       },
       {
+        xtype: 'panel',
+        name: 'topPanel',
+        ui: 'nx-drilldown-message',
+        cls: 'nx-drilldown-info',
+        iconCls: NX.Icons.cls('drilldown-info', 'x16'),
+        title: NX.I18n.format('Task_TaskSettingsForm_Top_Panel_HelpText'),
+        hidden: true
+      },
+      {
         xtype: 'checkbox',
         fieldLabel: NX.I18n.get('Task_TaskSettingsForm_Enabled_FieldLabel'),
         helpText: NX.I18n.get('Task_TaskSettingsForm_Enabled_HelpText'),
@@ -83,6 +92,15 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
       {
         xtype: 'nx-coreui-task-schedulefieldset',
         name: 'taskScheduleTime'
+      },
+      {
+        xtype: 'panel',
+        name: 'bottomPanel',
+        ui: 'nx-drilldown-message',
+        cls: 'nx-drilldown-info',
+        iconCls: NX.Icons.cls('drilldown-info', 'x16'),
+        title: NX.I18n.format('Task_TaskSettingsForm_Bottom_Panel_HelpText'),
+        hidden: true
       }
     ];
 
@@ -319,6 +337,8 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
     return false;
   },
   handlePlanReconcileTask: function (model, me) {
+    me.down('[name="topPanel"]').setHidden(false);
+    me.down('[name="bottomPanel"]').setHidden(false);
     const scopeFieldsSet = me.down('nx-coreui-task-scopefieldset');
     if (scopeFieldsSet) {
       if (model.get('properties') == null) {
