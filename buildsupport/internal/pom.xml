@@ -106,6 +106,15 @@
             <groupId>com.sonatype.insight.scan</groupId>
             <artifactId>insight-scanner-tools</artifactId>
           </exclusion>
+          <!-- Excluding Google dependencies which are also part of the Google Blob Store -->
+          <exclusion>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.auth</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
 
@@ -131,6 +140,44 @@
         <groupId>com.sonatype.insight.scan</groupId>
         <artifactId>insight-scanner-model</artifactId>
         <version>${insight-scanner.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.sonatype.insight.brain</groupId>
+        <artifactId>nexus-iq-cli</artifactId>
+        <version>2.4.4-SNAPSHOT</version>
+        <classifier>core</classifier>
+        <exclusions>
+          <exclusion>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.sisu</groupId>
+            <artifactId>org.eclipse.sisu.inject</artifactId>
+          </exclusion>
+          <!-- Excluding Google dependencies which are also part of the Google Blob Store -->
+          <exclusion>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.auth</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
