@@ -12,9 +12,7 @@
  */
 package org.sonatype.nexus.blobstore.s3.internal;
 
-import java.util.List;
-
-import jakarta.inject.Inject;
+import java.util.Collection;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.StorageLocationManager;
@@ -22,15 +20,14 @@ import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.BucketLifecycleConfiguration;
-import com.amazonaws.services.s3.model.BucketLifecycleConfiguration.Rule;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper.getConfiguredBucket;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.ACCESS_DENIED_CODE;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.INVALID_ACCESS_KEY_ID_CODE;
@@ -41,9 +38,6 @@ import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.buil
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.insufficientCreatePermissionsError;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.invalidIdentityError;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.unexpectedError;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
 /**
  * Creates and deletes buckets for the {@link S3BlobStore}.
@@ -64,9 +58,15 @@ public class BucketManager
 
   private final BucketOwnershipCheckFeatureFlag ownershipCheckFeatureFlag;
 
-  @Inject
-  public BucketManager(final BucketOwnershipCheckFeatureFlag featureFlag) {
+  private final Collection<BucketOperations> bucketOperations;
+
+  @Autowired
+  public BucketManager(
+      final BucketOwnershipCheckFeatureFlag featureFlag,
+      final Collection<BucketOperations> bucketOperations)
+  {
     this.ownershipCheckFeatureFlag = checkNotNull(featureFlag);
+    this.bucketOperations = checkNotNull(bucketOperations);
   }
 
   public void setS3(final AmazonS3 s3) {
@@ -101,27 +101,10 @@ public class BucketManager
     }
     else {
       log.info("Not removing S3 bucket {} because it is not empty", bucket);
-      BucketLifecycleConfiguration lifecycleConfiguration = s3.getBucketLifecycleConfiguration(bucket);
-      List<Rule> nonBlobstoreRules = nonBlobstoreRules(lifecycleConfiguration, blobStoreConfiguration.getName());
-      if (!isEmpty(nonBlobstoreRules)) {
-        lifecycleConfiguration.setRules(nonBlobstoreRules);
-        s3.setBucketLifecycleConfiguration(bucket, lifecycleConfiguration);
-      }
-      else {
-        s3.deleteBucketLifecycleConfiguration(bucket);
-      }
+      bucketOperations.forEach(operation -> {
+        operation.delete(blobStoreConfiguration.getName(), bucket, s3);
+      });
     }
-  }
-
-  private List<Rule> nonBlobstoreRules(final BucketLifecycleConfiguration existing, final String blobStoreName) {
-    List<Rule> rules = existing.getRules();
-    if (rules == null) {
-      return emptyList();
-    }
-    return rules.stream()
-        .filter(r -> !r.getId().equals(LIFECYCLE_EXPIRATION_RULE_ID_PREFIX + blobStoreName) &&
-            !r.getId().equals(OLD_LIFECYCLE_EXPIRATION_RULE_ID))
-        .collect(toList());
   }
 
   private void checkPermissions(final String bucket) {

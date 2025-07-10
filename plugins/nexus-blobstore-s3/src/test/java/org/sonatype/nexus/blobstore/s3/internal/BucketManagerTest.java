@@ -13,7 +13,6 @@
 package org.sonatype.nexus.blobstore.s3.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +24,6 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.BucketLifecycleConfiguration;
-import com.amazonaws.services.s3.model.BucketLifecycleConfiguration.Rule;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -37,9 +35,6 @@ import junitparams.Parameters;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import static org.junit.Assert.assertEquals;
@@ -52,8 +47,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper.BUCKET_KEY;
 import static org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper.CONFIG_KEY;
-import static org.sonatype.nexus.blobstore.s3.internal.BucketManager.LIFECYCLE_EXPIRATION_RULE_ID_PREFIX;
-import static org.sonatype.nexus.blobstore.s3.internal.BucketManager.OLD_LIFECYCLE_EXPIRATION_RULE_ID;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.ACCESS_DENIED_CODE;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.BUCKET_OWNERSHIP_ERR_MSG;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.ERROR_CODE_MESSAGES;
@@ -75,15 +68,15 @@ public class BucketManagerTest
   @Mock
   private BucketOwnershipCheckFeatureFlag featureFlag;
 
-  @Captor
-  private ArgumentCaptor<BucketLifecycleConfiguration> lifeCycleCfgCaptor;
+  @Mock
+  private BucketOperations bucketOperations;
 
-  @InjectMocks
   private BucketManager underTest;
 
   @Before
   public void setup() {
     when(featureFlag.isDisabled()).thenReturn(false);
+    underTest = new BucketManager(featureFlag, List.of(bucketOperations));
     underTest.setS3(s3);
   }
 
@@ -141,18 +134,10 @@ public class BucketManagerTest
   }
 
   @Test
-  @Parameters(named = "ruleSetAndDeleteLifeCycleParams")
-  public void itWillOnlyRemoveNxrmManagedLifeCyclesFromTheBucket(
-      final List<Rule> rules,
-      final int deleteLifeCycleCallCount,
-      final int setLifeCycleCallCount)
-  {
+  public void deleteCallsBucketOperationsImpl() {
     ObjectListing listingMock = mock(ObjectListing.class);
     when(listingMock.getObjectSummaries()).thenReturn(ImmutableList.of(new S3ObjectSummary()));
     when(s3.listObjects(any(ListObjectsRequest.class))).thenReturn(listingMock);
-    BucketLifecycleConfiguration lifeCycleCfg = mock(BucketLifecycleConfiguration.class);
-    when(lifeCycleCfg.getRules()).thenReturn(rules);
-    when(s3.getBucketLifecycleConfiguration(anyString())).thenReturn(lifeCycleCfg);
     underTest.setS3(s3);
 
     BlobStoreConfiguration cfg = new MockBlobStoreConfiguration();
@@ -163,33 +148,7 @@ public class BucketManagerTest
 
     underTest.deleteStorageLocation(cfg);
 
-    verify(s3, times(deleteLifeCycleCallCount)).deleteBucketLifecycleConfiguration(anyString());
-    verify(s3, times(setLifeCycleCallCount)).setBucketLifecycleConfiguration(anyString(),
-        any(BucketLifecycleConfiguration.class));
-  }
-
-  @NamedParameters("ruleSetAndDeleteLifeCycleParams")
-  private Object[] ruleSetAndDeleteLifeCycleParams() {
-    return new Object[]{
-        new Object[]{
-            Collections.emptyList(), 1, 0
-        },
-        new Object[]{
-            ImmutableList.of(oldNxrmRule()), 1, 0
-        },
-        new Object[]{
-            ImmutableList.of(newNxrmRule("my_s3_blob_store")), 1, 0
-        },
-        new Object[]{
-            ImmutableList.of(userRule()), 0, 1
-        },
-        new Object[]{
-            ImmutableList.of(userRule(), oldNxrmRule(), userRule()), 0, 1
-        },
-        new Object[]{
-            ImmutableList.of(userRule(), newNxrmRule("my_s3_blob_store"), userRule()), 0, 1
-        }
-    };
+    verify(bucketOperations).delete("my_s3_blob_store", "mybucket", s3);
   }
 
   @Test
@@ -300,23 +259,4 @@ public class BucketManagerTest
         }
     };
   }
-
-  private Rule userRule() {
-    Rule userRule = mock(Rule.class);
-    when(userRule.getId()).thenReturn("user_rule_id");
-    return userRule;
-  }
-
-  private Rule oldNxrmRule() {
-    Rule oldRule = mock(Rule.class);
-    when(oldRule.getId()).thenReturn(OLD_LIFECYCLE_EXPIRATION_RULE_ID);
-    return oldRule;
-  }
-
-  private Rule newNxrmRule(final String name) {
-    Rule newRule = mock(Rule.class);
-    when(newRule.getId()).thenReturn(LIFECYCLE_EXPIRATION_RULE_ID_PREFIX + name);
-    return newRule;
-  }
-
 }
