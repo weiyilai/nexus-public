@@ -127,6 +127,22 @@
     ORDER BY component_id LIMIT #{limit};
   </select>
 
+  <select id="selectAssetBlobById"
+          resultMap="AssetBlobDataMap">
+    SELECT * FROM ${format}_asset_blob WHERE asset_blob_id = #{assetBlobId}
+  </select>
+
+  <resultMap id="AssetBlobDataMap" type="org.sonatype.nexus.repository.content.store.AssetBlobData">
+    <id     property="assetBlobId"       column="asset_blob_id"/>
+    <result property="blobRef"           column="blob_store_name" typeHandler="org.sonatype.nexus.repository.content.store.BlobRefTypeHandler"/>
+    <result property="blobSize"          column="asset_blob_size"/>
+    <result property="contentType"       column="content_type"/>
+    <result property="blobCreated"       column="blob_created"/>
+    <result property="addedToRepository" column="added_to_repository"/>
+    <result property="createdBy"         column="created_by"/>
+    <result property="createdByIp"       column="created_by_ip"/>
+  </resultMap>
+
   <resultMap id="ComponentDataMap" type="ComponentData">
     <id property="componentId" column="component_id"/>
     <result property="namespace" column="namespace" />
@@ -165,6 +181,11 @@
       <result property="lastUpdated" column="last_updated"/>
       <result property="blobStoreName" column="blob_store_name"/>
       <result property="assetBlobSize" column="asset_blob_size"/>
+      <association property="assetBlob"
+                   javaType="org.sonatype.nexus.repository.content.store.AssetBlobData"
+                   column="asset_blob_id"
+                   select="selectAssetBlobById"
+                   fetchType="lazy"/>
     </collection>
   </resultMap>
 
