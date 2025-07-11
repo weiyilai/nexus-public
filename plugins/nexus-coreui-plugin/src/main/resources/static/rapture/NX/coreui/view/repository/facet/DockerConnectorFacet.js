@@ -30,7 +30,7 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
   initComponent: function () {
     var me = this,
       subdomainVisibility = NX.State.getEdition() === 'PRO';
-
+    // Remove repositoryName lookup here, as the form/field may not exist yet
     me.items = [
       {
         xtype: 'fieldset',
@@ -45,57 +45,136 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
             layout: {
               type: 'hbox',
               align: 'center',
-              pack: 'center'
+              pack: 'center',
             },
             items: [
               {
                 xtype: 'panel',
                 bodypadding: '10px',
                 width: '85%',
-                html: NX.I18n.get('Repository_Facet_DockerConnectorFacet_Help')
-              }
-            ]
+                html: NX.I18n.get('Repository_Facet_DockerConnectorFacet_Help'),
+              },
+            ],
           },
           {
-            xtype: 'checkbox',
-            name: 'attributes.docker.pathEnabled',
-            fieldLabel: NX.I18n.get('Repository_Facet_Docker_PathEnabled_FieldLabel'),
-            helpText: NX.I18n.get('Repository_Facet_Docker_PathEnabledHelpText'),
-            value: false
+            xtype: 'panel',
+            itemId: 'warning',
+            ui: 'nx-drilldown-message',
+            cls: 'nx-drilldown-warning',
+            iconCls: NX.Icons.cls('drilldown-warning', 'x16'),
+            title:
+              '<span style="font-weight:normal;">' +
+              NX.I18n.get('Repository_Facet_Docker_PathEnabled_WarningText') +
+              '</span>',
+            hidden: true, // Hide by default, show only in edit
+            margin: '8 0 4 0', // 10px top and bottom margin
+          },
+          {
+            xtype: 'radiogroup',
+            itemId: 'dockerRoutingMode',
+            fieldLabel: '',
+            columns: 1,
+            vertical: true,
+            items: [
+              {
+                boxLabel:
+                  NX.I18n.get('Repository_Facet_Docker_PathEnabled_FieldLabel') +
+                  '<br>' +
+                  NX.I18n.get('Repository_Facet_Docker_PathEnabled_HelpText'),
+                name: 'attributes.docker.pathEnabled',
+                inputValue: 'true',
+              },
+              {
+                boxLabel:
+                  NX.I18n.get('Repository_Facet_Docker_OtherConnectors_FieldLabel') +
+                  '<br>' +
+                  NX.I18n.get('Repository_Facet_Docker_OtherConnectors_HelpText'),
+                name: 'attributes.docker.pathEnabled',
+                inputValue: 'false',
+              },
+            ],
+            listeners: {
+              change: function (group, newValue) {
+                var form = group.up('form');
+                updateConnectorFields(form, newValue['attributes.docker.pathEnabled']);
+              },
+              afterRender: function () {
+                var group = this;
+                var form = group.up('form');
+                var nameField = form && form.down('#name');
+                var repoName = nameField ? nameField.getValue() : 'repo-name';
+                var items = group.items.items;
+                items.forEach(function (item) {
+                  if (item.boxLabel && item.boxLabel.indexOf('{{repoName}}') !== -1) {
+                    item.setBoxLabel(item.boxLabel.replace('{{repoName}}', repoName || 'repo-name'));
+                  }
+                });
+                var value = group.getValue()['attributes.docker.pathEnabled'];
+                updateConnectorFields(form, value);
+              },
+            },
           },
           subdomainVisibility
             ? {
                 xtype: 'fieldcontainer',
+                style: 'margin-left: 23px;',
                 fieldLabel: NX.I18n.get('Repository_Facet_Docker_Subdomain_FieldLabel'),
                 helpText: NX.I18n.get('Repository_Facet_Docker_Subdomain_HelpText'),
                 layout: 'hbox',
-                items: [me.createCheckbox('subdomain'), me.createSubdomain('subdomain')]
+                items: [me.createCheckbox('subdomain'), me.createSubdomain('subdomain')],
               }
             : undefined,
           {
             xtype: 'fieldcontainer',
+            style: 'margin-left: 23px;',
             fieldLabel: NX.I18n.get('Repository_Facet_DockerConnectorFacet_HttpPort_FieldLabel'),
             helpText: NX.I18n.get('Repository_Facet_DockerConnectorFacet_HttpPort_HelpText'),
             layout: 'hbox',
-            items: [me.createCheckbox('http'), me.createPort('http')]
+            items: [me.createCheckbox('http'), me.createPort('http')],
           },
           {
             xtype: 'fieldcontainer',
+            style: 'margin-left: 23px;',
             fieldLabel: NX.I18n.get('Repository_Facet_DockerConnectorFacet_HttpsPort_FieldLabel'),
             helpText: NX.I18n.get('Repository_Facet_DockerConnectorFacet_HttpsPort_HelpText'),
             layout: 'hbox',
-            items: [me.createCheckbox('https'), me.createPort('https')]
+            items: [me.createCheckbox('https'), me.createPort('https')],
           },
           {
             xtype: 'checkbox',
             name: 'attributes.docker.forceBasicAuth',
             fieldLabel: NX.I18n.get('Repository_Facet_DockerProxyFacet_BasicAuth_FieldLabel'),
             helpText: NX.I18n.get('Repository_Facet_DockerProxyFacet_BasicAuth_BoxLabel'),
-            value: false
-          }
-        ]
-      }
+            value: false,
+          },
+        ],
+      },
     ];
+
+    // Helper to update connector field states
+    function updateConnectorFields(form, isPathEnabled) {
+      var subdomainCheckbox = form.down('#subdomainEnabled');
+      var httpCheckbox = form.down('#httpEnabled');
+      var httpsCheckbox = form.down('#httpsEnabled');
+      var subdomainField = form.down('#subdomainPort');
+      var httpPortField = form.down('#httpPort');
+      var httpsPortField = form.down('#httpsPort');
+      if (isPathEnabled === 'true') {
+        subdomainCheckbox.setDisabled(true);
+        subdomainCheckbox.setValue(false);
+        httpCheckbox.setDisabled(true);
+        httpCheckbox.setValue(false);
+        httpsCheckbox.setDisabled(true);
+        httpsCheckbox.setValue(false);
+        if (subdomainField) subdomainField.setValue('');
+        if (httpPortField) httpPortField.setValue('');
+        if (httpsPortField) httpsPortField.setValue('');
+      } else {
+        subdomainCheckbox.setDisabled(false);
+        httpCheckbox.setDisabled(false);
+        httpsCheckbox.setDisabled(false);
+      }
+    }
 
     Ext.override(me.up('form'), {
       doGetValues: function (values) {
@@ -132,6 +211,10 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
             if (newPrefix === 'attributes.docker.forceBasicAuth') {
               value = !value;
             }
+            // Coerce pathEnabled to string for radiogroup
+            if (newPrefix === 'attributes.docker.pathEnabled') {
+              value = String(value);
+            }
 
             if (Ext.isObject(value)) {
               process(value, newPrefix);
@@ -142,7 +225,13 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
         };
 
         process(values);
-      }
+        // Show warning panel only in edit mode (when doSetValues is called)
+        var form = this;
+        var warningPanel = form.down && form.down('#warning');
+        if (warningPanel) {
+          warningPanel.show();
+        }
+      },
     });
 
     me.callParent();
@@ -166,8 +255,8 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
             port.disable();
           }
           form.isValid();
-        }
-      }
+        },
+      },
     };
   },
 
@@ -184,7 +273,7 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
       disabled: true,
       width: 560,
       style: {
-        marginLeft: '5px'
+        marginLeft: '5px',
       },
       listeners: {
         /**
@@ -196,8 +285,8 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
             checkbox.setValue(true);
             checkbox.resetOriginalValue();
           }
-        }
-      }
+        },
+      },
     };
   },
 
@@ -211,7 +300,7 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
       width: 560,
       vtype: 'nx-subdomain',
       style: {
-        marginLeft: '5px'
+        marginLeft: '5px',
       },
       listeners: {
         /**
@@ -229,8 +318,8 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
             const repositoryName = this.up('form').down('#name').value;
             this.setValue(repositoryName);
           }
-        }
-      }
+        },
+      },
     };
-  }
+  },
 });
