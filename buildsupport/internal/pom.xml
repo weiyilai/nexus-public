@@ -36,7 +36,27 @@
 
   <dependencyManagement>
     <dependencies>
-
+      <dependency>
+        <groupId>com.google.oauth-client</groupId>
+        <artifactId>google-oauth-client-bom</artifactId>
+        <version>1.39.0</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-bom</artifactId>
+        <version>1.47.1</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>com.google.auth</groupId>
+        <artifactId>google-auth-library-bom</artifactId>
+        <version>1.37.1</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
       <!-- licensing -->
 
       <dependency>
@@ -106,15 +126,6 @@
             <groupId>com.sonatype.insight.scan</groupId>
             <artifactId>insight-scanner-tools</artifactId>
           </exclusion>
-          <!-- Excluding Google dependencies which are also part of the Google Blob Store -->
-          <exclusion>
-            <groupId>com.google.http-client</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.auth</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
         </exclusions>
       </dependency>
 
@@ -127,6 +138,12 @@
       <dependency>
         <groupId>com.sonatype.insight.scan</groupId>
         <artifactId>insight-scanner-core</artifactId>
+        <version>${insight-scanner.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.sonatype.insight.scan</groupId>
+        <artifactId>insight-scanner-container-image</artifactId>
         <version>${insight-scanner.version}</version>
       </dependency>
 
@@ -167,15 +184,6 @@
           <exclusion>
             <groupId>org.eclipse.sisu</groupId>
             <artifactId>org.eclipse.sisu.inject</artifactId>
-          </exclusion>
-          <!-- Excluding Google dependencies which are also part of the Google Blob Store -->
-          <exclusion>
-            <groupId>com.google.http-client</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.auth</groupId>
-            <artifactId>*</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
