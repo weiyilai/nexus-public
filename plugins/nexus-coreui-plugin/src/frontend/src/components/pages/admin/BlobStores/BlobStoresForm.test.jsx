@@ -90,6 +90,8 @@ const selectors = {
   queryAvailableMembers: () => screen.getByRole('group', { name: 'Available Blob Stores' }),
   querySelectedMembers: () => screen.getByRole('group', { name: 'Selected Blob Stores' }),
 
+   s3warning: () => screen.queryByText('Some S3 Warning'),
+
   convertModal: {
     modal: () => screen.queryByRole('dialog'),
     title: () => within(selectors.convertModal.modal()).getByRole('heading', { level: 2 }),
@@ -135,6 +137,15 @@ describe('BlobStoresForm', function () {
     useCurrentStateAndParams.mockReturnValue({ state: { name: undefined }, params: {} });
     // Default: with update permission
     givenBlobStoresPermissions({ 'nexus:blobstores:update': true, 'nexus:blobstores:delete': true });
+    window.BlobStoreTypes = {
+    s3: {
+      Warning: () => 'Some S3 Warning',
+    }
+  };
+  });
+
+  afterEach(() => {
+    delete window.BlobStoreTypes;
   });
 
   it('renders the type selection for create', async function () {
@@ -556,5 +567,53 @@ describe('BlobStoresForm', function () {
     // Should disable the delete button
     const deleteButton = screen.getByRole('button', { name: /delete/i });
     expect(deleteButton).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('renders the S3 warning when the S3 type is selected in create', async function () {
+    renderCreateView();
+
+    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+
+    userEvent.selectOptions(selectors.queryTypeSelect(), 's3');
+    expect(selectors.s3warning()).toBeVisible();
+  });
+
+  it('renders the S3 warning when the S3 type is selected in edit', async function () {
+    when(axios.get)
+      .calledWith('service/rest/v1/blobstores/s3/test')
+      .mockResolvedValue({
+        data: {
+          path: 'testPath',
+          softQuota: {
+            type: 'spaceRemainingQuota',
+            limit: SOFT_QUOTA_1_TERABYTE_IN_MEGABYTES,
+          },
+        },
+      });
+    renderEditView('s3/test');
+
+    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+
+    expect(selectors.s3warning()).toBeVisible();
+  });
+
+  it('does not render the S3 warning when the S3 type is selected in edit read only', async function () {
+    when(axios.get)
+      .calledWith('service/rest/v1/blobstores/s3/test')
+      .mockResolvedValue({
+        data: {
+          path: 'testPath',
+          softQuota: {
+            type: 'spaceRemainingQuota',
+            limit: SOFT_QUOTA_1_TERABYTE_IN_MEGABYTES,
+          },
+        },
+      });
+    givenBlobStoresPermissions({ 'nexus:blobstores:update': false });
+    renderEditView('s3/test');
+
+    await waitForElementToBeRemoved(selectors.queryLoadingMask());
+
+    expect(selectors.s3warning()).not.toBeInTheDocument();
   });
 });
