@@ -641,23 +641,6 @@
           </configuration>
         </plugin>
 
-        <!--
-        Generate Pax-Exam test-dependency XML.
-        -->
-        <plugin>
-          <groupId>org.apache.servicemix.tooling</groupId>
-          <artifactId>depends-maven-plugin</artifactId>
-          <version>1.5.0</version>
-          <executions>
-            <execution>
-              <id>generate-depends-file</id>
-              <goals>
-                <goal>generate-depends-file</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-
         <plugin>
           <groupId>org.sonatype.nexus.buildsupport</groupId>
           <artifactId>extjs-maven-plugin</artifactId>
@@ -1828,14 +1811,6 @@
               <artifactId>yuicompressor-maven-plugin</artifactId>
               <configuration>
                 <required>false</required>
-              </configuration>
-            </plugin>
-            <plugin>
-              <!-- Fix for java.lang.IllegalArgumentException: Problem constructing class org.ops4j.pax.exam.junit.PaxExam runner for class -->
-              <groupId>org.apache.servicemix.tooling</groupId>
-              <artifactId>depends-maven-plugin</artifactId>
-              <configuration>
-                <outputFile>${project.build.directory}/test-classes/META-INF/maven/dependencies.properties</outputFile>
               </configuration>
             </plugin>
             <plugin>

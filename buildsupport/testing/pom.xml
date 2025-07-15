@@ -28,7 +28,6 @@
   <packaging>pom</packaging>
 
   <properties>
-    <pax-exam.version>4.13.5</pax-exam.version>
     <testcontainers.version>1.19.1</testcontainers.version>
     <iq.version>1.168.0</iq.version>
 
