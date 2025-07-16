@@ -21,6 +21,7 @@ import org.sonatype.nexus.common.Description;
 import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.security.NexusSimpleAuthenticationInfo;
 import org.sonatype.nexus.security.RealmCaseMapping;
+import org.sonatype.nexus.security.authc.NexusAuthenticationException;
 import org.sonatype.nexus.security.config.CUser;
 import org.sonatype.nexus.security.config.SecurityConfigurationManager;
 import org.sonatype.nexus.security.user.UserNotFoundException;
@@ -152,8 +153,12 @@ public class AuthenticatingRealmImpl
       while (!updated);
       user.setPassword(hashedPassword);
     }
+    catch (NexusAuthenticationException e) {
+      logger.error("Unable to hash password for user {}", user.getId(), e);
+      throw e;
+    }
     catch (Exception e) {
-      logger.error("Unable to update hash for user {}", user.getId(), e);
+      logger.error("Unable to update hashed password for user {}", user.getId(), e);
     }
   }
 
