@@ -20,6 +20,8 @@ import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.email.EmailConfiguration;
 import org.sonatype.nexus.email.EmailManager;
 import org.sonatype.nexus.rapture.PasswordPlaceholder;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension.ValidationExecutor;
 
@@ -40,7 +42,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(ValidationExtension.class)
-public class EmailComponentTest
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class EmailComponentTest
     extends Test5Support
 {
   private static final String ADDRESS = "you@somewhere.com";
@@ -52,14 +56,14 @@ public class EmailComponentTest
   @Mock
   private EmailManager emailManager;
 
+  @Mock
+  private EmailConfiguration emailConfiguration;
+
   @InjectMocks
   private EmailComponent underTest;
 
-  private EmailConfiguration emailConfiguration;
-
   @BeforeEach
-  public void setUp() {
-    emailConfiguration = mock(EmailConfiguration.class);
+  void setUp() {
     lenient().when(emailManager.getConfiguration()).thenReturn(emailConfiguration);
     lenient().when(emailConfiguration.isEnabled()).thenReturn(false);
     lenient().when(emailConfiguration.getHost()).thenReturn("localhost");
@@ -73,7 +77,7 @@ public class EmailComponentTest
   }
 
   @Test
-  public void readReturnsCurrentConfigurationWithPasswordPlaceHolder() {
+  void readReturnsCurrentConfigurationWithPasswordPlaceHolder() {
     when(emailConfiguration.getPassword()).thenReturn(mock(Secret.class));
 
     EmailConfigurationXO actualConfig = underTest.read();
@@ -94,7 +98,7 @@ public class EmailComponentTest
   }
 
   @Test
-  public void readReturnsCurrentConfigurationWithEmptyPasswordPlaceHolder() {
+  void readReturnsCurrentConfigurationWithEmptyPasswordPlaceHolder() {
     when(emailConfiguration.getPassword()).thenReturn(null);
 
     EmailConfigurationXO actualConfig = underTest.read();
@@ -115,7 +119,7 @@ public class EmailComponentTest
   }
 
   @Test
-  public void updateSavesConfiguration() {
+  void updateSavesConfiguration() {
     when(emailManager.newConfiguration()).thenReturn(emailConfiguration);
 
     underTest.update(getConfigurationXO("baz"));
@@ -125,7 +129,7 @@ public class EmailComponentTest
   }
 
   @Test
-  public void sendVerification() throws Exception {
+  void sendVerification() throws Exception {
     EmailConfigurationXO formCredentials = getConfigurationXO("baz");
     EmailConfiguration emailConfig = mock(EmailConfiguration.class);
     when(emailManager.newConfiguration()).thenReturn(emailConfig);

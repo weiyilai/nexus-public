@@ -20,7 +20,7 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.rest.WebApplicationMessageException;
 import org.sonatype.nexus.security.ErrorMessageUtil;
 import org.sonatype.nexus.security.SecuritySystem;
@@ -32,9 +32,13 @@ import org.sonatype.nexus.security.privilege.Privilege;
 import org.sonatype.nexus.security.privilege.PrivilegeDescriptor;
 import org.sonatype.nexus.security.privilege.ReadonlyPrivilegeException;
 import org.sonatype.nexus.security.privilege.WildcardPrivilegeDescriptor;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
@@ -45,14 +49,18 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.security.privilege.rest.ApiPrivilegeApplication.DOMAIN_KEY;
 import static org.sonatype.nexus.security.privilege.rest.ApiPrivilegeWildcard.PATTERN_KEY;
 import static org.sonatype.nexus.security.privilege.rest.ApiPrivilegeWithActions.ACTIONS_KEY;
 
-public class PrivilegeApiResourceTest
-    extends TestSupport
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class PrivilegeApiResourceTest
+    extends Test5Support
 {
   @Mock
   private SecuritySystem securitySystem;
@@ -62,9 +70,9 @@ public class PrivilegeApiResourceTest
 
   private PrivilegeApiResource underTest;
 
-  @Before
-  public void setup() throws Exception {
-    when(securitySystem.getAuthorizationManager("default")).thenReturn(authorizationManager);
+  @BeforeEach
+  void setup() throws Exception {
+    lenient().when(securitySystem.getAuthorizationManager("default")).thenReturn(authorizationManager);
 
     List<PrivilegeDescriptor> privilegeDescriptors = new ArrayList<>();
     privilegeDescriptors.add(new ApplicationPrivilegeDescriptor(false));
@@ -74,7 +82,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testGetPrivileges_eachPrivilegeType_HappyPath() {
+  void testGetPrivileges_eachPrivilegeType_HappyPath() {
     Privilege priv1 = createPrivilege("application", "priv1", "priv1desc", false, DOMAIN_KEY, "testDomain", ACTIONS_KEY,
         "create,read,update,delete");
     Privilege priv2 = createPrivilege("wildcard", "priv2", "priv2desc", true, PATTERN_KEY, "a:pattern");
@@ -91,7 +99,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testGetPrivileges_noPrivileges() {
+  void testGetPrivileges_noPrivileges() {
     when(securitySystem.listPrivileges()).thenReturn(Collections.emptySet());
 
     List<ApiPrivilege> apiPrivileges = new ArrayList<>(underTest.getPrivileges());
@@ -100,7 +108,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testGetPrivilege_application() {
+  void testGetPrivilege_application() {
     Privilege priv = createPrivilege("application", "priv", "privdesc", true, DOMAIN_KEY, "testDomain", ACTIONS_KEY,
         "create,update");
 
@@ -113,7 +121,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testGetPrivilege_wildcard() {
+  void testGetPrivilege_wildcard() {
     Privilege priv = createPrivilege("wildcard", "priv", "privdesc", false, PATTERN_KEY, "a:pattern");
 
     when(authorizationManager.getPrivilegeByName("priv")).thenReturn(priv);
@@ -124,7 +132,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testGetPrivilege_notFound() {
+  void testGetPrivilege_notFound() {
     when(authorizationManager.getPrivilegeByName("priv")).thenThrow(new NoSuchPrivilegeException("priv"));
 
     try {
@@ -140,17 +148,14 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testDeletePrivilege() {
-    Privilege priv = createPrivilege("wildcard", "priv", "privdesc", false, PATTERN_KEY, "a:pattern");
-    when(authorizationManager.getPrivilegeByName("priv")).thenReturn(priv);
-
+  void testDeletePrivilege() {
     underTest.deletePrivilege("priv");
 
     verify(authorizationManager).deletePrivilegeByName("priv");
   }
 
   @Test
-  public void testDeletePrivilege_readOnly() {
+  void testDeletePrivilege_readOnly() {
     doThrow(new ReadonlyPrivilegeException("priv")).when(authorizationManager).deletePrivilegeByName("priv");
 
     try {
@@ -167,7 +172,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testDeletePrivilege_notFound() {
+  void testDeletePrivilege_notFound() {
     doThrow(new NoSuchPrivilegeException("priv")).when(authorizationManager).deletePrivilegeByName("priv");
 
     try {
@@ -183,9 +188,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testCreatePrivilege_application() {
-    when(authorizationManager.getPrivilege("name")).thenThrow(new NoSuchPrivilegeException("name"));
-
+  void testCreatePrivilege_application() {
     ApiPrivilegeApplicationRequest apiPrivilege = new ApiPrivilegeApplicationRequest("name", "description", "domain",
         Arrays.asList(PrivilegeAction.ADD, PrivilegeAction.EDIT, PrivilegeAction.DELETE, PrivilegeAction.READ,
             PrivilegeAction.ASSOCIATE, PrivilegeAction.DISASSOCIATE));
@@ -199,9 +202,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testCreatePrivilege_applicationWithAllAction() {
-    when(authorizationManager.getPrivilege("name")).thenThrow(new NoSuchPrivilegeException("name"));
-
+  void testCreatePrivilege_applicationWithAllAction() {
     ApiPrivilegeApplicationRequest apiPrivilege = new ApiPrivilegeApplicationRequest("name", "description", "domain",
         Collections.singleton(PrivilegeAction.ALL));
 
@@ -213,9 +214,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testCreatePrivilege_wildcard() {
-    when(authorizationManager.getPrivilege("name")).thenThrow(new NoSuchPrivilegeException("name"));
-
+  void testCreatePrivilege_wildcard() {
     ApiPrivilegeWildcardRequest apiPrivilege = new ApiPrivilegeWildcardRequest("name", "description", "pattern");
 
     underTest.createPrivilege(apiPrivilege);
@@ -226,7 +225,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testCreatePrivilege_alreadyExists() {
+  void testCreatePrivilege_alreadyExists() {
     when(authorizationManager.addPrivilege(any())).thenThrow(new DuplicatePrivilegeException("name"));
 
     ApiPrivilegeWildcardRequest apiPrivilege = new ApiPrivilegeWildcardRequest("name", "description", "pattern");
@@ -244,9 +243,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testCreatePrivilege_runActionWithNonScriptPrivilege() {
-    when(authorizationManager.getPrivilege("name")).thenThrow(new NoSuchPrivilegeException("name"));
-
+  void testCreatePrivilege_runActionWithNonScriptPrivilege() {
     ApiPrivilegeApplicationRequest apiPrivilege = new ApiPrivilegeApplicationRequest("name", "description", "domain",
         Arrays.asList(PrivilegeAction.ADD, PrivilegeAction.RUN));
 
@@ -264,7 +261,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testUpdatePrivilege_application() {
+  void testUpdatePrivilege_application() {
     Privilege priv = createPrivilege("application", "priv", "privdesc", false, DOMAIN_KEY, "testDomain", ACTIONS_KEY,
         "*");
     when(authorizationManager.getPrivilegeByName("priv")).thenReturn(priv);
@@ -283,7 +280,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testUpdatePrivilege_wildcard() {
+  void testUpdatePrivilege_wildcard() {
     Privilege priv = createPrivilege("wildcard", "priv", "privdesc", false, PATTERN_KEY, "a:pattern");
     when(authorizationManager.getPrivilegeByName("priv")).thenReturn(priv);
 
@@ -298,7 +295,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testUpdatePrivilege_notFound() {
+  void testUpdatePrivilege_notFound() {
     when(authorizationManager.getPrivilegeByName("priv")).thenThrow(new NoSuchPrivilegeException("priv"));
 
     ApiPrivilegeWildcardRequest apiPrivilege = new ApiPrivilegeWildcardRequest("priv", "description", "pattern");
@@ -316,7 +313,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testUpdatePrivilege_readOnly() {
+  void testUpdatePrivilege_readOnly() {
     Privilege priv = createPrivilege("wildcard", "priv", "privdesc", true, PATTERN_KEY, "a:pattern");
     when(authorizationManager.getPrivilegeByName("priv")).thenReturn(priv);
 
@@ -338,10 +335,7 @@ public class PrivilegeApiResourceTest
   }
 
   @Test
-  public void testUpdatePrivilege_nameConflict() {
-    Privilege priv = createPrivilege("wildcard", "priv", "privdesc", true, PATTERN_KEY, "a:pattern");
-    when(authorizationManager.getPrivilege("priv")).thenReturn(priv);
-
+  void testUpdatePrivilege_nameConflict() {
     ApiPrivilegeWildcardRequest apiPrivilege =
         new ApiPrivilegeWildcardRequest("privnotmatching", "privdesc", "new_pattern");
 
@@ -358,11 +352,11 @@ public class PrivilegeApiResourceTest
     }
   }
 
-  private void assertPrivilege(
-      Privilege privilege,
-      String name,
-      String description,
-      String... properties)
+  private static void assertPrivilege(
+      final Privilege privilege,
+      final String name,
+      final String description,
+      final String... properties)
   {
     assertThat(privilege, notNullValue());
     assertThat(privilege.getName(), is(name));
@@ -375,36 +369,36 @@ public class PrivilegeApiResourceTest
     }
   }
 
-  private void assertApiPrivilegeApplication(
-      ApiPrivilege apiPrivilege,
-      String name,
-      String description,
-      boolean readOnly,
-      String domain,
-      PrivilegeAction... actions)
+  private static void assertApiPrivilegeApplication(
+      final ApiPrivilege apiPrivilege,
+      final String name,
+      final String description,
+      final boolean readOnly,
+      final String domain,
+      final PrivilegeAction... actions)
   {
     assertApiPrivilege(apiPrivilege, ApplicationPrivilegeDescriptor.TYPE, name, description, readOnly);
     assertThat(((ApiPrivilegeApplication) apiPrivilege).getDomain(), is(domain));
     assertThat(((ApiPrivilegeApplication) apiPrivilege).getActions(), containsInAnyOrder(actions));
   }
 
-  private void assertApiPrivilegeWildcard(
-      ApiPrivilege apiPrivilege,
-      String name,
-      String description,
-      boolean readOnly,
-      String pattern)
+  private static void assertApiPrivilegeWildcard(
+      final ApiPrivilege apiPrivilege,
+      final String name,
+      final String description,
+      final boolean readOnly,
+      final String pattern)
   {
     assertApiPrivilege(apiPrivilege, WildcardPrivilegeDescriptor.TYPE, name, description, readOnly);
     assertThat(((ApiPrivilegeWildcard) apiPrivilege).getPattern(), is(pattern));
   }
 
-  private void assertApiPrivilege(
-      ApiPrivilege apiPrivilege,
-      String type,
-      String name,
-      String description,
-      boolean readOnly)
+  private static void assertApiPrivilege(
+      final ApiPrivilege apiPrivilege,
+      final String type,
+      final String name,
+      final String description,
+      final boolean readOnly)
   {
     assertThat(apiPrivilege, notNullValue());
     assertThat(apiPrivilege.getType(), is(type));
@@ -413,12 +407,12 @@ public class PrivilegeApiResourceTest
     assertThat(apiPrivilege.isReadOnly(), is(readOnly));
   }
 
-  private Privilege createPrivilege(
-      String type,
-      String name,
-      String description,
-      boolean readOnly,
-      String... properties)
+  private static Privilege createPrivilege(
+      final String type,
+      final String name,
+      final String description,
+      final boolean readOnly,
+      final String... properties)
   {
     Privilege privilege = new Privilege();
     privilege.setType(type);

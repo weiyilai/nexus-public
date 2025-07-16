@@ -44,6 +44,8 @@ import org.sonatype.nexus.repository.security.RepositoryPermissionChecker;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.security.SecurityHelper;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
 import com.google.common.collect.ImmutableMap;
@@ -73,8 +75,10 @@ import static org.sonatype.nexus.coreui.service.RepositoryUiService.INVALID_BLOB
 /**
  * Test for {@link RepositoryUiService}
  */
-@ExtendWith(ValidationExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
 class RepositoryUiServiceTest
     extends Test5Support
 {

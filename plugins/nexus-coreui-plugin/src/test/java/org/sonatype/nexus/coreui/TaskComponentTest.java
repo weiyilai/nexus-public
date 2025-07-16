@@ -28,6 +28,8 @@ import org.sonatype.nexus.scheduling.TaskState;
 import org.sonatype.nexus.scheduling.schedule.Manual;
 import org.sonatype.nexus.scheduling.schedule.Schedule;
 import org.sonatype.nexus.scheduling.schedule.Weekly;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
 import jakarta.inject.Provider;
@@ -48,10 +50,11 @@ import static org.mockito.Mockito.when;
  * Tests {@link TaskComponent}.
  */
 @ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
 class TaskComponentTest
     extends Test5Support
 {
-
   @Mock(answer = Answers.RETURNS_DEEP_STUBS)
   private TaskScheduler scheduler;
 
@@ -66,7 +69,7 @@ class TaskComponentTest
   private TaskComponent component;
 
   @BeforeEach
-  public void setup() {
+  void setup() {
     component = new TaskComponent(scheduler, validatorProvider, false);
   }
 
@@ -90,7 +93,7 @@ class TaskComponentTest
   }
 
   @Test
-  public void testValidateScriptUpdate_noSourceChange() {
+  void testValidateScriptUpdate_noSourceChange() {
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     taskConfiguration.setString("source", "println 'hello'");
 
@@ -103,7 +106,7 @@ class TaskComponentTest
   }
 
   @Test
-  public void testValidateScriptUpdate_sourceChange_allowCreation() {
+  void testValidateScriptUpdate_sourceChange_allowCreation() {
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     taskConfiguration.setString("source", "println 'hello'");
 
@@ -117,7 +120,7 @@ class TaskComponentTest
   }
 
   @Test
-  public void testValidateScriptUpdate_sourceChange_doNotAllowCreation() {
+  void testValidateScriptUpdate_sourceChange_doNotAllowCreation() {
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     taskConfiguration.setString("source", "println 'hello'");
 
@@ -132,7 +135,7 @@ class TaskComponentTest
   }
 
   @Test
-  public void testNotExposedTaskCannotBeCreated() throws Exception {
+  void testNotExposedTaskCannotBeCreated() throws Exception {
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     taskConfiguration.setString("source", "println 'hello'");
     taskConfiguration.setExposed(false);
@@ -151,7 +154,7 @@ class TaskComponentTest
   }
 
   @Test
-  public void testAppendPlanReconciliationText_NoDryRun() {
+  void testAppendPlanReconciliationText_NoDryRun() {
     TaskConfiguration taskConfiguration = mock(TaskConfiguration.class);
     setupTask(taskConfiguration);
 
@@ -163,7 +166,7 @@ class TaskComponentTest
   }
 
   @Test
-  public void testAppendPlanReconciliationText_DryRun() {
+  void testAppendPlanReconciliationText_DryRun() {
     TaskConfiguration taskConfiguration = mock(TaskConfiguration.class);
     setupTask(taskConfiguration);
     when(taskConfiguration.getBoolean(anyString(), anyBoolean())).thenReturn(true);

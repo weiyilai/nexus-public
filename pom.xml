@@ -971,6 +971,10 @@
               </aspectLibrary>
               <aspectLibrary>
                 <groupId>org.sonatype.nexus</groupId>
+                <artifactId>nexus-security</artifactId>
+              </aspectLibrary>
+              <aspectLibrary>
+                <groupId>org.sonatype.nexus</groupId>
                 <artifactId>nexus-validation</artifactId>
               </aspectLibrary>
             </aspectLibraries>

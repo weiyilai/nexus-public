@@ -48,6 +48,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-core</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
       <groupId>org.sonatype.nexus</groupId>
       <artifactId>nexus-validation</artifactId>
     </dependency>

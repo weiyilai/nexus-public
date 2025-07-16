@@ -79,6 +79,13 @@
     </dependencies>
   </dependencyManagement>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjrt</artifactId>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
       <plugin>
@@ -87,6 +94,11 @@
         <configuration>
           <compilerId>javac</compilerId>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>dev.aspectj</groupId>
+        <artifactId>aspectj-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

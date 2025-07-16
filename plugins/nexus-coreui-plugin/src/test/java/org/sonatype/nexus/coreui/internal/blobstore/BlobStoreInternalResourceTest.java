@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.blobstore.BlobStoreDescriptor;
 import org.sonatype.nexus.blobstore.BlobStoreDescriptorProvider;
 import org.sonatype.nexus.blobstore.MockBlobStoreConfiguration;
@@ -27,30 +27,38 @@ import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.blobstore.api.BlobStoreMetrics;
-import org.sonatype.nexus.blobstore.group.BlobStoreGroup;
 import org.sonatype.nexus.blobstore.file.FileBlobStore;
+import org.sonatype.nexus.blobstore.group.BlobStoreGroup;
 import org.sonatype.nexus.repository.blobstore.BlobStoreConfigurationStore;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class BlobStoreInternalResourceTest
-    extends TestSupport
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class BlobStoreInternalResourceTest
+    extends Test5Support
 {
-  public static final String FILE_TYPE = "File";
+  static final String FILE_TYPE = "File";
 
-  public static final String FILE_TYPE_ID = "file";
+  static final String FILE_TYPE_ID = "file";
 
-  public static final String S3_TYPE = "S3";
+  static final String S3_TYPE = "S3";
 
-  public static final String S3_TYPE_ID = "s3";
+  static final String S3_TYPE_ID = "s3";
 
   @Mock
   private BlobStoreManager blobStoreManager;
@@ -70,13 +78,13 @@ public class BlobStoreInternalResourceTest
 
   private BlobStoreInternalResource underTest;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     addDescriptor(FILE_TYPE, FILE_TYPE_ID);
     addDescriptor(S3_TYPE, S3_TYPE_ID);
     addDescriptor(BlobStoreGroup.TYPE, BlobStoreGroup.CONFIG_KEY);
 
-    when(blobStoreDescriptorProvider.get()).thenReturn(blobStoreDescriptors);
+    lenient().when(blobStoreDescriptorProvider.get()).thenReturn(blobStoreDescriptors);
     when(blobStoreConfigurationStore.list()).thenReturn(configurations);
 
     underTest = new BlobStoreInternalResource(
@@ -84,13 +92,13 @@ public class BlobStoreInternalResourceTest
   }
 
   @Test
-  public void listNoBlobStores() {
+  void listNoBlobStores() {
     List<BlobStoreUIResponse> responses = underTest.listBlobStores();
     assertThat(responses.isEmpty(), is(true));
   }
 
   @Test
-  public void noDataInBlobStoreDescriptorProvider() {
+  void noDataInBlobStoreDescriptorProvider() {
     addBlobStore("fileStore1", FILE_TYPE);
     addBlobStore("s3BlobStore", S3_TYPE);
 
@@ -104,7 +112,7 @@ public class BlobStoreInternalResourceTest
   }
 
   @Test
-  public void listOneBlobStore() {
+  void listOneBlobStore() {
     addBlobStore("fileStore", FILE_TYPE);
 
     List<BlobStoreUIResponse> responses = underTest.listBlobStores();
@@ -120,7 +128,7 @@ public class BlobStoreInternalResourceTest
   }
 
   @Test
-  public void listMultipleBlobStores() {
+  void listMultipleBlobStores() {
     addBlobStore("fileStore1", FILE_TYPE);
     addBlobStore("fileStore2", FILE_TYPE);
     addBlobStore("s3BlobStore", S3_TYPE);
@@ -156,7 +164,7 @@ public class BlobStoreInternalResourceTest
   }
 
   @Test
-  public void listNonStartedBlobStore() {
+  void listNonStartedBlobStore() {
     BlobStore fileBS = addBlobStore("fileStore", FILE_TYPE);
     BlobStore s3BS = addBlobStore("s3BlobStore", S3_TYPE, false);
     addGroupBlobStore("groupBS", BlobStoreGroup.TYPE, true, Arrays.asList(fileBS, s3BS));
@@ -191,9 +199,9 @@ public class BlobStoreInternalResourceTest
     assertThat(response3.isUnavailable(), is(true));
   }
 
-  private void addDescriptor(String type, String typeId) {
+  private void addDescriptor(final String type, final String typeId) {
     BlobStoreDescriptor result = mock(BlobStoreDescriptor.class);
-    when(result.getId()).thenReturn(typeId);
+    lenient().when(result.getId()).thenReturn(typeId);
     blobStoreDescriptors.put(type, result);
   }
 
@@ -207,7 +215,7 @@ public class BlobStoreInternalResourceTest
     BlobStoreMetrics metrics = getBlobStoreMetrics();
     when(bs.isGroupable()).thenReturn(true);
     when(bs.isStarted()).thenReturn(started);
-    when(bs.getMetrics()).thenReturn(metrics);
+    lenient().when(bs.getMetrics()).thenReturn(metrics);
     // add configuration
     MockBlobStoreConfiguration mockBlobStoreConfiguration = new MockBlobStoreConfiguration(name, type);
     Map<String, Map<String, Object>> attributes = new HashMap<>();
@@ -221,21 +229,26 @@ public class BlobStoreInternalResourceTest
     return bs;
   }
 
-  private BlobStoreMetrics getBlobStoreMetrics() {
+  private static BlobStoreMetrics getBlobStoreMetrics() {
     BlobStoreMetrics metrics = mock(BlobStoreMetrics.class);
-    when(metrics.getBlobCount()).thenReturn(1L);
-    when(metrics.getTotalSize()).thenReturn(100L);
-    when(metrics.getAvailableSpace()).thenReturn(1000L);
+    lenient().when(metrics.getBlobCount()).thenReturn(1L);
+    lenient().when(metrics.getTotalSize()).thenReturn(100L);
+    lenient().when(metrics.getAvailableSpace()).thenReturn(1000L);
     return metrics;
   }
 
-  private void addGroupBlobStore(final String name, final String type, final boolean started, List<BlobStore> members) {
+  private void addGroupBlobStore(
+      final String name,
+      final String type,
+      final boolean started,
+      final List<BlobStore> members)
+  {
     // create blobstore and metrics
     BlobStoreGroup groupBlobStore = mock(BlobStoreGroup.class);
     BlobStoreMetrics metrics = getBlobStoreMetrics();
     when(groupBlobStore.isGroupable()).thenReturn(false);
-    when(groupBlobStore.isStarted()).thenReturn(started);
-    when(groupBlobStore.getMetrics()).thenReturn(metrics);
+    lenient().when(groupBlobStore.isStarted()).thenReturn(started);
+    lenient().when(groupBlobStore.getMetrics()).thenReturn(metrics);
 
     when(groupBlobStore.getMembers()).thenReturn(members);
     // add configuration

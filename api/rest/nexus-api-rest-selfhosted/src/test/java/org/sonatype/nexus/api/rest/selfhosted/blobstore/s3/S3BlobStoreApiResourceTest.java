@@ -14,6 +14,7 @@ package org.sonatype.nexus.api.rest.selfhosted.blobstore.s3;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.ws.rs.core.Response;
 
 import org.sonatype.goodies.testsupport.Test5Support;
@@ -31,9 +32,12 @@ import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsFactory;
 import org.sonatype.nexus.rapture.PasswordPlaceholder;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -51,6 +55,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
 class S3BlobStoreApiResourceTest
     extends Test5Support
 {

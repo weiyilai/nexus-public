@@ -12,14 +12,12 @@
  */
 package org.sonatype.nexus.script.plugin.internal.rest;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.rest.WebApplicationMessageException;
 import org.sonatype.nexus.script.Script;
 import org.sonatype.nexus.script.ScriptManager;
@@ -27,29 +25,37 @@ import org.sonatype.nexus.script.plugin.internal.security.ScriptPrivilegeDescrip
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.authz.AuthorizationManager;
 import org.sonatype.nexus.security.privilege.ApplicationPrivilegeDescriptor;
-import org.sonatype.nexus.security.privilege.NoSuchPrivilegeException;
 import org.sonatype.nexus.security.privilege.Privilege;
 import org.sonatype.nexus.security.privilege.PrivilegeDescriptor;
 import org.sonatype.nexus.security.privilege.WildcardPrivilegeDescriptor;
 import org.sonatype.nexus.security.privilege.rest.PrivilegeAction;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.script.plugin.internal.rest.ApiPrivilegeScript.SCRIPT_KEY;
 import static org.sonatype.nexus.security.privilege.rest.ApiPrivilegeWithActions.ACTIONS_KEY;
 
-public class ScriptPrivilegeApiResourceTest
-    extends TestSupport
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class ScriptPrivilegeApiResourceTest
+    extends Test5Support
 {
   @Mock
   private SecuritySystem securitySystem;
@@ -62,11 +68,11 @@ public class ScriptPrivilegeApiResourceTest
 
   private ScriptPrivilegeApiResource underTest;
 
-  @Before
-  public void setup() throws Exception {
-    when(securitySystem.getAuthorizationManager("default")).thenReturn(authorizationManager);
+  @BeforeEach
+  void setup() throws Exception {
+    lenient().when(securitySystem.getAuthorizationManager("default")).thenReturn(authorizationManager);
     when(scriptManager.get(any())).thenReturn(mock(Script.class));
-    when(scriptManager.get("invalid")).thenReturn(null);
+    lenient().when(scriptManager.get("invalid")).thenReturn(null);
 
     List<PrivilegeDescriptor> privilegeDescriptors = new LinkedList<>();
     privilegeDescriptors.add(new ApplicationPrivilegeDescriptor(false));
@@ -76,11 +82,9 @@ public class ScriptPrivilegeApiResourceTest
   }
 
   @Test
-  public void testCreatePrivilege_script() {
-    when(authorizationManager.getPrivilege("name")).thenThrow(new NoSuchPrivilegeException("name"));
-
-    ApiPrivilegeScriptRequest apiPrivilege = new ApiPrivilegeScriptRequest("name", "description", "scriptName", Arrays
-        .asList(PrivilegeAction.BROWSE, PrivilegeAction.READ, PrivilegeAction.DELETE, PrivilegeAction.EDIT,
+  void testCreatePrivilege_script() {
+    ApiPrivilegeScriptRequest apiPrivilege = new ApiPrivilegeScriptRequest("name", "description", "scriptName",
+        List.of(PrivilegeAction.BROWSE, PrivilegeAction.READ, PrivilegeAction.DELETE, PrivilegeAction.EDIT,
             PrivilegeAction.ADD, PrivilegeAction.RUN));
 
     underTest.createPrivilege(apiPrivilege);
@@ -92,11 +96,9 @@ public class ScriptPrivilegeApiResourceTest
   }
 
   @Test
-  public void testCreatePrivilege_scriptWithAllAction() {
-    when(authorizationManager.getPrivilege("name")).thenThrow(new NoSuchPrivilegeException("name"));
-
+  void testCreatePrivilege_scriptWithAllAction() {
     ApiPrivilegeScriptRequest apiPrivilege = new ApiPrivilegeScriptRequest("name", "description", "scriptName",
-        Collections.singleton(PrivilegeAction.ALL));
+        List.of(PrivilegeAction.ALL));
 
     underTest.createPrivilege(apiPrivilege);
 
@@ -106,31 +108,26 @@ public class ScriptPrivilegeApiResourceTest
   }
 
   @Test
-  public void testCreatePrivilege_invalidScript() {
-    when(authorizationManager.getPrivilege("name")).thenThrow(new NoSuchPrivilegeException("name"));
-
+  void testCreatePrivilege_invalidScript() {
     ApiPrivilegeScriptRequest apiPrivilege = new ApiPrivilegeScriptRequest("name", "description", "invalid",
-        Collections.singleton(PrivilegeAction.ALL));
+        List.of(PrivilegeAction.ALL));
 
-    try {
-      underTest.createPrivilege(apiPrivilege);
-    }
-    catch (WebApplicationMessageException e) {
-      assertThat(e.getResponse().getStatus(), is(400));
-      assertThat(e.getResponse().getMediaType(), is(MediaType.APPLICATION_JSON_TYPE));
-      assertThat(e.getResponse().getEntity().toString(),
-          is("ValidationErrorXO{id='*', message='\"Invalid script 'invalid' supplied.\"'}"));
-    }
+    WebApplicationMessageException e =
+        assertThrows(WebApplicationMessageException.class, () -> underTest.createPrivilege(apiPrivilege));
+    assertThat(e.getResponse().getStatus(), is(400));
+    assertThat(e.getResponse().getMediaType(), is(MediaType.APPLICATION_JSON_TYPE));
+    assertThat(e.getResponse().getEntity().toString(),
+        is("ValidationErrorXO{id='*', message='\"Invalid script 'invalid' supplied.\"'}"));
   }
 
   @Test
-  public void testUpdatePrivilege_script() {
+  void testUpdatePrivilege_script() {
     Privilege priv = createPrivilege("script", "priv", "privdesc", false, SCRIPT_KEY, "scriptName", ACTIONS_KEY,
         "read,run");
     when(authorizationManager.getPrivilegeByName("priv")).thenReturn(priv);
 
     ApiPrivilegeScriptRequest apiPrivilege = new ApiPrivilegeScriptRequest("priv", "newdescription", "newScriptName",
-        Collections.singletonList(PrivilegeAction.RUN));
+        List.of(PrivilegeAction.RUN));
 
     underTest.updatePrivilege("priv", apiPrivilege);
 
@@ -140,11 +137,11 @@ public class ScriptPrivilegeApiResourceTest
         "run");
   }
 
-  private void assertPrivilege(
-      Privilege privilege,
-      String name,
-      String description,
-      String... properties)
+  private static void assertPrivilege(
+      final Privilege privilege,
+      final String name,
+      final String description,
+      final String... properties)
   {
     assertThat(privilege, notNullValue());
     assertThat(privilege.getName(), is(name));
@@ -157,12 +154,12 @@ public class ScriptPrivilegeApiResourceTest
     }
   }
 
-  private Privilege createPrivilege(
-      String type,
-      String name,
-      String description,
-      boolean readOnly,
-      String... properties)
+  private static Privilege createPrivilege(
+      final String type,
+      final String name,
+      final String description,
+      final boolean readOnly,
+      final String... properties)
   {
     Privilege privilege = new Privilege();
     privilege.setType(type);

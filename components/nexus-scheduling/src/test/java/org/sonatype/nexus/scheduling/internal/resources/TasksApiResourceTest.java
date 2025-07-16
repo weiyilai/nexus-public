@@ -24,7 +24,7 @@ import java.util.function.Function;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.rest.Page;
 import org.sonatype.nexus.scheduling.CurrentState;
 import org.sonatype.nexus.scheduling.ExternalTaskState;
@@ -34,9 +34,14 @@ import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.scheduling.TaskState;
 import org.sonatype.nexus.scheduling.api.TaskXO;
 import org.sonatype.nexus.scheduling.schedule.Schedule;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 
@@ -49,13 +54,17 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.scheduling.TaskState.OK;
 import static org.sonatype.nexus.scheduling.TaskState.RUNNING;
 import static org.sonatype.nexus.scheduling.TaskState.WAITING;
 
-public class TasksApiResourceTest
-    extends TestSupport
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class TasksApiResourceTest
+    extends Test5Support
 {
   private final TaskConfiguration visibleConfig = configuration(true);
 
@@ -73,16 +82,16 @@ public class TasksApiResourceTest
   @Mock
   private TaskScheduler taskScheduler;
 
+  @InjectMocks
   TasksApiResource tasksResource;
 
-  @Before
-  public void setup() {
-    tasksResource = new TasksApiResource(taskScheduler);
-    when(taskScheduler.getTaskById(any())).thenAnswer(this::findTask);
+  @BeforeEach
+  void setup() {
+    lenient().when(taskScheduler.getTaskById(any())).thenAnswer(this::findTask);
   }
 
   @Test
-  public void testResourceURI() {
+  void testResourceURI() {
     assertThat(TasksApiResource.RESOURCE_URI, is("/v1/tasks"));
   }
 
@@ -90,7 +99,7 @@ public class TasksApiResourceTest
    * getTasks gets list of scheduled tasks
    */
   @Test
-  public void testGetTasks() {
+  void testGetTasks() {
     when( taskScheduler.listsTasks()).thenReturn(Arrays.asList(testTasks));
     when(taskScheduler.toExternalTaskState(any())).thenReturn(new ExternalTaskState(testTasks[1]),
         new ExternalTaskState(testTasks[2]), new ExternalTaskState(testTasks[3]));
@@ -108,7 +117,7 @@ public class TasksApiResourceTest
    * getTasks filters on task type
    */
   @Test
-  public void testGetTasks_taskTypeFilter() {
+  void testGetTasks_taskTypeFilter() {
     when(taskScheduler.listsTasks()).thenReturn(Arrays.asList(testTasks));
     when(taskScheduler.toExternalTaskState(any())).thenReturn(new ExternalTaskState(testTasks[1]),
         new ExternalTaskState(testTasks[3]));
@@ -122,7 +131,7 @@ public class TasksApiResourceTest
    * getTaskById gets tasks by id
    */
   @Test
-  public void testGetTaskById() {
+  void testGetTaskById() {
     when(taskScheduler.toExternalTaskState(any())).thenReturn(new ExternalTaskState(testTasks[1]));
 
     TaskXO validTaskXO = tasksResource.getTaskById("task1");
@@ -134,7 +143,7 @@ public class TasksApiResourceTest
   }
 
   @Test
-  public void testGetTaskById_invalid() {
+  void testGetTaskById_invalid() {
     WebApplicationException exception =
         assertThrows(WebApplicationException.class, () -> tasksResource.getTaskById("nosuchtask"));
 
@@ -145,14 +154,14 @@ public class TasksApiResourceTest
    * run invokes runNow on tasks
    */
   @Test
-  public void testRun() {
+  void testRun() {
     tasksResource.run("task1");
 
     assertThat(findTask("task1").runs, contains("REST API"));
   }
 
   @Test
-  public void testRun_invalidId() {
+  void testRun_invalidId() {
     WebApplicationException exception =
         assertThrows(WebApplicationException.class, () -> tasksResource.run("nosuchtask"));
 
@@ -160,7 +169,7 @@ public class TasksApiResourceTest
   }
 
   @Test
-  public void testRun_error() {
+  void testRun_error() {
     when(taskScheduler.getTaskById(any())).thenThrow(new RuntimeException("error"));
 
     WebApplicationException exception = assertThrows(WebApplicationException.class, () -> tasksResource.run("error"));
@@ -172,7 +181,7 @@ public class TasksApiResourceTest
    * stop cancels running tasks
    */
   @Test
-  public void testStop() {
+  void testStop() {
     tasksResource.stop("task2");
 
     assertThat(findTask("task2").currentState.getFuture().isCancelled(), is(true));
@@ -182,7 +191,7 @@ public class TasksApiResourceTest
    * stop called with valid id for a non-running task
    */
   @Test
-  public void testStop_notRunning() {
+  void testStop_notRunning() {
     WebApplicationException exception = assertThrows(WebApplicationException.class, () -> tasksResource.stop("task1"));
 
     assertThat(Status.fromStatusCode(exception.getResponse().getStatus()), is(CONFLICT));
@@ -190,14 +199,14 @@ public class TasksApiResourceTest
   }
 
   @Test
-  public void testStop_stopOnCompleted() {
+  void testStop_stopOnCompleted() {
     WebApplicationException exception = assertThrows(WebApplicationException.class, () -> tasksResource.stop("task3"));
 
     assertThat(Status.fromStatusCode(exception.getResponse().getStatus()), is(CONFLICT));
   }
 
   @Test
-  public void testStop_invalidId() {
+  void testStop_invalidId() {
     WebApplicationException exception =
         assertThrows(WebApplicationException.class, () -> tasksResource.stop("nosuchtask"));
 
@@ -205,7 +214,7 @@ public class TasksApiResourceTest
   }
 
   @Test
-  public void testStop_error() {
+  void testStop_error() {
     when(taskScheduler.getTaskById(any())).thenThrow(new RuntimeException("error"));
     WebApplicationException exception = assertThrows(WebApplicationException.class, () -> tasksResource.stop("error"));
 

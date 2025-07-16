@@ -36,6 +36,8 @@ import org.sonatype.nexus.security.user.UserManager;
 import org.sonatype.nexus.security.user.UserNotFoundException;
 import org.sonatype.nexus.security.user.UserSearchCriteria;
 import org.sonatype.nexus.security.user.UserStatus;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension.ValidationExecutor;
 
@@ -61,6 +63,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
 class UserApiResourceTest
     extends Test5Support
 {

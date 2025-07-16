@@ -14,28 +14,35 @@ package org.sonatype.nexus.api.rest.selfhosted.security.anonymous;
 
 import java.io.IOException;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.api.rest.selfhosted.security.anonymous.model.AnonymousAccessSettingsXO;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 import org.sonatype.nexus.security.TestAnonymousConfiguration;
 import org.sonatype.nexus.security.anonymous.AnonymousConfiguration;
 import org.sonatype.nexus.security.anonymous.AnonymousManager;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.realm.Realm;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class AnonymousAccessApiResourceTest
-    extends TestSupport
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class AnonymousAccessApiResourceTest
+    extends Test5Support
 {
   @Mock
   private AnonymousManager anonymousManager;
@@ -47,29 +54,29 @@ public class AnonymousAccessApiResourceTest
 
   private AnonymousConfiguration initialAnonymousConfiguration = new TestAnonymousConfiguration();
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     initialAnonymousConfiguration.setEnabled(true);
     initialAnonymousConfiguration.setUserId(AnonymousConfiguration.DEFAULT_USER_ID);
     initialAnonymousConfiguration.setRealmName(AnonymousConfiguration.DEFAULT_REALM_NAME);
 
-    when(anonymousManager.newConfiguration()).thenReturn(initialAnonymousConfiguration);
-    when(anonymousManager.getConfiguration()).thenReturn(initialAnonymousConfiguration);
+    lenient().when(anonymousManager.newConfiguration()).thenReturn(initialAnonymousConfiguration);
+    lenient().when(anonymousManager.getConfiguration()).thenReturn(initialAnonymousConfiguration);
 
     Realm realm = mock(Realm.class);
-    when(realm.getName()).thenReturn(AnonymousConfiguration.DEFAULT_REALM_NAME);
-    when(realmSecurityManager.getRealms()).thenReturn(Lists.newArrayList(realm));
+    lenient().when(realm.getName()).thenReturn(AnonymousConfiguration.DEFAULT_REALM_NAME);
+    lenient().when(realmSecurityManager.getRealms()).thenReturn(Lists.newArrayList(realm));
 
     underTest = new AnonymousAccessApiResource(anonymousManager, realmSecurityManager);
   }
 
   @Test
-  public void testGet() {
+  void testGet() {
     assertThat(underTest.read(), is(new AnonymousAccessSettingsXO(initialAnonymousConfiguration)));
   }
 
   @Test
-  public void testUpdate() {
+  void testUpdate() {
     AnonymousConfiguration newConfiguration = new TestAnonymousConfiguration();
     newConfiguration.setRealmName(AnonymousConfiguration.DEFAULT_REALM_NAME);
     newConfiguration.setUserId(AnonymousConfiguration.DEFAULT_USER_ID);
@@ -80,18 +87,19 @@ public class AnonymousAccessApiResourceTest
     assertThat(underTest.update(xo), is(new AnonymousAccessSettingsXO(newConfiguration)));
   }
 
-  @Test(expected = ValidationErrorsException.class)
-  public void testInvalidRealm() {
+  @Test
+  void testInvalidRealm() {
     AnonymousConfiguration newConfiguration = new TestAnonymousConfiguration();
     newConfiguration.setRealmName("invalidRealmName");
     newConfiguration.setUserId(AnonymousConfiguration.DEFAULT_USER_ID);
     newConfiguration.setEnabled(false);
 
-    underTest.update(new AnonymousAccessSettingsXO(newConfiguration));
+    assertThrows(ValidationErrorsException.class,
+        () -> underTest.update(new AnonymousAccessSettingsXO(newConfiguration)));
   }
 
   @Test
-  public void testDeserialize() throws IOException {
+  void testDeserialize() throws IOException {
     ObjectMapper mapper = new ObjectMapper();
     String value = "{\"enabled\": true }";
     AnonymousAccessSettingsXO settings = mapper.readValue(value.getBytes(), AnonymousAccessSettingsXO.class);

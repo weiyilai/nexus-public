@@ -16,12 +16,16 @@ import java.io.IOException;
 
 import javax.ws.rs.core.Response;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.wonderland.AuthTicketService;
 import org.sonatype.nexus.common.wonderland.DownloadService;
 import org.sonatype.nexus.common.wonderland.DownloadService.Download;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
 import static com.google.common.net.HttpHeaders.CONTENT_DISPOSITION;
@@ -30,8 +34,11 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class DownloadResourceTest
-    extends TestSupport
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class DownloadResourceTest
+    extends Test5Support
 {
   @Mock
   private DownloadService downloadService;
@@ -43,7 +50,7 @@ public class DownloadResourceTest
    * Fix for NEXUS-40992
    */
   @Test
-  public void downloadZipUsesCorrectFileNameHeader() throws IOException {
+  void downloadZipUsesCorrectFileNameHeader() {
     DownloadResource underTest = new DownloadResource(downloadService, authTicketService);
     String fileName = "supportZip-timestamp.zip";
     mockAuthenticatedDownload(fileName);
@@ -53,13 +60,14 @@ public class DownloadResourceTest
     assertThat(response.getHeaderString(CONTENT_DISPOSITION), is("attachment; filename=\"" + fileName + "\""));
   }
 
-  private void mockAuthenticatedDownload(String fileName) {
+  private void mockAuthenticatedDownload(final String fileName) {
     Download mockDownload = mock(Download.class);
     String fileAuthTicket = fileName + "-authTicket";
     when(authTicketService.createTicket()).thenReturn(fileAuthTicket);
     try {
       when(downloadService.get(fileName, fileAuthTicket)).thenReturn(mockDownload);
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       // swallow exception that will never happen
     }
   }

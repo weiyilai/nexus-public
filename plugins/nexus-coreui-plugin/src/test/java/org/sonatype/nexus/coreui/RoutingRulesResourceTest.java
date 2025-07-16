@@ -12,13 +12,11 @@
  */
 package org.sonatype.nexus.coreui;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.entity.DetachedEntityId;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.repository.Repository;
@@ -28,20 +26,26 @@ import org.sonatype.nexus.repository.routing.RoutingRuleHelper;
 import org.sonatype.nexus.repository.routing.RoutingRuleStore;
 import org.sonatype.nexus.repository.routing.internal.RoutingRuleData;
 import org.sonatype.nexus.repository.security.RepositoryPermissionChecker;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class RoutingRulesResourceTest
-  extends TestSupport
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class RoutingRulesResourceTest
+    extends Test5Support
 {
+  @InjectMocks
   private RoutingRulesResource underTest;
 
   @Mock
@@ -65,32 +69,25 @@ public class RoutingRulesResourceTest
 
   private Repository repository3 = repository("repository3");
 
-  @Before
-  public void setup() {
-    underTest = new RoutingRulesResource(routingRuleStore, routingRuleHelper, repositoryPermissionChecker);
-  }
-
   @Test
-  public void testGetRoutingRules_AssignedRepositories() {
-    when(routingRuleStore.list()).thenReturn(Arrays.asList(rule1, rule2, rule3));
+  void testGetRoutingRules_AssignedRepositories() {
+    when(routingRuleStore.list()).thenReturn(List.of(rule1, rule2, rule3));
 
     Map<EntityId,List<Repository>> ruleRepoMap = new HashMap<>();
-    ruleRepoMap.put(new DetachedEntityId("rule1"), Collections.singletonList(repository1));
-    ruleRepoMap.put(new DetachedEntityId("rule2"), Collections.singletonList(repository2));
-    ruleRepoMap.put(new DetachedEntityId("rule3"), Collections.singletonList(repository3));
+    ruleRepoMap.put(new DetachedEntityId("rule1"), List.of(repository1));
+    ruleRepoMap.put(new DetachedEntityId("rule2"), List.of(repository2));
+    ruleRepoMap.put(new DetachedEntityId("rule3"), List.of(repository3));
 
     when(routingRuleHelper.calculateAssignedRepositories()).thenReturn(ruleRepoMap);
 
-    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(Arrays.asList(repository1), "read"))
-        .thenReturn(Arrays.asList(repository1));
+    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(List.of(repository1), "read"))
+        .thenReturn(List.of(repository1));
 
-    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(Arrays.asList(repository2), "read"))
-        .thenReturn(Arrays.asList(repository2));
+    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(List.of(repository2), "read"))
+        .thenReturn(List.of(repository2));
 
-    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(Arrays.asList(repository3), "read"))
-        .thenReturn(Arrays.asList(repository3));
-
-    when(repositoryPermissionChecker.userCanReadOrBrowse(any())).thenReturn(true);
+    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(List.of(repository3), "read"))
+        .thenReturn(List.of(repository3));
 
     List<RoutingRuleXO> xos = underTest.getRoutingRules(true);
 
@@ -101,13 +98,13 @@ public class RoutingRulesResourceTest
   }
 
   @Test
-  public void testGetRoutingRules_NoAssignedRepositories() {
-    when(routingRuleStore.list()).thenReturn(Arrays.asList(rule1, rule2, rule3));
+  void testGetRoutingRules_NoAssignedRepositories() {
+    when(routingRuleStore.list()).thenReturn(List.of(rule1, rule2, rule3));
 
     Map<EntityId,List<Repository>> ruleRepoMap = new HashMap<>();
-    ruleRepoMap.put(new DetachedEntityId("rule1"), Collections.emptyList());
-    ruleRepoMap.put(new DetachedEntityId("rule2"), Collections.emptyList());
-    ruleRepoMap.put(new DetachedEntityId("rule3"), Collections.emptyList());
+    ruleRepoMap.put(new DetachedEntityId("rule1"), List.of());
+    ruleRepoMap.put(new DetachedEntityId("rule2"), List.of());
+    ruleRepoMap.put(new DetachedEntityId("rule3"), List.of());
 
     when(routingRuleHelper.calculateAssignedRepositories()).thenReturn(ruleRepoMap);
 
@@ -120,24 +117,24 @@ public class RoutingRulesResourceTest
   }
 
   @Test
-  public void testGetRoutingRules_AssignedRepositoriesHiddenByPerms() {
-    when(routingRuleStore.list()).thenReturn(Arrays.asList(rule1, rule2, rule3));
+  void testGetRoutingRules_AssignedRepositoriesHiddenByPerms() {
+    when(routingRuleStore.list()).thenReturn(List.of(rule1, rule2, rule3));
 
     Map<EntityId,List<Repository>> ruleRepoMap = new HashMap<>();
-    ruleRepoMap.put(new DetachedEntityId("rule1"), Collections.singletonList(repository1));
-    ruleRepoMap.put(new DetachedEntityId("rule2"), Collections.singletonList(repository2));
-    ruleRepoMap.put(new DetachedEntityId("rule3"), Collections.singletonList(repository3));
+    ruleRepoMap.put(new DetachedEntityId("rule1"), List.of(repository1));
+    ruleRepoMap.put(new DetachedEntityId("rule2"), List.of(repository2));
+    ruleRepoMap.put(new DetachedEntityId("rule3"), List.of(repository3));
 
     when(routingRuleHelper.calculateAssignedRepositories()).thenReturn(ruleRepoMap);
 
-    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(Arrays.asList(repository1), "read"))
-        .thenReturn(Arrays.asList(repository1));
+    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(List.of(repository1), "read"))
+        .thenReturn(List.of(repository1));
 
-    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(Arrays.asList(repository2), "read"))
-        .thenReturn(Collections.emptyList());
+    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(List.of(repository2), "read"))
+        .thenReturn(List.of());
 
-    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(Arrays.asList(repository3), "read"))
-        .thenReturn(Arrays.asList(repository3));
+    when(repositoryPermissionChecker.userHasRepositoryAdminPermission(List.of(repository3), "read"))
+        .thenReturn(List.of(repository3));
 
     List<RoutingRuleXO> xos = underTest.getRoutingRules(true);
 
@@ -148,23 +145,19 @@ public class RoutingRulesResourceTest
   }
 
   @Test
-  public void testGetRoutingRules_AssignedRepositoriesMultipleHiddenByPerms() {
-    when(routingRuleStore.list()).thenReturn(Arrays.asList(rule1, rule2, rule3));
+  void testGetRoutingRules_AssignedRepositoriesMultipleHiddenByPerms() {
+    when(routingRuleStore.list()).thenReturn(List.of(rule1, rule2, rule3));
 
     Map<EntityId,List<Repository>> ruleRepoMap = new HashMap<>();
-    ruleRepoMap.put(new DetachedEntityId("rule1"), Arrays.asList(repository1, repository2, repository3));
-    ruleRepoMap.put(new DetachedEntityId("rule2"), Collections.emptyList());
-    ruleRepoMap.put(new DetachedEntityId("rule3"), Collections.emptyList());
+    ruleRepoMap.put(new DetachedEntityId("rule1"), List.of(repository1, repository2, repository3));
+    ruleRepoMap.put(new DetachedEntityId("rule2"), List.of());
+    ruleRepoMap.put(new DetachedEntityId("rule3"), List.of());
 
     when(routingRuleHelper.calculateAssignedRepositories()).thenReturn(ruleRepoMap);
 
     when(repositoryPermissionChecker
-        .userHasRepositoryAdminPermission(Arrays.asList(repository1, repository2, repository3), "read"))
-        .thenReturn(Arrays.asList(repository1, repository3));
-
-    when(repositoryPermissionChecker.userCanReadOrBrowse(repository1)).thenReturn(true);
-    when(repositoryPermissionChecker.userCanReadOrBrowse(repository2)).thenReturn(false);
-    when(repositoryPermissionChecker.userCanReadOrBrowse(repository3)).thenReturn(true);
+        .userHasRepositoryAdminPermission(List.of(repository1, repository2, repository3), "read"))
+            .thenReturn(List.of(repository1, repository3));
 
     List<RoutingRuleXO> xos = underTest.getRoutingRules(true);
 
@@ -174,28 +167,33 @@ public class RoutingRulesResourceTest
     assertXO(xos.get(2), "rule3", 0);
   }
 
-  private RoutingRule routingRule(String name) {
-    RoutingRuleData routingRule = new RoutingRuleData().name(name).mode(RoutingMode.ALLOW).matchers(Collections.singletonList(".*"));
+  private static RoutingRule routingRule(final String name) {
+    RoutingRuleData routingRule = new RoutingRuleData().name(name).mode(RoutingMode.ALLOW).matchers(List.of(".*"));
     EntityId entityId = new DetachedEntityId(name);
     routingRule.setId(entityId);
     return routingRule;
   }
 
-  private Repository repository(String name) {
+  private static Repository repository(final String name) {
     Repository repository = mock(Repository.class);
     when(repository.getName()).thenReturn(name);
     return repository;
   }
 
-  private void assertXO(final RoutingRuleXO xo, final String name, final int count, final String... repositoryNames) {
+  private static void assertXO(
+      final RoutingRuleXO xo,
+      final String name,
+      final int count,
+      final String... repositoryNames)
+  {
     assertThat(xo.getName(), is(name));
     assertThat(xo.getId(), is(name));
     assertThat(xo.getAssignedRepositoryCount(), is(count));
     if (repositoryNames == null || repositoryNames.length == 0) {
-      assertThat(xo.getAssignedRepositoryNames(), is(Collections.emptyList()));
+      assertThat(xo.getAssignedRepositoryNames(), empty());
     }
     else {
-      assertThat(xo.getAssignedRepositoryNames(), is(Arrays.asList(repositoryNames)));
+      assertThat(xo.getAssignedRepositoryNames(), is(List.of(repositoryNames)));
     }
   }
 }

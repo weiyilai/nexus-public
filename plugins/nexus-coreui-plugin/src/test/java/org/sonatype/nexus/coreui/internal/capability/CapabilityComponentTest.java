@@ -25,6 +25,8 @@ import org.sonatype.nexus.capability.CapabilityReference;
 import org.sonatype.nexus.capability.CapabilityRegistry;
 import org.sonatype.nexus.capability.CapabilityType;
 import org.sonatype.nexus.rapture.PasswordPlaceholder;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
 import com.google.common.base.Predicate;
@@ -51,6 +53,8 @@ import static org.mockito.Mockito.when;
  * Tests {@link CapabilityComponent}.
  */
 @ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
 class CapabilityComponentTest
     extends Test5Support
 {

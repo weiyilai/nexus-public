@@ -12,32 +12,34 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.security.jwt;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.security.jwt.SecretStore;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
-public class JwtSecretApiResourceTest
-    extends TestSupport
+import static org.mockito.Mockito.verify;
+
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class JwtSecretApiResourceTest
+    extends Test5Support
 {
   @Mock
   private SecretStore secretStore;
 
+  @InjectMocks
   private JwtSecretApiResourceV1 underTest;
 
-  @Before
-  public void setup() throws Exception {
-    underTest = new JwtSecretApiResourceV1(secretStore);
-  }
-
   @Test
-  public void resetSecret() {
+  void resetSecret() {
     underTest.resetSecret();
 
-    Mockito.verify(secretStore).setSecret(ArgumentMatchers.any(String.class));
+    verify(secretStore).setSecret(ArgumentMatchers.any(String.class));
   }
 }

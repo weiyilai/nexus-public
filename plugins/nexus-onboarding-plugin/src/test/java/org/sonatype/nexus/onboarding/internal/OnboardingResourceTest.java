@@ -21,6 +21,8 @@ import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.onboarding.OnboardingManager;
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.config.AdminPasswordFileManager;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension.ValidationExecutor;
 
@@ -31,12 +33,14 @@ import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.sonatype.nexus.onboarding.internal.OnboardingResource.PASSWORD_REQUIRED;
 
 @ExtendWith(ValidationExtension.class)
-public class OnboardingResourceTest
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class OnboardingResourceTest
     extends Test5Support
 {
   @ValidationExecutor
@@ -58,31 +62,23 @@ public class OnboardingResourceTest
   private OnboardingResource underTest;
 
   @Test
-  public void testChangeAdminPassword() throws Exception {
+  void testChangeAdminPassword() throws Exception {
     underTest.changeAdminPassword("newpass");
 
     verify(securitySystem).changePassword("admin", "newpass", false);
   }
 
   @Test
-  public void testChangeAdminPassword_empty() {
-    try {
-      underTest.changeAdminPassword("");
-      fail("empty password should have failed validation");
-    }
-    catch (ConstraintViolationException e) {
-      assertThat(e.getConstraintViolations().iterator().next().getMessage(), is(PASSWORD_REQUIRED));
-    }
+  void testChangeAdminPassword_empty() {
+    ConstraintViolationException e =
+        assertThrows(ConstraintViolationException.class, () -> underTest.changeAdminPassword(""));
+    assertThat(e.getConstraintViolations().iterator().next().getMessage(), is(PASSWORD_REQUIRED));
   }
 
   @Test
-  public void testChangeAdminPassword_null() {
-    try {
-      underTest.changeAdminPassword(null);
-      fail("null password should have failed validation");
-    }
-    catch (ConstraintViolationException e) {
-      assertThat(e.getConstraintViolations().iterator().next().getMessage(), is(PASSWORD_REQUIRED));
-    }
+  void testChangeAdminPassword_null() {
+    ConstraintViolationException e =
+        assertThrows(ConstraintViolationException.class, () -> underTest.changeAdminPassword(null));
+    assertThat(e.getConstraintViolations().iterator().next().getMessage(), is(PASSWORD_REQUIRED));
   }
 }

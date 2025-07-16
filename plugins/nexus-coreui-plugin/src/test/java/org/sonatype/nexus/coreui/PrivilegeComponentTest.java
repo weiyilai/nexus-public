@@ -12,19 +12,6 @@
  */
 package org.sonatype.nexus.coreui;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.extdirect.model.PagedResponse;
-import org.sonatype.nexus.extdirect.model.StoreLoadParameters;
-import org.sonatype.nexus.extdirect.model.StoreLoadParameters.Filter;
-import org.sonatype.nexus.extdirect.model.StoreLoadParameters.Sort;
-import org.sonatype.nexus.security.SecuritySystem;
-import org.sonatype.nexus.security.privilege.Privilege;
-import org.sonatype.nexus.security.privilege.PrivilegeDescriptor;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,13 +19,35 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.extdirect.model.PagedResponse;
+import org.sonatype.nexus.extdirect.model.StoreLoadParameters;
+import org.sonatype.nexus.extdirect.model.StoreLoadParameters.Filter;
+import org.sonatype.nexus.extdirect.model.StoreLoadParameters.Sort;
+import org.sonatype.nexus.security.SecuritySystem;
+import org.sonatype.nexus.security.privilege.Privilege;
+import org.sonatype.nexus.security.privilege.PrivilegeDescriptor;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+
 import static com.google.common.collect.Lists.reverse;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 
-public class PrivilegeComponentTest
-    extends TestSupport
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class PrivilegeComponentTest
+    extends Test5Support
 {
   @Mock
   private SecuritySystem securitySystem;
@@ -47,13 +56,13 @@ public class PrivilegeComponentTest
 
   private PrivilegeComponent underTest;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     underTest = new PrivilegeComponent(securitySystem, privilegeDescriptors);
   }
 
   @Test
-  public void testExtractPageWithNoResults() {
+  void testExtractPageWithNoResults() {
     PagedResponse<PrivilegeXO> page =
         underTest.extractPage(parameters(0, 100, sort(), filter("test")), new ArrayList<>());
     assertThat(page.getTotal(), is(0L));
@@ -61,7 +70,7 @@ public class PrivilegeComponentTest
   }
 
   @Test
-  public void testCanFilterResultsByNameDescriptionPermissionOrType() {
+  void testCanFilterResultsByNameDescriptionPermissionOrType() {
     List<PrivilegeXO> privileges = new ArrayList<>(Arrays.asList(
         privilege("a", "b", "c", "d"),
         privilege("w", "x", "y", "z")));
@@ -88,7 +97,7 @@ public class PrivilegeComponentTest
   }
 
   @Test
-  public void testCanSortOnAvailableFields() {
+  void testCanSortOnAvailableFields() {
     List<PrivilegeXO> privileges =
         Arrays.asList(
             privilege("a", "b", "c", "d"),
@@ -123,7 +132,7 @@ public class PrivilegeComponentTest
   }
 
   @Test
-  public void testCanPageResults() {
+  void testCanPageResults() {
     List<PrivilegeXO> privileges =
         Arrays.asList(privilege("a", "a", "a", "a"), privilege("b", "b", "b", "b"), privilege("c", "c", "c", "c"));
 
@@ -144,7 +153,7 @@ public class PrivilegeComponentTest
   }
 
   @Test
-  public void testCanLoadListOfPrivilegeReferences() {
+  void testCanLoadListOfPrivilegeReferences() {
     Set<Privilege> privileges = Set.of(privilege("a"), privilege("b"), privilege("c"));
 
     when(securitySystem.listPrivileges()).thenReturn(privileges);
@@ -156,15 +165,25 @@ public class PrivilegeComponentTest
         new ReferenceXO("c", "c")));
   }
 
-  private static Privilege privilege(String text) {
+  private static Privilege privilege(final String text) {
     return new Privilege(text, text, text, text, Collections.emptyMap(), false);
   }
 
-  private static PrivilegeXO privilege(String name, String description, String permission, String type) {
+  private static PrivilegeXO privilege(
+      final String name,
+      final String description,
+      final String permission,
+      final String type)
+  {
     return new PrivilegeXO().withName(name).withDescription(description).withPermission(permission).withType(type);
   }
 
-  private static StoreLoadParameters parameters(int start, int limit, Sort sort, Filter filter) {
+  private static StoreLoadParameters parameters(
+      final int start,
+      final int limit,
+      final Sort sort,
+      final Filter filter)
+  {
     List<Filter> filters = filter != null ? List.of(filter) : Collections.emptyList();
     List<Sort> sorts = sort != null ? List.of(sort) : Collections.emptyList();
     return new StoreLoadParameters().start(start).limit(limit).filters(filters).sort(sorts);

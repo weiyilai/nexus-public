@@ -12,29 +12,34 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.email;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.api.rest.selfhosted.email.model.ApiEmailConfiguration;
 import org.sonatype.nexus.common.text.Strings2;
-import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.email.EmailConfiguration;
 import org.sonatype.nexus.email.EmailManager;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
 import org.apache.commons.mail.EmailException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class EmailConfigurationApiResourceTest
-    extends TestSupport
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class EmailConfigurationApiResourceTest
+    extends Test5Support
 {
-
   @Mock
   private EmailManager emailManager;
 
@@ -43,13 +48,13 @@ public class EmailConfigurationApiResourceTest
 
   private EmailConfigurationApiResource underTest;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     underTest = new EmailConfigurationApiResource(emailManager);
   }
 
   @Test
-  public void getUnconfiguredEmailConfigurationHandlesNullDefaultConfiguration() {
+  void getUnconfiguredEmailConfigurationHandlesNullDefaultConfiguration() {
     ApiEmailConfiguration response = underTest.getEmailConfiguration();
 
     assertThat(response.getFromAddress(), is(nullValue()));
@@ -67,8 +72,7 @@ public class EmailConfigurationApiResourceTest
   }
 
   @Test
-  public void getEmailConfigurationObfuscatesThePassword() {
-    when(emailConfiguration.getPassword()).thenReturn(mock(Secret.class));
+  void getEmailConfigurationObfuscatesThePassword() {
     when(emailManager.getConfiguration()).thenReturn(emailConfiguration);
 
     ApiEmailConfiguration response = underTest.getEmailConfiguration();
@@ -77,7 +81,7 @@ public class EmailConfigurationApiResourceTest
   }
 
   @Test
-  public void setEmailConfigurationSetsTheNewConfiguration() {
+  void setEmailConfigurationSetsTheNewConfiguration() {
     EmailConfiguration newConfiguration = mock(EmailConfiguration.class);
     String newPassword = "testPassword";
     ApiEmailConfiguration request = new ApiEmailConfiguration();
@@ -93,9 +97,8 @@ public class EmailConfigurationApiResourceTest
   }
 
   @Test
-  public void setEmailConfigurationKeepsTheOriginalPassword() {
+  void setEmailConfigurationKeepsTheOriginalPassword() {
     EmailConfiguration newConfiguration = mock(EmailConfiguration.class);
-    when(emailManager.getConfiguration()).thenReturn(emailConfiguration);
     when(emailManager.newConfiguration()).thenReturn(newConfiguration);
 
     ApiEmailConfiguration request = new ApiEmailConfiguration();
@@ -109,8 +112,7 @@ public class EmailConfigurationApiResourceTest
   }
 
   @Test
-  public void testEmailConfigurationSendsTestEmail() throws EmailException {
-    when(emailConfiguration.isEnabled()).thenReturn(true);
+  void testEmailConfigurationSendsTestEmail() throws EmailException {
     when(emailManager.getConfiguration()).thenReturn(emailConfiguration);
     String destinationAddress = "test@example.com";
 

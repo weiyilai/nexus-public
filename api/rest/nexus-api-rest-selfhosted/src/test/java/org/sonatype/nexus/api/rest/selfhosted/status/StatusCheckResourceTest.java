@@ -12,33 +12,38 @@
  */
 package org.sonatype.nexus.api.rest.selfhosted.status;
 
+import java.util.SortedMap;
+
+import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
+
 import com.codahale.metrics.health.HealthCheck.Result;
 import com.codahale.metrics.health.HealthCheckRegistry;
-import java.util.SortedMap;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class StatusCheckResourceTest
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class StatusCheckResourceTest
+    extends Test5Support
 {
   @Mock
   private HealthCheckRegistry registry;
 
+  @InjectMocks
   private StatusCheckResource resource;
 
-  @Before
-  public void setUp() {
-    MockitoAnnotations.initMocks(this);
-    resource = new StatusCheckResource(registry);
-  }
-
   @Test
-  public void returnsTheSystemStatusChecks() {
+  void returnsTheSystemStatusChecks() {
     SortedMap<String, Result> expectedStatusChecks = mock(SortedMap.class);
     when(registry.runHealthChecks()).thenReturn(expectedStatusChecks);
     SortedMap<String, Result> systemStatusChecks = resource.getSystemStatusChecks();

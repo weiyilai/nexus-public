@@ -15,10 +15,10 @@ package org.sonatype.nexus.cleanup.internal.rest;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import jakarta.inject.Provider;
+
 import javax.ws.rs.core.Response;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.cleanup.config.CleanupPolicyConfiguration;
 import org.sonatype.nexus.cleanup.config.DefaultCleanupPolicyConfiguration;
 import org.sonatype.nexus.cleanup.internal.preview.CsvCleanupPreviewContentWriter;
@@ -30,10 +30,15 @@ import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import jakarta.inject.Provider;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -49,8 +54,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-public class CleanupPolicyResourceTest
-    extends TestSupport
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class CleanupPolicyResourceTest
+    extends Test5Support
 {
   @Mock
   private CleanupPolicyStorage cleanupPolicyStorage;
@@ -86,8 +94,8 @@ public class CleanupPolicyResourceTest
 
   private MockedStatic<QualifierUtil> mockedStatic;
 
-  @Before
-  public void setUp() throws Exception {
+  @BeforeEach
+  void setUp() throws Exception {
     mockedStatic = mockStatic(QualifierUtil.class);
     cleanupFormatConfigurationMap =
         Map.of(DefaultCleanupPolicyConfiguration.NAME, mock(CleanupPolicyConfiguration.class));
@@ -101,13 +109,13 @@ public class CleanupPolicyResourceTest
     cleanupPolicyValidators = singleton(cleanupPolicyValidator);
   }
 
-  @After
-  public void tearDown() {
+  @AfterEach
+  void tearDown() {
     mockedStatic.close();
   }
 
   @Test
-  public void testPreviewContentCsv() {
+  void testPreviewContentCsv() {
     underTest =
         new CleanupPolicyResource(
             cleanupPolicyStorage,

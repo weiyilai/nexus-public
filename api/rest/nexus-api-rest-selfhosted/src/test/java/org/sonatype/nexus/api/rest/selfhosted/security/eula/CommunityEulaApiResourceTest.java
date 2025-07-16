@@ -15,12 +15,15 @@ package org.sonatype.nexus.api.rest.selfhosted.security.eula;
 import java.util.Map;
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.api.rest.selfhosted.security.eula.model.EulaStatus;
 import org.sonatype.nexus.kv.GlobalKeyValueStore;
 import org.sonatype.nexus.kv.NexusKeyValue;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -34,8 +37,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class CommunityEulaApiResourceTest
-    extends TestSupport
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class CommunityEulaApiResourceTest
+    extends Test5Support
 {
   @Mock
   private GlobalKeyValueStore mockGlobalKeyValueStore;
@@ -44,14 +49,14 @@ public class CommunityEulaApiResourceTest
   private CommunityEulaApiResource underTest;
 
   @Test
-  public void testGetCommunityEulaStatusNotSet() {
+  void testGetCommunityEulaStatusNotSet() {
     when(mockGlobalKeyValueStore.getKey(anyString())).thenReturn(Optional.empty());
     EulaStatus eulaStatus = underTest.getCommunityEulaStatus();
     assertFalse(eulaStatus.isAccepted());
   }
 
   @Test
-  public void testGetCommunityEulaStatusSet() {
+  void testGetCommunityEulaStatusSet() {
     NexusKeyValue keyValue = new NexusKeyValue();
     keyValue.setValue(Map.of("accepted", true));
     when(mockGlobalKeyValueStore.getKey(anyString())).thenReturn(Optional.of(keyValue));
@@ -60,7 +65,7 @@ public class CommunityEulaApiResourceTest
   }
 
   @Test
-  public void testSetEulaAccepted() {
+  void testSetEulaAccepted() {
     EulaStatus eulaStatus = new EulaStatus();
     eulaStatus.setAccepted(true);
     eulaStatus.setDisclaimer(EulaStatus.EXPECTED_DISCLAIMER);
@@ -69,7 +74,7 @@ public class CommunityEulaApiResourceTest
   }
 
   @Test
-  public void testsAttemptToUnacceptEula() {
+  void testsAttemptToUnacceptEula() {
     NexusKeyValue keyValue = new NexusKeyValue();
     keyValue.setValue(Map.of("accepted", true));
     when(mockGlobalKeyValueStore.getKey(anyString())).thenReturn(Optional.of(keyValue));
@@ -86,7 +91,7 @@ public class CommunityEulaApiResourceTest
   }
 
   @Test
-  public void testReacceptEula() {
+  void testReacceptEula() {
     NexusKeyValue keyValue = new NexusKeyValue();
     keyValue.setValue(Map.of("accepted", true));
     when(mockGlobalKeyValueStore.getKey(anyString())).thenReturn(Optional.of(keyValue));
@@ -99,7 +104,7 @@ public class CommunityEulaApiResourceTest
   }
 
   @Test
-  public void testInvalidDisclaimer() {
+  void testInvalidDisclaimer() {
     EulaStatus eulaStatus = new EulaStatus();
     eulaStatus.setAccepted(true);
     eulaStatus.setDisclaimer("foo");

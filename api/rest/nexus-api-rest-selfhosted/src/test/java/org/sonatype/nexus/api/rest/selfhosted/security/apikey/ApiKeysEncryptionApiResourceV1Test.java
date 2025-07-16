@@ -15,15 +15,19 @@ package org.sonatype.nexus.api.rest.selfhosted.security.apikey;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.api.rest.selfhosted.security.apikey.model.ApiKeysReEncryptionRequestApiXO;
 import org.sonatype.nexus.crypto.apikey.ApiKeysReEncryptService;
 import org.sonatype.nexus.crypto.secrets.ReEncryptionNotSupportedException;
 import org.sonatype.nexus.rest.ValidationErrorXO;
 import org.sonatype.nexus.rest.WebApplicationMessageException;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,21 +35,20 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 
-public class ApiKeysEncryptionApiResourceV1Test
-    extends TestSupport
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class ApiKeysEncryptionApiResourceV1Test
+    extends Test5Support
 {
   @Mock
   private ApiKeysReEncryptService apiKeysReEncryptService;
 
+  @InjectMocks
   private ApiKeysEncryptionApiResourceV1 underTest;
 
-  @Before
-  public void setup() {
-    underTest = new ApiKeysEncryptionApiResourceV1(apiKeysReEncryptService);
-  }
-
   @Test
-  public void testEncrypt() {
+  void testEncrypt() {
     ApiKeysReEncryptionRequestApiXO request =
         new ApiKeysReEncryptionRequestApiXO("password", "salt", "iv", "algorithm", null);
     Response response = underTest.reEncrypt(request);
@@ -65,7 +68,7 @@ public class ApiKeysEncryptionApiResourceV1Test
   }
 
   @Test
-  public void testEncrypt_InvalidRequest() {
+  void testEncrypt_InvalidRequest() {
     ApiKeysReEncryptionRequestApiXO request = new ApiKeysReEncryptionRequestApiXO(null, null, null, null, null);
 
     WebApplicationMessageException exception =
@@ -77,7 +80,7 @@ public class ApiKeysEncryptionApiResourceV1Test
   }
 
   @Test
-  public void testEncrypt_ReEncryptionIsNotSupported() {
+  void testEncrypt_ReEncryptionIsNotSupported() {
     doThrow(new ReEncryptionNotSupportedException("Re-encryption api key principals is not supported"))
         .when(apiKeysReEncryptService)
         .submitReEncryption(any(), any(), any(), any(), any());
@@ -92,7 +95,7 @@ public class ApiKeysEncryptionApiResourceV1Test
   }
 
   @Test
-  public void testEncrypt_ReEncryptionIsRunning() {
+  void testEncrypt_ReEncryptionIsRunning() {
     doThrow(new IllegalStateException("Re-encryption principals task is already running")).when(apiKeysReEncryptService)
         .submitReEncryption(any(), any(), any(), any(), any());
 
@@ -106,7 +109,7 @@ public class ApiKeysEncryptionApiResourceV1Test
   }
 
   @Test
-  public void testEncrypt_UnexpectedError() {
+  void testEncrypt_UnexpectedError() {
     doThrow(new RuntimeException("unexpected error")).when(apiKeysReEncryptService)
         .submitReEncryption(any(), any(), any(), any(), any());
     ApiKeysReEncryptionRequestApiXO request =

@@ -14,20 +14,24 @@ package org.sonatype.nexus.api.extdirect.selfhosted.s3;
 
 import java.util.List;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.api.extdirect.selfhosted.s3.model.S3EncryptionTypeXO;
 import org.sonatype.nexus.api.extdirect.selfhosted.s3.model.S3RegionXO;
 import org.sonatype.nexus.api.extdirect.selfhosted.s3.model.S3SignerTypeXO;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
 public class S3ComponentTest
-    extends TestSupport
+    extends Test5Support
 {
-
   private final S3Component underTest = new S3Component();
 
   @Test

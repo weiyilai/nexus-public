@@ -33,6 +33,8 @@ import org.sonatype.nexus.rapture.PasswordPlaceholder;
 import org.sonatype.nexus.repository.blobstore.BlobStoreConfigurationStore;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.security.RepositoryPermissionChecker;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -58,7 +60,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(ValidationExtension.class)
-public class BlobStoreComponentTest
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class BlobStoreComponentTest
     extends Test5Support
 {
   @Mock
@@ -85,13 +89,13 @@ public class BlobStoreComponentTest
   private BlobStoreComponent underTest;
 
   @BeforeEach
-  public void setup() {
+  void setup() {
     underTest = new BlobStoreComponent(blobStoreManager, store, blobStoreDescriptorProvider, List.of(),
         applicationDirectories, repositoryManager, permissionChecker, blobStoreTaskService);
   }
 
   @Test
-  public void testReadTypesReturnsDescriptorData() {
+  void testReadTypesReturnsDescriptorData() {
     BlobStoreDescriptor descriptor = mock(BlobStoreDescriptor.class);
     when(descriptor.getName()).thenReturn("MyType");
     when(descriptor.getFormFields()).thenReturn(Collections.emptyList());
@@ -112,7 +116,7 @@ public class BlobStoreComponentTest
   }
 
   @Test
-  public void testCreateBlobstoreCreatesAndReturnsNewBlobstore() throws Exception {
+  void testCreateBlobstoreCreatesAndReturnsNewBlobstore() throws Exception {
     Map<String, Map<String, Object>> attributes = new HashMap<>();
     Map<String, Object> fileAttributes = new HashMap<>();
     fileAttributes.put("path", "path/to/blobs/myblobs");
@@ -147,7 +151,7 @@ public class BlobStoreComponentTest
   }
 
   @Test
-  public void testRemoveBlobstoreOnlyRemovesUnusedBlobstores() throws Exception {
+  void testRemoveBlobstoreOnlyRemovesUnusedBlobstores() throws Exception {
     when(repositoryManager.isBlobstoreUsed("not-used")).thenReturn(false);
 
     underTest.remove("not-used");
@@ -160,7 +164,7 @@ public class BlobStoreComponentTest
   }
 
   @Test
-  public void testDefaultWorkDirectoryReturnsTheBlobsDirectory() {
+  void testDefaultWorkDirectoryReturnsTheBlobsDirectory() {
     File blobDirectory = new File("path/to/blobs");
     when(applicationDirectories.getWorkDirectory("blobs")).thenReturn(blobDirectory);
 
@@ -171,7 +175,7 @@ public class BlobStoreComponentTest
   }
 
   @Test
-  public void testCreateBlobStoreXOWithQuota() {
+  void testCreateBlobStoreXOWithQuota() {
     long quotaLimitBytes = (long) (10 * pow(10, 6));
     MockBlobStoreConfiguration config = mockConfig("test", quotaLimitBytes);
 
@@ -190,7 +194,7 @@ public class BlobStoreComponentTest
   }
 
   @Test
-  public void testCreateBlobStoreConfigWithQuota() {
+  void testCreateBlobStoreConfigWithQuota() {
     BlobStoreConfiguration blobStoreConfig = mock(BlobStoreConfiguration.class);
     BlobStoreXO blobStoreXO = mock(BlobStoreXO.class);
     when(blobStoreXO.getName()).thenReturn("xoTest");
@@ -215,7 +219,7 @@ public class BlobStoreComponentTest
   }
 
   @Test
-  public void testRequestingBlobstoreNamesOnlyDoesNotSetOtherProperties() {
+  void testRequestingBlobstoreNamesOnlyDoesNotSetOtherProperties() {
     MockBlobStoreConfiguration config = new MockBlobStoreConfiguration().withName("test")
         .withAttributes(
             Map.of("file", Map.of("path", "path"), "blobStoreQuotaConfig",
@@ -231,7 +235,7 @@ public class BlobStoreComponentTest
   }
 
   @Test
-  public void testUpdatingS3BlobstoreWithPasswordPlaceholderDoesNotAlterSecretAccessKey() throws Exception {
+  void testUpdatingS3BlobstoreWithPasswordPlaceholderDoesNotAlterSecretAccessKey() throws Exception {
     ArgumentCaptor<BlobStoreConfiguration> blobStoreConfigCaptor =
         ArgumentCaptor.forClass(BlobStoreConfiguration.class);
 
@@ -271,7 +275,7 @@ public class BlobStoreComponentTest
   }
 
   @Test
-  public void testUpdatingAzureBlobstoreWithPasswordPlaceholderDoesNotAlterAccountKey() throws Exception {
+  void testUpdatingAzureBlobstoreWithPasswordPlaceholderDoesNotAlterAccountKey() throws Exception {
     ArgumentCaptor<BlobStoreConfiguration> blobStoreConfigCaptor =
         ArgumentCaptor.forClass(BlobStoreConfiguration.class);
 
@@ -307,7 +311,7 @@ public class BlobStoreComponentTest
   }
 
   @Test
-  public void testRemoveBlobstoreDoesNotRemoveBlobstoresPartOfMoveRepositoryTask() throws Exception {
+  void testRemoveBlobstoreDoesNotRemoveBlobstoresPartOfMoveRepositoryTask() throws Exception {
     when(blobStoreTaskService.countTasksInUseForBlobStore("used_in_move")).thenReturn(2);
 
     try {

@@ -17,13 +17,15 @@ import javax.validation.Validator;
 import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.bootstrap.validation.ValidationConfiguration;
 import org.sonatype.nexus.common.app.FreezeService;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension.ValidationExecutor;
 
 import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorFactoryImpl;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -33,6 +35,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
 class FreezeComponentTest
     extends Test5Support
 {
@@ -40,15 +44,11 @@ class FreezeComponentTest
   private final Validator validator =
       new ValidationConfiguration().validatorFactory(new ConstraintValidatorFactoryImpl()).getValidator();
 
-  FreezeComponent underTest;
-
   @Mock
   FreezeService freezeService;
 
-  @BeforeEach
-  void setup() {
-    underTest = new FreezeComponent(freezeService);
-  }
+  @InjectMocks
+  FreezeComponent underTest;
 
   @Test
   void read() throws Exception {
@@ -76,5 +76,4 @@ class FreezeComponentTest
 
     verify(freezeService).requestFreeze(isA(String.class));
   }
-
 }

@@ -16,9 +16,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.formfields.FormField;
 import org.sonatype.nexus.formfields.SetOfCheckboxesFormField;
 import org.sonatype.nexus.repository.Format;
@@ -27,26 +26,28 @@ import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.security.RepositoryAdminPrivilegeDescriptor;
 import org.sonatype.nexus.repository.security.RepositoryContentSelectorPrivilegeDescriptor;
 import org.sonatype.nexus.repository.security.RepositoryViewPrivilegeDescriptor;
-import org.sonatype.nexus.script.Script;
 import org.sonatype.nexus.script.ScriptManager;
 import org.sonatype.nexus.script.plugin.internal.security.ScriptPrivilegeDescriptor;
 import org.sonatype.nexus.security.privilege.ApplicationPrivilegeDescriptor;
 import org.sonatype.nexus.security.privilege.PrivilegeDescriptor;
-import org.sonatype.nexus.selector.SelectorConfiguration;
 import org.sonatype.nexus.selector.SelectorManager;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-public class PrivilegesUIResourceTest
-    extends TestSupport
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class PrivilegesUIResourceTest
+    extends Test5Support
 {
   public static final String HELP_TEXT = "The actions you wish to allow";
 
@@ -87,31 +88,23 @@ public class PrivilegesUIResourceTest
 
   private PrivilegesUIResource underTest;
 
-  @Before
-  public void setup() {
-    when(repository1.getFormat()).thenReturn(format1);
-    when(repository2.getFormat()).thenReturn(format2);
-    when(repositoryManager.get("repository1")).thenReturn(repository1);
-    when(repositoryManager.get("repository2")).thenReturn(repository2);
-    when(selectorManager.findByName(any())).thenReturn(Optional.of(mock(SelectorConfiguration.class)));
-    when(scriptManager.get(any())).thenReturn(mock(Script.class));
-    when(format1.getValue()).thenReturn("format1");
-    when(format2.getValue()).thenReturn("format2");
-
+  @BeforeEach
+  void setup() {
     List<Format> formats = Arrays.asList(format1, format2);
 
     List<PrivilegeDescriptor> privilegeDescriptors = new LinkedList<>();
     privilegeDescriptors.add(new ApplicationPrivilegeDescriptor(true));
     privilegeDescriptors.add(new RepositoryAdminPrivilegeDescriptor(repositoryManager, formats, true));
     privilegeDescriptors.add(new RepositoryViewPrivilegeDescriptor(repositoryManager, formats, true));
-    privilegeDescriptors.add(new RepositoryContentSelectorPrivilegeDescriptor(repositoryManager, selectorManager, formats, true));
+    privilegeDescriptors
+        .add(new RepositoryContentSelectorPrivilegeDescriptor(repositoryManager, selectorManager, formats, true));
     privilegeDescriptors.add(new ScriptPrivilegeDescriptor(scriptManager, true));
 
     underTest = new PrivilegesUIResource(privilegeDescriptors);
   }
 
   @Test
-  public void listPrivilegesTypes() {
+  void listPrivilegesTypes() {
     List<PrivilegesTypesUIResponse> responses = underTest.listPrivilegesTypes();
     assertThat(responses.size(), is(5));
 
@@ -146,11 +139,11 @@ public class PrivilegesUIResourceTest
     assertSetOfCheckboxesFormField(responseScript, HELP_TEXT, FORM_TYPE, BREAD_RUN_ACTION_STRINGS);
   }
 
-  private void assertSetOfCheckboxesFormField(
-      PrivilegesTypesUIResponse response,
-      String helpText,
-      String type,
-      List<String> actions)
+  private static void assertSetOfCheckboxesFormField(
+      final PrivilegesTypesUIResponse response,
+      final String helpText,
+      final String type,
+      final List<String> actions)
   {
     List<FormField> formFields = response.getFormFields();
     SetOfCheckboxesFormField formField = (SetOfCheckboxesFormField) formFields.stream()

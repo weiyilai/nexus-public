@@ -15,7 +15,7 @@ package org.sonatype.nexus.repository.rest.internal.api;
 import java.util.List;
 import java.util.Map;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.repository.Facet;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Recipe;
@@ -31,20 +31,28 @@ import org.sonatype.nexus.repository.security.RepositoryPermissionChecker;
 import org.sonatype.nexus.repository.types.GroupType;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.repository.types.ProxyType;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
+import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.security.BreadActions.READ;
 
-public class RepositoryInternalResourceTest
-    extends TestSupport
+@ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
+class RepositoryInternalResourceTest
+    extends Test5Support
 {
   @Mock
   private List<Format> formats;
@@ -75,8 +83,8 @@ public class RepositoryInternalResourceTest
 
   private RepositoryInternalResource underTest;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     underTest = new RepositoryInternalResource(
         formats,
         repositoryManager,
@@ -89,7 +97,7 @@ public class RepositoryInternalResourceTest
   }
 
   @Test
-  public void testGetRepositories() {
+  void testGetRepositories() {
     Format maven2 = new Format("maven2")
     {
     };
@@ -140,7 +148,7 @@ public class RepositoryInternalResourceTest
   }
 
   @Test
-  public void testGetDetails() {
+  void testGetDetails() {
     Format maven2 = new Format("maven2")
     {
     };
@@ -227,32 +235,32 @@ public class RepositoryInternalResourceTest
         is("java.net.UnknownHostException: api.example.org: nodename nor servname provided, or not known"));
   }
 
-  private Repository mockRepository(
-      String name,
-      Format format,
-      Type type,
-      String url,
-      boolean online,
-      Map<Class<? extends Facet>, Facet> facets)
+  private static Repository mockRepository(
+      final String name,
+      final Format format,
+      final Type type,
+      final String url,
+      final boolean online,
+      final Map<Class<? extends Facet>, Facet> facets)
   {
     Repository repository = mock(Repository.class);
-    when(repository.getName()).thenReturn(name);
-    when(repository.getFormat()).thenReturn(format);
-    when(repository.getType()).thenReturn(type);
-    when(repository.getUrl()).thenReturn(url);
+    lenient().when(repository.getName()).thenReturn(name);
+    lenient().when(repository.getFormat()).thenReturn(format);
+    lenient().when(repository.getType()).thenReturn(type);
+    lenient().when(repository.getUrl()).thenReturn(url);
     ConfigurationData configuration = new ConfigurationData();
-    when(repository.getConfiguration()).thenReturn(configuration);
-    facets.forEach((clazz, facet) -> when(repository.facet(clazz)).thenAnswer(invocation -> facet));
+    lenient().when(repository.getConfiguration()).thenReturn(configuration);
+    facets.forEach((clazz, facet) -> lenient().when(repository.facet(clazz)).thenAnswer(invocation -> facet));
     configuration.setOnline(online);
     return repository;
   }
 
-  private Facet mockHttpFacet(String description, String reason) {
+  private static Facet mockHttpFacet(final String description, final String reason) {
     HttpClientFacet facet = mock(HttpClientFacet.class);
     RemoteConnectionStatus status = mock(RemoteConnectionStatus.class);
-    when(facet.getStatus()).thenReturn(status);
-    when(status.getDescription()).thenReturn(description);
-    when(status.getReason()).thenReturn(reason);
+    lenient().when(facet.getStatus()).thenReturn(status);
+    lenient().when(status.getDescription()).thenReturn(description);
+    lenient().when(status.getReason()).thenReturn(reason);
     return facet;
   }
 }

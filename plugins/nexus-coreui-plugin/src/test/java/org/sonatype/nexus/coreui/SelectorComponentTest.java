@@ -24,6 +24,8 @@ import org.sonatype.nexus.selector.SelectorConfiguration;
 import org.sonatype.nexus.selector.SelectorConfigurationStore;
 import org.sonatype.nexus.selector.SelectorFactory;
 import org.sonatype.nexus.selector.SelectorManager;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension;
+import org.sonatype.nexus.testcommon.extensions.AuthenticationExtension.WithUser;
 import org.sonatype.nexus.testcommon.validation.ValidationExtension;
 import org.sonatype.nexus.validation.ConstraintViolationFactory;
 
@@ -54,6 +56,8 @@ import static org.mockito.Mockito.when;
  * Tests {@link SelectorComponent}.
  */
 @ExtendWith(ValidationExtension.class)
+@ExtendWith(AuthenticationExtension.class)
+@WithUser
 class SelectorComponentTest
     extends Test5Support
 {

@@ -160,4 +160,29 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>dev.aspectj</groupId>
+        <artifactId>aspectj-maven-plugin</artifactId>
+        <configuration>
+          <aspectLibraries combine.self="override">
+            <aspectLibrary>
+              <groupId>org.sonatype.nexus</groupId>
+              <artifactId>nexus-transaction</artifactId>
+            </aspectLibrary>
+            <aspectLibrary>
+              <groupId>org.sonatype.nexus</groupId>
+              <artifactId>nexus-common</artifactId>
+            </aspectLibrary>
+            <aspectLibrary>
+              <groupId>org.sonatype.nexus</groupId>
+              <artifactId>nexus-validation</artifactId>
+            </aspectLibrary>
+          </aspectLibraries>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
