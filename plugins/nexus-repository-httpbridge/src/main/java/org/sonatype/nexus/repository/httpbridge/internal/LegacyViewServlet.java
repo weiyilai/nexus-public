@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -29,13 +31,10 @@ import org.sonatype.nexus.repository.httpbridge.internal.describe.DescriptionHel
 import org.sonatype.nexus.repository.httpbridge.internal.describe.DescriptionRenderer;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-import org.springframework.stereotype.Component;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.isNull;
 import static org.sonatype.nexus.repository.http.HttpResponses.notFound;
+import org.springframework.stereotype.Component;
 
 /**
  * Repository view servlet for NX2 urls.
@@ -44,8 +43,7 @@ import static org.sonatype.nexus.repository.http.HttpResponses.notFound;
  */
 @Component
 @Singleton
-@WebServlet(urlPatterns = {"/content/groups/*", "/content/repositories/*", "/content/sites/*",
-    "/service/local/repositories/*", "/service/local/repo_groups/*", "/service/local/nuget/*"})
+@WebServlet(urlPatterns = {"/content/groups/*", "/content/repositories/*", "/content/sites/*", "/service/local/*"})
 public class LegacyViewServlet
     extends ViewServlet
 {

@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.sonatype.nexus.assemblies</groupId>
     <artifactId>nexus-assemblies</artifactId>
-    <version>3.83.2-01</version>
+    <version>3.84.0-SNAPSHOT</version>
   </parent>
 
   <groupId>org.sonatype.nexus</groupId>
@@ -416,31 +416,6 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>enforce-dependencies</id>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-            <configuration>
-              <fail>true</fail>
-              <rules>
-                <bannedDependencies>
-                  <searchTransitive>true</searchTransitive>
-                  <excludes combine.children="append">
-                    <!-- Ban private -->
-                    <exclude>com.sonatype.nexus*</exclude>
-                  </excludes>
-                </bannedDependencies>
-              </rules>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
           <excludePackageNames>org.sonatype.nexus.bootstrap.*</excludePackageNames>
@@ -503,6 +478,9 @@
                 <!-- overlay customizations -->
                 <copy todir="${project.build.directory}/assembly" overwrite="true">
                   <fileset dir="${project.basedir}/src/main/assembly/overlay"/>
+                </copy>
+                <copy todir="${project.build.directory}/sonatype-work" overwrite="true">
+                  <fileset dir="${project.basedir}/src/main/assembly/sonatype-work"/>
                 </copy>
 
                 <!-- workaround maven-assembly-plugin bug where lineEnding configuration for fileSets is ineffective -->

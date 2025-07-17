@@ -39,8 +39,7 @@ public class FirewallSupportedFormatTest
         FirewallSupportedFormat.COMPOSER,
         FirewallSupportedFormat.COCOAPODS,
         FirewallSupportedFormat.HUGGINGFACE,
-        FirewallSupportedFormat.DOCKER,
-        FirewallSupportedFormat.RAW
+        FirewallSupportedFormat.DOCKER
     };
     assertArrayEquals(expectedValues, FirewallSupportedFormat.values());
   }
@@ -70,7 +69,7 @@ public class FirewallSupportedFormatTest
   public void testGetValues() {
     String[] expectedValues = {
         "r", "go", "p2", "apt", "rubygems", "npm", "yum", "pypi", "cargo", "conan", "conda", "nuget", "maven2",
-        "composer", "cocoapods", "huggingface", "docker", "raw"
+        "composer", "cocoapods", "huggingface", "docker"
     };
     assertArrayEquals(expectedValues, FirewallSupportedFormat.getValues());
   }

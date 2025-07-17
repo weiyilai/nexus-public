@@ -50,24 +50,44 @@ class ApiKeysEncryptionApiResourceV1Test
   @Test
   void testEncrypt() {
     ApiKeysReEncryptionRequestApiXO request =
-        new ApiKeysReEncryptionRequestApiXO("algorithm", null);
+        new ApiKeysReEncryptionRequestApiXO("password", "salt", "iv", "algorithm", null);
     Response response = underTest.reEncrypt(request);
     assertThat(response.getStatus()).isEqualTo(Response.Status.ACCEPTED.getStatusCode());
 
-    request = new ApiKeysReEncryptionRequestApiXO(null, null);
+    request = new ApiKeysReEncryptionRequestApiXO("password", "salt", "iv", null, null);
     response = underTest.reEncrypt(request);
     assertThat(response.getStatus()).isEqualTo(Response.Status.ACCEPTED.getStatusCode());
+
+    request = new ApiKeysReEncryptionRequestApiXO("password", "salt", null, null, null);
+    response = underTest.reEncrypt(request);
+    assertThat(response.getStatus()).isEqualTo(Response.Status.ACCEPTED.getStatusCode());
+
+    request = new ApiKeysReEncryptionRequestApiXO("password", null, null, null, null);
+    response = underTest.reEncrypt(request);
+    assertThat(response.getStatus()).isEqualTo(Response.Status.ACCEPTED.getStatusCode());
+  }
+
+  @Test
+  void testEncrypt_InvalidRequest() {
+    ApiKeysReEncryptionRequestApiXO request = new ApiKeysReEncryptionRequestApiXO(null, null, null, null, null);
+
+    WebApplicationMessageException exception =
+        assertThrows(WebApplicationMessageException.class, () -> underTest.reEncrypt(request));
+
+    assertThat(exception.getResponse().getStatus()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
+    ValidationErrorXO error = (ValidationErrorXO) exception.getResponse().getEntity();
+    assertThat(error.getMessage()).isEqualTo("Invalid request parameters");
   }
 
   @Test
   void testEncrypt_ReEncryptionIsNotSupported() {
     doThrow(new ReEncryptionNotSupportedException("Re-encryption api key principals is not supported"))
         .when(apiKeysReEncryptService)
-        .submitReEncryption(any(), any());
+        .submitReEncryption(any(), any(), any(), any(), any());
 
     WebApplicationMessageException exception =
         assertThrows(WebApplicationMessageException.class,
-            () -> underTest.reEncrypt(new ApiKeysReEncryptionRequestApiXO(null, null)));
+            () -> underTest.reEncrypt(new ApiKeysReEncryptionRequestApiXO("password", null, null, null, null)));
 
     assertThat(exception.getResponse().getStatus()).isEqualTo(Status.BAD_REQUEST.getStatusCode());
     ValidationErrorXO error = (ValidationErrorXO) exception.getResponse().getEntity();
@@ -77,11 +97,11 @@ class ApiKeysEncryptionApiResourceV1Test
   @Test
   void testEncrypt_ReEncryptionIsRunning() {
     doThrow(new IllegalStateException("Re-encryption principals task is already running")).when(apiKeysReEncryptService)
-        .submitReEncryption(any(), any());
+        .submitReEncryption(any(), any(), any(), any(), any());
 
     WebApplicationMessageException exception =
         assertThrows(WebApplicationMessageException.class,
-            () -> underTest.reEncrypt(new ApiKeysReEncryptionRequestApiXO(null, null)));
+            () -> underTest.reEncrypt(new ApiKeysReEncryptionRequestApiXO("password", null, null, null, null)));
 
     assertThat(exception.getResponse().getStatus()).isEqualTo(Status.CONFLICT.getStatusCode());
     ValidationErrorXO error = (ValidationErrorXO) exception.getResponse().getEntity();
@@ -91,9 +111,9 @@ class ApiKeysEncryptionApiResourceV1Test
   @Test
   void testEncrypt_UnexpectedError() {
     doThrow(new RuntimeException("unexpected error")).when(apiKeysReEncryptService)
-        .submitReEncryption(any(), any());
+        .submitReEncryption(any(), any(), any(), any(), any());
     ApiKeysReEncryptionRequestApiXO request =
-        new ApiKeysReEncryptionRequestApiXO(null, null);
+        new ApiKeysReEncryptionRequestApiXO("password", null, null, null, null);
     assertThrows(RuntimeException.class, () -> underTest.reEncrypt(request));
   }
 }

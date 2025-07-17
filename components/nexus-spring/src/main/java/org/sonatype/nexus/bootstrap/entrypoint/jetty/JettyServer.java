@@ -12,6 +12,18 @@
  */
 package org.sonatype.nexus.bootstrap.entrypoint.jetty;
 
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.EventListener;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 import javax.servlet.ServletContextListener;
@@ -26,22 +38,11 @@ import org.sonatype.nexus.bootstrap.jetty.ConnectorConfiguration;
 import org.sonatype.nexus.bootstrap.jetty.ConnectorManager;
 import org.sonatype.nexus.bootstrap.jetty.InstrumentedHandler;
 import org.sonatype.nexus.common.QualifierUtil;
-import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.common.text.Strings2;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.EventListener;
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
+import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
@@ -58,6 +59,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import static org.eclipse.jetty.http.HttpStatus.Code.SERVICE_UNAVAILABLE;
+import static org.eclipse.jetty.http.HttpStatus.Code.UNAUTHORIZED;
 import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 
 /**
@@ -197,7 +200,7 @@ public class JettyServer
 
     registerServlets(applicationContext, server);
 
-    thread = new JettyMainThread(components, shutdownDelegate, applicationContext);
+    thread = new JettyMainThread(components, shutdownDelegate);
     thread.startComponents(waitForServer);
   }
 
@@ -211,13 +214,12 @@ public class JettyServer
     }
   }
 
-  private static void registerServlets(final ApplicationContext context, final Server server) {
+  private void registerServlets(final ApplicationContext context, final Server server) {
     InstrumentedHandler defaultHandler = server.getBean(InstrumentedHandler.class);
     if (defaultHandler == null) {
       throw new IllegalStateException("Missing default handler");
     }
-
-    ServletContextHandler servletContext = defaultHandler.getDelegate();
+    ServletContextHandler servletContext = new ServletContextHandler(defaultHandler, null);
     context.getBeansOfType(HttpServlet.class)
         .values()
         .stream()
@@ -235,6 +237,16 @@ public class JettyServer
         .filter(EventListener.class::isInstance)
         .map(EventListener.class::cast)
         .forEach(servletContext::addEventListener);
+
+    defaultHandler.setHandler(servletContext);
+
+    setErrorPage(servletContext);
+  }
+
+  private static void setErrorPage(final ServletContextHandler servletContext) {
+    ErrorPageErrorHandler errorHandler = new ErrorPageErrorHandler();
+    errorHandler.addErrorPage(UNAUTHORIZED.getCode(), SERVICE_UNAVAILABLE.getCode(), ERROR_PAGE_PATH);
+    servletContext.setErrorHandler(errorHandler);
   }
 
   private static Consumer<HttpServlet> createRegistration(final ServletContextHandler servletContext) {
@@ -342,19 +354,15 @@ public class JettyServer
 
     private final ShutdownDelegate shutdownDelegate;
 
-    private final ApplicationContext applicationContext;
-
     private volatile Exception exception;
 
     public JettyMainThread(
         final List<LifeCycle> components,
-        final ShutdownDelegate shutdownDelegate,
-        final ApplicationContext applicationContext)
+        final ShutdownDelegate shutdownDelegate)
     {
       super("jetty-main-" + INSTANCE_COUNTER.getAndIncrement());
       this.components = components;
       this.shutdownDelegate = shutdownDelegate;
-      this.applicationContext = applicationContext;
       this.started = new CountDownLatch(1);
       this.stopped = new CountDownLatch(1);
     }
@@ -431,22 +439,17 @@ public class JettyServer
       stopped.await();
     }
 
-    private void logStartupBanner(final Server server) {
-      String banner = "Nexus Repository Manager - Unknown Version and Edition";
+    private static void logStartupBanner(final Server server) {
+      Object banner = null;
 
-      try {
-        ApplicationVersion applicationVersion = applicationContext.getBean(ApplicationVersion.class);
-        banner = String.format("Sonatype Nexus %s %s",
-            applicationVersion.getEdition(),
-            applicationVersion.getVersion());
-      }
-      catch (Exception e) {
-        LOG.error("ApplicationVersion not available for banner", e);
+      ContextHandler context = JettyServer.getContextHandler(server);
+      if (context != null) {
+        banner = context.getAttribute("nexus-banner");
       }
 
       StringBuilder buf = new StringBuilder();
       buf.append("\n-------------------------------------------------\n\n");
-      buf.append("Started ").append(banner);
+      buf.append("Started ").append(banner instanceof String ? banner : "Nexus Repository Manager");
       buf.append("\n\n-------------------------------------------------");
       LOG.info(buf.toString());
     }

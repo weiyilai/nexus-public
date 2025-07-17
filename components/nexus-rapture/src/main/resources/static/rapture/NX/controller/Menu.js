@@ -811,10 +811,9 @@ Ext.define('NX.controller.Menu', {
    * Check for unsaved changes. Warn the user, and stop or continue navigation.
    *
    * @private
-   * @param {Function} onConfirm - called if user discards changes (proceed)
-   * @param {Function} [onCancel] - called if user cancels/close (optional)
+   * @param {Function} callback
    */
-  warnBeforeNavigate: function(onConfirm, onCancel) {
+  warnBeforeNavigate: function(callback) {
     var me = this,
       dirty = me.hasDirt(),
       content = me.getFeatureContent();
@@ -823,17 +822,17 @@ Ext.define('NX.controller.Menu', {
     if (content.discardUnsavedChanges) {
       // Reset the flag and continue with navigation
       content.resetUnsavedChangesFlag();
-      if (onConfirm) onConfirm();
       return true;
     }
 
     // Load the content, but warn first if there are unsaved changes
     if (dirty) {
-      me.showUnsavedChangesModal(onConfirm, onCancel);
+      // Show modal and stop navigation
+      me.showUnsavedChangesModal(callback);
       return false;
+
     } else {
       // Continue with navigation
-      if (onConfirm) onConfirm();
       return true;
     }
   },
@@ -842,26 +841,20 @@ Ext.define('NX.controller.Menu', {
    * Show warning modal about unsaved changes, and take action.
    *
    * @private
-   * @param {Function} onConfirm
-   * @param {Function} [onCancel]
+   * @param {Function} callback
    */
-  showUnsavedChangesModal: function(onConfirm, onCancel) {
+  showUnsavedChangesModal: function(callback) {
     var content = this.getFeatureContent();
 
     Ext.create('NX.view.UnsavedChanges', {
       content: content,
       callback: function() {
-        // User confirmed/discarded changes
-        if (onConfirm) onConfirm();
+        // Run the callback
+        callback();
+
+        // Reset the unsaved changes flag
         content.resetUnsavedChangesFlag();
         window.dirty = [];
-      },
-      listeners: {
-        close: function() {
-          // User cancelled/closed modal
-          if (onCancel) onCancel();
-        },
-        single: true
       }
     });
   },

@@ -13,24 +13,28 @@
 package org.sonatype.nexus.datastore;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 
+import javax.annotation.Priority;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.datastore.api.DataStoreConfiguration;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-import org.springframework.stereotype.Component;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Streams.stream;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static java.util.Comparator.comparingInt;
+import org.springframework.stereotype.Component;
 
 /**
  * Manages {@link DataStoreConfiguration}s supplied by one or more sources.
@@ -42,11 +46,11 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 public class DataStoreConfigurationManager
     extends ComponentSupport
 {
-  private final List<DataStoreConfigurationSource> configurationSources;
+  private final Map<String, DataStoreConfigurationSource> configurationSources;
 
   @Inject
   public DataStoreConfigurationManager(final List<DataStoreConfigurationSource> configurationSourcesList) {
-    this.configurationSources = checkNotNull(configurationSourcesList);
+    this.configurationSources = QualifierUtil.buildQualifierBeanMap(checkNotNull(configurationSourcesList));
   }
 
   /**
@@ -56,15 +60,26 @@ public class DataStoreConfigurationManager
     Set<String> configuredStores = new TreeSet<>(CASE_INSENSITIVE_ORDER);
     // only attempt to load a named store once from the first store that has it
     // (if the first attempt fails then that store is considered not available)
-    return configurationSources
+    return configurationSources.values()
         .stream()
         .filter(DataStoreConfigurationSource::isEnabled)
-        .sorted(QualifierUtil::compareByOrder)
+        .sorted(comparingInt(this::getPriority).reversed())
         .flatMap(source -> stream(source.browseStoreNames())
             .filter(configuredStores::add)
             .map(configLoader(source)))
         .filter(Objects::nonNull)
-        .toList();
+        .collect(toImmutableList());
+  }
+
+  private int getPriority(final DataStoreConfigurationSource configSource) {
+    if (configSource.getClass().isAnnotationPresent(Priority.class)) {
+      Priority priority = configSource.getClass().getAnnotation(Priority.class);
+      return priority.value();
+    }
+    else {
+      log.warn("Loaded config source {} without priority, assuming last", configSource.getName());
+      return Integer.MIN_VALUE;
+    }
   }
 
   /**
@@ -100,10 +115,7 @@ public class DataStoreConfigurationManager
    * Attempts to find the modifiable source that originally loaded the given configuration.
    */
   private Optional<DataStoreConfigurationSource> findModifiableSource(final DataStoreConfiguration configuration) {
-    DataStoreConfigurationSource source = configurationSources.stream()
-        .filter(candidate -> configuration.getSource().equals(QualifierUtil.value(candidate).orElse(null)))
-        .findFirst()
-        .orElse(null);
+    DataStoreConfigurationSource source = configurationSources.get(configuration.getSource());
 
     checkArgument(source != null, "%s refers to a missing source", configuration);
 

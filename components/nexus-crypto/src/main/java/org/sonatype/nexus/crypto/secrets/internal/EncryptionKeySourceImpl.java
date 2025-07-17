@@ -22,7 +22,6 @@ import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.secrets.EncryptionKeyValidator;
-import org.sonatype.nexus.crypto.secrets.internal.EncryptionKeyList.FixedEncryption;
 import org.sonatype.nexus.crypto.secrets.internal.EncryptionKeyList.SecretEncryptionKey;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -53,10 +52,6 @@ public class EncryptionKeySourceImpl
 
   private Optional<SecretEncryptionKey> activeKey;
 
-  private Optional<FixedEncryption> fixedEncryption;
-
-  private Optional<FixedEncryption> previousFixedEncryption;
-
   private boolean pristine = true;
 
   @Inject
@@ -75,8 +70,6 @@ public class EncryptionKeySourceImpl
     this.objectMapper = objectMapper;
     this.secretsFilePath = secretsFilePath;
     this.activeKey = Optional.empty();
-    this.fixedEncryption = Optional.empty();
-    this.previousFixedEncryption = Optional.empty();
 
     checkFilePath();
   }
@@ -118,26 +111,8 @@ public class EncryptionKeySourceImpl
             .filter(s -> s.getId().equals(activeKeyId))
             .findFirst();
 
-        if (activeKey.isEmpty() && activeKeyId != null) {
+        if (!activeKey.isPresent() && activeKeyId != null) {
           log.error("unable to find encryption key with id '{}'", activeKeyId);
-        }
-
-        FixedEncryption maybeFixedEncryptionConfig = configuredKeys.getFixedEncryption();
-
-        if (maybeFixedEncryptionConfig != null) {
-          fixedEncryption = Optional.of(maybeFixedEncryptionConfig);
-        }
-        else {
-          fixedEncryption = Optional.empty();
-        }
-
-        FixedEncryption maybePreviousFixedEncryptionConfig = configuredKeys.getPreviousFixedEncryption();
-
-        if (maybePreviousFixedEncryptionConfig != null) {
-          previousFixedEncryption = Optional.of(maybePreviousFixedEncryptionConfig);
-        }
-        else {
-          previousFixedEncryption = Optional.empty();
         }
       }
 
@@ -175,27 +150,9 @@ public class EncryptionKeySourceImpl
   }
 
   @Override
-  public Optional<FixedEncryption> getFixedEncryption() {
-    if (pristine) {
-      readFile();
-    }
-
-    return fixedEncryption;
-  }
-
-  @Override
-  public Optional<FixedEncryption> getPreviousFixedEncryption() {
-    if (pristine) {
-      readFile();
-    }
-
-    return previousFixedEncryption;
-  }
-
-  @Override
   public Optional<SecretEncryptionKey> getKey(final String keyId) {
     checkNotNull(keyId);
-    if (findKey(keyId).isEmpty()) {
+    if (!findKey(keyId).isPresent()) {
       readFile();
     }
 

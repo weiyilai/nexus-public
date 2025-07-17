@@ -12,20 +12,23 @@
  */
 package org.sonatype.nexus.self.hosted.datastore;
 
+import javax.annotation.Priority;
+import jakarta.inject.Singleton;
+
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.datastore.DataStoreConfigurationSource;
 import org.sonatype.nexus.datastore.api.DataStoreConfiguration;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import jakarta.inject.Singleton;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
+import static java.lang.Integer.MIN_VALUE;
 import static org.sonatype.nexus.self.hosted.datastore.DataStoreConfigurationDefaultSource.DEFAULT;
+import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Source of {@link DataStoreConfiguration}s for the default datastore only
@@ -34,7 +37,8 @@ import static org.sonatype.nexus.self.hosted.datastore.DataStoreConfigurationDef
  */
 @Component
 @Qualifier(DEFAULT)
-@Order(DataStoreConfigurationSource.ORDER_DEFAULT_SOURCE)
+@Priority(MIN_VALUE)
+@Order
 @Singleton
 public class DataStoreConfigurationDefaultSource
     extends ComponentSupport

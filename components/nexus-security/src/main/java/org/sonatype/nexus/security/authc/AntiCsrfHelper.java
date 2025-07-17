@@ -134,7 +134,7 @@ public class AntiCsrfHelper
   }
 
   private boolean isExemptRequest(final HttpServletRequest request) {
-    String requestPath = request.getRequestURI();
+    String requestPath = request.getServletPath();
     return csrfExemptPaths.stream()
         .map(CsrfExemption::getPath)
         .anyMatch(requestPath::contains);

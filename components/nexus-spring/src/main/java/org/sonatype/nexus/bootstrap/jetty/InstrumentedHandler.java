@@ -17,8 +17,6 @@ import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * Extension of {@link io.dropwizard.metrics.jetty12.AbstractInstrumentedHandler} that restores the delegate
  * constructor.
@@ -26,16 +24,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class InstrumentedHandler // NOSONAR
     extends io.dropwizard.metrics.jetty12.AbstractInstrumentedHandler
 {
-  private final ServletContextHandler delegate;
-
-  public InstrumentedHandler(final ServletContextHandler delegate) {
+  public InstrumentedHandler(ServletContextHandler delegate) {
     super(SharedMetricRegistries.getOrCreate("nexus"));
     setHandler(delegate);
-    this.delegate = checkNotNull(delegate);
-  }
-
-  public ServletContextHandler getDelegate() {
-    return delegate;
   }
 
   @Override

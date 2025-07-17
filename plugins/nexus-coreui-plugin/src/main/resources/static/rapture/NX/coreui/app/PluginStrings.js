@@ -1414,19 +1414,7 @@ Ext.define('NX.coreui.app.PluginStrings', {
     ClmSettings_Show_Link_HelpText: 'Show IQ Server link in Browse menu when server is enabled',
 
     //Settings form general error
-    SettingsForm_Save_Error: 'An error occurred while saving the form',
-
-    // Reconciliation Plan information
-    Task_TaskSettingsForm_PlanInformation_Plans_Qty: "Plan (s)",
-    Task_TaskSettingsForm_PlanInformation_Plans_Empty: "N/A",
-    Task_TaskSettingsForm_PlanInformation_BlobStore_Qty: "Blob Stores",
-    Task_TaskSettingsForm_PlanInformation_BlobStore_Empty: "N/A",
-    Task_TaskSettingsForm_PlanInformation_Repositories_Qty: "Repositories",
-    Task_TaskSettingsForm_PlanInformation_Repositories_Empty: "N/A",
-    Task_TaskSettingsForm_PlanInformation_StartDate: "Start Date",
-    Task_TaskSettingsForm_PlanInformation_StartDate_Empty: "N/A",
-    Task_TaskSettingsForm_PlanInformation_EndDate: "End Date",
-    Task_TaskSettingsForm_PlanInformation_EndDate_Empty: "N/A",
+    SettingsForm_Save_Error: 'An error occurred while saving the form'
   },
 
   /**

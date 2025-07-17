@@ -40,7 +40,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 public class AntiCsrfHelperTest
-    extends TestSupport
+  extends TestSupport
 {
   private AntiCsrfHelper underTest;
 
@@ -56,7 +56,7 @@ public class AntiCsrfHelperTest
   @Before
   public void setup() {
     underTest = new AntiCsrfHelper(true, Collections.EMPTY_LIST);
-    when(httpServletRequest.getRequestURI()).thenReturn("/somepath");
+    when(httpServletRequest.getServletPath()).thenReturn("/somepath");
 
     ThreadContext.bind(securityManager);
     ThreadContext.bind(subject);
@@ -110,7 +110,7 @@ public class AntiCsrfHelperTest
   public void testRequireValidToken() {
     setupBrowserSubject();
     when(httpServletRequest.getCookies())
-        .thenReturn(new Cookie[]{new Cookie(AntiCsrfHelper.ANTI_CSRF_TOKEN_NAME, "a-value")});
+        .thenReturn(new Cookie[] { new Cookie(AntiCsrfHelper.ANTI_CSRF_TOKEN_NAME, "a-value") });
     try {
       underTest.requireValidToken(httpServletRequest, "a-value");
     }
@@ -126,7 +126,7 @@ public class AntiCsrfHelperTest
   public void testRequireValidToken_tokenMismatch() {
     setupBrowserSubject();
     when(httpServletRequest.getCookies())
-        .thenReturn(new Cookie[]{new Cookie(AntiCsrfHelper.ANTI_CSRF_TOKEN_NAME, "a-value")});
+        .thenReturn(new Cookie[] { new Cookie(AntiCsrfHelper.ANTI_CSRF_TOKEN_NAME, "a-value") });
     underTest.requireValidToken(httpServletRequest, "a-different-value");
   }
 
@@ -243,7 +243,7 @@ public class AntiCsrfHelperTest
     setupBrowserSubject();
     when(httpServletRequest.getMethod()).thenReturn(HttpMethod.POST);
     // NX-ANTI-CSRF-TOKEN header not set
-    when(httpServletRequest.getCookies()).thenReturn(new Cookie[]{new Cookie("NX-ANTI-CSRF-TOKEN", "avalue")});
+    when(httpServletRequest.getCookies()).thenReturn(new Cookie[] { new Cookie("NX-ANTI-CSRF-TOKEN", "avalue") });
 
     assertThat(underTest.isAccessAllowed(httpServletRequest), is(false));
 
@@ -261,7 +261,7 @@ public class AntiCsrfHelperTest
     when(httpServletRequest.getHeader(HttpHeaders.REFERER)).thenReturn("referrer");
     when(httpServletRequest.getHeader("NX-ANTI-CSRF-TOKEN")).thenReturn("some-value");
     when(httpServletRequest.getCookies())
-        .thenReturn(new Cookie[]{new Cookie("NX-ANTI-CSRF-TOKEN", "some-other-value")});
+        .thenReturn(new Cookie[] { new Cookie("NX-ANTI-CSRF-TOKEN", "some-other-value") });
 
     assertThat(underTest.isAccessAllowed(httpServletRequest), is(false));
 
@@ -273,15 +273,12 @@ public class AntiCsrfHelperTest
    * Test that a request missing a CSRF cookie but with exempt path is allowed
    */
   @Test
-  public void testIsAccessAllowed_MissingCsrfCookie_ExemptTelemetryPath() {
-    underTest = new AntiCsrfHelper(true, Collections.singletonList(() -> "user-telemetry/events"));
+  public void testIsAccessAllowed_MissingCsrfCookie_ExamptPath() {
+    underTest = new AntiCsrfHelper(true, Collections.singletonList(() -> "/some-service/config"));
     when(httpServletRequest.getMethod()).thenReturn(HttpMethod.POST);
     setupBrowserSubject();
     when(httpServletRequest.getHeader("NX-ANTI-CSRF-TOKEN")).thenReturn("avalue");
-
-    when(httpServletRequest.getRequestURI()).thenReturn("/service/rest/v1/user-telemetry/events/rte/v2/command");
-    when(httpServletRequest.getServletPath()).thenThrow(
-        new RuntimeException("getServletPath() should not be used! Use getRequestURI() instead."));
+    when(httpServletRequest.getServletPath()).thenReturn("/v1/rest/some-service/config?s=a");
 
     assertThat(underTest.isAccessAllowed(httpServletRequest), is(true));
   }
@@ -290,18 +287,13 @@ public class AntiCsrfHelperTest
    * Test that a request missing a CSRF header but with exempt path is allowed
    */
   @Test
-  public void testIsAccessAllowed_MissingCsrfHeader_ExemptTelemetryPath() {
-    underTest = new AntiCsrfHelper(true, Collections.singletonList(() -> "user-telemetry/events"));
+  public void testIsAccessAllowed_MissingCsrfHeader_ExemptPath() {
+    underTest = new AntiCsrfHelper(true, Collections.singletonList(() -> "/some-service/config"));
     setupBrowserSubject();
     when(httpServletRequest.getMethod()).thenReturn(HttpMethod.POST);
     // NX-ANTI-CSRF-TOKEN header not set
-    when(httpServletRequest.getCookies()).thenReturn(new Cookie[]{
-        new Cookie("NX-ANTI-CSRF-TOKEN", "avalue")
-    });
-
-    when(httpServletRequest.getRequestURI()).thenReturn("/service/rest/v1/user-telemetry/events/rte/v2/command");
-    when(httpServletRequest.getServletPath()).thenThrow(
-        new RuntimeException("getServletPath() should not be used! Use getRequestURI() instead."));
+    when(httpServletRequest.getCookies()).thenReturn(new Cookie[] { new Cookie("NX-ANTI-CSRF-TOKEN", "avalue") });
+    when(httpServletRequest.getServletPath()).thenReturn("/v1/rest/some-service/config?s=a");
 
     assertThat(underTest.isAccessAllowed(httpServletRequest), is(true));
   }

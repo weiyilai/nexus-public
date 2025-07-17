@@ -212,12 +212,12 @@ Ext.define('NX.coreui.mixin.ComponentUtils', {
       case 'folder':
         return iconController.findIcon('tree-folder', 'x16');
       case 'component':
-        if(!NX.State.isLicenseValid() && asset.get('vulnerable')) {
+        if('OSS' === NX.State.getEdition() && asset.get('vulnerable')) {
           return iconController.findIcon('vulnerability', 'x16');
         }
         return iconController.findIcon('tree-component', 'x16');
       case 'asset':
-        if(!NX.State.isLicenseValid() && asset.get('vulnerable')) {
+        if('OSS' === NX.State.getEdition() && asset.get('vulnerable')) {
           return iconController.findIcon('vulnerability', 'x16');
         }
         var assetName = asset.get('text');

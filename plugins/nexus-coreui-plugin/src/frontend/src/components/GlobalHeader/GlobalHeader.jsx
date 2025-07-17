@@ -27,7 +27,6 @@ import ceDarkLogo from "../../../../art/logos/logo-community-edition-header-dark
 import coreLogo from "../../../../art/logos/logo-core-edition-header.svg";
 import coreDarkLogo from "../../../../art/logos/logo-core-edition-header-dark.svg";
 import { useRouter } from '@uirouter/react';
-import { handleExtJsUnsavedChanges } from '../widgets/ExtJsContainer/useExtJsUnsavedChangesGuard';
 
 import './Globalheader.scss'
 import HelpMenu from './HelpMenu';
@@ -75,19 +74,11 @@ export default function GlobalHeader() {
       </NxGlobalHeader2>);
 
   function onRefreshClick() {
-    // Try to get the ExtJS Menu controller
-    const menuCtrl =
-      window.Ext && Ext.getApplication && Ext.getApplication().getController
-        ? Ext.getApplication().getController('Menu')
-        : null;
-
-    handleExtJsUnsavedChanges(menuCtrl, () => {
-      if (ExtJS.isExtJsRendered()) {
-        ExtJS.refresh();
-      } else {
-        router.stateService.reload();
-      }
-    });
+    if (ExtJS.isExtJsRendered()) {
+      ExtJS.refresh();
+    } else {
+      router.stateService.reload();
+    }
   }
 
   function getLogoProps() {

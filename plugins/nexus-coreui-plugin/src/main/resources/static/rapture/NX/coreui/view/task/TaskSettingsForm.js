@@ -194,7 +194,6 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
       }
 
       this.initScheduleFieldSet(taskTypeModel, scheduleFieldSet);
-      this.initAlertBanners(taskTypeModel);
 
       Ext.each(formFields, function (field) {
         var properties = model.get('properties');
@@ -328,6 +327,8 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
     return false;
   },
   handlePlanReconcileTask: function (model, me) {
+    me.down('[name="topPanel"]').setHidden(false);
+    me.down('[name="bottomPanel"]').setHidden(false);
     const scopeFieldsSet = me.down('nx-coreui-task-scopefieldset');
     if (scopeFieldsSet) {
       if (model.get('properties') == null) {
@@ -377,28 +378,5 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
         }
       });
     }
-  },
-
-  initAlertBanners: function(taskTypeModel) {
-    const me = this,
-        formFields = taskTypeModel.get('formFields'),
-        showBanner = function (model, name) {
-          if (model) {
-            me.down('panel[name="' + name + '"]').setVisible(true);
-            me.down('panel[name="' + name + '"]').setTitle(model.helpText);
-          } else {
-            me.down('panel[name="' + name + '"]').setVisible(false);
-          }
-        };
-
-    const top = Ext.Array.findBy(formFields, function(field) {
-      return field.type === 'templateOnly' && field.id === 'topAlertBanner';
-    });
-    const bottom = Ext.Array.findBy(formFields, function(field) {
-      return field.type === 'templateOnly' && field.id === 'bottomAlertBanner';
-    });
-
-    showBanner(top, 'topPanel');
-    showBanner(bottom, 'bottomPanel');
-  },
+  }
 });

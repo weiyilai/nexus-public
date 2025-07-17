@@ -13,6 +13,7 @@
 package org.sonatype.nexus.coreui.service;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -159,7 +160,10 @@ public class RepositoryUiService
   }
 
   public List<BrowseableFormatXO> getBrowseableFormats() {
-    return StreamSupport.stream(repositoryManager.browse().spliterator(), false)
+    Collection<Repository> browseableRepositories =
+        repositoryPermissionChecker.userCanBrowseRepositories(repositoryManager.browse());
+
+    return browseableRepositories.stream()
         .map(Repository::getFormat)
         .map(Format::getValue)
         .distinct()

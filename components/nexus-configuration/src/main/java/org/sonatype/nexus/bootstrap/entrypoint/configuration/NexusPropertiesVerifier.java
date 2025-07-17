@@ -51,11 +51,9 @@ public class NexusPropertiesVerifier
       nexusProperties.put(NexusEditionSelector.PROPERTY_KEY, "CORE");
     }
 
-    applyEnvironmentVariables(nexusProperties);
-
-    // the select methods must happen after applying environment variables
     selectDatastoreFeature(nexusProperties);
     selectAuthenticationFeature(nexusProperties);
+    applyEnvironmentVariables(nexusProperties);
 
     requireProperty(nexusProperties, NexusEditionSelector.PROPERTY_KEY);
     requireProperty(nexusProperties, DB_FEATURE_PROPERTY_KEY);
@@ -144,7 +142,7 @@ public class NexusPropertiesVerifier
   }
 
   private static void ensureHACIsDisabled(final NexusProperties nexusProperties) {
-    if (parseBoolean(nexusProperties.getProperty("nexus.clustered"))) {
+    if (!isNullOrEmpty(nexusProperties.getProperty("nexus.clustered"))) {
       throw new IllegalStateException(
           "High Availability Clustering (HA-C) is a legacy feature and is no longer supported");
     }

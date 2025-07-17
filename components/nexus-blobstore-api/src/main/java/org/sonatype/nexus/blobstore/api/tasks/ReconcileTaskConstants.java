@@ -45,9 +45,9 @@ public final class ReconcileTaskConstants
 
   public static final String REPOSITORY_NAME_FIELD_ID = "repositoryName";
 
-  public static final String PLAN_INFORMATION_FIELD_ID = "planInformation";
-
   public static final String ONLY_NOTIFY = "onlyNotify";
+
+  public static final String DRY_RUN = "dryRun";
 
   private ReconcileTaskConstants() {
   }

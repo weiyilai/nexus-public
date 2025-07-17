@@ -95,14 +95,4 @@ public class ApplicationDirectoriesImplTest
     assertThat(relative.getCanonicalFile(), equalTo(workDir.getCanonicalFile()));
     assertThat(absolute.getCanonicalFile(), equalTo(tempDir.getCanonicalFile()));
   }
-
-  @Test
-  public void testWithNoWorkDir() {
-    File root = temporaryFolder.getRoot();
-    workDir = new File(root, "does-not-exist");
-    underTest =
-        new ApplicationDirectoriesImpl(installDir.getAbsolutePath(), workDir.getAbsolutePath(), directoryHelper);
-
-    // prior to fix, this would throw an NPE
-  }
 }

@@ -16,15 +16,20 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+
 import javax.annotation.Nullable;
+import jakarta.inject.Inject;
+import javax.validation.Valid;
 
 import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.event.EventHelper;
 import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.distributed.event.service.api.common.RepositoryRemoteConnectionStatusEvent;
 import org.sonatype.nexus.httpclient.HttpClientManager;
+import org.sonatype.nexus.httpclient.config.AuthenticationConfiguration;
 import org.sonatype.nexus.httpclient.config.BearerTokenAuthenticationConfiguration;
 import org.sonatype.nexus.httpclient.config.ConfigurationCustomizer;
+import org.sonatype.nexus.httpclient.config.ConnectionConfiguration;
 import org.sonatype.nexus.httpclient.config.HttpClientConfiguration;
 import org.sonatype.nexus.httpclient.config.HttpClientConfigurationChangedEvent;
 import org.sonatype.nexus.httpclient.config.UsernameAuthenticationConfiguration;
@@ -33,7 +38,6 @@ import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.config.ConfigurationFacet;
 import org.sonatype.nexus.repository.httpclient.AutoBlockConfiguration;
 import org.sonatype.nexus.repository.httpclient.ContentCompressionStrategy;
-import org.sonatype.nexus.repository.httpclient.HttpClientConfig;
 import org.sonatype.nexus.repository.httpclient.HttpClientFacet;
 import org.sonatype.nexus.repository.httpclient.NormalizationStrategy;
 import org.sonatype.nexus.repository.httpclient.RemoteConnectionStatus;
@@ -42,7 +46,6 @@ import org.sonatype.nexus.repository.httpclient.RemoteConnectionStatusObserver;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
-import jakarta.inject.Inject;
 import org.apache.http.Header;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.RedirectStrategy;
@@ -50,9 +53,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.TargetAuthenticationStrategy;
 import org.apache.http.message.BasicHeader;
 import org.joda.time.DateTime;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -62,6 +62,9 @@ import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.sonatype.nexus.repository.FacetSupport.State.STARTED;
 import static org.sonatype.nexus.repository.httpclient.RemoteConnectionStatusType.AUTO_BLOCKED_UNAVAILABLE;
 import static org.sonatype.nexus.repository.httpclient.RemoteConnectionStatusType.UNINITIALISED;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Default {@link HttpClientFacet} implementation.
@@ -93,7 +96,25 @@ public class HttpClientFacetImpl
 
   private String unencryptedPassword;
 
-  private HttpClientConfig config;
+  @VisibleForTesting
+  public static class Config
+  {
+    @Valid
+    @Nullable
+    public ConnectionConfiguration connection;
+
+    @Valid
+    @Nullable
+    public AuthenticationConfiguration authentication;
+
+    @Nullable
+    public Boolean blocked;
+
+    @Nullable
+    public Boolean autoBlock;
+  }
+
+  private Config config;
 
   @VisibleForTesting
   BlockingHttpClient httpClient;
@@ -124,7 +145,7 @@ public class HttpClientFacetImpl
       final List<NormalizationStrategy> normalizationStrategy,
       final List<ContentCompressionStrategy> contentCompressionStrategies,
       final List<TargetAuthenticationStrategy> authenticationStrategies,
-      final HttpClientConfig config)
+      final Config config)
   {
     this(httpClientManager, autoBlockConfiguration, redirectStrategy, normalizationStrategy,
         contentCompressionStrategies, authenticationStrategies);
@@ -134,13 +155,12 @@ public class HttpClientFacetImpl
 
   @Override
   protected void doValidate(final Configuration configuration) throws Exception {
-    facet(ConfigurationFacet.class).validateSection(configuration, CONFIG_KEY, HttpClientConfig.class);
+    facet(ConfigurationFacet.class).validateSection(configuration, CONFIG_KEY, Config.class);
   }
 
   @Override
   protected void doConfigure(final Configuration configuration) throws Exception {
-    config = facet(ConfigurationFacet.class).readSection(configuration, CONFIG_KEY, HttpClientConfig.class);
-    resetPasswordCache();
+    config = facet(ConfigurationFacet.class).readSection(configuration, CONFIG_KEY, Config.class);
     log.debug("Config: {}", config);
 
     createHttpClient();
@@ -285,7 +305,7 @@ public class HttpClientFacetImpl
 
   protected HttpClientConfiguration getHttpClientConfiguration(
       final HttpClientManager httpClientManager,
-      final HttpClientConfig config)
+      final Config config)
   {
     // construct http client delegate
     HttpClientConfiguration delegateConfig = httpClientManager.newConfiguration();
@@ -357,16 +377,5 @@ public class HttpClientFacetImpl
         status.getRequestUrl());
 
     getEventManager().post(event);
-  }
-
-  private void resetPasswordCache() {
-    if (config.authentication instanceof UsernameAuthenticationConfiguration) {
-      UsernameAuthenticationConfiguration userAuth = (UsernameAuthenticationConfiguration) config.authentication;
-      unencryptedPassword = new String(userAuth.getPassword().decrypt());
-
-    }
-    else {
-      unencryptedPassword = null;
-    }
   }
 }

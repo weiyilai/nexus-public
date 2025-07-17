@@ -14,17 +14,21 @@ package org.sonatype.nexus.cleanup.internal;
 
 import java.util.Objects;
 
+import com.sonatype.nexus.bootstrap.entrypoint.conditional.ConditionalOnEdition;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import org.sonatype.nexus.cleanup.content.search.CleanupBrowseServiceFactory;
 import org.sonatype.nexus.cleanup.content.search.CleanupComponentBrowse;
 import org.sonatype.nexus.cleanup.content.search.DefaultCleanupComponentBrowse;
 import org.sonatype.nexus.repository.Format;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-@Lazy
+@ConditionalOnEdition(community = true)
+@Primary
 @Component
 @Singleton
 public class DefaultCleanupBrowseServiceFactory

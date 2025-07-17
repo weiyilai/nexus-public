@@ -95,21 +95,10 @@ public class SecretsServiceImplTest
         new PbeCipherFactoryImpl(cryptoHelper, hashingHandlerFactory, "PBKDF2WithHmacSHA256");
 
     underTestSha1 = new SecretsServiceImpl(cipherFactory, mavenCipher, PhraseService.LEGACY_PHRASE_SERVICE, sha1Factory,
-        secretsStore, encryptionKeySource, databaseCheck, false);
+        secretsStore, encryptionKeySource, databaseCheck);
     underTestSha256 =
         new SecretsServiceImpl(cipherFactory, mavenCipher, PhraseService.LEGACY_PHRASE_SERVICE, sha256Factory,
-            secretsStore, encryptionKeySource, databaseCheck, false);
-  }
-
-  @Test
-  public void testLegacyCannotBeUsedWithFips() {
-    HashingHandlerFactory hashingHandlerFactory = new HashingHandlerFactoryImpl(cryptoHelper);
-    PbeCipherFactory sha1Factory = new PbeCipherFactoryImpl(cryptoHelper, hashingHandlerFactory, "PBKDF2WithHmacSHA1");
-    when(databaseCheck.isAtLeast(anyString())).thenReturn(false);
-    IllegalStateException expected = assertThrows(IllegalStateException.class,
-        () -> new SecretsServiceImpl(cipherFactory, mavenCipher, PhraseService.LEGACY_PHRASE_SERVICE, sha1Factory,
-            secretsStore, encryptionKeySource, databaseCheck, true));
-    assertThat(expected.getMessage(), is("FIPS mode requires migration to the new secrets service"));
+            secretsStore, encryptionKeySource, databaseCheck);
   }
 
   @Test

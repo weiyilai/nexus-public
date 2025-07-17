@@ -137,7 +137,6 @@ public class DatabaseCheckImpl
 
     MigrationInfo current = flyway.info().current();
     if (current != null) {
-      log.debug("Flyway info is reloaded, current version: {}", current.getVersion().getVersion());
       return current.getVersion();
     }
 
@@ -149,8 +148,8 @@ public class DatabaseCheckImpl
       extends CacheLoader<String, Boolean>
   {
     @Override
-    public Boolean load(final String requiredVersion) {
-      if (currentSchemaVersion == null || !currentSchemaVersion.isAtLeast(requiredVersion)) {
+    public Boolean load(final String requiredVersion) throws Exception {
+      if (currentSchemaVersion == null) {
         currentSchemaVersion = getMigrationVersion();
         if (currentSchemaVersion == null) {
           return true;

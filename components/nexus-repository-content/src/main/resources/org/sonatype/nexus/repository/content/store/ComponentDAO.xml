@@ -255,26 +255,12 @@
   </select>
 
   <insert id="createComponent" useGeneratedKeys="true" keyProperty="component.componentId">
-    MERGE INTO ${format}_component (repository_id, namespace, name, kind, version, normalized_version, attributes
-    <if test="entityVersionEnabled">, entity_version</if>
-    )
-    KEY (repository_id, namespace, name, version)
-    VALUES (#{component.repositoryId}, #{component.namespace}, #{component.name},
-    #{component.kind}, #{component.version}, #{component.normalizedVersion}, #{component.attributes}
-    <if test="entityVersionEnabled">, 1</if>
-    );
-  </insert>
-
-  <!-- Note that the ON CONFLICT requires a DO UPDATE so that the entityId is returned, so that's why only single
-       field is set, figure thats less work than setting the other coordinates as well -->
-  <insert id="createComponent" useGeneratedKeys="true" keyProperty="component.componentId" databaseId="PostgreSQL">
     INSERT INTO ${format}_component (repository_id, namespace, name, kind, version, normalized_version, attributes
     <if test="entityVersionEnabled">, entity_version</if>
     ) VALUES (#{component.repositoryId}, #{component.namespace}, #{component.name},
     #{component.kind}, #{component.version}, #{component.normalizedVersion}, #{component.attributes}
     <if test="entityVersionEnabled">, 1</if>
-    )
-    ON CONFLICT(repository_id, namespace, name, version) DO UPDATE SET repository_id = #{component.repositoryId};
+    );
   </insert>
 
   <select id="readComponent" resultType="ComponentData">

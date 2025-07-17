@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.sonatype.nexus</groupId>
     <artifactId>nexus-components</artifactId>
-    <version>3.83.2-01</version>
+    <version>3.84.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>nexus-crypto</artifactId>
@@ -53,10 +53,6 @@
     The classloader uses the first matching provider found, so order affects which implementation is loaded.
     Changing this order may break cryptographic operations or FIPS compliance.
     -->
-    <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcpkix-fips</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.bouncycastle</groupId>
@@ -86,6 +82,11 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bc-fips</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-fips</artifactId>
     </dependency>
 
     <dependency>

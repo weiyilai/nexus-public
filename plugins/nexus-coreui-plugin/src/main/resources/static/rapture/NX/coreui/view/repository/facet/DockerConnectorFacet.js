@@ -110,24 +110,6 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
                   }
                 });
                 var value = group.getValue()['attributes.docker.pathEnabled'];
-                // Ensure value is explicitly 'true' or 'false'; default to 'true' otherwise
-                if (!['true', 'false'].includes(value)) {
-                  // if not explicit, then look at existing config and make it explicit
-                  var subdomainCheckboxField = form && form.down('[name=dockercheckboxsubdomain]');
-                  var httpPortCheckboxField = form && form.down('[name=dockercheckboxhttp]');
-                  var httpsPortCheckboxField = form && form.down('[name=dockercheckboxhttps]');
-                  value = ((subdomainCheckboxField && subdomainCheckboxField.getValue()) ||
-                      (httpPortCheckboxField && httpPortCheckboxField.getValue()) ||
-                      (httpsPortCheckboxField && httpsPortCheckboxField.getValue())) ? 'false' : 'true';
-
-                  group.setValue({ 'attributes.docker.pathEnabled': value });
-                  // Reset the original value of the radiogroup to ensure that the newly set default value
-                  // is treated as the initial state. This helps maintain consistency in form validation
-                  // and dirty state tracking.
-                  if (typeof group.resetOriginalValue === 'function') {
-                    group.resetOriginalValue();
-                  }
-                }
                 updateConnectorFields(form, value);
               },
             },
@@ -172,25 +154,23 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
     // Helper to update connector field states
     function updateConnectorFields(form, isPathEnabled) {
       var subdomainCheckbox = form.down('#subdomainEnabled');
-      var subdomainField = form.down('#subdomainPort');
       var httpCheckbox = form.down('#httpEnabled');
       var httpsCheckbox = form.down('#httpsEnabled');
+      var subdomainField = form.down('#subdomainPort');
       var httpPortField = form.down('#httpPort');
       var httpsPortField = form.down('#httpsPort');
       if (isPathEnabled === 'true') {
-        if (subdomainVisibility) {
-          subdomainCheckbox.setDisabled(true);
-          subdomainCheckbox.setValue(false);
-        }
+        subdomainCheckbox.setDisabled(true);
+        subdomainCheckbox.setValue(false);
         httpCheckbox.setDisabled(true);
         httpCheckbox.setValue(false);
         httpsCheckbox.setDisabled(true);
         httpsCheckbox.setValue(false);
-        subdomainField && subdomainField.setValue('');
-        httpPortField && httpPortField.setValue('');
-        httpsPortField && httpsPortField.setValue('');
+        if (subdomainField) subdomainField.setValue('');
+        if (httpPortField) httpPortField.setValue('');
+        if (httpsPortField) httpsPortField.setValue('');
       } else {
-        subdomainVisibility && subdomainCheckbox.setDisabled(false);
+        subdomainCheckbox.setDisabled(false);
         httpCheckbox.setDisabled(false);
         httpsCheckbox.setDisabled(false);
       }

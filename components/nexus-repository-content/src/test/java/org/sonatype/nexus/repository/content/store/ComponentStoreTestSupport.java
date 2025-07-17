@@ -158,7 +158,7 @@ public abstract class ComponentStoreTestSupport
 
   private void createComponentWithAsset(final int num) {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
-      ComponentData component = component(repositoryId, "namespace" + num, "" + num, "1.0." + num);
+      ComponentData component = randomComponent(repositoryId, "" + num);
       session.access(TestComponentDAO.class).createComponent(component, entityVersioningEnabled);
 
       TestAssetData asset = generateAsset(repositoryId, "/" + num);

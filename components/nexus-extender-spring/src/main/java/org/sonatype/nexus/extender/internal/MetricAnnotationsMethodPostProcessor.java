@@ -29,7 +29,6 @@ import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.common.metrics.ExceptionMeteredAspect.metricName;
 import static org.sonatype.nexus.common.metrics.TimedAspect.metricName;
-import static org.springframework.util.ReflectionUtils.getAllDeclaredMethods;
 
 /**
  * Ensures {@link Timed} and {@link ExceptionMetered} are registered during startup as opposed to waiting for first
@@ -60,8 +59,7 @@ public class MetricAnnotationsMethodPostProcessor
   private void registerMetricsOfClassMethods(final String className) {
     try {
       Class<?> clazz = Class.forName(className);
-      // Use ReflectionUtils to get all declared methods, including private/protected and inherited
-      for (Method method : getAllDeclaredMethods(clazz)) {
+      for (Method method : clazz.getMethods()) {
         registerMetrics(method);
       }
     }

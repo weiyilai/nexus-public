@@ -32,8 +32,7 @@ public enum FirewallSupportedFormat
   COMPOSER("composer"),
   COCOAPODS("cocoapods"),
   HUGGINGFACE("huggingface"),
-  DOCKER("docker"),
-  RAW("raw");
+  DOCKER("docker");
 
   private final String value;
 

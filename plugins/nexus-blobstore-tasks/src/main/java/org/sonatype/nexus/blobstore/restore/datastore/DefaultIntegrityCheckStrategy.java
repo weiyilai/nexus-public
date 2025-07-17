@@ -12,7 +12,6 @@
  */
 package org.sonatype.nexus.blobstore.restore.datastore;
 
-import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,6 +19,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.Blob;
@@ -37,8 +38,6 @@ import org.sonatype.nexus.repository.content.facet.ContentFacet;
 import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.content.fluent.FluentAssets;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -277,13 +276,11 @@ public class DefaultIntegrityCheckStrategy
    * returns true if the blobs data is accessible, false otherwise
    */
   protected boolean blobDataExists(final Blob blob) {
-    try (InputStream in = blob.getInputStream()) {
-      // Read from the stream to avoid a bug with Azure see NEXUS-48217
-      in.read();
+    try {
+      blob.getInputStream().close();
       return true;
     }
     catch (Exception e) { // NOSONAR
-      log.warn("Failed to read {} cause {}", blob, e.getClass(), log.isDebugEnabled() ? e : null);
       return false;
     }
   }

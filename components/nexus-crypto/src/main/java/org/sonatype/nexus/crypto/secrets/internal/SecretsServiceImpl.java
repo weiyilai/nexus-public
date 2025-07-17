@@ -23,7 +23,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
-import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.common.event.EventAware;
@@ -111,19 +110,9 @@ public class SecretsServiceImpl
       final DatabaseCheck databaseCheck,
       @Value("${nexus.mybatis.cipher.password:changeme}") final String legacyPassword,
       @Value("${nexus.mybatis.cipher.salt:changeme}") final String legacySalt,
-      @Value("${nexus.mybatis.cipher.iv:0123456789ABCDEF}") final String legacyIv,
-      @Value(FeatureFlags.NEXUS_SECURITY_FIPS_ENABLED_NAMED_VALUE) final boolean fipsEnabled)
+      @Value("${nexus.mybatis.cipher.iv:0123456789ABCDEF}") final String legacyIv)
   {
-    if (fipsEnabled) {
-      if (!databaseCheck.isAtLeast(SECRETS_MIGRATION_VERSION)) {
-        throw new IllegalStateException("FIPS mode requires migration to the new secrets service");
-      }
-      this.legacyCipher = null; // FIPS mode does not support legacy ciphers
-    }
-    else {
-      this.legacyCipher = checkNotNull(legacyCipherFactory).create(legacyPassword, legacySalt, legacyIv);// NOSONAR
-    }
-
+    this.legacyCipher = checkNotNull(legacyCipherFactory).create(legacyPassword, legacySalt, legacyIv);// NOSONAR
     this.mavenCipher = checkNotNull(mavenCipher);// NOSONAR
     this.phraseService = checkNotNull(phraseService);// NOSONAR
     this.cipherFactory = checkNotNull(pbeCipherFactory);
@@ -141,11 +130,10 @@ public class SecretsServiceImpl
       final PbeCipherFactory pbeCipherFactory,
       final SecretsStore secretsStore,
       final EncryptionKeySource encryptionKeySource,
-      final DatabaseCheck databaseCheck,
-      final boolean fipsEnabled) throws CipherException
+      final DatabaseCheck databaseCheck) throws CipherException
   {
     this(legacyCipherFactory, mavenCipher, phraseService, pbeCipherFactory, secretsStore, encryptionKeySource,
-        databaseCheck, "changeme", "changeme", "0123456789ABCDEF", fipsEnabled);
+        databaseCheck, "changeme", "changeme", "0123456789ABCDEF");
   }
 
   @Subscribe

@@ -22,10 +22,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.annotation.Nullable;
+import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.Blob;
 import org.sonatype.nexus.blobstore.api.BlobAttributes;
@@ -33,9 +34,7 @@ import org.sonatype.nexus.blobstore.api.BlobId;
 import org.sonatype.nexus.blobstore.api.BlobSession;
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
-import org.sonatype.nexus.blobstore.api.BlobStoreException;
 import org.sonatype.nexus.blobstore.api.BlobStoreUsageChecker;
-import org.sonatype.nexus.blobstore.metrics.MonitoringBlobStoreMetrics;
 import org.sonatype.nexus.common.log.DryRunPrefix;
 import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
@@ -44,18 +43,13 @@ import org.sonatype.nexus.common.text.Strings2;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.codahale.metrics.annotation.Timed;
-import com.google.common.cache.LoadingCache;
-import jakarta.inject.Inject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.sonatype.nexus.blobstore.api.BlobAttributesConstants.HEADER_PREFIX;
 import static org.sonatype.nexus.blobstore.api.BlobRef.DATE_TIME_FORMATTER;
 import static org.sonatype.nexus.blobstore.api.BlobRef.DATE_TIME_PATH_FORMATTER;
-import static org.sonatype.nexus.blobstore.api.OperationType.DOWNLOAD;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.SHUTDOWN;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
 
@@ -84,8 +78,6 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
 
   protected BlobStoreConfiguration blobStoreConfiguration;
 
-  protected LoadingCache<BlobId, BlobSupport> liveBlobs;
-
   private static final Pattern UUID_PATTERN = Pattern.compile(
       ".*vol-\\d{2}[/\\\\]chap-\\d{2}[/\\\\]\\b([0-9a-f]{8}\\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\\b[0-9a-f]{12}\\b).(properties|bytes)$",
       Pattern.CASE_INSENSITIVE);
@@ -101,58 +93,12 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
 
   public static final int MIN_NAME_LENGTH = 1;
 
-  private static final int DEFAULT_MAX_RETRIES = 1;
-
-  private static final long DEFAULT_RETRY_DELAY_MS = 500;
-
-  private int maxRetries;
-
-  private long retryDelayMs;
-
   public BlobStoreSupport(
       final BlobIdLocationResolver blobIdLocationResolver,
       final DryRunPrefix dryRunPrefix)
   {
     this.blobIdLocationResolver = checkNotNull(blobIdLocationResolver);
     this.dryRunPrefix = checkNotNull(dryRunPrefix);
-  }
-
-  @Autowired
-  public void setRetryConfiguration(
-      @Value("${nexus.blobstore.get.maxRetries:" + DEFAULT_MAX_RETRIES + "}") final int maxRetries,
-      @Value("${nexus.blobstore.get.retryDelayMs:" + DEFAULT_RETRY_DELAY_MS + "}") final long retryDelayMs)
-  {
-    this.maxRetries = maxRetries;
-    this.retryDelayMs = retryDelayMs;
-  }
-
-  protected abstract BlobAttributes loadBlobAttributes(final BlobId blobId) throws IOException;
-
-  protected Blob refreshBlob(final BlobSupport blob, final BlobId blobId, final boolean includeDeleted) {
-    Lock lock = blob.lock();
-    try {
-      if (blob.isStale()) {
-        BlobAttributes blobAttributes = loadBlobAttributes(blobId);
-        if (blobAttributes == null) {
-          log.warn("Attempt to access non-existent blob {}", blobId);
-          return null;
-        }
-
-        if (blobAttributes.isDeleted() && !includeDeleted) {
-          log.warn("Attempt to access soft-deleted blob {} ({})", blobId, blobAttributes);
-          return null;
-        }
-
-        blob.refresh(blobAttributes.getHeaders(), blobAttributes.getMetrics());
-      }
-      return blob;
-    }
-    catch (IOException e) {
-      throw new BlobStoreException(e, blobId);
-    }
-    finally {
-      lock.unlock();
-    }
   }
 
   @Inject
@@ -206,66 +152,6 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
   }
 
   protected abstract Blob doCreate(InputStream blobData, Map<String, String> headers, @Nullable BlobId blobId);
-
-  @Nullable
-  @Override
-  @Guarded(by = STARTED)
-  public Blob get(final BlobId blobId) {
-    return get(blobId, false);
-  }
-
-  @Nullable
-  @Override
-  @Guarded(by = STARTED)
-  @Timed
-  @MonitoringBlobStoreMetrics(operationType = DOWNLOAD)
-  public Blob get(final BlobId blobId, final boolean includeDeleted) {
-    return getWithRetries(blobId, includeDeleted);
-  }
-
-  private Blob getWithRetries(final BlobId blobId, final boolean includeDeleted) {
-    if (log.isDebugEnabled()) {
-      log.debug("Attempting to get blob {} (includeDeleted={}) with maxRetries={}, retryDelayMs={}",
-          blobId, includeDeleted, maxRetries, retryDelayMs);
-    }
-    for (int attempt = 0; attempt < this.maxRetries; attempt++) {
-      Blob blob = doGet(blobId, includeDeleted);
-      if (blob != null) {
-        if (log.isDebugEnabled()) {
-          log.debug("Successfully retrieved blob {} on attempt {}", blobId, attempt + 1);
-        }
-        return blob;
-      }
-
-      if (log.isDebugEnabled()) {
-        log.debug("Failed to retrieve blob {} on attempt {}, retrying after {} ms", blobId, attempt + 1, retryDelayMs);
-      }
-
-      try {
-        log.warn("Thread interrupted while waiting to retry getting blob {}", blobId);
-        Thread.sleep(this.retryDelayMs);
-      }
-      catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        break;
-      }
-    }
-
-    if (log.isDebugEnabled()) {
-      log.debug("Failed to retrieve blob {} after {} attempts", blobId, maxRetries);
-    }
-
-    return null;
-  }
-
-  protected final Blob doGet(final BlobId blobId, final boolean includeDeleted) {
-    checkNotNull(blobId);
-    final BlobSupport blob = liveBlobs.getUnchecked(blobId);
-    if (blob.isStale()) {
-      return refreshBlob(blob, blobId, includeDeleted);
-    }
-    return blob;
-  }
 
   @Override
   @Guarded(by = STARTED)
@@ -429,7 +315,7 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
 
     matcher = DATE_BASED_PATTERN.matcher(attributeFilePath.getFullPath());
     if (matcher.find()) {
-      LocalDateTime localDateTime = LocalDateTime.parse(matcher.group(1).replace("\\", "/"), DATE_TIME_PATH_FORMATTER);
+      LocalDateTime localDateTime = LocalDateTime.parse(matcher.group(1), DATE_TIME_PATH_FORMATTER);
       OffsetDateTime blobCreatedRef = localDateTime.atOffset(ZoneOffset.UTC);
       String id = matcher.group(3);
       return new BlobId(id, blobCreatedRef, replaceBytesName(attributeFilePath));
