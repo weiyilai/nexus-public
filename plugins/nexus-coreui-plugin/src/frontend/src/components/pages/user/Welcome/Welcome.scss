@@ -19,7 +19,6 @@
     margin: 0 calc(-1 * #{$main-padding});
     width: calc(100% + 2 * #{$main-padding});
     height: 100%;
-    overflow-y: scroll;
     overflow-x: hidden;
   }
 
