@@ -51,10 +51,11 @@ export default function Search() {
           ? Ext.getApplication().getController('Menu')
           : null;
       handleExtJsUnsavedChanges(menuCtrl, async () => {
-        if (state.name !== 'browse.search') {
+        if (state.name !== ROUTE_NAMES.BROWSE.SEARCH.GENERIC) {
           await router.stateService.go(ROUTE_NAMES.BROWSE.SEARCH.GENERIC, { keyword: `=keyword%3D${searchValue}` });
+        } else {
+          ExtJS.search(searchValue);
         }
-        ExtJS.search(searchValue);
       });
     }
   }
