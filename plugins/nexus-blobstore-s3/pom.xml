@@ -154,7 +154,7 @@
         <groupId>dev.aspectj</groupId>
         <artifactId>aspectj-maven-plugin</artifactId>
         <configuration>
-          <aspectLibraries combine.self="combine">
+          <aspectLibraries combine.children="append">
             <aspectLibrary>
               <groupId>org.sonatype.nexus</groupId>
               <artifactId>nexus-blobstore</artifactId>
