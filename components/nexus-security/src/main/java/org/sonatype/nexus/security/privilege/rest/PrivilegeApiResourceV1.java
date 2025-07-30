@@ -19,7 +19,7 @@ import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.security.SecuritySystem;
-import org.sonatype.nexus.security.internal.rest.SecurityApiResourceV1;
+import org.sonatype.nexus.security.internal.rest.SecurityApiConstants;
 import org.sonatype.nexus.security.privilege.PrivilegeDescriptor;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 public class PrivilegeApiResourceV1
     extends PrivilegeApiResource
 {
-  static final String RESOURCE_URI = SecurityApiResourceV1.V1_RESOURCE_URI + "privileges";
+  static final String RESOURCE_URI = SecurityApiConstants.V1_RESOURCE_URI + "privileges";
 
   @Inject
   public PrivilegeApiResourceV1(

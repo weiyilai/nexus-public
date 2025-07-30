@@ -11,7 +11,7 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-package org.sonatype.nexus.security.internal.rest;
+package org.sonatype.nexus.api.rest.selfhosted.security.usersource;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +24,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.api.rest.selfhosted.security.usersource.model.ApiUserSource;
 import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.rest.Resource;
 import org.sonatype.nexus.security.user.ConfiguredUsersUserManager;

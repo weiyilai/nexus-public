@@ -17,7 +17,7 @@ import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.common.event.EventManager;
-import org.sonatype.nexus.security.internal.rest.SecurityApiResourceV1;
+import org.sonatype.nexus.security.internal.rest.SecurityApiConstants;
 import org.sonatype.nexus.selector.SelectorConfigurationStore;
 import org.sonatype.nexus.selector.SelectorFactory;
 import org.sonatype.nexus.selector.SelectorManager;
@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
 public class ContentSelectorsApiResourceV1
     extends ContentSelectorsApiResource
 {
-  static final String RESOURCE_URI = SecurityApiResourceV1.V1_RESOURCE_URI + "content-selectors";
+  static final String RESOURCE_URI = SecurityApiConstants.V1_RESOURCE_URI + "content-selectors";
 
   @Inject
   public ContentSelectorsApiResourceV1(

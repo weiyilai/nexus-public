@@ -17,7 +17,7 @@ import jakarta.inject.Singleton;
 import javax.ws.rs.Path;
 
 import org.sonatype.nexus.security.anonymous.AnonymousManager;
-import org.sonatype.nexus.security.internal.rest.SecurityApiResourceV1;
+import org.sonatype.nexus.security.internal.rest.SecurityApiConstants;
 
 import org.apache.shiro.mgt.RealmSecurityManager;
 
@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
 public class AnonymousAccessApiResourceV1
     extends AnonymousAccessApiResource
 {
-  static final String RESOURCE_URI = SecurityApiResourceV1.V1_RESOURCE_URI + "anonymous";
+  static final String RESOURCE_URI = SecurityApiConstants.V1_RESOURCE_URI + "anonymous";
 
   @Inject
   public AnonymousAccessApiResourceV1(

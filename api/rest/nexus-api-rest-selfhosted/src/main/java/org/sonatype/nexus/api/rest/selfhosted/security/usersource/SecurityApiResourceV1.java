@@ -10,38 +10,31 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.security.internal.rest;
+package org.sonatype.nexus.api.rest.selfhosted.security.usersource;
 
 import java.util.List;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+
 import javax.ws.rs.Path;
 
-import org.sonatype.nexus.rest.APIConstants;
+import org.sonatype.nexus.security.internal.rest.SecurityApiConstants;
 import org.sonatype.nexus.security.user.UserManager;
 
-import io.swagger.annotations.Api;
-
-import static org.sonatype.nexus.rest.APIConstants.BETA_API_PREFIX;
 import org.springframework.stereotype.Component;
 
 /**
  * @since 3.26
- * @deprecated beta prefix is being phased out, prefer starting new APIs with {@link APIConstants#V1_API_PREFIX} instead
  */
-@Api(hidden = true)
 @Component
 @Singleton
-@Path(SecurityApiResourceBeta.BETA_RESOURCE_URI)
-@Deprecated
-public class SecurityApiResourceBeta
+@Path(SecurityApiConstants.V1_RESOURCE_URI)
+public class SecurityApiResourceV1
     extends SecurityApiResource
 {
-  public static final String BETA_RESOURCE_URI = BETA_API_PREFIX + "/security/";
-
   @Inject
-  public SecurityApiResourceBeta(final List<UserManager> userManagersList) {
+  public SecurityApiResourceV1(final List<UserManager> userManagersList) {
     super(userManagersList);
   }
 }

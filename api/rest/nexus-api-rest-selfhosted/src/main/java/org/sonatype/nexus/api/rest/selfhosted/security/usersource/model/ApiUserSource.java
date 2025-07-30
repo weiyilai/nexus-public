@@ -10,29 +10,30 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.security.role.rest;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-import javax.ws.rs.Path;
+package org.sonatype.nexus.api.rest.selfhosted.security.usersource.model;
 
-import org.sonatype.nexus.security.SecuritySystem;
-import org.sonatype.nexus.security.internal.rest.SecurityApiConstants;
-import org.springframework.stereotype.Component;
+import org.sonatype.nexus.security.user.UserManager;
 
 /**
- * @since 3.26
+ * @since 3.17
  */
-@Component
-@Singleton
-@Path(RoleApiResourceV1.RESOURCE_URI)
-public class RoleApiResourceV1
-    extends RoleApiResource
+public class ApiUserSource
 {
-  public static final String RESOURCE_URI = SecurityApiConstants.V1_RESOURCE_URI + "roles";
+  private String id;
 
-  @Inject
-  public RoleApiResourceV1(final SecuritySystem securitySystem) {
-    super(securitySystem);
+  private String name;
+
+  public ApiUserSource(final UserManager manager) {
+    this.id = manager.getSource();
+    this.name = manager.getAuthenticationRealmName();
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public String getName() {
+    return name;
   }
 }

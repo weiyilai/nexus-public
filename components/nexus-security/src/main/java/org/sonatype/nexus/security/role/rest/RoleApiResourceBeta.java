@@ -18,7 +18,7 @@ import javax.ws.rs.Path;
 
 import org.sonatype.nexus.rest.APIConstants;
 import org.sonatype.nexus.security.SecuritySystem;
-import org.sonatype.nexus.security.internal.rest.SecurityApiResourceBeta;
+import org.sonatype.nexus.security.internal.rest.SecurityApiConstants;
 
 import io.swagger.annotations.Api;
 import org.springframework.stereotype.Component;
@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
 public class RoleApiResourceBeta
     extends RoleApiResource
 {
-  static final String RESOURCE_URI = SecurityApiResourceBeta.BETA_RESOURCE_URI + "roles";
+  static final String RESOURCE_URI = SecurityApiConstants.BETA_RESOURCE_URI + "roles";
 
   @Inject
   public RoleApiResourceBeta(final SecuritySystem securitySystem) {

@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
 public class UserApiResourceV1
     extends UserApiResource
 {
-  static final String RESOURCE_URI = SecurityApiResourceV1.V1_RESOURCE_URI + "users/";
+  static final String RESOURCE_URI = SecurityApiConstants.V1_RESOURCE_URI + "users/";
 
   @Inject
   public UserApiResourceV1(

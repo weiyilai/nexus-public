@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
 public class UserApiResourceBeta
     extends UserApiResource
 {
-  static final String RESOURCE_URI = SecurityApiResourceBeta.BETA_RESOURCE_URI + "users/";
+  static final String RESOURCE_URI = SecurityApiConstants.BETA_RESOURCE_URI + "users/";
 
   @Inject
   public UserApiResourceBeta(

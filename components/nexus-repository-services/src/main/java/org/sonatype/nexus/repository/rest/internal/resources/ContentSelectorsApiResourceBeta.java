@@ -18,7 +18,7 @@ import javax.ws.rs.Path;
 
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.rest.APIConstants;
-import org.sonatype.nexus.security.internal.rest.SecurityApiResourceBeta;
+import org.sonatype.nexus.security.internal.rest.SecurityApiConstants;
 import org.sonatype.nexus.selector.SelectorConfigurationStore;
 import org.sonatype.nexus.selector.SelectorFactory;
 import org.sonatype.nexus.selector.SelectorManager;
@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
 public class ContentSelectorsApiResourceBeta
     extends ContentSelectorsApiResource
 {
-  static final String RESOURCE_URI = SecurityApiResourceBeta.BETA_RESOURCE_URI + "content-selectors";
+  static final String RESOURCE_URI = SecurityApiConstants.BETA_RESOURCE_URI + "content-selectors";
 
   @Inject
   public ContentSelectorsApiResourceBeta(

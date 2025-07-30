@@ -10,30 +10,29 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
+package org.sonatype.nexus.api.rest.selfhosted.security.usersource;
 
-package org.sonatype.nexus.security.internal.rest;
+import java.util.List;
 
-import org.sonatype.nexus.security.user.UserManager;
+import org.sonatype.nexus.api.rest.selfhosted.security.usersource.model.ApiUserSource;
+import org.sonatype.nexus.security.internal.rest.NexusSecurityApiConstants;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 /**
+ * Swagger documentation for {@link SecurityApiResource}
+ *
  * @since 3.17
  */
-public class ApiUserSource
+@Api(value = "Security management")
+public interface SecurityApiResourceDoc
 {
-  private String id;
-
-  private String name;
-
-  public ApiUserSource(final UserManager manager) {
-    this.id = manager.getSource();
-    this.name = manager.getAuthenticationRealmName();
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public String getName() {
-    return name;
-  }
+  @ApiOperation("Retrieve a list of the available user sources.")
+  @ApiResponses(value = {
+      @ApiResponse(code = 403, message = NexusSecurityApiConstants.INVALID_PERMISSIONS)
+  })
+  List<ApiUserSource> getUserSources();
 }
