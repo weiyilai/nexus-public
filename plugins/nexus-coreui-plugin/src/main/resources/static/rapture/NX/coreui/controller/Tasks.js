@@ -169,27 +169,6 @@ Ext.define('NX.coreui.controller.Tasks', {
   },
 
   /**
-   * Get the reconcile plans for the given model.
-   * @param model
-   * @returns {*}
-   */
-  getReconcilePlans: function(model) {
-    const deferred = Ext.create('Ext.Deferred');
-    if ("blobstore.planReconciliation" === model.get('typeId')) {
-      var store = Ext.create('NX.coreui.store.ReconcilePlans');
-      store.on('load', function(store, records) {
-        model.set('reconcilePlans', records[0]);
-        deferred.resolve();
-      });
-      store.load();
-    }
-    else {
-      deferred.resolve();
-    }
-    return deferred.promise;
-  },
-
-  /**
    * @override
    * Load task model into detail tabs.
    * @param {NX.coreui.view.task.TaskList} list task grid
@@ -247,14 +226,14 @@ Ext.define('NX.coreui.controller.Tasks', {
 
   /**
    * @private
-   * Displays task settings, it waits until reconcile plans are fully loaded.
+   * Displays task settings, attempting to load reconcile plan information if applicable.
    * @param {NX.coreui.model.Task} model task model
    */
   showSettings: function(model) {
     var me = this;
-    Ext.Promise.all([this.getReconcilePlans(model)]).then(function() {
-      me.getSettings().loadRecord(model);
-    });
+
+    me.subscribeToReconciliationPlans(model);
+    me.getSettings().loadRecord(model);
   },
 
   /**
@@ -314,7 +293,10 @@ Ext.define('NX.coreui.controller.Tasks', {
         }
       ]
     }));
-    panel.down('nx-settingsform').loadRecord(me.getTaskModel().create({typeId: model.getId(), enabled: true}));
+    const taskModel = me.getTaskModel().create({typeId: model.getId(), enabled: true});
+
+    me.subscribeToReconciliationPlans(taskModel)
+    panel.down('nx-settingsform').loadRecord(taskModel);
   },
 
   /**
@@ -520,7 +502,7 @@ Ext.define('NX.coreui.controller.Tasks', {
                 me.getContent().getEl().unmask();
                 if (Ext.isObject(response) && response.success) {
                   me.getStore('Task').load();
-                  me.getReconcilePlans(model);
+                  me.getStore('ReconcilePlans').load();
                   NX.Messages.success(NX.I18n.format('Tasks_Run_Success', description));
                 }
               });
@@ -621,6 +603,64 @@ Ext.define('NX.coreui.controller.Tasks', {
           }
         });
       }
+    });
+  },
+
+  subscribeToReconciliationPlans: function(model) {
+    const me = this,
+        store = me.getStore('ReconcilePlans');
+
+    store.un('load', me.updateReconciliationPlanInformation, me);
+
+    if ("blobstore.executeReconciliationPlan" === model.get('typeId')) {
+      store.on('load', me.updateReconciliationPlanInformation, me);
+      store.load();
+    }
+  },
+
+  updateReconciliationPlanInformation: function(store, records) {
+    const planItems = (records[0].data && records[0].data.items) || [];
+    const me = this;
+
+    var planCount = 0;
+    var blobstoreCount = 0;
+    var repositoryCount = 0;
+    var startDate, endDate;
+
+    for (var i = 0; i < planItems.length; i++) {
+      var planItem = planItems[i];
+      var conf = planItem.configuration;
+
+      if(Ext.Array.contains(['PLANNED', 'EXECUTE'], planItem.state)) {
+        planCount++;
+
+        if (conf && conf.planStartDate) {
+          const thisStartDate = new Date(conf.planStartDate);
+          if (!startDate || thisStartDate < startDate) {
+            startDate = thisStartDate;
+          }
+        }
+        if (conf && conf.planEndDate) {
+          const thisEndDate = new Date(conf.planEndDate);
+          if (!endDate || thisEndDate > endDate) {
+            endDate = thisEndDate;
+          }
+        }
+        if (planItem.repository && planItem.repository !== 'undefined') {
+          repositoryCount += 1;
+        }
+        if (planItem.blobStore && planItem.blobStore !== 'undefined') {
+          blobstoreCount += 1;
+        }
+      }
+    }
+
+    me.getContent().down("#reconcilePlanInformation").setValues({
+      planCount: planCount,
+      blobStoreCount: blobstoreCount,
+      repositoryCount: repositoryCount,
+      startDate: startDate,
+      endDate: endDate
     });
   }
 });

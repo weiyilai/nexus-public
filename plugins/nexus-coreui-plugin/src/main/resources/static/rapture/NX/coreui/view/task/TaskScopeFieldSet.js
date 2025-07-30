@@ -86,6 +86,10 @@ Ext.define('NX.coreui.view.task.TaskScopeFieldSet', {
     const me = this;
     me.config.properties = properties;
 
+    if(!properties) {
+      return;
+    }
+
     const taskScope = me.config.properties['taskScope'];
     const scopeCombo = me.down('combo[name="taskScope"]');
     if (taskScope) {
