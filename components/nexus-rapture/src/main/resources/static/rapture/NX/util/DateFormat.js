@@ -53,7 +53,10 @@ Ext.define('NX.util.DateFormat', {
       'short': 'Y-M-d H:i:s',
 
       // Wednesday, March 06, 2013 15:50:19 PDT (GMT-0700)
-      'long': 'l, F d, Y H:i:s T (\\G\\M\\TO)'
+      'long': 'l, F d, Y H:i:s T (\\G\\M\\TO)',
+
+      // 2013/03/06 15:49:57 PDT (GMT-0700)
+      'longVariant1': 'Y/m/d H:i:s T (\\G\\M\\TO)',
     }
   },
 
