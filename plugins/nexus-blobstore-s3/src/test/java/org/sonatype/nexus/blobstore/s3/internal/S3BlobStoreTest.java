@@ -343,6 +343,7 @@ public class S3BlobStoreTest
     AmazonS3Exception s3Exception = new AmazonS3Exception("error");
     s3Exception.setErrorCode("UnknownError");
     doThrow(s3Exception).when(bucketManager).deleteStorageLocation(config);
+    blobStore.stop();
     assertThrows(BlobStoreException.class, () -> blobStore.remove());
     verify(storeMetrics).remove();
     verify(s3).deleteObject("mybucket", "myPrefix/metadata.properties");
@@ -356,6 +357,7 @@ public class S3BlobStoreTest
     AmazonS3Exception s3Exception = new AmazonS3Exception("error");
     s3Exception.setErrorCode("BucketNotEmpty");
     doThrow(s3Exception).when(bucketManager).deleteStorageLocation(any());
+    blobStore.stop();
     blobStore.remove();
     verify(storeMetrics).remove();
     verify(s3).deleteObject("mybucket", "myPrefix/metadata.properties");
@@ -367,7 +369,6 @@ public class S3BlobStoreTest
     when(objectListing.getObjectSummaries()).thenReturn(List.of(new S3ObjectSummary()));
     when(s3.listObjects("mybucket", "myPrefix/content/")).thenReturn(objectListing);
     blobStore.init(config);
-    blobStore.start();
     blobStore.remove();
     verify(s3, never()).deleteObject("mybucket", "myPrefix/metadata.properties");
     verify(bucketManager, never()).deleteStorageLocation(config);

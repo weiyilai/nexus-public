@@ -162,7 +162,7 @@ public class FileBlobStoreTest
   private Path directFullPath;
 
   @Before
-  public void initBlobStore() throws IOException {
+  public void initBlobStore() throws Exception {
     CancelableHelper.set(cancelled);
     when(nodeAccess.getId()).thenReturn("test");
     when(dryRunPrefix.get()).thenReturn("");
@@ -213,6 +213,8 @@ public class FileBlobStoreTest
     Map<OperationType, OperationMetrics> operationMetricsMap = mock(Map.class);
     when(operationMetricsMap.get(any())).thenReturn(operationMetrics);
     when(metrics.getOperationMetricsDelta()).thenReturn(operationMetricsMap);
+
+    underTest.start();
   }
 
   @After
@@ -234,7 +236,6 @@ public class FileBlobStoreTest
 
   @Test
   public void hardLinkWithPrecalculatedInformation() throws Exception {
-    underTest.start();
 
     long size = 100L;
     HashCode sha1 = HashCode.fromString("356a192b7913b04c54574d18c28d46e6395428ab");
@@ -249,7 +250,6 @@ public class FileBlobStoreTest
 
   @Test
   public void blobIdCollisionCausesRetry() throws Exception {
-    underTest.start();
 
     long size = 100L;
     HashCode sha1 = HashCode.fromString("356a192b7913b04c54574d18c28d46e6395428ab");
@@ -296,7 +296,6 @@ public class FileBlobStoreTest
   public void testDoCompact_RebuildMetadataNeeded() throws Exception {
     when(fileOperations.delete(any())).thenReturn(true);
     when(nodeAccess.isOldestNode()).thenReturn(true);
-    underTest.start();
 
     write(fullPath.resolve("e27f83a9-dc18-4818-b4ca-ae8a9cb813c7.properties"),
         deletedBlobStoreProperties);
@@ -314,7 +313,6 @@ public class FileBlobStoreTest
   @Test
   public void testDoCompact_RebuildMetadataNeeded_NotOldestNode() throws Exception {
     when(nodeAccess.isOldestNode()).thenReturn(false);
-    underTest.start();
 
     checkDeletionsIndex(true);
     setRebuildMetadataToTrue();
@@ -330,7 +328,6 @@ public class FileBlobStoreTest
   public void testDoCompact_clearsDirectPathEmptyDirectories() throws Exception {
     when(fileOperations.delete(any())).thenReturn(true);
     when(nodeAccess.isOldestNode()).thenReturn(true);
-    underTest.start();
 
     Path fileInSubdir1 = directFullPath.resolve("subdir").resolve("somefile.txt");
     fileInSubdir1.toFile().getParentFile().mkdirs();
@@ -350,8 +347,6 @@ public class FileBlobStoreTest
 
   @Test
   public void testDoDeleteHard() throws Exception {
-    underTest.start();
-
     BlobId blobId = new BlobId("0515c8b9-0de0-49d4-bcf0-7738c40c9c5e");
     Path bytesPath = underTest.getAbsoluteBlobDir()
         .resolve(CONTENT_PREFIX)
@@ -400,7 +395,6 @@ public class FileBlobStoreTest
   @Test
   public void testUndelete_AttributesNotDeleted() throws Exception {
     when(attributes.isDeleted()).thenReturn(false);
-    underTest.start();
 
     boolean result = underTest.undelete(blobStoreUsageChecker, new BlobId("fakeid"), attributes, false);
     assertThat(result, is(false));
@@ -409,14 +403,12 @@ public class FileBlobStoreTest
 
   @Test
   public void testUndelete_CheckerNull() throws Exception {
-    underTest.start();
     boolean result = underTest.undelete(null, new BlobId("fakeid"), attributes, false);
     assertThat(result, is(false));
   }
 
   @Test
   public void testUndelete_CheckInUse() throws Exception {
-    underTest.start();
     when(blobStoreUsageChecker.test(eq(underTest), any(BlobId.class), anyString())).thenReturn(true);
 
     boolean result = underTest.undelete(blobStoreUsageChecker, new BlobId("fakeid"), attributes, false);
@@ -428,7 +420,6 @@ public class FileBlobStoreTest
 
   @Test
   public void testUndelete_CheckInUse_DryRun() throws Exception {
-    underTest.start();
     when(blobStoreUsageChecker.test(eq(underTest), any(BlobId.class), anyString())).thenReturn(true);
 
     boolean result = underTest.undelete(blobStoreUsageChecker, new BlobId("fakeid"), attributes, true);
@@ -464,7 +455,6 @@ public class FileBlobStoreTest
   @Test
   public void testCompactCorruptAttributes() throws Exception {
     when(nodeAccess.isOldestNode()).thenReturn(true);
-    underTest.start();
 
     write(fullPath.resolve("e27f83a9-dc18-4818-b4ca-ae8a9cb813c7.properties"),
         deletedBlobStorePropertiesNoBlobName);
@@ -479,7 +469,6 @@ public class FileBlobStoreTest
   @Test
   public void testCompactIsCancelable() throws Exception {
     when(nodeAccess.isOldestNode()).thenReturn(true);
-    underTest.start();
 
     write(fullPath.resolve("e27f83a9-dc18-4818-b4ca-ae8a9cb813c7.properties"),
         deletedBlobStoreProperties);
@@ -496,7 +485,6 @@ public class FileBlobStoreTest
   @Test
   public void testDeleteWithCorruptAttributes() throws Exception {
     when(nodeAccess.isOldestNode()).thenReturn(true);
-    underTest.start();
 
     Path bytesPath = fullPath.resolve("e27f83a9-dc18-4818-b4ca-ae8a9cb813c7.bytes");
     Path propertiesPath = fullPath.resolve("e27f83a9-dc18-4818-b4ca-ae8a9cb813c7.properties");
@@ -600,7 +588,6 @@ public class FileBlobStoreTest
 
   @Test
   public void testDoDeleteWithDateBasedLayoutEnabled() throws Exception {
-
     TestFileBlobStore underTest = createFixture();
 
     BlobId blobId = new BlobId("test-blob-id");
