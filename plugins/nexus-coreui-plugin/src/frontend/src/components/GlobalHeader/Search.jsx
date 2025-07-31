@@ -14,10 +14,9 @@
 import React, { useState } from 'react';
 import { useCurrentStateAndParams } from '@uirouter/react';
 import { NxFilterInput } from '@sonatype/react-shared-components';
-import {ExtJS, useIsVisible} from '@sonatype/nexus-ui-plugin';
+import {ExtJS, useIsVisible, handleExtJsUnsavedChanges} from '@sonatype/nexus-ui-plugin';
 import { useRouter } from '@uirouter/react';
 import {ROUTE_NAMES} from "../../routerConfig/routeNames/routeNames";
-import { handleExtJsUnsavedChanges } from '../widgets/ExtJsContainer/useExtJsUnsavedChangesGuard';
 
 export default function Search() {
   const [searchValue, setSearchValue] = useState("");

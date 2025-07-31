@@ -16,7 +16,7 @@ import { NxPageMain } from '@sonatype/react-shared-components';
 
 import { useSize } from '../../../hooks/useSize';
 import { useExtComponent } from './useExtComponent';
-import { useExtJsUnsavedChangesGuard } from './useExtJsUnsavedChangesGuard';
+import { useExtJsUnsavedChangesGuard } from '@sonatype/nexus-ui-plugin';
 import MaliciousRiskOnDisk from '../riskondisk/MaliciousRiskOnDisk';
 import './ExtJsContainer.scss';
 

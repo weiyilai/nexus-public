@@ -19,7 +19,7 @@ import {
   NxGlobalHeader2,
 } from "@sonatype/react-shared-components";
 import { faSync } from "@fortawesome/free-solid-svg-icons";
-import { ExtJS } from '@sonatype/nexus-ui-plugin';
+import { ExtJS, handleExtJsUnsavedChanges } from '@sonatype/nexus-ui-plugin';
 import proLogo from "../../../../art/logos/logo-pro-edition-header.svg";
 import proDarkLogo from "../../../../art/logos/logo-pro-edition-header-dark.svg";
 import ceLogo from "../../../../art/logos/logo-community-edition-header.svg";
@@ -27,7 +27,6 @@ import ceDarkLogo from "../../../../art/logos/logo-community-edition-header-dark
 import coreLogo from "../../../../art/logos/logo-core-edition-header.svg";
 import coreDarkLogo from "../../../../art/logos/logo-core-edition-header-dark.svg";
 import { useRouter } from '@uirouter/react';
-import { handleExtJsUnsavedChanges } from '../widgets/ExtJsContainer/useExtJsUnsavedChangesGuard';
 
 import './Globalheader.scss'
 import HelpMenu from './HelpMenu';

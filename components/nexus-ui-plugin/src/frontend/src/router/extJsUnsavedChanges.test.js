@@ -17,7 +17,7 @@
 import React, { useRef } from 'react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useExtJsUnsavedChangesGuard } from './useExtJsUnsavedChangesGuard';
+import { useExtJsUnsavedChangesGuard } from './extJsUnsavedChanges';
 
 // Mock ExtJS and related globals
 const warnBeforeNavigateMock = jest.fn();
