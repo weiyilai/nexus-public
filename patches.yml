@@ -1,0 +1,51 @@
+---
+version: "1.0"
+github:
+  api:
+    url: "https://api.github.com"
+    timeout: 30
+global:
+  maxConcurrentPrs: 3
+  dryRun: false
+  reviewers:
+  - "team-lead"
+  labels:
+  - "dependencies"
+  - "automated"
+  pr:
+    title: "chore(deps): update {dependency} to {version}"
+    description: "Updates {dependency} from {currentVersion} to {version}\n\n### Changes\n\
+      {changelog}\n\n### Analysis\n{analysis}\n\n### Additional Information\n- Package:\
+      \ {ecosystem}:{dependency}\n- Update Type: {updateType}\n- Breaking Changes:\
+      \ {breakingChanges}\n- Security Impact: {securityImpact}"
+    commitMessage: "chore(deps): update {dependency} to {version}"
+    branchPrefix: "patches/"
+  ignoredDependencies:
+  - "com.sonatype*"
+  - "org.sonatype*"
+  notifications:
+    slack:
+      channel: "#dependency-updates"
+    email:
+      recipients:
+      - "team@example.com"
+  rollback:
+    enabled: true
+    maxAttempts: 3
+    onFailure: "notify"
+  projects:
+    nexus-internal-maven:
+      path: "."
+      type: "maven"
+      enabled: true
+      testCommand: "mvn test"
+    nexus-internal-yarn:
+      path: "."
+      type: "yarn"
+      enabled: true
+      testCommand: "yarn test"
+scm:
+  provider: "GITHUB"
+  owner: "sonatype"
+  name: "nexus-internal"
+  apiUrl: "https://api.github.com"
