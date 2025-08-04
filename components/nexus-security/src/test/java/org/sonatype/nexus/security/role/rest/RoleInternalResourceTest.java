@@ -33,6 +33,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.util.ThreadContext;
+import static org.mockito.ArgumentMatchers.any;
 
 public class RoleInternalResourceTest
     extends TestSupport
@@ -40,11 +45,24 @@ public class RoleInternalResourceTest
   @Mock
   private SecuritySystem securitySystem;
 
+  @Mock
+  private Subject subject;
+
+  @Mock
+  private SecurityManager securityManager;
+
   private RoleInternalResource underTest;
 
   @Before
   public void setup() {
     underTest = new RoleInternalResource(securitySystem);
+
+    when(securityManager.createSubject(any())).thenReturn(subject);
+    ThreadContext.bind(securityManager);
+    SecurityUtils.setSecurityManager(securityManager);
+
+    when(subject.isAuthenticated()).thenReturn(true);
+    when(subject.isPermitted("nexus:roles:read")).thenReturn(true);
   }
 
   @Test

@@ -37,6 +37,11 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.util.ThreadContext;
+import org.apache.shiro.SecurityUtils;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
@@ -56,6 +61,12 @@ public class RoleApiResourceTest
   @Mock
   private AuthorizationManager authorizationManager;
 
+  @Mock
+  private Subject subject;
+
+  @Mock
+  private SecurityManager securityManager;
+
   private RoleApiResource underTest;
 
   @Before
@@ -64,6 +75,16 @@ public class RoleApiResourceTest
     when(securitySystem.listSources()).thenReturn(Arrays.asList("default", "LDAP"));
 
     underTest = new RoleApiResource(securitySystem);
+
+    when(securityManager.createSubject(any())).thenReturn(subject);
+    ThreadContext.bind(securityManager);
+    SecurityUtils.setSecurityManager(securityManager);
+    
+    when(subject.isAuthenticated()).thenReturn(true);
+    when(subject.isPermitted("nexus:roles:read")).thenReturn(true);
+    when(subject.isPermitted("nexus:roles:create")).thenReturn(true);
+    when(subject.isPermitted("nexus:roles:update")).thenReturn(true);
+    when(subject.isPermitted("nexus:roles:delete")).thenReturn(true);
   }
 
   @Test
@@ -315,12 +336,13 @@ public class RoleApiResourceTest
     }
   }
 
-  private Role createRole(final String source,
-                          final String id,
-                          final String name,
-                          final String description,
-                          final Collection<String> roles,
-                          final Collection<String> privileges)
+  private Role createRole(
+      final String source,
+      final String id,
+      final String name,
+      final String description,
+      final Collection<String> roles,
+      final Collection<String> privileges)
   {
     Role role = new Role();
     role.setRoleId(id);
@@ -333,11 +355,12 @@ public class RoleApiResourceTest
     return role;
   }
 
-  private RoleXORequest createApiRole(final String id,
-                                      final String name,
-                                      final String description,
-                                      final Collection<String> roles,
-                                      final Collection<String> privileges)
+  private RoleXORequest createApiRole(
+      final String id,
+      final String name,
+      final String description,
+      final Collection<String> roles,
+      final Collection<String> privileges)
   {
     RoleXORequest roleXo = new RoleXORequest();
     roleXo.setId(id);
@@ -349,13 +372,14 @@ public class RoleApiResourceTest
     return roleXo;
   }
 
-  private void assertRole(final Role role,
-                          final String source,
-                          final String id,
-                          final String name,
-                          final String description,
-                          final Collection<String> roles,
-                          final Collection<String> privileges)
+  private void assertRole(
+      final Role role,
+      final String source,
+      final String id,
+      final String name,
+      final String description,
+      final Collection<String> roles,
+      final Collection<String> privileges)
   {
     assertThat(role.getSource(), is(source));
     assertThat(role.getRoleId(), is(id));
@@ -365,23 +389,24 @@ public class RoleApiResourceTest
       assertThat(role.getRoles(), empty());
     }
     else {
-      assertThat(role.getRoles(), containsInAnyOrder(roles.toArray(new String[] {})));
+      assertThat(role.getRoles(), containsInAnyOrder(roles.toArray(new String[]{})));
     }
     if (privileges.isEmpty()) {
       assertThat(role.getPrivileges(), empty());
     }
     else {
-      assertThat(role.getPrivileges(), containsInAnyOrder(privileges.toArray(new String[] {})));
+      assertThat(role.getPrivileges(), containsInAnyOrder(privileges.toArray(new String[]{})));
     }
   }
 
-  private void assertApiRole(final RoleXOResponse roleXo,
-                             final String source,
-                             final String id,
-                             final String name,
-                             final String description,
-                             final Collection<String> roles,
-                             final Collection<String> privileges)
+  private void assertApiRole(
+      final RoleXOResponse roleXo,
+      final String source,
+      final String id,
+      final String name,
+      final String description,
+      final Collection<String> roles,
+      final Collection<String> privileges)
   {
     assertThat(roleXo.getSource(), is(source));
     assertThat(roleXo.getId(), is(id));
@@ -391,13 +416,13 @@ public class RoleApiResourceTest
       assertThat(roleXo.getRoles(), empty());
     }
     else {
-      assertThat(roleXo.getRoles(), containsInAnyOrder(roles.toArray(new String[] {})));
+      assertThat(roleXo.getRoles(), containsInAnyOrder(roles.toArray(new String[]{})));
     }
     if (privileges.isEmpty()) {
       assertThat(roleXo.getPrivileges(), empty());
     }
     else {
-      assertThat(roleXo.getPrivileges(), containsInAnyOrder(privileges.toArray(new String[] {})));
+      assertThat(roleXo.getPrivileges(), containsInAnyOrder(privileges.toArray(new String[]{})));
     }
   }
 }
