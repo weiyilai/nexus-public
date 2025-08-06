@@ -22,6 +22,7 @@ import jakarta.inject.Inject;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -47,6 +48,7 @@ import org.sonatype.nexus.rest.Resource;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 import org.sonatype.nexus.rest.WebApplicationMessageException;
 import org.sonatype.nexus.validation.Validate;
+import org.sonatype.nexus.validation.group.Create;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -140,7 +142,7 @@ public abstract class AbstractRepositoriesApiResource<T extends AbstractReposito
 
   @POST
   @RequiresAuthentication
-  @Validate
+  @Validate(groups = {Create.class, Default.class})
   public Response createRepository(@NotNull @Valid final T request) {
     verifyAPIEnabled(request.getFormat());
     try {
