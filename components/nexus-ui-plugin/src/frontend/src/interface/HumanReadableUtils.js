@@ -27,10 +27,10 @@ export default class HumanReadableUtils {
   /**
    * Convert a size in bytes to a human readable string
    * @param bytes
-   * @param unitOfMeasurement - si, iec, or jedec, more information available at https://www.npmjs.com/package/file-size
+   * @param unitOfMeasurement - si (default), iec, or jedec, more information available at https://www.npmjs.com/package/file-size
    * @return {*}
    */
-  static bytesToString(bytes, unitNotation = 'jedec') {
+  static bytesToString(bytes, unitNotation = 'si') {
     if (bytes < 0) {
       return UIStrings.UNAVAILABLE;
     }

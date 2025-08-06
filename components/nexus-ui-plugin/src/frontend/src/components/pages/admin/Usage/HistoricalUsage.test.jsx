@@ -74,8 +74,8 @@ describe('Licensing Historical Usage', () => {
       expect(screen.getByText('10%')).toBeInTheDocument();
       expect(screen.getByText('2,000')).toBeInTheDocument();
       expect(screen.getByText('5%')).toBeInTheDocument();
-      expect(screen.getByText('1.00 GB')).toBeInTheDocument();
-      expect(screen.getByText('512.00 MB')).toBeInTheDocument();
+      expect(screen.getByText('1.07 GB')).toBeInTheDocument();
+      expect(screen.getByText('536.87 MB')).toBeInTheDocument();
     });
   });
 

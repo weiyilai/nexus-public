@@ -135,8 +135,8 @@ describe('BlobStoresList', function() {
     expect(blobStoreType(0)).toHaveTextContent('File');
     expect(blobStoreState(0)).toHaveTextContent('Started');
     expect(blobStoreBlobCount(0)).toHaveTextContent('66206');
-    expect(blobStoreTotalSize(0)).toHaveTextContent('16.18 GB');
-    expect(blobStoreAvailableSpace(0)).toHaveTextContent('39.15 GB');
+    expect(blobStoreTotalSize(0)).toHaveTextContent('17.38 GB');
+    expect(blobStoreAvailableSpace(0)).toHaveTextContent('42.04 GB');
 
     expect(blobStoreName(1)).toHaveTextContent('test2');
     expect(blobStorePath(1)).toHaveTextContent('default');
@@ -274,11 +274,11 @@ describe('BlobStoresList', function() {
 
     expect(blobStoreTotalSize(0)).toHaveTextContent('Unavailable');
     expect(blobStoreTotalSize(1)).toHaveTextContent('0.00 Bytes');
-    expect(blobStoreTotalSize(2)).toHaveTextContent('16.18 GB');
+    expect(blobStoreTotalSize(2)).toHaveTextContent('17.38 GB');
 
     userEvent.click(tableHeader('Total Size'));
 
-    expect(blobStoreTotalSize(0)).toHaveTextContent('16.18 GB');
+    expect(blobStoreTotalSize(0)).toHaveTextContent('17.38 GB');
     expect(blobStoreTotalSize(1)).toHaveTextContent('0.00 Bytes');
     expect(blobStoreTotalSize(2)).toHaveTextContent('Unavailable');
   });
@@ -295,13 +295,13 @@ describe('BlobStoresList', function() {
     userEvent.click(tableHeader('Available Space'));
 
     expect(blobStoreAvailableSpace(0)).toHaveTextContent('Unavailable');
-    expect(blobStoreAvailableSpace(1)).toHaveTextContent('39.15 GB');
+    expect(blobStoreAvailableSpace(1)).toHaveTextContent('42.04 GB');
     expect(blobStoreAvailableSpace(2)).toHaveTextContent('Unlimited');
 
     userEvent.click(tableHeader('Available Space'));
 
     expect(blobStoreAvailableSpace(0)).toHaveTextContent('Unlimited');
-    expect(blobStoreAvailableSpace(1)).toHaveTextContent('39.15 GB');
+    expect(blobStoreAvailableSpace(1)).toHaveTextContent('42.04 GB');
     expect(blobStoreAvailableSpace(2)).toHaveTextContent('Unavailable');
   });
 
