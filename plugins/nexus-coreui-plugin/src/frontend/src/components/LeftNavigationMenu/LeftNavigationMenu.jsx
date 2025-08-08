@@ -17,8 +17,8 @@ import { faArrowLeft, faArrowRight, faExternalLinkAlt } from '@fortawesome/free-
 import UIStrings from '../../constants/UIStrings';
 import { ROUTE_NAMES } from '../../routerConfig/routeNames/routeNames';
 import { useDefaultAdminRouteName } from './useDefaultAdminRouteName';
+import { useClmDashboardVisibility } from './useClmDashboardVisibility';
 import {
-  ExtJS,
   LeftNavigationMenuItem,
   LeftNavigationMenuCollapsibleItem,
   LeftNavigationMenuCollapsibleChildItem
@@ -32,14 +32,7 @@ export default function LeftNavigationMenu() {
 
   const adminInitialRouteName = useDefaultAdminRouteName();
   const isSettingsVisible = !!adminInitialRouteName;
-
-  const clmState = ExtJS.useState(() => {
-    const clm = ExtJS.state().getValue('clm') || {};
-    return {
-      showDashboard: !!(clm?.enabled && clm?.showLink && clm?.url),
-      url: clm?.url
-    };
-  });
+  const clmState = useClmDashboardVisibility();
 
   return (
     <NxGlobalSidebar2

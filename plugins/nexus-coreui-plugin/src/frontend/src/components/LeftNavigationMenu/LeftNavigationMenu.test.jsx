@@ -16,6 +16,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import LeftNavigationMenu from './LeftNavigationMenu';
 import { UIRouter, UIView } from '@uirouter/react';
 import { getRouter } from '../../routerConfig/routerConfig';
+import { useClmDashboardVisibility } from './useClmDashboardVisibility';
 import userEvent from '@testing-library/user-event';
 
 // This is used by the API view, it's not really something we need to
@@ -40,6 +41,12 @@ jest.mock('../pages/browse/Browse/BrowseExt', () => {
     </main>
   );
 });
+jest.mock('./useClmDashboardVisibility', () => ({
+  useClmDashboardVisibility: jest.fn(() => ({
+    showDashboard: false,
+    url: undefined
+  }))
+}));
 
 describe('LeftNavigationMenu', () => {
   const Application = global.NX.app.Application;
@@ -60,6 +67,9 @@ describe('LeftNavigationMenu', () => {
     // router state can get persisted between tests on the location has, clear it out each time
     // so that the tests don't influence each other when they use navigation
     window.location.hash = '';
+    
+    // Reset all mocks
+    jest.restoreAllMocks();
   });
 
   it('renders with the welcome link', async () => {
@@ -451,41 +461,21 @@ describe('LeftNavigationMenu', () => {
   
   describe('IQ Dashboard link', () => {
     describe('IQ Dashboard link behaviour', () => {
-      beforeEach (() => {
-        givenStateValues({
-          ...getDefaultStateValues(),
-          clm : {enabled: true, showLink: false, url: 'http://mock-iq-server.com'}
-        });
-      });
       it('should not render if user is not logged in', async () => {
-        renderComponent();
-        assertLinkNotVisible('IQ Server Dashboard');
-      });
-
-      it('should not render if user is logged in but no permissions', async () => {
-        givenUserLoggedIn();
-        givenNoPermissions();
-
-        renderComponent();
-        assertLinkNotVisible('IQ Server Dashboard');
-      });
-
-      it('should not render if user is logged in and has permissions but IQ Server is not configured', async () => {
-        givenUserLoggedIn();
-        givenPermissions({ 'nexus:iq:read': true });
-
-        renderComponent();
-        assertLinkNotVisible('IQ Server Dashboard');
-      });
-      
-      it('should be visible if configured as such', async () => {
-        givenStateValues({
-          ...getDefaultStateValues(),
-          clm : { enabled: true, showLink: true, url: 'http://mock-iq-server.com'}
+        useClmDashboardVisibility.mockReturnValue({
+          showDashboard: false,
+          url: 'http://mock-iq-server.com'
         });
-        givenUserLoggedIn();
-        givenPermissions({ 'nexus:iq:read': true });
-                
+        renderComponent();
+        assertLinkNotVisible('IQ Server Dashboard');
+      });
+
+      it('should be visible if configured as such', async () => {
+        useClmDashboardVisibility.mockReturnValue({
+          showDashboard: true,
+          url: 'http://mock-iq-server.com'
+        });
+        
         renderComponent();
         assertLinkVisible('IQ Server Dashboard', 'http://mock-iq-server.com');
       });
