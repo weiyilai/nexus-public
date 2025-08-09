@@ -80,9 +80,9 @@ public abstract class ComponentDAOTestSupport
 
   protected void testCrudOperations() throws InterruptedException {
 
-    ComponentData component1 = randomComponent(repositoryId);
-    ComponentData component2 = randomComponent(repositoryId);
-    ComponentData component3 = randomComponent(repositoryId);
+    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
+    ComponentData component3 = component(repositoryId, "namespace3", "name3", "3.0.0");
 
     // cover with/without namespace and different versions
     String akind = "kind1";
@@ -156,14 +156,16 @@ public abstract class ComponentDAOTestSupport
       duplicate.setVersion(component1.version());
       duplicate.setNormalizedVersion(component1.normalizedVersion());
       duplicate.setKind(component1.kind());
-      duplicate.setAttributes(newAttributes("duplicate"));
+      duplicate.setAttributes(component1.attributes());
       dao.createComponent(duplicate, entityVersionEnabled);
 
       session.getTransaction().commit();
-      fail("Cannot create the same component twice");
+
+      assertThat(browseComponents(dao, repositoryId, component1.kind(), 10, null).size(), is(1));
     }
     catch (DuplicateKeyException e) {
-      logger.debug("Got expected exception", e);
+      logger.error("Got exception", e);
+      fail("DuplicateKeyException exception shouldn't be thrown on duplicate create");
     }
 
     // READ
@@ -427,8 +429,8 @@ public abstract class ComponentDAOTestSupport
   }
 
   protected void testPurgeOperation() {
-    ComponentData component1 = randomComponent(repositoryId);
-    ComponentData component2 = randomComponent(repositoryId);
+    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setVersion(component1.version() + ".2"); // make sure versions are different
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
@@ -495,8 +497,8 @@ public abstract class ComponentDAOTestSupport
   }
 
   protected void testRoundTrip() {
-    ComponentData component1 = randomComponent(repositoryId);
-    ComponentData component2 = randomComponent(repositoryId);
+    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setVersion(component1.version() + ".2"); // make sure versions are different
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
@@ -530,8 +532,8 @@ public abstract class ComponentDAOTestSupport
     createContentRepository(anotherContentRepository);
     int anotherRepositoryId = anotherContentRepository.repositoryId;
 
-    ComponentData component1 = randomComponent(repositoryId);
-    ComponentData component2 = randomComponent(anotherRepositoryId);
+    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = component(anotherRepositoryId, "namespace2", "name2", "2.0.0");
 
     String akind = "kind1";
     String anotherKind = "kind2";
@@ -579,8 +581,8 @@ public abstract class ComponentDAOTestSupport
     ContentRepositoryData anotherContentRepository = randomContentRepository();
     createContentRepository(anotherContentRepository);
     int anotherRepositoryId = anotherContentRepository.repositoryId;
-    ComponentData component1 = randomComponent(repositoryId);
-    ComponentData component2 = randomComponent(anotherRepositoryId);
+    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = component(anotherRepositoryId, "namespace2", "name2", "2.0.0");
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       ComponentDAO dao = session.access(TestComponentDAO.class);
@@ -666,8 +668,8 @@ public abstract class ComponentDAOTestSupport
   protected void testNormalizationMethods() {
     ContentRepositoryData randomContentRepository = randomContentRepository();
     createContentRepository(randomContentRepository);
-    ComponentData component1 = randomComponent(randomContentRepository.repositoryId, "artifact-1");
-    ComponentData component2 = randomComponent(randomContentRepository.repositoryId, "artifact-2");
+    ComponentData component1 = component(randomContentRepository.repositoryId, "namespace.one", "artifact-1", "1.0.0");
+    ComponentData component2 = component(randomContentRepository.repositoryId, "namespace.two", "artifact-2", "2.0.0");
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       ComponentDAO dao = session.access(TestComponentDAO.class);

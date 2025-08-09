@@ -99,11 +99,11 @@ public abstract class AssetStoreTestSupport
     AssetData asset4 = randomAsset(repositoryId);
     AssetData asset5 = randomAsset(repositoryId);
 
-    ComponentData component1 = randomComponent(repositoryId);
+    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
     component1.setComponentId(1);
     component1.setNamespace(component1.namespace() + "1");
     component1.setName(component1.name() + "1");
-    ComponentData component2 = randomComponent(repositoryId);
+    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setNamespace(component2.namespace() + "2");
     component2.setName(component2.name() + "2");
     component2.setComponentId(2);
@@ -298,8 +298,8 @@ public abstract class AssetStoreTestSupport
   }
 
   protected void testDeleteAssetsByPaths() {
-    ComponentData component1 = randomComponent(repositoryId);
-    ComponentData component2 = randomComponent(repositoryId);
+    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setVersion(component1.version() + ".2"); // make sure versions are different
 
     inTx(() -> {

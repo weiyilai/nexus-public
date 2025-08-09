@@ -191,7 +191,7 @@ class BrowseNodeMigrationStep_1_36Test
   }
 
   private ComponentData createComponent(final ContentRepositoryData repository) {
-    ComponentData component = randomComponent(InternalIds.contentRepositoryId(repository));
+    ComponentData component = component(InternalIds.contentRepositoryId(repository), "namespace1", "name1", "1.0.0");
     try (DataSession<?> session = store.openSession()) {
       TestComponentDAO dao = session.access(TestComponentDAO.class);
       dao.createComponent(component, false);
