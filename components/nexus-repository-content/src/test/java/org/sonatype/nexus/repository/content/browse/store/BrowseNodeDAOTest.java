@@ -105,8 +105,8 @@ class BrowseNodeDAOTest
     generateRandomVersions(100);
     generateRandomPaths(100);
 
-    component1 = randomComponent(1);
-    component2 = randomComponent(1);
+    component1 = component(1, "namespace1", "name1", "1.0.0");
+    component2 = component(1, "namespace2", "name2", "2.0.0");
     component2.setVersion(component1.version() + "-2");
 
     asset1 = randomAsset(1);

@@ -222,9 +222,13 @@ public abstract class ExampleContentTestSupport
       final boolean entityVersionEnabled)
   {
     components = new ArrayList<>();
-    while (components.size() < maxComponents) {
-      int repositoryId = repositories.get(random.nextInt(repositories.size())).repositoryId;
-      ComponentData component = randomComponent(repositoryId);
+    for (int i = 0; i < maxComponents; i++) {
+      int repositoryId = repositories.get(i % repositories.size()).repositoryId;
+      String namespace = namespaces.get(i % namespaces.size());
+      String name = namespaces.get(i % names.size());
+      String version = versions.get(i % versions.size());
+
+      ComponentData component = component(repositoryId, namespace, name, version);
       if (doCommit(
           session -> session.access(TestComponentDAO.class).createComponent(component, entityVersionEnabled))) {
         components.add(component);
@@ -268,9 +272,10 @@ public abstract class ExampleContentTestSupport
   protected void generateContent(final List<String> componentNames, final boolean entityVersionEnabled) {
     int maxComponents = componentNames.size();
     components = new ArrayList<>(maxComponents);
-    for (String componentName : componentNames) {
+    for (int i = 0; i < componentNames.size(); i++) {
+      String componentName = componentNames.get(i);
       int repositoryId = repositories.get(random.nextInt(repositories.size())).repositoryId;
-      ComponentData component = randomComponent(repositoryId, componentName);
+      ComponentData component = component(repositoryId, "namespace" + i, componentName, "1.0." + i);
       if (doCommit(
           session -> session.access(TestComponentDAO.class).createComponent(component, entityVersionEnabled))) {
         components.add(component);
@@ -336,33 +341,6 @@ public abstract class ExampleContentTestSupport
     repository.setConfigRepositoryId(new EntityUUID(combUUID()));
     repository.setAttributes(newAttributes("repository"));
     return repository;
-  }
-
-  protected ComponentData randomComponent(final int repositoryId) {
-    String name = names.get(random.nextInt(names.size()));
-    return randomComponent(repositoryId, name);
-  }
-
-  protected ComponentData randomComponent(final int repositoryId, final String name) {
-    ComponentData component = new ComponentData();
-    component.setRepositoryId(repositoryId);
-    if (random.nextInt(100) > 10) {
-      component.setNamespace(namespaces.get(random.nextInt(namespaces.size())));
-    }
-    else {
-      component.setNamespace("");
-    }
-    component.setName(name);
-    if (random.nextInt(100) > 10) {
-      component.setVersion(versions.get(random.nextInt(versions.size())));
-    }
-    else {
-      component.setVersion("");
-    }
-    component.setNormalizedVersion(component.version());
-    component.setAttributes(newAttributes("component"));
-    component.setKind("aKind");
-    return component;
   }
 
   protected ComponentData component(

@@ -95,9 +95,9 @@ public abstract class AssetDAOTestSupport
     AssetData asset4 = randomAsset(repositoryId, anotherKind);
     AssetData asset5 = randomAsset(repositoryId, anotherKind);
 
-    ComponentData component1 = randomComponent(repositoryId);
+    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
     component1.setComponentId(1);
-    ComponentData component2 = randomComponent(repositoryId);
+    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setComponentId(2);
 
     asset1.setComponent(component1);
@@ -387,7 +387,7 @@ public abstract class AssetDAOTestSupport
     String path = asset.path();
     Asset tempResult;
 
-    ComponentData componentData = randomComponent(repositoryId);
+    ComponentData componentData = component(repositoryId, "namespace1", "name1", "1.0.0");
     componentData.setComponentId(1);
 
     asset.setComponent(componentData);
@@ -926,7 +926,7 @@ public abstract class AssetDAOTestSupport
 
   protected void testSetLastDownloaded() {
     AssetData asset1 = randomAsset(repositoryId);
-    ComponentData componentData = randomComponent(repositoryId);
+    ComponentData componentData = component(repositoryId, "namespace1", "name1", "1.0.0");
     componentData.setComponentId(1);
     asset1.setComponent(componentData);
 
@@ -950,7 +950,7 @@ public abstract class AssetDAOTestSupport
 
   protected void testLastUpdated() {
     AssetData asset1 = randomAsset(repositoryId);
-    ComponentData componentData = randomComponent(repositoryId);
+    ComponentData componentData = component(repositoryId, "namespace1", "name1", "1.0.0");
     componentData.setComponentId(1);
     asset1.setComponent(componentData);
 
@@ -1173,9 +1173,9 @@ public abstract class AssetDAOTestSupport
     AssetData asset4 = randomAsset(repositoryId);
     AssetData asset5 = randomAsset(repositoryId);
 
-    ComponentData component1 = randomComponent(repositoryId);
+    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
     component1.setComponentId(1);
-    ComponentData component2 = randomComponent(repositoryId);
+    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setComponentId(2);
 
     asset1.setComponent(component1);
@@ -1249,7 +1249,7 @@ public abstract class AssetDAOTestSupport
     AssetData asset = randomAsset(repositoryId);
     AssetData assetWithoutComponent = randomAsset(repositoryId);
 
-    ComponentData componentData = randomComponent(repositoryId);
+    ComponentData componentData = component(repositoryId, "namespace1", "name1", "1.0.0");
     componentData.setComponentId(1);
 
     asset.setComponent(componentData);
