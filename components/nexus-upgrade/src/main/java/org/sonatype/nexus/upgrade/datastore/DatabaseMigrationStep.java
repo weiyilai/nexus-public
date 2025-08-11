@@ -92,8 +92,10 @@ public interface DatabaseMigrationStep
     }
   }
 
-  default boolean columnExists(final Connection conn, final String tableName, final String columnName)
-      throws SQLException
+  default boolean columnExists(
+      final Connection conn,
+      final String tableName,
+      final String columnName) throws SQLException
   {
     String sql = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE UPPER(TABLE_NAME) = ? AND UPPER(COLUMN_NAME) = ?";
     try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -105,9 +107,24 @@ public interface DatabaseMigrationStep
     }
   }
 
-  default boolean indexExists(final Connection conn, final String indexName)
-      throws SQLException
+  default boolean constraintExists(
+      final Connection conn,
+      final String tableName,
+      final String constraintName) throws SQLException
   {
+    String sql = "SELECT * FROM INFORMATION_SCHEMA.constraint_column_usage " +
+        " WHERE UPPER(table_name) = ?" +
+        "   AND UPPER(constraint_name) = ?";
+    try (PreparedStatement statement = conn.prepareStatement(sql)) {
+      statement.setString(1, tableName.toUpperCase());
+      statement.setString(2, constraintName.toUpperCase());
+      try (ResultSet results = statement.executeQuery()) {
+        return results.next();
+      }
+    }
+  }
+
+  default boolean indexExists(final Connection conn, final String indexName) throws SQLException {
     if (isPostgresql(conn)) {
       String currentSchema = currentSchema(conn);
       String sql = "SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS" +
@@ -135,9 +152,7 @@ public interface DatabaseMigrationStep
     throw new UnsupportedOperationException();
   }
 
-  default String currentSchema(final Connection conn)
-      throws SQLException
-  {
+  default String currentSchema(final Connection conn) throws SQLException {
     String sql = "select current_schema()";
     try (PreparedStatement statement = conn.prepareStatement(sql)) {
       try (ResultSet results = statement.executeQuery()) {
