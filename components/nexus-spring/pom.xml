@@ -82,7 +82,6 @@
     <dependency>
       <groupId>org.sonatype.nexus.jetty</groupId>
       <artifactId>jetty-ee8-nested</artifactId>
-      <version>3.84.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>

@@ -520,6 +520,24 @@
         <version>3.84.0-SNAPSHOT</version>
       </dependency>
 
+      <!-- jetty modifications -->
+
+      <dependency>
+        <groupId>org.sonatype.nexus.jetty</groupId>
+        <artifactId>jetty-ee8-nested</artifactId>
+        <version>3.84.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.sonatype.nexus.jetty</groupId>
+        <artifactId>jetty-security</artifactId>
+        <version>3.84.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.sonatype.nexus.jetty</groupId>
+        <artifactId>jetty-server</artifactId>
+        <version>3.84.0-SNAPSHOT</version>
+      </dependency>
+
       <!-- testsupport -->
 
       <dependency>
@@ -1027,6 +1045,22 @@
               <exclude>
                 <groupId>org.sonatype.nexus.assemblies</groupId>
                 <artifactId>nexus-base-overlay</artifactId>
+              </exclude>
+              <exclude>
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+              </exclude>
+              <exclude>
+                <groupId>com.google.inject.extension</groupId>
+                <artifactId>guice-assistedinject</artifactId>
+              </exclude>
+              <exclude>
+                <groupId>com.google.inject.extensions</groupId>
+                <artifactId>guice-servlet</artifactId>
+              </exclude>
+              <exclude>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>org.eclipse.sisu.inject</artifactId>
               </exclude>
             </excludes>
           </configuration>
