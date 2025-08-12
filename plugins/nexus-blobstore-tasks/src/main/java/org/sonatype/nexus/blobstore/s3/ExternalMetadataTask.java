@@ -16,11 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 
@@ -31,7 +28,7 @@ import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.logging.task.ProgressLogIntervalHelper;
 import org.sonatype.nexus.logging.task.TaskLogging;
 import org.sonatype.nexus.repository.Repository;
-import org.sonatype.nexus.repository.RepositoryTaskSupport;
+import org.sonatype.nexus.repository.RepositoryParallelTaskSupport;
 import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.content.AssetBlob;
 import org.sonatype.nexus.repository.content.facet.ContentFacet;
@@ -40,13 +37,11 @@ import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.content.store.AssetBlobStore;
 import org.sonatype.nexus.scheduling.Cancelable;
 import org.sonatype.nexus.scheduling.CancelableHelper;
-import org.sonatype.nexus.thread.NexusThreadFactory;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import org.springframework.beans.factory.annotation.Value;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.blobstore.group.BlobStoreGroup.CONFIG_KEY;
 import static org.sonatype.nexus.blobstore.group.BlobStoreGroup.MEMBERS_KEY;
@@ -64,7 +59,7 @@ import org.springframework.stereotype.Component;
 @TaskLogging(TASK_LOG_ONLY)
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ExternalMetadataTask
-    extends RepositoryTaskSupport
+    extends RepositoryParallelTaskSupport
     implements Cancelable
 {
   public static final String FORMAT_FIELD_ID = "external.metadata.repository.format";
@@ -72,10 +67,6 @@ public class ExternalMetadataTask
   private final BlobStoreManager blobStoreManager;
 
   private final AtomicInteger processed = new AtomicInteger();
-
-  private final int concurrencyLimit;
-
-  private final int queueCapacity;
 
   /**
    * @param blobStoreManager the blob store manager
@@ -88,13 +79,8 @@ public class ExternalMetadataTask
       @Value("${external.metadata.repository.concurrencyLimit:5}") final int concurrencyLimit,
       @Value("${external.metadata.repository.queueCapacity:15}") final int queueCapacity)
   {
+    super(concurrencyLimit, queueCapacity);
     this.blobStoreManager = checkNotNull(blobStoreManager);
-
-    checkArgument(concurrencyLimit > 0, "external.metadata.repository.concurrencyLimit must be positive");
-    checkArgument(queueCapacity > 0, "external.metadata.repository.queueCapacity must be positive");
-
-    this.concurrencyLimit = concurrencyLimit;
-    this.queueCapacity = queueCapacity;
   }
 
   @Override
@@ -103,64 +89,33 @@ public class ExternalMetadataTask
   }
 
   @Override
-  protected void execute(final Repository repository) {
+  protected Object result() {
+    return processed.get();
+  }
+
+  @Override
+  protected Stream<Runnable> jobStream(final ProgressLogIntervalHelper progress, final Repository repository) {
     log.info("Processing {}", repository.getName());
 
     BlobStore blobstore = getBlobStore(repository).orElse(null);
     if (blobstore == null) {
       log.error("Unable to obtain blobstore for {}", repository);
-      return;
+      return Stream.of();
     }
-    final String repositoryName = repository.getName();
-    // reset progress counter
-    processed.set(0);
 
     AssetBlobStore<?> assetBlobStore =
         ((ContentFacetSupport) repository.facet(ContentFacet.class)).stores().assetBlobStore();
 
-    ThreadPoolExecutor executor = new ThreadPoolExecutor(0, concurrencyLimit, 500L, TimeUnit.MILLISECONDS,
-        new LinkedBlockingQueue<>(queueCapacity),
-        new NexusThreadFactory("task-external-metadata", "task-external-metadata"), new CallerRunsPolicy());
-
-    try (ProgressLogIntervalHelper progress = new ProgressLogIntervalHelper(log, 60)) {
-      Continuations.streamOf(repository.facet(ContentFacet.class).assets()::browse)
-          .filter(FluentAsset::hasBlob)
-          .map(FluentAsset::blob)
-          .map(Optional::get)
-          .filter(assetBlob -> assetBlob.externalMetadata() == null)
-          .forEach(assetBlob -> {
-            // check cancellation before scheduling job so the primary thread throws an exception and stops queuing jobs
-            CancelableHelper.checkCancellation();
-            executor.submit(createJob(assetBlobStore, blobstore, assetBlob));
-            progress.info("Processed {} assets in repository {}", processed.get(), repositoryName);
-          });
-
-      while (!executor.isShutdown() && (executor.getActiveCount() > 0 || !executor.getQueue().isEmpty())) {
-        Runnable runnable = executor.getQueue().poll();
-        if (runnable != null) {
-          runnable.run();
-        }
-        else {
-          Thread.sleep(500L);
-        }
-        progress.info("Processed {} assets in repository {}", processed.get(), repositoryName);
-        CancelableHelper.checkCancellation();
-      }
-    }
-    catch (RuntimeException e) {
-      throw e;
-    }
-    catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      CancelableHelper.checkCancellation();
-      throw new RuntimeException(e);
-    }
-    finally {
-      executor.shutdownNow();
-    }
+    return Continuations.streamOf(repository.facet(ContentFacet.class).assets()::browse)
+        .filter(FluentAsset::hasBlob)
+        .map(FluentAsset::blob)
+        .map(Optional::get)
+        .filter(assetBlob -> assetBlob.externalMetadata() == null)
+        .map(assetBlob -> createJob(progress, assetBlobStore, blobstore, assetBlob));
   }
 
   private Runnable createJob(
+      final ProgressLogIntervalHelper progress,
       final AssetBlobStore<?> assetBlobStore,
       final BlobStore blobstore,
       final AssetBlob assetBlob)
@@ -174,6 +129,7 @@ public class ExternalMetadataTask
           .ifPresent(remoteMetadata -> assetBlobStore.setExternalMetadata(assetBlob, remoteMetadata));
 
       processed.addAndGet(1);
+      progress.info("Processed {} assets", processed.get());
     };
   }
 

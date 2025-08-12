@@ -45,6 +45,7 @@ import org.sonatype.nexus.repository.content.store.AssetData;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.types.GroupType;
 import org.sonatype.nexus.repository.types.ProxyType;
+import org.sonatype.nexus.scheduling.TaskConfiguration;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,6 +67,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.blobstore.group.BlobStoreGroup.CONFIG_KEY;
 import static org.sonatype.nexus.blobstore.group.BlobStoreGroup.MEMBERS_KEY;
+import static org.sonatype.nexus.repository.RepositoryTaskSupport.REPOSITORY_NAME_FIELD_ID;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.BLOB_STORE_NAME;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STORAGE;
 
@@ -110,9 +112,10 @@ class ExternalMetadataTaskTest
   }
 
   @Test
-  void testExecute() {
+  void testExecute() throws Exception {
     BlobStore blobstore = mockBlobStore("my-blobstore", "S3");
     Repository repository = mockRepository("my-repo", "my-blobstore");
+    when(repositoryManager.get("my-repo")).thenReturn(repository);
     // asset with existing metadata -> not called
     AssetBlob blobWithExternalMetadata = mockBlob(true);
     AssetData assetWithExternalMetadata = asset(blobWithExternalMetadata);
@@ -135,8 +138,14 @@ class ExternalMetadataTaskTest
     when(assets.browse(anyInt(), any())).thenReturn(of(assetWithExternalMetadata, assetWithoutBlob,
         assetWithoutExternalMetadata, assetWithoutExternalMetadataAndNoRemote));
 
-    underTest.execute(repository);
+    TaskConfiguration task = new TaskConfiguration();
+    task.setTypeId("typeId");
+    task.setId("id");
+    task.setString(REPOSITORY_NAME_FIELD_ID, "my-repo");
+    underTest.configure(task);
+    underTest.call();
 
+    verify(blobstore).getBlobStoreConfiguration();
     verify(blobstore, never()).getExternalMetadata(blobWithExternalMetadata.blobRef());
     verify(blobstore).getExternalMetadata(blobWithoutExternalMetadata.blobRef());
     verify(blobstore).getExternalMetadata(blobWithoutExternalMetadataAndNoRemote.blobRef());
