@@ -97,7 +97,7 @@ export const adminRoutes = [
     component: RepositoriesExt,
     data: {
       visibilityRequirements: {
-        permissions: ['nexus:repository-admin:*:*:read'],
+        permissionPrefix: 'nexus:repository-admin',
       },
       title: ADMIN.REPOSITORY.REPOSITORIES.TITLE,
     },

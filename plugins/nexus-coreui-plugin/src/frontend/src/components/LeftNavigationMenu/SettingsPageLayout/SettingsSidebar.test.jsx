@@ -811,6 +811,8 @@ describe('SettingsSidebar', () => {
     Permissions.check.mockImplementation(key => {
       return permissionLookup[key] ?? false;
     });
+
+    Permissions.permissions = permissionLookup;
   }
 
   function givenNoUserLoggedIn() {

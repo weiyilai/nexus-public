@@ -24,6 +24,7 @@
  *   licenseValid: { key: string, defaultValue: boolean } []
  *   statesEnabled: { key: string, defaultValue: boolean } []
  *   permissions : string []
+ *   permissionPrefix: string
  *   editions: string []
  *   requiresUser: boolean
  *
@@ -40,6 +41,7 @@ export default function isVisible(visibilityRequirements) {
     licenseValid,
     statesEnabled,
     permissions,
+    permissionPrefix,
     capability,
     editions,
     requiresUser,
@@ -84,6 +86,11 @@ export default function isVisible(visibilityRequirements) {
   if (permissions && !areAllRequiredPermissionsPresent(permissions)) {
     console.debug('permissions=false', permissions);
     return false
+  }
+
+  if (permissionPrefix && !hasAnyPermissionWithPrefix(permissionPrefix)) {
+    console.debug('permissionPrefix=false', permissionPrefix);
+    return false;
   }
 
   // check that edition requirements are met, i.e. must be PRO or COMMUNITY
@@ -139,6 +146,33 @@ function areAllRequiredPermissionsPresent(permissions) {
     }
     return hasPermission;
   });
+}
+
+/**
+ * Check if user has ANY permission starting with the given prefix.
+ * This replicates the behavior of NX.Permissions.checkExistsWithPrefix from the older version.
+ *
+ * @param {string} prefix - The permission prefix to check
+ * @returns {boolean} True if user has any permission starting with the prefix
+ */
+function hasAnyPermissionWithPrefix(prefix) {
+  if (!NX.Permissions || !NX.Permissions.permissions) {
+    console.debug(`NX.Permissions or NX.Permissions.permissions not available`);
+    return false;
+  }
+
+  const permissions = NX.Permissions.permissions;
+
+  // Check if any permission starts with the prefix and is permitted
+  for (const permission in permissions) {
+    if (permission.startsWith(prefix) && permissions[permission] === true) {
+      console.debug(`Found permission with prefix ${prefix}: ${permission}`);
+      return true;
+    }
+  }
+
+  console.debug(`No permissions found with prefix: ${prefix}`);
+  return false;
 }
 
 function areAllRequiredLicensesPresent(licenseValid) {
