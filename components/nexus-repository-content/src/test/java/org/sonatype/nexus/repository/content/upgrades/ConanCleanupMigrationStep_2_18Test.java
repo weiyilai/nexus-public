@@ -27,20 +27,18 @@ import static java.util.Arrays.stream;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
+import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrationStep_2_18.NEW_CONSTRAINT_NAME;
+import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrationStep_2_18.OLD_CONSTRAINT_NAME;
+import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrationStep_2_18.OLD_INDEX_NAME;
+import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrationStep_2_18.OLD_REVISION_COLUMN_NAME;
+import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrationStep_2_18.OLD_REVISION_TIME_COLUMN_NAME;
+import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrationStep_2_18.TABLE_NAME;
 
 @Category(SQLTestGroup.class)
 public class ConanCleanupMigrationStep_2_18Test
     extends TestSupport
 {
-  private static final String TABLE_NAME = "conan_component";
-
-  private static final String OLD_INDEX_NAME = "idx_conan_component_coordinate_revisions";
-
-  private static final String OLD_CONSTRAINT_NAME = "uk_conan_component_coordinate_revisions";
-
-  private static final String OLD_COLUMN_REVISION_NAME = "revision";
-
-  private static final String OLD_COLUMN_REVISION_TIME_NAME = "revision_time";
+  private static final String NEW_INDEX_NAME = "idx_conan_component_coordinates";
 
   private static final String OLD_SCHEMA =
       "CREATE TABLE IF NOT EXISTS conan_component ("
@@ -57,22 +55,26 @@ public class ConanCleanupMigrationStep_2_18Test
           + "revision_time TIMESTAMP WITH TIME ZONE NULL,"
           + "CONSTRAINT pk_conan_component_id PRIMARY KEY (component_id)";
 
-  private static final String OLD_SCHEMA_WITHOUT_UNIQUE_CONSTRAINT =
-      OLD_SCHEMA
-          + ", CONSTRAINT uk_conan_component_coordinate UNIQUE (repository_id, namespace, name, version)"
-          + ")";
+  private static final String OLD_SCHEMA_WITH_OLD_CONSTRAINT =
+      String.format(OLD_SCHEMA
+          + ", CONSTRAINT %s UNIQUE (repository_id, namespace, name, version, revision)"
+          + ")", OLD_CONSTRAINT_NAME);
 
-  private static final String OLD_SCHEMA_WITH_UNIQUE_CONSTRAINT =
-      OLD_SCHEMA
-          +
-          ", CONSTRAINT uk_conan_component_coordinate_revisions UNIQUE (repository_id, namespace, name, version, revision)"
-          + ")";
+  private static final String OLD_SCHEMA_WITH_NEW_CONSTRAINT =
+      String.format(OLD_SCHEMA
+          + ", CONSTRAINT %s UNIQUE (repository_id, namespace, name, version)"
+          + ")", NEW_CONSTRAINT_NAME);
 
   private static final String[] OLD_INDEX_LIST = new String[]{
-      "CREATE INDEX IF NOT EXISTS idx_conan_component_kind ON conan_component (kind)",
-      "CREATE INDEX IF NOT EXISTS idx_conan_normalized_version ON conan_component (normalized_version)",
-      "CREATE INDEX IF NOT EXISTS idx_conan_component_coordinates ON conan_component (repository_id, namespace, name, version)",
-      "CREATE UNIQUE INDEX IF NOT EXISTS idx_conan_component_coordinate_revisions ON conan_component (repository_id, namespace, name, version, revision)"
+      String.format("CREATE INDEX IF NOT EXISTS idx_conan_component_kind ON %s (kind)", TABLE_NAME),
+      String.format("CREATE INDEX IF NOT EXISTS idx_conan_normalized_version ON %s (normalized_version)", TABLE_NAME),
+      String.format(
+          "CREATE INDEX IF NOT EXISTS idx_conan_component_coordinates ON %s (repository_id, namespace, name, version)",
+          TABLE_NAME),
+      String.format(
+          "CREATE UNIQUE INDEX IF NOT EXISTS %s ON %s (repository_id, namespace, name, version, revision)",
+          OLD_INDEX_NAME,
+          TABLE_NAME)
   };
 
   @Rule
@@ -84,7 +86,7 @@ public class ConanCleanupMigrationStep_2_18Test
   public void testUpgrade() throws Exception {
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       // create old schema
-      underTest.runStatement(conn, OLD_SCHEMA_WITH_UNIQUE_CONSTRAINT);
+      underTest.runStatement(conn, OLD_SCHEMA_WITH_OLD_CONSTRAINT);
 
       // create old indexes
       stream(OLD_INDEX_LIST).forEach(index -> {
@@ -96,20 +98,23 @@ public class ConanCleanupMigrationStep_2_18Test
         }
       });
 
-      // Sanity checks
-      assertTrue("Sanity check - table exists", underTest.tableExists(conn, TABLE_NAME));
-      assertTrue("Sanity check - old column exists", underTest.columnExists(conn, TABLE_NAME, "revision"));
-      assertTrue("Sanity check - old column exists", underTest.columnExists(conn, TABLE_NAME, "revision_time"));
-      assertTrue(
-          "Sanity check - old constraint exists",
-          underTest.constraintExists(conn, TABLE_NAME, OLD_CONSTRAINT_NAME));
+      assertTrue("table doesn't exist!", underTest.tableExists(conn, TABLE_NAME));
+      assertTrue("old column doesn't exist!", underTest.columnExists(conn, TABLE_NAME, OLD_REVISION_COLUMN_NAME));
+      assertTrue("old column doesn't exist!", underTest.columnExists(conn, TABLE_NAME, OLD_REVISION_TIME_COLUMN_NAME));
+      assertTrue("old constraint doesn't exist!", underTest.constraintExists(conn, TABLE_NAME, OLD_CONSTRAINT_NAME));
+      assertTrue("old index doesn't exist!", underTest.indexExists(conn, TABLE_NAME, OLD_INDEX_NAME));
+      assertTrue("new index doesn't exist!", underTest.indexExists(conn, TABLE_NAME, NEW_INDEX_NAME));
+      assertFalse("new constraint exists!", underTest.constraintExists(conn, TABLE_NAME, NEW_CONSTRAINT_NAME));
 
       underTest.migrate(conn);
 
-      assertFalse("Old index removed", underTest.indexExists(conn, OLD_INDEX_NAME));
-      assertFalse("Old constraint removed", underTest.constraintExists(conn, TABLE_NAME, OLD_CONSTRAINT_NAME));
-      assertFalse("Old column removed", underTest.columnExists(conn, TABLE_NAME, OLD_COLUMN_REVISION_NAME));
-      assertFalse("Old column removed", underTest.columnExists(conn, TABLE_NAME, OLD_COLUMN_REVISION_TIME_NAME));
+      assertFalse("old index not removed!", underTest.indexExists(conn, OLD_INDEX_NAME));
+      assertFalse("old constraint not removed!", underTest.constraintExists(conn, TABLE_NAME, OLD_CONSTRAINT_NAME));
+      assertFalse("old column not removed!", underTest.columnExists(conn, TABLE_NAME, OLD_REVISION_COLUMN_NAME));
+      assertFalse("old column not removed!", underTest.columnExists(conn, TABLE_NAME, OLD_REVISION_TIME_COLUMN_NAME));
+      assertFalse("old index not removed!", underTest.indexExists(conn, TABLE_NAME, OLD_INDEX_NAME));
+      assertTrue("new index doesn't exist!", underTest.indexExists(conn, TABLE_NAME, NEW_INDEX_NAME));
+      assertTrue("new constraint not added!", underTest.constraintExists(conn, TABLE_NAME, NEW_CONSTRAINT_NAME));
     }
   }
 
@@ -126,7 +131,7 @@ public class ConanCleanupMigrationStep_2_18Test
   public void testUpgrade_skipsAddConstraintWhenDropConstraintDoesNothing() throws Exception {
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       // create old schema
-      underTest.runStatement(conn, OLD_SCHEMA_WITHOUT_UNIQUE_CONSTRAINT);
+      underTest.runStatement(conn, OLD_SCHEMA_WITH_NEW_CONSTRAINT);
 
       // create old indexes
       stream(OLD_INDEX_LIST).forEach(index -> {
@@ -138,19 +143,22 @@ public class ConanCleanupMigrationStep_2_18Test
         }
       });
 
-      // Sanity checks
-      assertTrue("Sanity check - table exists", underTest.tableExists(conn, TABLE_NAME));
-      assertTrue("Sanity check - old column exists", underTest.columnExists(conn, TABLE_NAME, "revision"));
-      assertTrue("Sanity check - old column exists", underTest.columnExists(conn, TABLE_NAME, "revision_time"));
-      assertFalse("Sanity check - old constraint doesn't exist",
-          underTest.constraintExists(conn, TABLE_NAME, OLD_CONSTRAINT_NAME));
+      assertTrue("table doesn't exist!", underTest.tableExists(conn, TABLE_NAME));
+      assertTrue("old column doesn't exist!", underTest.columnExists(conn, TABLE_NAME, OLD_REVISION_TIME_COLUMN_NAME));
+      assertTrue("old column doesn't exist!", underTest.columnExists(conn, TABLE_NAME, OLD_REVISION_COLUMN_NAME));
+      assertTrue("new constraint doesn't exist!", underTest.constraintExists(conn, TABLE_NAME, NEW_CONSTRAINT_NAME));
+      assertTrue("old index doesn't exist!", underTest.indexExists(conn, TABLE_NAME, OLD_INDEX_NAME));
+      assertTrue("new index doesn't exist!", underTest.indexExists(conn, TABLE_NAME, NEW_INDEX_NAME));
 
       underTest.migrate(conn);
 
-      assertFalse("Old index removed", underTest.indexExists(conn, OLD_INDEX_NAME));
-      assertFalse("Old constraint removed", underTest.constraintExists(conn, TABLE_NAME, OLD_CONSTRAINT_NAME));
-      assertFalse("Old column removed", underTest.columnExists(conn, TABLE_NAME, OLD_COLUMN_REVISION_NAME));
-      assertFalse("Old column removed", underTest.columnExists(conn, TABLE_NAME, OLD_COLUMN_REVISION_TIME_NAME));
+      assertFalse("old index not removed!", underTest.indexExists(conn, OLD_INDEX_NAME));
+      assertFalse("old constraint added again!", underTest.constraintExists(conn, TABLE_NAME, OLD_CONSTRAINT_NAME));
+      assertFalse("old column not removed!", underTest.columnExists(conn, TABLE_NAME, OLD_REVISION_COLUMN_NAME));
+      assertFalse("old column not removed!", underTest.columnExists(conn, TABLE_NAME, OLD_REVISION_TIME_COLUMN_NAME));
+      assertFalse("old index not removed!", underTest.indexExists(conn, TABLE_NAME, OLD_INDEX_NAME));
+      assertTrue("new index doesn't exist!", underTest.indexExists(conn, TABLE_NAME, NEW_INDEX_NAME));
+      assertTrue("new constraint removed!", underTest.constraintExists(conn, TABLE_NAME, NEW_CONSTRAINT_NAME));
     }
   }
 }

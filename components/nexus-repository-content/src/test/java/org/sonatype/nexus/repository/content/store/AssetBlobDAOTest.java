@@ -61,10 +61,10 @@ class AssetBlobDAOTest
   @Test
   void testCrudOperations() {
 
-    AssetBlobData assetBlob1 = randomAssetBlob();
+    AssetBlobData assetBlob1 = generateAssetBlob();
     assetBlob1.setExternalMetadata(
         new ExternalMetadata("my-etag", OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)));
-    AssetBlobData assetBlob2 = randomAssetBlob();
+    AssetBlobData assetBlob2 = generateAssetBlob();
 
     BlobRef blobRef1 = assetBlob1.blobRef();
     BlobRef blobRef2 = assetBlob2.blobRef();
@@ -147,8 +147,8 @@ class AssetBlobDAOTest
 
   @Test
   void testBrowseAll() {
-    AssetBlobData assetBlob1 = randomAssetBlob();
-    AssetBlobData assetBlob2 = randomAssetBlob();
+    AssetBlobData assetBlob1 = generateAssetBlob();
+    AssetBlobData assetBlob2 = generateAssetBlob();
 
     BlobRef blobRef1 = assetBlob1.blobRef();
 
@@ -174,8 +174,8 @@ class AssetBlobDAOTest
     OffsetDateTime now = UTC.now();
     OffsetDateTime blobCreated1 = now.minusDays(10);
     OffsetDateTime blobCreated2 = now.minusDays(5);
-    AssetBlobData assetBlob1 = randomAssetBlob(blobCreated1);
-    AssetBlobData assetBlob2 = randomAssetBlob(blobCreated2);
+    AssetBlobData assetBlob1 = generateAssetBlob(blobCreated1);
+    AssetBlobData assetBlob2 = generateAssetBlob(blobCreated2);
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetBlobDAO dao = session.access(TestAssetBlobDAO.class);
@@ -190,7 +190,7 @@ class AssetBlobDAOTest
 
   @Test
   void testBlob() {
-    AssetBlobData assetBlob1 = randomAssetBlob();
+    AssetBlobData assetBlob1 = generateAssetBlob();
     BlobRef blobRef1 = assetBlob1.blobRef();
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
@@ -300,15 +300,14 @@ class AssetBlobDAOTest
     ConfigurationData configurationData = generatedConfigurations().get(0);
     EntityId repositoryId = configurationData.getRepositoryId();
     generateSingleRepository(UUID.fromString(repositoryId.getValue()));
-    generateRandomNamespaces(1);
-    generateRandomVersions(1);
+    generateNamespaces(1);
+    generateVersions(1);
     generateContent(1, false);
 
     BlobRef blobRef = generatedAssetBlobs().get(0).blobRef();
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetBlobDAO dao = session.access(TestAssetBlobDAO.class);
       String repoName = dao.getRepositoryName(blobRef);
-      System.out.println(repoName);
       assertThat(repoName, is("repo-name"));
     }
   }
@@ -319,8 +318,8 @@ class AssetBlobDAOTest
     ConfigurationData configurationData = generatedConfigurations().get(0);
     EntityId repositoryId = configurationData.getRepositoryId();
     generateSingleRepository(UUID.fromString(repositoryId.getValue()));
-    generateRandomNamespaces(1);
-    generateRandomVersions(1);
+    generateNamespaces(1);
+    generateVersions(1);
     generateContent(1, false);
 
     BlobRef blobRef = generatedAssetBlobs().get(0).blobRef();
@@ -337,9 +336,9 @@ class AssetBlobDAOTest
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetBlobDAO dao = session.access(TestAssetBlobDAO.class);
 
-      AssetBlobData assetBlobToChange = randomAssetBlob();
+      AssetBlobData assetBlobToChange = generateAssetBlob();
       dao.createAssetBlob(assetBlobToChange);
-      dao.createAssetBlob(randomAssetBlob());
+      dao.createAssetBlob(generateAssetBlob());
 
       // update
       ExternalMetadata external =
@@ -366,7 +365,7 @@ class AssetBlobDAOTest
         Connection connection = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       AssetBlobDAO dao = session.access(TestAssetBlobDAO.class);
       for (int i = 0; i < assetsCount; i++) {
-        dao.createAssetBlob(randomAssetBlob());
+        dao.createAssetBlob(generateAssetBlob());
       }
 
       session.getTransaction().commit();

@@ -31,20 +31,32 @@ public class ConanCleanupMigrationStep_2_18
 {
   private static final Logger LOG = LoggerFactory.getLogger(ConanCleanupMigrationStep_2_18.class);
 
-  private static final String DROP_INDEX = "DROP INDEX IF EXISTS idx_conan_component_coordinate_revisions;";
+  static final String TABLE_NAME = "conan_component";
+
+  static final String OLD_INDEX_NAME = "idx_conan_component_coordinate_revisions";
+
+  static final String OLD_CONSTRAINT_NAME = "uk_conan_component_coordinate_revisions";
+
+  static final String OLD_REVISION_COLUMN_NAME = "revision";
+
+  static final String OLD_REVISION_TIME_COLUMN_NAME = "revision_time";
+
+  static final String NEW_CONSTRAINT_NAME = "uk_conan_component_coordinate";
+
+  private static final String DROP_INDEX = String.format("DROP INDEX IF EXISTS %s;", OLD_INDEX_NAME);
 
   private static final String DROP_CONSTRAINT =
-      "ALTER TABLE IF EXISTS conan_component DROP CONSTRAINT IF EXISTS uk_conan_component_coordinate_revisions;";
+      String.format("ALTER TABLE IF EXISTS %s DROP CONSTRAINT IF EXISTS %s;", TABLE_NAME, OLD_CONSTRAINT_NAME);
 
   private static final String DROP_COLUMN_REVISION =
-      "ALTER TABLE IF EXISTS conan_component DROP COLUMN IF EXISTS revision;";
+      String.format("ALTER TABLE IF EXISTS %s DROP COLUMN IF EXISTS %s;", TABLE_NAME, OLD_REVISION_COLUMN_NAME);
 
   private static final String DROP_COLUMN_REVISION_TIME =
-      "ALTER TABLE IF EXISTS conan_component DROP COLUMN IF EXISTS revision_time;";
+      String.format("ALTER TABLE IF EXISTS %s DROP COLUMN IF EXISTS %s;", TABLE_NAME, OLD_REVISION_TIME_COLUMN_NAME);
 
   private static final String ADD_CONSTRAINT =
-      "ALTER TABLE IF EXISTS conan_component " +
-          "ADD CONSTRAINT uk_conan_component_coordinate UNIQUE (repository_id, namespace, name, version)";
+      String.format("ALTER TABLE IF EXISTS %s ADD CONSTRAINT %s UNIQUE (repository_id, namespace, name, version)",
+          TABLE_NAME, NEW_CONSTRAINT_NAME);
 
   @Override
   public Optional<String> version() {
@@ -59,21 +71,25 @@ public class ConanCleanupMigrationStep_2_18
    */
   @Override
   public void migrate(final Connection connection) throws Exception {
-    LOG.info("Removing outdated indexes and columns from conan_component.");
+    LOG.info("Removing outdated indexes and columns from {}.", TABLE_NAME);
 
-    int dropIndexCount = this.runStatement(connection, DROP_INDEX);
-    LOG.debug("Drop count for index idx_conan_component_coordinate_revisions: {}", dropIndexCount);
-    int dropConstraintCount = this.runStatement(connection, DROP_CONSTRAINT);
-    LOG.debug("Drop count for constraint uk_conan_component_coordinate_revisions: {}", dropConstraintCount);
-    int dropColumnCount = this.runStatement(connection, DROP_COLUMN_REVISION);
-    LOG.debug("Drop count for column revision: {}", dropColumnCount);
-    dropColumnCount = this.runStatement(connection, DROP_COLUMN_REVISION_TIME);
-    LOG.debug("Drop count for column revision_time: {}", dropColumnCount);
-    if (dropConstraintCount > 0) {
-      int addConstraintCount = this.runStatement(connection, ADD_CONSTRAINT);
-      LOG.debug("Add count for constraint uk_conan_component_coordinate: {}", addConstraintCount);
+    this.runStatement(connection, DROP_INDEX);
+    LOG.debug("Drop index {} on {} (IF EXISTS)", OLD_INDEX_NAME, TABLE_NAME);
+
+    boolean constraintExists = constraintExists(connection, TABLE_NAME, OLD_CONSTRAINT_NAME);
+    if (constraintExists) {
+      this.runStatement(connection, DROP_CONSTRAINT);
+      LOG.debug("Drop constraint {} from table {} (IF EXISTS)", OLD_CONSTRAINT_NAME, TABLE_NAME);
+      this.runStatement(connection, ADD_CONSTRAINT);
+      LOG.debug("Added constraint {} to table {}", NEW_CONSTRAINT_NAME, TABLE_NAME);
     }
 
-    LOG.info("Successfully removed outdated indexes and columns from conan_component.");
+    this.runStatement(connection, DROP_COLUMN_REVISION);
+    LOG.debug("Drop column {} from table {} (IF EXISTS)", OLD_REVISION_COLUMN_NAME, TABLE_NAME);
+
+    this.runStatement(connection, DROP_COLUMN_REVISION_TIME);
+    LOG.debug("Drop column {} from table {} (IF EXISTS)", OLD_REVISION_TIME_COLUMN_NAME, TABLE_NAME);
+
+    LOG.info("Successfully completed correcting the state of the {} table.", TABLE_NAME);
   }
 }

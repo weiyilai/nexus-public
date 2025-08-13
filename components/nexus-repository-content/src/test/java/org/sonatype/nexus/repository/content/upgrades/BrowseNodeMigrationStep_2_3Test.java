@@ -76,7 +76,7 @@ class BrowseNodeMigrationStep_2_3Test
 
   @Test
   void testMigration() throws Exception {
-    ContentRepositoryData contentRepositoryData = randomContentRepository();
+    ContentRepositoryData contentRepositoryData = generateContentRepository();
     createRepository(contentRepositoryData);
 
     try (Connection conn = store.openConnection()) {

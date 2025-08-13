@@ -73,31 +73,31 @@ public abstract class AssetDAOTestSupport
 
   protected void initialiseContent(final boolean entityVersionEnabled) {
     this.entityVersionEnabled = entityVersionEnabled;
-    ContentRepositoryData contentRepository = randomContentRepository();
+    ContentRepositoryData contentRepository = generateContentRepository();
 
     createContentRepository(contentRepository);
 
     repositoryId = contentRepository.repositoryId;
 
-    generateRandomNamespaces(100);
-    generateRandomNames(100);
-    generateRandomVersions(100);
-    generateRandomPaths(100);
+    generateNamespaces(100);
+    generateNames(100);
+    generateVersions(100);
+    generatePaths(100);
   }
 
   protected void testCrudOperations() throws InterruptedException {
 
     String aKind = "a kind";
     String anotherKind = "another kind";
-    AssetData asset1 = randomAsset(repositoryId);
-    AssetData asset2 = randomAsset(repositoryId);
-    AssetData asset3 = randomAsset(repositoryId, aKind);
-    AssetData asset4 = randomAsset(repositoryId, anotherKind);
-    AssetData asset5 = randomAsset(repositoryId, anotherKind);
+    AssetData asset1 = generateAsset(repositoryId, "/org/sonatype/asset-test/1.0/binary-1.0.jar");
+    AssetData asset2 = generateAsset(repositoryId, "/org/sonatype/asset-test/2.0/binary-2.0.jar");
+    AssetData asset3 = generateAsset(repositoryId, "/org/sonatype/asset-test/3.0/binary-3.0.jar", aKind);
+    AssetData asset4 = generateAsset(repositoryId, "/org/sonatype/asset-test/4.0/binary-4.0.jar", anotherKind);
+    AssetData asset5 = generateAsset(repositoryId, "/org/sonatype/asset-test/5.0/binary-5.0.jar", anotherKind);
 
-    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component1 = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
     component1.setComponentId(1);
-    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
+    ComponentData component2 = generateComponent(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setComponentId(2);
 
     asset1.setComponent(component1);
@@ -105,12 +105,6 @@ public abstract class AssetDAOTestSupport
     asset3.setComponent(component1);
     asset4.setComponent(component2);
     asset5.setComponent(component2);
-
-    // make sure paths are different
-    asset2.setPath(asset1.path() + "/2");
-    asset3.setPath(asset1.path() + "/3");
-    asset4.setPath(asset1.path() + "/4");
-    asset5.setPath(asset1.path() + "/5");
 
     String path1 = asset1.path();
     String path2 = asset2.path();
@@ -320,8 +314,7 @@ public abstract class AssetDAOTestSupport
 
   protected void testLastDownloaded() throws InterruptedException {
 
-    AssetData asset = randomAsset(repositoryId);
-    String path = asset.path();
+    AssetData asset = generateAsset(repositoryId, "/asset1/asset1.jar");
     Asset tempResult;
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
@@ -337,7 +330,7 @@ public abstract class AssetDAOTestSupport
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
 
       OffsetDateTime oldCreated = tempResult.created();
       OffsetDateTime oldLastUpdated = tempResult.lastUpdated();
@@ -345,7 +338,7 @@ public abstract class AssetDAOTestSupport
 
       dao.markAsDownloaded(asset);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
       assertTrue(tempResult.lastDownloaded().isPresent());
       assertTrue(tempResult.lastDownloaded().get().isAfter(oldLastUpdated));
       assertThat(tempResult.created(), is(oldCreated));
@@ -361,7 +354,7 @@ public abstract class AssetDAOTestSupport
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
 
       OffsetDateTime oldCreated = tempResult.created();
       OffsetDateTime oldLastUpdated = tempResult.lastUpdated();
@@ -369,7 +362,7 @@ public abstract class AssetDAOTestSupport
 
       dao.markAsDownloaded(asset);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
       assertTrue(tempResult.lastDownloaded().isPresent());
       assertTrue(tempResult.lastDownloaded().get().isAfter(oldLastDownloaded));
       assertThat(tempResult.created(), is(oldCreated));
@@ -381,13 +374,12 @@ public abstract class AssetDAOTestSupport
 
   protected void testAttachingBlobs() throws InterruptedException {
 
-    AssetBlobData assetBlob1 = randomAssetBlob();
-    AssetBlobData assetBlob2 = randomAssetBlob();
-    AssetData asset = randomAsset(repositoryId);
-    String path = asset.path();
+    AssetBlobData assetBlob1 = generateAssetBlob();
+    AssetBlobData assetBlob2 = generateAssetBlob();
+    AssetData asset = generateAsset(repositoryId, "/asset1/asset1.jar");
     Asset tempResult;
 
-    ComponentData componentData = component(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData componentData = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
     componentData.setComponentId(1);
 
     asset.setComponent(componentData);
@@ -415,7 +407,7 @@ public abstract class AssetDAOTestSupport
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
 
       OffsetDateTime oldCreated = tempResult.created();
       OffsetDateTime oldLastUpdated = tempResult.lastUpdated();
@@ -424,7 +416,7 @@ public abstract class AssetDAOTestSupport
       asset.setAssetBlob(assetBlob1);
       dao.updateAssetBlobLink(asset, entityVersionEnabled);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
       assertTrue(tempResult.blob().isPresent());
       assertThat(tempResult.blob().get(), sameBlob(assetBlob1));
       assertThat(tempResult, sameBlob(asset));
@@ -446,7 +438,7 @@ public abstract class AssetDAOTestSupport
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
 
       OffsetDateTime oldCreated = tempResult.created();
       OffsetDateTime oldLastUpdated = tempResult.lastUpdated();
@@ -455,7 +447,7 @@ public abstract class AssetDAOTestSupport
       asset.setAssetBlob(assetBlob2);
       dao.updateAssetBlobLink(asset, entityVersionEnabled);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
       assertTrue(tempResult.blob().isPresent());
       assertThat(tempResult.blob().get(), sameBlob(assetBlob2));
       assertThat(tempResult, sameBlob(asset));
@@ -479,7 +471,7 @@ public abstract class AssetDAOTestSupport
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
 
       OffsetDateTime oldCreated = tempResult.created();
       OffsetDateTime oldLastUpdated = tempResult.lastUpdated();
@@ -488,7 +480,7 @@ public abstract class AssetDAOTestSupport
       asset.setAssetBlob(assetBlob2);
       dao.updateAssetBlobLink(asset, entityVersionEnabled);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
       assertTrue(tempResult.blob().isPresent());
       assertThat(tempResult.blob().get(), sameBlob(assetBlob2));
       assertThat(tempResult, sameBlob(asset));
@@ -513,7 +505,7 @@ public abstract class AssetDAOTestSupport
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
 
       OffsetDateTime oldCreated = tempResult.created();
       OffsetDateTime oldLastUpdated = tempResult.lastUpdated();
@@ -522,7 +514,7 @@ public abstract class AssetDAOTestSupport
       asset.setAssetBlob(null);
       dao.updateAssetBlobLink(asset, entityVersionEnabled);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
       assertFalse(tempResult.blob().isPresent());
       assertThat(tempResult.created().truncatedTo(ChronoUnit.SECONDS), is(oldCreated.truncatedTo(ChronoUnit.SECONDS)));
       assertTrue(tempResult.lastUpdated().isAfter(oldLastUpdated));
@@ -542,7 +534,7 @@ public abstract class AssetDAOTestSupport
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
 
       OffsetDateTime oldCreated = tempResult.created();
       OffsetDateTime oldLastUpdated = tempResult.lastUpdated();
@@ -551,7 +543,7 @@ public abstract class AssetDAOTestSupport
       asset.setAssetBlob(null);
       dao.updateAssetBlobLink(asset, entityVersionEnabled);
 
-      tempResult = dao.readPath(repositoryId, path).get();
+      tempResult = dao.readPath(repositoryId, asset.path()).get();
       assertFalse(tempResult.blob().isPresent());
 
       assertThat(tempResult.created().truncatedTo(ChronoUnit.SECONDS), is(oldCreated.truncatedTo(ChronoUnit.SECONDS)));
@@ -571,8 +563,8 @@ public abstract class AssetDAOTestSupport
   protected void testBrowseComponentAssets() {
 
     // scatter components and assets
-    generateRandomRepositories(10);
-    generateRandomContent(10, 100, entityVersionEnabled);
+    generateRepositories(10);
+    generateContent(10, 100, entityVersionEnabled);
 
     List<Asset> browsedAssets = new ArrayList<>();
 
@@ -619,12 +611,12 @@ public abstract class AssetDAOTestSupport
 
   protected void testContinuationBrowsing() {
 
-    generateRandomNamespaces(1);
-    generateRandomNames(1);
-    generateRandomVersions(1);
-    generateRandomPaths(10000);
-    generateRandomRepositories(1);
-    generateRandomContent(1, 1000, entityVersionEnabled);
+    generateNamespaces(1);
+    generateNames(1);
+    generateVersions(1);
+    generatePaths(10000);
+    generateRepositories(1);
+    generateContent(1, 1000, entityVersionEnabled);
 
     repositoryId = generatedRepositories().get(0).repositoryId;
 
@@ -657,8 +649,8 @@ public abstract class AssetDAOTestSupport
 
   protected void testFlaggedBrowsing() {
 
-    TestAssetData asset1 = randomAsset(repositoryId);
-    TestAssetData asset2 = randomAsset(repositoryId);
+    TestAssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
+    TestAssetData asset2 = generateAsset(repositoryId, "/asset2/asset2.jar");
     asset2.setPath(asset1.path() + "/2"); // make sure paths are different
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
@@ -689,8 +681,8 @@ public abstract class AssetDAOTestSupport
   }
 
   protected void testReadPathTest() {
-    TestAssetData asset1 = randomAsset(repositoryId);
-    TestAssetData asset2 = randomAsset(repositoryId);
+    TestAssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
+    TestAssetData asset2 = generateAsset(repositoryId, "/asset2/asset2.jar");
     asset2.setPath(asset1.path() + "/2"); // make sure paths are different
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
@@ -725,8 +717,8 @@ public abstract class AssetDAOTestSupport
   protected void testDeleteAllAssets() {
 
     // scatter components and assets
-    generateRandomRepositories(1);
-    generateRandomContent(100, 100, entityVersionEnabled);
+    generateRepositories(1);
+    generateContent(100, 100, entityVersionEnabled);
 
     repositoryId = generatedRepositories().get(0).contentRepositoryId();
 
@@ -757,17 +749,11 @@ public abstract class AssetDAOTestSupport
 
   protected void testReadPaths() {
 
-    AssetData asset1 = randomAsset(repositoryId);
-    AssetData asset2 = randomAsset(repositoryId);
-    AssetData asset3 = randomAsset(repositoryId);
-    AssetData asset4 = randomAsset(repositoryId);
-    AssetData asset5 = randomAsset(repositoryId);
-
-    // make sure paths are different
-    asset2.setPath(asset1.path() + "/2");
-    asset3.setPath(asset1.path() + "/3");
-    asset4.setPath(asset1.path() + "/4");
-    asset5.setPath(asset1.path() + "/5");
+    AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
+    AssetData asset2 = generateAsset(repositoryId, "/asset2/asset2.jar");
+    AssetData asset3 = generateAsset(repositoryId, "/asset3/asset3.jar");
+    AssetData asset4 = generateAsset(repositoryId, "/asset4/asset4.jar");
+    AssetData asset5 = generateAsset(repositoryId, "/asset5/asset5.jar");
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
@@ -792,9 +778,8 @@ public abstract class AssetDAOTestSupport
   }
 
   protected void testPurgeOperation() {
-    AssetData asset1 = randomAsset(repositoryId);
-    AssetData asset2 = randomAsset(repositoryId);
-    asset2.setPath(asset1.path() + "/2"); // make sure paths are different
+    TestAssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
+    TestAssetData asset2 = generateAsset(repositoryId, "/asset2/asset2.jar");
 
     asset1.setLastDownloaded(UTC.now().minusDays(2));
     asset2.setLastDownloaded(UTC.now().minusDays(4));
@@ -828,9 +813,8 @@ public abstract class AssetDAOTestSupport
   }
 
   protected void testRoundTrip() {
-    AssetData asset1 = randomAsset(repositoryId);
-    AssetData asset2 = randomAsset(repositoryId);
-    asset2.setPath(asset1.path() + "/2"); // make sure paths are different
+    AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
+    AssetData asset2 = generateAsset(repositoryId, "/asset2/asset2.jar");
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
@@ -857,18 +841,13 @@ public abstract class AssetDAOTestSupport
   }
 
   protected void testBrowseAssetsInRepositories() {
-    ContentRepositoryData anotherContentRepository = randomContentRepository();
+    ContentRepositoryData anotherContentRepository = generateContentRepository();
     createContentRepository(anotherContentRepository);
     int anotherRepositoryId = anotherContentRepository.repositoryId;
-    AssetData asset1 = randomAsset(repositoryId);
-    AssetData asset2 = randomAsset(repositoryId);
-    AssetData asset3 = randomAsset(anotherRepositoryId);
-    AssetData asset4 = randomAsset(anotherRepositoryId);
-
-    // make sure paths are different
-    asset2.setPath(asset1.path() + "/2");
-    asset3.setPath(asset1.path() + "/3");
-    asset4.setPath(asset1.path() + "/4");
+    AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
+    AssetData asset2 = generateAsset(repositoryId, "/asset2/asset2.jar");
+    AssetData asset3 = generateAsset(anotherRepositoryId, "/asset3/asset3.jar");
+    AssetData asset4 = generateAsset(anotherRepositoryId, "/asset4/asset4.jar");
 
     // CREATE
 
@@ -925,8 +904,8 @@ public abstract class AssetDAOTestSupport
   }
 
   protected void testSetLastDownloaded() {
-    AssetData asset1 = randomAsset(repositoryId);
-    ComponentData componentData = component(repositoryId, "namespace1", "name1", "1.0.0");
+    AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
+    ComponentData componentData = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
     componentData.setComponentId(1);
     asset1.setComponent(componentData);
 
@@ -949,8 +928,8 @@ public abstract class AssetDAOTestSupport
   }
 
   protected void testLastUpdated() {
-    AssetData asset1 = randomAsset(repositoryId);
-    ComponentData componentData = component(repositoryId, "namespace1", "name1", "1.0.0");
+    AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
+    ComponentData componentData = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
     componentData.setComponentId(1);
     asset1.setComponent(componentData);
 
@@ -973,11 +952,11 @@ public abstract class AssetDAOTestSupport
   }
 
   protected void testFilterClauseIsolation() {
-    ContentRepositoryData anotherContentRepository = randomContentRepository();
+    ContentRepositoryData anotherContentRepository = generateContentRepository();
     createContentRepository(anotherContentRepository);
     int anotherRepositoryId = anotherContentRepository.repositoryId;
-    AssetData asset1 = randomAsset(repositoryId);
-    AssetData asset2 = randomAsset(anotherRepositoryId);
+    AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
+    AssetData asset2 = generateAsset(anotherRepositoryId, "/asset2/asset2.jar");
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
@@ -993,10 +972,9 @@ public abstract class AssetDAOTestSupport
   }
 
   protected void testFindByBlobRef() throws InterruptedException {
-    AssetBlobData assetBlob = randomAssetBlob();
-    randomAsset(repositoryId);
-    AssetData asset2 = randomAsset(repositoryId);
-    String path = asset2.path();
+    AssetBlobData assetBlob = generateAssetBlob();
+    generateAsset(repositoryId, "/asset1/asset1.jar");
+    AssetData asset2 = generateAsset(repositoryId, "/asset2/asset2/jar");
     Asset tempResult;
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
@@ -1011,7 +989,7 @@ public abstract class AssetDAOTestSupport
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
-      tempResult = dao.readPath(repositoryId, path).get();
+      dao.readPath(repositoryId, asset2.path()).get();
       asset2.setAssetBlob(assetBlob);
       dao.updateAssetBlobLink(asset2, false);
       session.getTransaction().commit();
@@ -1020,7 +998,7 @@ public abstract class AssetDAOTestSupport
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
       tempResult = dao.findByBlobRef(repositoryId, assetBlob.blobRef()).get();
-      assertThat(tempResult.path(), is(path));
+      assertThat(tempResult.path(), is(asset2.path()));
     }
   }
 
@@ -1067,12 +1045,12 @@ public abstract class AssetDAOTestSupport
       AssetData asset5 = generateAsset(repositoryId, "/asset5/asset5.jar");
       AssetData asset6 = generateAsset(repositoryId, "/asset6/asset6.jar");
 
-      AssetBlobData assetBlob1 = randomAssetBlob();
-      AssetBlobData assetBlob2 = randomAssetBlob();
-      AssetBlobData assetBlob3 = randomAssetBlob();
-      AssetBlobData assetBlob4 = randomAssetBlob();
-      AssetBlobData assetBlob5 = randomAssetBlob();
-      AssetBlobData assetBlob6 = randomAssetBlob();
+      AssetBlobData assetBlob1 = generateAssetBlob();
+      AssetBlobData assetBlob2 = generateAssetBlob();
+      AssetBlobData assetBlob3 = generateAssetBlob();
+      AssetBlobData assetBlob4 = generateAssetBlob();
+      AssetBlobData assetBlob5 = generateAssetBlob();
+      AssetBlobData assetBlob6 = generateAssetBlob();
 
       assetBlob1.setAddedToRepository(baseTime);
       assetBlob2.setAddedToRepository(baseTime);
@@ -1134,10 +1112,10 @@ public abstract class AssetDAOTestSupport
       AssetData asset3 = generateAsset(repositoryId, "/asset3/asset3.jar");
       AssetData asset4 = generateAsset(repositoryId, "/asset4/asset4.jar");
 
-      AssetBlobData assetBlob1 = randomAssetBlob();
-      AssetBlobData assetBlob2 = randomAssetBlob();
-      AssetBlobData assetBlob3 = randomAssetBlob();
-      AssetBlobData assetBlob4 = randomAssetBlob();
+      AssetBlobData assetBlob1 = generateAssetBlob();
+      AssetBlobData assetBlob2 = generateAssetBlob();
+      AssetBlobData assetBlob3 = generateAssetBlob();
+      AssetBlobData assetBlob4 = generateAssetBlob();
 
       assetBlob1.setAddedToRepository(baseTime);
       assetBlob2.setAddedToRepository(baseTime);
@@ -1167,15 +1145,15 @@ public abstract class AssetDAOTestSupport
 
   protected void testDeleteByPaths() {
 
-    AssetData asset1 = randomAsset(repositoryId);
-    AssetData asset2 = randomAsset(repositoryId);
-    AssetData asset3 = randomAsset(repositoryId);
-    AssetData asset4 = randomAsset(repositoryId);
-    AssetData asset5 = randomAsset(repositoryId);
+    AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
+    AssetData asset2 = generateAsset(repositoryId, "/asset2/asset2.jar");
+    AssetData asset3 = generateAsset(repositoryId, "/asset3/asset3.jar");
+    AssetData asset4 = generateAsset(repositoryId, "/asset4/asset4.jar");
+    AssetData asset5 = generateAsset(repositoryId, "/asset5/asset5.jar");
 
-    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component1 = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
     component1.setComponentId(1);
-    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
+    ComponentData component2 = generateComponent(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setComponentId(2);
 
     asset1.setComponent(component1);
@@ -1183,12 +1161,6 @@ public abstract class AssetDAOTestSupport
     asset3.setComponent(component1);
     asset4.setComponent(component2);
     asset5.setComponent(component2);
-
-    // make sure paths are different
-    asset2.setPath(asset1.path() + "/2");
-    asset3.setPath(asset1.path() + "/3");
-    asset4.setPath(asset1.path() + "/4");
-    asset5.setPath(asset1.path() + "/5");
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       TestAssetDAO dao = session.access(TestAssetDAO.class);
@@ -1243,13 +1215,13 @@ public abstract class AssetDAOTestSupport
   }
 
   protected void testAssetRecordsExist() {
-    AssetBlobData assetBlob = randomAssetBlob();
-    AssetBlobData assetBlobWithoutComponent = randomAssetBlob();
+    AssetBlobData assetBlob = generateAssetBlob();
+    AssetBlobData assetBlobWithoutComponent = generateAssetBlob();
 
-    AssetData asset = randomAsset(repositoryId);
-    AssetData assetWithoutComponent = randomAsset(repositoryId);
+    AssetData asset = generateAsset(repositoryId, "/asset/asset.jar");
+    AssetData assetWithoutComponent = generateAsset(repositoryId, "/asset2/asset2.jar");
 
-    ComponentData componentData = component(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData componentData = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
     componentData.setComponentId(1);
 
     asset.setComponent(componentData);

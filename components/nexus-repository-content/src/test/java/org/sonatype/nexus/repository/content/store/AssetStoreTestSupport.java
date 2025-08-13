@@ -68,13 +68,13 @@ public abstract class AssetStoreTestSupport
 
   protected void initialiseStores(final boolean entityVersioningEnabled) {
     this.entityVersioningEnabled = entityVersioningEnabled;
-    ContentRepositoryData contentRepository = randomContentRepository();
+    ContentRepositoryData contentRepository = generateContentRepository();
     createContentRepository(contentRepository);
     repositoryId = contentRepository.repositoryId;
 
-    generateRandomNamespaces(4);
-    generateRandomNames(4);
-    generateRandomVersions(4);
+    generateNamespaces(4);
+    generateNames(4);
+    generateVersions(4);
 
     underTest = new AssetStore<>(sessionRule, entityVersioningEnabled, "test", TestAssetDAO.class);
     componentStore = new ComponentStore<>(sessionRule, entityVersioningEnabled, "test", TestComponentDAO.class);
@@ -92,18 +92,17 @@ public abstract class AssetStoreTestSupport
   }
 
   protected void testDeleteAsset() {
-    generateRandomPaths(100);
-    AssetData asset1 = randomAsset(repositoryId);
-    AssetData asset2 = randomAsset(repositoryId);
-    AssetData asset3 = randomAsset(repositoryId);
-    AssetData asset4 = randomAsset(repositoryId);
-    AssetData asset5 = randomAsset(repositoryId);
+    AssetData asset1 = generateAsset(repositoryId, "/path/1");
+    AssetData asset2 = generateAsset(repositoryId, "/path/2");
+    AssetData asset3 = generateAsset(repositoryId, "/path/3");
+    AssetData asset4 = generateAsset(repositoryId, "/path/4");
+    AssetData asset5 = generateAsset(repositoryId, "/path/5");
 
-    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component1 = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
     component1.setComponentId(1);
     component1.setNamespace(component1.namespace() + "1");
     component1.setName(component1.name() + "1");
-    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
+    ComponentData component2 = generateComponent(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setNamespace(component2.namespace() + "2");
     component2.setName(component2.name() + "2");
     component2.setComponentId(2);
@@ -113,12 +112,6 @@ public abstract class AssetStoreTestSupport
     asset3.setComponent(component2);
     asset4.setComponent(component2);
     asset5.setComponent(component2);
-
-    // make sure paths are different
-    asset2.setPath(asset1.path() + "/2");
-    asset3.setPath(asset1.path() + "/3");
-    asset4.setPath(asset1.path() + "/4");
-    asset5.setPath(asset1.path() + "/5");
 
     inTx(() -> {
       TestAssetDAO assetDAO = underTest.dao();
@@ -193,12 +186,12 @@ public abstract class AssetStoreTestSupport
     AssetData asset5 = generateAsset(repositoryId, "/asset5/asset5.jar");
     AssetData asset6 = generateAsset(repositoryId, "/asset6/asset6.jar");
 
-    AssetBlobData assetBlob1 = randomAssetBlob();
-    AssetBlobData assetBlob2 = randomAssetBlob();
-    AssetBlobData assetBlob3 = randomAssetBlob();
-    AssetBlobData assetBlob4 = randomAssetBlob();
-    AssetBlobData assetBlob5 = randomAssetBlob();
-    AssetBlobData assetBlob6 = randomAssetBlob();
+    AssetBlobData assetBlob1 = generateAssetBlob();
+    AssetBlobData assetBlob2 = generateAssetBlob();
+    AssetBlobData assetBlob3 = generateAssetBlob();
+    AssetBlobData assetBlob4 = generateAssetBlob();
+    AssetBlobData assetBlob5 = generateAssetBlob();
+    AssetBlobData assetBlob6 = generateAssetBlob();
 
     assetBlob1.setAddedToRepository(time);
     assetBlob2.setAddedToRepository(time.plusSeconds(1));
@@ -258,10 +251,10 @@ public abstract class AssetStoreTestSupport
     AssetData asset3 = generateAsset(repositoryId, "/asset3/asset3.jar");
     AssetData asset4 = generateAsset(repositoryId, "/asset4/asset4.jar");
 
-    AssetBlobData assetBlob1 = randomAssetBlob();
-    AssetBlobData assetBlob2 = randomAssetBlob();
-    AssetBlobData assetBlob3 = randomAssetBlob();
-    AssetBlobData assetBlob4 = randomAssetBlob();
+    AssetBlobData assetBlob1 = generateAssetBlob();
+    AssetBlobData assetBlob2 = generateAssetBlob();
+    AssetBlobData assetBlob3 = generateAssetBlob();
+    AssetBlobData assetBlob4 = generateAssetBlob();
 
     // times are considered the same if they are at the same millisecond
     OffsetDateTime time2 = time1.plusNanos(100000);
@@ -298,8 +291,8 @@ public abstract class AssetStoreTestSupport
   }
 
   protected void testDeleteAssetsByPaths() {
-    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
-    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
+    ComponentData component1 = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = generateComponent(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setVersion(component1.version() + ".2"); // make sure versions are different
 
     inTx(() -> {

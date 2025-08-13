@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -23,6 +24,8 @@ import java.util.Optional;
  */
 public interface DatabaseMigrationStep
 {
+  String H2_REGEX_SUFFIX = "[_[0-9]*]?";
+
   /**
    * The version this step migrates the database to. Migrations returning an empty value will only run when the checksum
    * changes.
@@ -144,6 +147,37 @@ public interface DatabaseMigrationStep
           " WHERE UPPER(constraint_name) = ?";
       try (PreparedStatement statement = conn.prepareStatement(sql)) {
         statement.setString(1, indexName.toUpperCase());
+        try (ResultSet results = statement.executeQuery()) {
+          return results.next();
+        }
+      }
+    }
+    throw new UnsupportedOperationException();
+  }
+
+  default boolean indexExists(
+      final Connection conn,
+      final String tableName,
+      final String indexName) throws SQLException
+  {
+    if (isPostgresql(conn)) {
+      String currentSchema = currentSchema(conn);
+      String sql = "SELECT * FROM pg_indexes WHERE UPPER(tablename) = ? AND UPPER(indexname) = ?";
+
+      try (PreparedStatement statement = conn.prepareStatement(sql)) {
+        statement.setString(1, tableName.toUpperCase(Locale.ENGLISH));
+        statement.setString(2, indexName.toUpperCase(Locale.ENGLISH));
+        try (ResultSet results = statement.executeQuery()) {
+          return results.next();
+        }
+      }
+    }
+    else if (isH2(conn)) {
+      String sql =
+          "SELECT * FROM information_schema.indexes WHERE REGEXP_LIKE(UPPER(index_name), ?) AND UPPER(TABLE_NAME) = ?";
+      try (PreparedStatement statement = conn.prepareStatement(sql)) {
+        statement.setString(1, (indexName.toUpperCase(Locale.ENGLISH) + H2_REGEX_SUFFIX));
+        statement.setString(2, tableName.toUpperCase(Locale.ENGLISH));
         try (ResultSet results = statement.executeQuery()) {
           return results.next();
         }

@@ -113,13 +113,13 @@ class BrowseNodeMigrationStep_1_36Test
 
   @Test
   void testMigration() throws Exception {
-    generateRandomPaths(10);
-    generateRandomNamespaces(10);
-    generateRandomNames(10);
-    generateRandomVersions(10);
+    generatePaths(10);
+    generateNamespaces(10);
+    generateNames(10);
+    generateVersions(10);
 
-    ContentRepositoryData member = createRepository("member", "test-hosted", randomContentRepository());
-    ContentRepositoryData group = createRepository("group", "test-group", randomContentRepository());
+    ContentRepositoryData member = createRepository("member", "test-hosted", generateContentRepository());
+    ContentRepositoryData group = createRepository("group", "test-group", generateContentRepository());
 
     // An asset in member that was added to the browse tree of the group
     insert(group.contentRepositoryId(), 0, "jquery", "/jquery/", createAsset(member), null);
@@ -127,7 +127,7 @@ class BrowseNodeMigrationStep_1_36Test
     insert(group.contentRepositoryId(), 0, "jquery-1.5", "/jquery-1.5/", null, createComponent(member));
 
     // A group repository with content (the fact this is a group is unimportant)
-    ContentRepositoryData unaffectedGroup = createRepository("unaffected", "test-group", randomContentRepository());
+    ContentRepositoryData unaffectedGroup = createRepository("unaffected", "test-group", generateContentRepository());
 
     // An asset in the correct repository
     insert(unaffectedGroup.contentRepositoryId(), 0, "jquery", "/jquery/", createAsset(unaffectedGroup), null);
@@ -136,7 +136,7 @@ class BrowseNodeMigrationStep_1_36Test
         createComponent(unaffectedGroup));
 
     // All pypi groups should be scheduled regardless of mixed content
-    createRepository("my-pypi-group", "pypi-group", randomContentRepository());
+    createRepository("my-pypi-group", "pypi-group", generateContentRepository());
 
     try (Connection conn = store.openConnection()) {
       upgradeStep.migrate(conn);
@@ -181,7 +181,7 @@ class BrowseNodeMigrationStep_1_36Test
   }
 
   private AssetData createAsset(final ContentRepositoryData repository) {
-    AssetData asset = randomAsset(InternalIds.contentRepositoryId(repository));
+    AssetData asset = generateAsset(InternalIds.contentRepositoryId(repository), "/asset1/asset1.jar");
     try (DataSession<?> session = store.openSession()) {
       TestAssetDAO dao = session.access(TestAssetDAO.class);
       dao.createAsset(asset, false);
@@ -191,7 +191,8 @@ class BrowseNodeMigrationStep_1_36Test
   }
 
   private ComponentData createComponent(final ContentRepositoryData repository) {
-    ComponentData component = component(InternalIds.contentRepositoryId(repository), "namespace1", "name1", "1.0.0");
+    ComponentData component =
+        generateComponent(InternalIds.contentRepositoryId(repository), "namespace1", "name1", "1.0.0");
     try (DataSession<?> session = store.openSession()) {
       TestComponentDAO dao = session.access(TestComponentDAO.class);
       dao.createComponent(component, false);

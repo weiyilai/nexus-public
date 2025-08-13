@@ -66,23 +66,23 @@ public abstract class ComponentDAOTestSupport
   public void setupContent(final boolean entityVersionEnabled) {
     this.entityVersionEnabled = entityVersionEnabled;
 
-    ContentRepositoryData contentRepository = randomContentRepository();
+    ContentRepositoryData contentRepository = generateContentRepository();
 
     createContentRepository(contentRepository);
 
     repositoryId = contentRepository.repositoryId;
 
-    generateRandomNamespaces(100);
-    generateRandomNames(100);
-    generateRandomVersions(100);
-    generateRandomPaths(100);
+    generateNamespaces(100);
+    generateNames(100);
+    generateVersions(100);
+    generatePaths(100);
   }
 
   protected void testCrudOperations() throws InterruptedException {
 
-    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
-    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
-    ComponentData component3 = component(repositoryId, "namespace3", "name3", "3.0.0");
+    ComponentData component1 = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = generateComponent(repositoryId, "namespace2", "name2", "2.0.0");
+    ComponentData component3 = generateComponent(repositoryId, "namespace3", "name3", "3.0.0");
 
     // cover with/without namespace and different versions
     String akind = "kind1";
@@ -325,8 +325,8 @@ public abstract class ComponentDAOTestSupport
   protected void testBrowseComponentCoordinates() {
 
     // scatter components and assets
-    generateRandomRepositories(10);
-    generateRandomContent(10, 100, entityVersionEnabled);
+    generateRepositories(10);
+    generateContent(10, 100, entityVersionEnabled);
 
     List<Component> browsedComponents = new ArrayList<>();
 
@@ -355,12 +355,12 @@ public abstract class ComponentDAOTestSupport
 
   protected void testContinuationBrowsing() {
 
-    generateRandomNamespaces(1000);
-    generateRandomNames(1000);
-    generateRandomVersions(1000);
-    generateRandomPaths(10000);
-    generateRandomRepositories(1);
-    generateRandomContent(1000, 1000, entityVersionEnabled);
+    generateNamespaces(1000);
+    generateNames(1000);
+    generateVersions(1000);
+    generatePaths(10000);
+    generateRepositories(1);
+    generateContent(1000, 1000, entityVersionEnabled);
 
     repositoryId = generatedRepositories().get(0).repositoryId;
 
@@ -395,8 +395,8 @@ public abstract class ComponentDAOTestSupport
   protected void testDeleteAllComponents() {
 
     // scatter components and assets
-    generateRandomRepositories(1);
-    generateRandomContent(100, 100, entityVersionEnabled);
+    generateRepositories(1);
+    generateContent(100, 100, entityVersionEnabled);
 
     repositoryId = generatedRepositories().get(0).contentRepositoryId();
 
@@ -429,8 +429,8 @@ public abstract class ComponentDAOTestSupport
   }
 
   protected void testPurgeOperation() {
-    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
-    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
+    ComponentData component1 = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = generateComponent(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setVersion(component1.version() + ".2"); // make sure versions are different
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
@@ -440,8 +440,8 @@ public abstract class ComponentDAOTestSupport
       session.getTransaction().commit();
     }
 
-    AssetData asset1 = randomAsset(repositoryId);
-    AssetData asset2 = randomAsset(repositoryId);
+    AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
+    AssetData asset2 = generateAsset(repositoryId, "/asset2/asset2.jar");
     asset2.setPath(asset1.path() + "/2"); // make sure paths are different
 
     asset1.setComponent(component1);
@@ -497,8 +497,8 @@ public abstract class ComponentDAOTestSupport
   }
 
   protected void testRoundTrip() {
-    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
-    ComponentData component2 = component(repositoryId, "namespace2", "name2", "2.0.0");
+    ComponentData component1 = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = generateComponent(repositoryId, "namespace2", "name2", "2.0.0");
     component2.setVersion(component1.version() + ".2"); // make sure versions are different
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
@@ -528,12 +528,12 @@ public abstract class ComponentDAOTestSupport
   }
 
   protected void testBrowseComponentsInRepositories() {
-    ContentRepositoryData anotherContentRepository = randomContentRepository();
+    ContentRepositoryData anotherContentRepository = generateContentRepository();
     createContentRepository(anotherContentRepository);
     int anotherRepositoryId = anotherContentRepository.repositoryId;
 
-    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
-    ComponentData component2 = component(anotherRepositoryId, "namespace2", "name2", "2.0.0");
+    ComponentData component1 = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = generateComponent(anotherRepositoryId, "namespace2", "name2", "2.0.0");
 
     String akind = "kind1";
     String anotherKind = "kind2";
@@ -578,11 +578,11 @@ public abstract class ComponentDAOTestSupport
   }
 
   protected void testFilterClauseIsolation() {
-    ContentRepositoryData anotherContentRepository = randomContentRepository();
+    ContentRepositoryData anotherContentRepository = generateContentRepository();
     createContentRepository(anotherContentRepository);
     int anotherRepositoryId = anotherContentRepository.repositoryId;
-    ComponentData component1 = component(repositoryId, "namespace1", "name1", "1.0.0");
-    ComponentData component2 = component(anotherRepositoryId, "namespace2", "name2", "2.0.0");
+    ComponentData component1 = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = generateComponent(anotherRepositoryId, "namespace2", "name2", "2.0.0");
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       ComponentDAO dao = session.access(TestComponentDAO.class);
@@ -606,11 +606,11 @@ public abstract class ComponentDAOTestSupport
     final int versionCount = 145;
     final int pageLimit = 13;
 
-    generateRandomNamespaces(namespaceCount);
-    generateRandomNames(nameCount);
-    generateRandomVersions(versionCount);
-    generateRandomPaths(500);
-    generateRandomRepositories(1);
+    generateNamespaces(namespaceCount);
+    generateNames(nameCount);
+    generateVersions(versionCount);
+    generatePaths(500);
+    generateRepositories(1);
 
     repositoryId = generatedRepositories().get(0).repositoryId;
 
@@ -625,7 +625,7 @@ public abstract class ComponentDAOTestSupport
         sets.add(set);
         List<ComponentData> setComponents = new ArrayList<>();
         generatedVersions().forEach(version -> {
-          setComponents.add(component(repositoryId, namespace, name, version));
+          setComponents.add(generateComponent(repositoryId, namespace, name, version));
         });
         components.addAll(setComponents);
         generatedComponents.put(set, setComponents);
@@ -666,10 +666,12 @@ public abstract class ComponentDAOTestSupport
   }
 
   protected void testNormalizationMethods() {
-    ContentRepositoryData randomContentRepository = randomContentRepository();
-    createContentRepository(randomContentRepository);
-    ComponentData component1 = component(randomContentRepository.repositoryId, "namespace.one", "artifact-1", "1.0.0");
-    ComponentData component2 = component(randomContentRepository.repositoryId, "namespace.two", "artifact-2", "2.0.0");
+    ContentRepositoryData contentRepository = generateContentRepository();
+    createContentRepository(contentRepository);
+    ComponentData component1 =
+        generateComponent(contentRepository.repositoryId, "namespace.one", "artifact-1", "1.0.0");
+    ComponentData component2 =
+        generateComponent(contentRepository.repositoryId, "namespace.two", "artifact-2", "2.0.0");
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       ComponentDAO dao = session.access(TestComponentDAO.class);

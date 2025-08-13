@@ -97,9 +97,9 @@ public abstract class ComponentStoreTestSupport
     FormatStoreManager fsm = testContext.getBean(FormatStoreManager.class);
 
     underTest = fsm.componentStore(DEFAULT_DATASTORE_NAME);
-    generateRandomRepositories(1);
-    generateRandomNamespaces(componentCount);
-    generateRandomVersions(componentCount);
+    generateRepositories(1);
+    generateNamespaces(componentCount);
+    generateVersions(componentCount);
     repositoryId = generatedRepositories().get(0).repositoryId;
 
     // create a number of components that require paging
@@ -158,7 +158,7 @@ public abstract class ComponentStoreTestSupport
 
   private void createComponentWithAsset(final int num) {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
-      ComponentData component = component(repositoryId, "namespace" + num, "" + num, "1.0." + num);
+      ComponentData component = generateComponent(repositoryId, "namespace" + num, "" + num, "1.0." + num);
       session.access(TestComponentDAO.class).createComponent(component, entityVersioningEnabled);
 
       TestAssetData asset = generateAsset(repositoryId, "/" + num);

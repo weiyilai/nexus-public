@@ -84,11 +84,11 @@ class BrowseNodeMigrationStep_1_1Test
 
   @Test
   void testMigration() throws Exception {
-    generateRandomPaths(10);
-    generateRandomNamespaces(10);
-    generateRandomNames(10);
-    generateRandomVersions(10);
-    ContentRepositoryData repo = createContentRepository(randomContentRepository());
+    generatePaths(10);
+    generateNamespaces(10);
+    generateNames(10);
+    generateVersions(10);
+    ContentRepositoryData repo = createContentRepository(generateContentRepository());
 
     insert(repo.contentRepositoryId(), 0, "jquery", "/jquery/", null, null);
 

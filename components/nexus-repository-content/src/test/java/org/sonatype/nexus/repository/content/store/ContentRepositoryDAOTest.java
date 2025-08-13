@@ -43,8 +43,8 @@ class ContentRepositoryDAOTest
   @Test
   void testCrudOperations() throws InterruptedException {
 
-    ContentRepositoryData contentRepository1 = randomContentRepository();
-    ContentRepositoryData contentRepository2 = randomContentRepository();
+    ContentRepositoryData contentRepository1 = generateContentRepository();
+    ContentRepositoryData contentRepository2 = generateContentRepository();
 
     EntityId configRepositoryId1 = contentRepository1.configRepositoryId();
     EntityId configRepositoryId2 = contentRepository2.configRepositoryId();

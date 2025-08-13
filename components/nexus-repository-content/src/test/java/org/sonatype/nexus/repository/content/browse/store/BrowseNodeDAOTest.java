@@ -92,7 +92,7 @@ class BrowseNodeDAOTest
   @BeforeEach
   void setupContent() {
     sessionRule.register(TestBrowseNodeDAO.class);
-    contentRepository = randomContentRepository();
+    contentRepository = generateContentRepository();
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       ContentRepositoryDAO dao = session.access(TestContentRepositoryDAO.class);
@@ -100,17 +100,17 @@ class BrowseNodeDAOTest
       session.getTransaction().commit();
     }
 
-    generateRandomNamespaces(100);
-    generateRandomNames(100);
-    generateRandomVersions(100);
-    generateRandomPaths(100);
+    generateNamespaces(100);
+    generateNames(100);
+    generateVersions(100);
+    generatePaths(100);
 
-    component1 = component(1, "namespace1", "name1", "1.0.0");
-    component2 = component(1, "namespace2", "name2", "2.0.0");
+    component1 = generateComponent(1, "namespace1", "name1", "1.0.0");
+    component2 = generateComponent(1, "namespace2", "name2", "2.0.0");
     component2.setVersion(component1.version() + "-2");
 
-    asset1 = randomAsset(1);
-    asset2 = randomAsset(1);
+    asset1 = generateAsset(1, "/asset1/asset1.jar");
+    asset2 = generateAsset(1, "/asset2/asset2.jar");
     asset2.setPath(asset1.path() + "/2");
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {

@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -53,7 +52,6 @@ import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
@@ -64,7 +62,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
-import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -82,8 +79,6 @@ public abstract class ExampleContentTestSupport
       TestAssetDAO.class, ConfigurationDAO.class},
       typeHandlers = {BlobRefTypeHandler.class, ExternalMetadataTypeHandler.class})
   protected TestDataSessionSupplier sessionRule;
-
-  private Random random = new Random();
 
   private List<String> namespaces;
 
@@ -105,6 +100,10 @@ public abstract class ExampleContentTestSupport
 
   protected List<ContentRepositoryData> generatedRepositories() {
     return unmodifiableList(repositories);
+  }
+
+  protected List<String> generatedPaths() {
+    return unmodifiableList(paths);
   }
 
   protected List<String> generatedNamespaces() {
@@ -135,46 +134,39 @@ public abstract class ExampleContentTestSupport
     return unmodifiableList(configurations);
   }
 
-  protected void generateRandomNamespaces(final int maxNamespaces) {
+  protected void generateNamespaces(final int maxNamespaces) {
     Set<String> uniqueNamespaces = new HashSet<>();
 
-    String randomBase = (random.nextBoolean() ? "com." : "org.") + RandomStringUtils.randomAlphabetic(16);
     for (int i = 0; i < maxNamespaces; i++) {
       // example will be "com.abcdefghijklmnop-0", "com.abcdefghijklmnop-1", "com.abcdefghijklmnop-2", ...
-      String buf = randomBase + "-" + i;
+      String buf = "com.abcdef" + "-" + i;
       uniqueNamespaces.add(buf);
     }
     namespaces = ImmutableList.copyOf(uniqueNamespaces);
   }
 
-  protected void generateRandomNames(final int maxNames) {
+  protected void generateNames(final int maxNames) {
     Set<String> uniqueNames = new HashSet<>();
-    String randomBase = RandomStringUtils.randomAlphabetic(8);
     for (int i = 0; i < maxNames; i++) {
       // example will be "abcdefgh-0", "abcdefgh-1", "abcdefgh-2", ...
-      uniqueNames.add(randomBase + "-" + i);
+      uniqueNames.add("abcdef" + "-" + i);
     }
     names = ImmutableList.copyOf(uniqueNames);
   }
 
-  protected void generateRandomVersions(final int maxVersions) {
+  protected void generateVersions(final int maxVersions) {
     Set<String> uniqueVersions = new HashSet<>();
-    String randomMajor = RandomStringUtils.randomNumeric(2);
-    String randomMinor = RandomStringUtils.randomNumeric(2);
     for (int i = 0; i < maxVersions; i++) {
       // example will be "12.34.0", "12.34.1", "12.34.2", ...
-      uniqueVersions.add(randomMajor + "." + randomMinor + "." + i);
+      uniqueVersions.add("1.0." + i);
     }
     versions = ImmutableList.copyOf(uniqueVersions);
   }
 
-  protected void generateRandomPaths(final int maxPaths) {
+  protected void generatePaths(final int maxPaths) {
     Set<String> uniquePaths = new HashSet<>();
-    String randomBase = (random.nextBoolean() ? "/com/" : "/org/") + RandomStringUtils.randomAlphabetic(16);
     for (int i = 0; i < maxPaths; i++) {
-      // example will be "/com/abcdefghijklmnop/subfolder-0", "/com/abcdefghijklmnop/subfolder-1",
-      // "/com/abcdefghijklmnop/subfolder-2", ...
-      uniquePaths.add(randomBase + "/subfolder-" + i);
+      uniquePaths.add("/folder/subfolder-" + i);
     }
     paths = ImmutableList.copyOf(uniquePaths);
   }
@@ -198,10 +190,10 @@ public abstract class ExampleContentTestSupport
     return configurationData;
   }
 
-  protected void generateRandomRepositories(final int maxRepositories) {
+  protected void generateRepositories(final int maxRepositories) {
     repositories = new ArrayList<>();
-    while (repositories.size() < maxRepositories) {
-      ContentRepositoryData repository = randomContentRepository();
+    for (int i = 0; i < maxRepositories; i++) {
+      ContentRepositoryData repository = generateContentRepository();
       if (doCommit(session -> session.access(TestContentRepositoryDAO.class).createContentRepository(repository))) {
         repositories.add(repository);
       }
@@ -209,14 +201,14 @@ public abstract class ExampleContentTestSupport
   }
 
   protected void generateSingleRepository(final UUID configRepositoryUUID) {
-    ContentRepositoryData repository = randomContentRepository();
+    ContentRepositoryData repository = generateContentRepository();
     repository.setConfigRepositoryId(new EntityUUID(configRepositoryUUID));
     if (doCommit(session -> session.access(TestContentRepositoryDAO.class).createContentRepository(repository))) {
       repositories = Collections.singletonList(repository);
     }
   }
 
-  protected void generateRandomContent(
+  protected void generateContent(
       final int maxComponents,
       final int maxAssets,
       final boolean entityVersionEnabled)
@@ -224,11 +216,10 @@ public abstract class ExampleContentTestSupport
     components = new ArrayList<>();
     for (int i = 0; i < maxComponents; i++) {
       int repositoryId = repositories.get(i % repositories.size()).repositoryId;
-      String namespace = namespaces.get(i % namespaces.size());
-      String name = namespaces.get(i % names.size());
-      String version = versions.get(i % versions.size());
-
-      ComponentData component = component(repositoryId, namespace, name, version);
+      String namespace = "org.namespace." + i;
+      String name = "test-name-" + i;
+      String version = "1.0." + i;
+      ComponentData component = generateComponent(repositoryId, namespace, name, version);
       if (doCommit(
           session -> session.access(TestComponentDAO.class).createComponent(component, entityVersionEnabled))) {
         components.add(component);
@@ -237,18 +228,19 @@ public abstract class ExampleContentTestSupport
 
     assets = new ArrayList<>();
     assetBlobs = new ArrayList<>();
-    while (assets.size() < maxAssets) {
-      ComponentData component = components.get(random.nextInt(components.size()));
-      AssetData asset = randomAsset(component.repositoryId);
-      if (random.nextInt(100) > 10) {
+    for (int i = 0; i < maxAssets; i++) {
+      ComponentData component = components.get(i % components.size());
+      AssetData asset = generateAsset(component.repositoryId, toPath(component, "jar" + i));
+      if (i % 4 != 0) {
         asset.setComponent(component);
       }
       if (doCommit(session -> session.access(TestAssetDAO.class).createAsset(asset, false))) {
         assets.add(asset);
-        AssetBlobData assetBlob = randomAssetBlob();
+        AssetBlobData assetBlob = generateAssetBlob();
+        final boolean attachBlob = (i % 4) != 0;
         if (doCommit(session -> {
           session.access(TestAssetBlobDAO.class).createAssetBlob(assetBlob);
-          if (random.nextInt(100) > 10) {
+          if (attachBlob) {
             asset.setAssetBlob(assetBlob);
             session.access(TestAssetDAO.class).updateAssetBlobLink(asset, false);
           }
@@ -274,8 +266,8 @@ public abstract class ExampleContentTestSupport
     components = new ArrayList<>(maxComponents);
     for (int i = 0; i < componentNames.size(); i++) {
       String componentName = componentNames.get(i);
-      int repositoryId = repositories.get(random.nextInt(repositories.size())).repositoryId;
-      ComponentData component = component(repositoryId, "namespace" + i, componentName, "1.0." + i);
+      int repositoryId = repositories.get(i % repositories.size()).repositoryId;
+      ComponentData component = generateComponent(repositoryId, "namespace" + i, componentName, "1.0." + i);
       if (doCommit(
           session -> session.access(TestComponentDAO.class).createComponent(component, entityVersionEnabled))) {
         components.add(component);
@@ -285,13 +277,13 @@ public abstract class ExampleContentTestSupport
     assets = new ArrayList<>(maxComponents);
     assetBlobs = new ArrayList<>(maxComponents);
     for (ComponentData component : components) {
-      AssetData asset = generateAsset(component.repositoryId, "/" + UUID.randomUUID());
+      AssetData asset = generateAsset(component.repositoryId, toPath(component, ".jar"));
       asset.setAssetId(component.componentId);
       asset.setComponent(component);
 
       if (doCommit(session -> session.access(TestAssetDAO.class).createAsset(asset, false))) {
         assets.add(asset);
-        AssetBlobData assetBlob = randomAssetBlob();
+        AssetBlobData assetBlob = generateAssetBlob();
         if (doCommit(session -> {
           session.access(TestAssetBlobDAO.class).createAssetBlob(assetBlob);
           asset.setAssetBlob(assetBlob);
@@ -318,13 +310,13 @@ public abstract class ExampleContentTestSupport
     assets = new ArrayList<>(components.size());
     assetBlobs = new ArrayList<>(components.size());
     for (ComponentData component : components) {
-      AssetData asset = generateAsset(component.repositoryId, "/" + UUID.randomUUID());
+      AssetData asset = generateAsset(component.repositoryId, toPath(component, ".jar"));
       asset.setAssetId(component.componentId);
       asset.setComponent(component);
 
       if (doCommit(session -> session.access(TestAssetDAO.class).createAsset(asset, false))) {
         assets.add(asset);
-        AssetBlobData assetBlob = randomAssetBlob();
+        AssetBlobData assetBlob = generateAssetBlob();
         if (doCommit(session -> {
           session.access(TestAssetBlobDAO.class).createAssetBlob(assetBlob);
           asset.setAssetBlob(assetBlob);
@@ -336,14 +328,14 @@ public abstract class ExampleContentTestSupport
     }
   }
 
-  protected ContentRepositoryData randomContentRepository() {
+  protected ContentRepositoryData generateContentRepository() {
     ContentRepositoryData repository = new ContentRepositoryData();
     repository.setConfigRepositoryId(new EntityUUID(combUUID()));
     repository.setAttributes(newAttributes("repository"));
     return repository;
   }
 
-  protected ComponentData component(
+  protected ComponentData generateComponent(
       final int repositoryId,
       final String namespace,
       final String name,
@@ -360,30 +352,24 @@ public abstract class ExampleContentTestSupport
     return component;
   }
 
-  protected TestAssetData randomAsset(final int repositoryId) {
-    return generateAsset(repositoryId, paths.get(random.nextInt(paths.size())));
-  }
-
-  protected TestAssetData randomAsset(final int repositoryId, final String kind) {
-    TestAssetData asset = randomAsset(repositoryId);
-    asset.setKind(kind);
-    return asset;
-  }
-
   protected TestAssetData generateAsset(final int repositoryId, final String path) {
+    return generateAsset(repositoryId, path, "test");
+  }
+
+  protected TestAssetData generateAsset(final int repositoryId, final String path, final String kind) {
     TestAssetData asset = new TestAssetData();
     asset.setRepositoryId(repositoryId);
     asset.setPath(path);
-    asset.setKind("test");
+    asset.setKind(kind);
     asset.setAttributes(newAttributes("asset"));
     asset.setLastUpdated(OffsetDateTime.now());
     return asset;
   }
 
-  protected AssetBlobData randomAssetBlob(final OffsetDateTime blobCreated) {
+  protected AssetBlobData assetBlob(final OffsetDateTime blobCreated) {
     AssetBlobData assetBlob = new AssetBlobData();
-    assetBlob.setBlobRef(new BlobRef("test-node", "test-store", randomUUID().toString()));
-    assetBlob.setBlobSize(random.nextInt(1024 * 1024));
+    assetBlob.setBlobRef(new BlobRef("test-node", "test-store", combUUID().toString()));
+    assetBlob.setBlobSize(System.currentTimeMillis());
     assetBlob.setContentType("text/plain");
     assetBlob.setChecksums(ImmutableMap.of());
     assetBlob.setBlobCreated(blobCreated);
@@ -391,8 +377,12 @@ public abstract class ExampleContentTestSupport
     return assetBlob;
   }
 
-  protected AssetBlobData randomAssetBlob() {
-    return randomAssetBlob(UTC.now().minusMinutes(120));
+  protected AssetBlobData generateAssetBlob() {
+    return generateAssetBlob(UTC.now().minusMinutes(120));
+  }
+
+  protected AssetBlobData generateAssetBlob(final OffsetDateTime blobCreated) {
+    return assetBlob(blobCreated);
   }
 
   protected NestedAttributesMap newAttributes(final String key) {
@@ -508,5 +498,10 @@ public abstract class ExampleContentTestSupport
         description.appendDescriptionOf(is(extractors.get(i).apply(expected)));
       }
     }
+  }
+
+  protected String toPath(final Component component, final String extension) {
+    return "/" + component.namespace() + "/" + component.name() + "/" + component.version() + "/" + component.name() +
+        "-" + component.version() + "." + extension;
   }
 }
