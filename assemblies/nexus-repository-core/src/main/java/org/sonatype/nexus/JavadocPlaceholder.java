@@ -14,9 +14,9 @@ package org.sonatype.nexus;
 
 /**
  * Placeholder class for javadoc generation.
- * The nexus-repository-code module is published to Maven Central, which requires javadocs assets be attached.
+ * The nexus-repository-core module is published to Maven Central, which requires javadocs assets be attached.
  * The configuration for javadoc excludes the only active code in this module. The javadoc plugin will not
- * generate a javadoc jar unless there is an eligible class to include. This class' purpose fulfills that requirement.
+ * generate a javadoc jar unless there is an eligible class to include. This class fulfills that requirement.
  */
 public class JavadocPlaceholder
 {
