@@ -450,6 +450,16 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <mainClass>org.sonatype.nexus.bootstrap.entrypoint.core.NexusRepositoryCoreApplication</mainClass>
+          <workingDirectory>${project.build.directory}/assembly</workingDirectory>
+          <environmentVariables>
+            <!-- Used by the `?debug` mode to allow javascript resources to be loaded from the filesystem -->
+            <NEXUS_RESOURCE_DIRS>${project.parent.basedir}/plugins/nexus-coreui-plugin/src/main/resources,${project.parent.basedir}/plugins/nexus-onboarding-plugin/src/main/resources,${project.parent.basedir}/plugins/nexus-blobstore-s3/src/main/resources,${project.parent.basedir}/plugins/nexus-repository-maven/src/main/resources,${project.parent.basedir}/components/nexus-base/src/main/resources,${project.parent.basedir}/components/nexus-rapture/src/main/resources,${project.parent.basedir}/components/nexus-ui-plugin/target/classes,${project.parent.basedir}/components/nexus-rapture/target/classes,${project.parent.basedir}/plugins/nexus-coreui-plugin/target/classes</NEXUS_RESOURCE_DIRS>
+            <!-- Used to disable the random password generation, and default to admin/admin123 for easy development -->
+            <NEXUS_SECURITY_RANDOMPASSWORD>false</NEXUS_SECURITY_RANDOMPASSWORD>
+          </environmentVariables>
+        </configuration>
         <executions>
           <execution>
             <id>uberjar</id>
@@ -527,39 +537,8 @@
     <profile>
       <id>spring-only</id>
       <activation>
-		<activeByDefault>true</activeByDefault>
+        <activeByDefault>true</activeByDefault>
       </activation>
-      <build>
-        <pluginManagement>
-          <plugins>
-            <plugin>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-maven-plugin</artifactId>
-              <configuration>
-                <mainClass>org.sonatype.nexus.bootstrap.entrypoint.core.NexusRepositoryCoreApplication</mainClass>
-                <excludes>
-                  <exclude>
-                    <groupId>com.google.inject</groupId>
-                    <artifactId>guice</artifactId>
-                  </exclude>
-                  <exclude>
-                    <groupId>com.google.inject.extension</groupId>
-                    <artifactId>guice-assistedinject</artifactId>
-                  </exclude>
-                  <exclude>
-                    <groupId>com.google.inject.extensions</groupId>
-                    <artifactId>guice-servlet</artifactId>
-                  </exclude>
-                  <exclude>
-                    <groupId>org.eclipse.sisu</groupId>
-                    <artifactId>org.eclipse.sisu.inject</artifactId>
-                  </exclude>
-                </excludes>
-              </configuration>
-            </plugin>
-          </plugins>
-        </pluginManagement>
-      </build>
     </profile>
   </profiles>
 </project>
