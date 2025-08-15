@@ -75,7 +75,7 @@ const DATA = {
   expirationDate: '2023-08-02T00:00:00.000+00:00',
   features: 'SonatypeCLM, NexusProfessional, Firewall',
   fingerprint: '53274cced19cs2e5208s73801g4a9160a960684',
-  licenseType: 'Nexus IQ Server, Nexus Repository Pro, Nexus Firewall',
+  licenseType: 'Sonatype IQ Server, Nexus Repository Pro, Sonatype Repository Firewall',
   licensedUsers: '1001',
   maxRepoRequests: '60000',
   maxRepoComponents: '200000'
