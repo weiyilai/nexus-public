@@ -16,12 +16,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.testdb.DataSessionRule;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import static java.util.Arrays.stream;
 import static org.junit.Assert.assertFalse;
@@ -34,7 +32,6 @@ import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrati
 import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrationStep_2_18.OLD_REVISION_TIME_COLUMN_NAME;
 import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrationStep_2_18.TABLE_NAME;
 
-@Category(SQLTestGroup.class)
 public class ConanCleanupMigrationStep_2_18Test
     extends TestSupport
 {
