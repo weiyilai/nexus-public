@@ -36,7 +36,6 @@ import org.eclipse.sisu.BeanEntry;
 import org.eclipse.sisu.inject.BeanLocator;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.Ordered;
@@ -45,7 +44,6 @@ import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
 
 /**
@@ -60,7 +58,6 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
 @ManagedLifecycle(phase = TASKS)
 @Priority(Integer.MAX_VALUE)
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class TaskFactoryImpl

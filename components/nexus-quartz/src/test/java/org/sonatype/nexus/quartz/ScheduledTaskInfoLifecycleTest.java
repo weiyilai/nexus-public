@@ -21,9 +21,8 @@ import org.sonatype.nexus.scheduling.CurrentState;
 import org.sonatype.nexus.scheduling.LastRunState;
 import org.sonatype.nexus.scheduling.TaskState;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -35,13 +34,12 @@ import static org.hamcrest.Matchers.nullValue;
 /**
  * Tests for scheduled tasks and their TaskInfo.
  */
-@Ignore("NEXUS-43375")
-public class ScheduledTaskInfoLifecycleTest
-    extends QuartzTestSupport
+class ScheduledTaskInfoLifecycleTest
+    extends TaskSchedulerTestSupport
 {
 
-  @Before
-  public void prepare() throws Exception {
+  @BeforeEach
+  void prepare() {
     SleeperTask.reset();
   }
 
@@ -49,13 +47,14 @@ public class ScheduledTaskInfoLifecycleTest
    * "one shot", aka "runNow", aka "bg jobs" tasks are getting into DONE state once run.
    */
   @Test
-  public void taskLifecycleRunNow() throws Exception {
+  void taskLifecycleRunNow() throws Exception {
 
     // create the task
-    final TaskConfiguration taskConfiguration = taskScheduler().createTaskConfigurationInstance(SleeperTaskDescriptor.TYPE_ID);
+    final TaskConfiguration taskConfiguration =
+        taskScheduler.createTaskConfigurationInstance(SleeperTaskDescriptor.TYPE_ID);
     final String RESULT = "This is the expected result";
     taskConfiguration.setString(SleeperTask.RESULT_KEY, RESULT);
-    final TaskInfo taskInfo = taskScheduler().submit(taskConfiguration);
+    final TaskInfo taskInfo = taskScheduler.submit(taskConfiguration);
 
     // give it some time to start
     SleeperTask.youWait.await();
@@ -94,10 +93,10 @@ public class ScheduledTaskInfoLifecycleTest
    * Repeatedly run tasks are bouncing between "running" and "waiting".
    */
   @Test
-  public void taskLifecycleRunRepeatedly() throws Exception {
+  void taskLifecycleRunRepeatedly() throws Exception {
     // create the task
     final TaskInfo taskInfo = createTask(SleeperTaskDescriptor.TYPE_ID);
-    final TaskConfiguration taskConfiguration =    taskInfo.getConfiguration();
+    final TaskConfiguration taskConfiguration = taskInfo.getConfiguration();
 
     // task message is available after task is done (as it comes from persisted dataMap)
     assertThat(taskInfo.getMessage(), nullValue());
@@ -146,7 +145,7 @@ public class ScheduledTaskInfoLifecycleTest
 
     // repeating tasks when done are waiting, call for state is okay at any time
     {
-      final TaskInfo ti = taskScheduler().getTaskById(taskInfo.getId());
+      final TaskInfo ti = taskScheduler.getTaskById(taskInfo.getId());
       assertThat(ti, notNullValue());
       assertThat(ti.getId(), equalTo(taskConfiguration.getId()));
       assertThat(ti.getName(), equalTo(taskConfiguration.getName()));
@@ -160,7 +159,7 @@ public class ScheduledTaskInfoLifecycleTest
       assertThat(currentState.getRunState(), nullValue());
       assertThat(currentState.getRunStarted(), nullValue());
       // task future is last future
-       assertThat(currentState.getFuture(), nullValue());
+      assertThat(currentState.getFuture(), nullValue());
     }
 
     // same thing from "old" handle
@@ -171,7 +170,7 @@ public class ScheduledTaskInfoLifecycleTest
       assertThat(currentState.getRunState(), nullValue());
       assertThat(currentState.getRunStarted(), nullValue());
       // task future is last future
-       assertThat(currentState.getFuture(), nullValue());
+      assertThat(currentState.getFuture(), nullValue());
     }
 
     // and post-execution it will have last rune state
@@ -184,7 +183,8 @@ public class ScheduledTaskInfoLifecycleTest
     }
 
     // task message is persisted, last run's message is here
-    // TODO: the point in time when message becomes available is unclear. It depends WHEN Quartz serializes the done job map
+    // TODO: the point in time when message becomes available is unclear. It depends WHEN Quartz serializes the done job
+    // map
     // and nothing signals it to caller when it's done. Make it part of CurrentState?
     assertThat(taskInfo.getMessage(), equalTo("Message is:" + RESULT));
   }

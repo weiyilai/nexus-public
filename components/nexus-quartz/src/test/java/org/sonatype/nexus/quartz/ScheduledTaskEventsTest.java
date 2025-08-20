@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.scheduling.TaskInfo;
 import org.sonatype.nexus.scheduling.TaskInterruptedException;
 import org.sonatype.nexus.scheduling.TaskState;
@@ -32,9 +31,8 @@ import org.sonatype.nexus.scheduling.events.TaskStartedRunningEvent;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -47,18 +45,13 @@ import static org.hamcrest.Matchers.instanceOf;
 /**
  * Tests for task eventing.
  */
-@Ignore("NEXUS-43375")
-public class ScheduledTaskEventsTest
-    extends QuartzTestSupport
+class ScheduledTaskEventsTest
+    extends TaskSchedulerTestSupport
 {
+  private Listener listener;
 
-  protected EventManager eventManager;
-
-  protected Listener listener;
-
-  @Before
-  public void prepare() throws Exception {
-    eventManager = helper().getEventManager();
+  @BeforeEach
+  void prepare() {
     listener = new Listener();
     eventManager.register(listener);
     // reset the latch
@@ -68,7 +61,7 @@ public class ScheduledTaskEventsTest
   }
 
   @Test
-  public void goodRun() throws Exception {
+  void goodRun() throws Exception {
     // create the task
     final TaskInfo taskInfo = createTask(SleeperTaskDescriptor.TYPE_ID);
 
@@ -94,7 +87,7 @@ public class ScheduledTaskEventsTest
   }
 
   @Test
-  public void goodRunAfterBlocking() throws Exception {
+  void goodRunAfterBlocking() throws Exception {
     // create task to block the next one
     createTask(SleeperTaskDescriptor.TYPE_ID);
 
@@ -105,7 +98,8 @@ public class ScheduledTaskEventsTest
     final TaskInfo taskInfo = createTask(SleeperTaskDescriptor.TYPE_ID);
 
     // allow scheduler to start task and find it blocked
-    await().atMost(RUN_TIMEOUT, MILLISECONDS).until(() -> TaskState.RUNNING_BLOCKED.equals(taskInfo.getCurrentState().getRunState()));
+    await().atMost(RUN_TIMEOUT, MILLISECONDS)
+        .until(() -> TaskState.RUNNING_BLOCKED.equals(taskInfo.getCurrentState().getRunState()));
 
     // signal tasks to complete
     SleeperTask.meWait.countDown();
@@ -127,7 +121,7 @@ public class ScheduledTaskEventsTest
   }
 
   @Test
-  public void failedRunCheckedException() throws Exception {
+  void failedRunCheckedException() throws Exception {
     SleeperTask.exception = new IOException("foo");
 
     // create the task
@@ -152,11 +146,12 @@ public class ScheduledTaskEventsTest
     assertThat(listener.arrivedEvents.get(1), instanceOf(TaskEventStarted.class));
     assertThat(listener.arrivedEvents.get(2), instanceOf(TaskStartedRunningEvent.class));
     assertThat(listener.arrivedEvents.get(3), instanceOf(TaskEventStoppedFailed.class));
-    assertThat(((TaskEventStoppedFailed) listener.arrivedEvents.get(3)).getFailureCause(), instanceOf(IOException.class));
+    assertThat(((TaskEventStoppedFailed) listener.arrivedEvents.get(3)).getFailureCause(),
+        instanceOf(IOException.class));
   }
 
   @Test
-  public void failedRunRuntimeException() throws Exception {
+  void failedRunRuntimeException() throws Exception {
     SleeperTask.exception = new IllegalArgumentException("foo");
 
     // create the task
@@ -181,11 +176,12 @@ public class ScheduledTaskEventsTest
     assertThat(listener.arrivedEvents.get(1), instanceOf(TaskEventStarted.class));
     assertThat(listener.arrivedEvents.get(2), instanceOf(TaskStartedRunningEvent.class));
     assertThat(listener.arrivedEvents.get(3), instanceOf(TaskEventStoppedFailed.class));
-    assertThat(((TaskEventStoppedFailed) listener.arrivedEvents.get(3)).getFailureCause(), instanceOf(IllegalArgumentException.class));
+    assertThat(((TaskEventStoppedFailed) listener.arrivedEvents.get(3)).getFailureCause(),
+        instanceOf(IllegalArgumentException.class));
   }
 
   @Test
-  public void canceledRunWithNonCancelableTaskWithoutInterruption() throws Exception {
+  void canceledRunWithNonCancelableTaskWithoutInterruption() throws Exception {
     // create the task
     final TaskInfo taskInfo = createTask(SleeperTaskDescriptor.TYPE_ID);
 
@@ -217,8 +213,8 @@ public class ScheduledTaskEventsTest
   }
 
   @Test
-  public void prematureCanceledRunWithNonCancelableTask() throws Exception {
-    final TaskInfo taskInfo = createTask(SleeperTaskDescriptor.TYPE_ID, taskScheduler().getScheduleFactory().now());
+  void prematureCanceledRunWithNonCancelableTask() throws Exception {
+    final TaskInfo taskInfo = createTask(SleeperTaskDescriptor.TYPE_ID, taskScheduler.getScheduleFactory().now());
     taskInfo.getCurrentState().getFuture().cancel(false);
     // do not use latches, as this task will not even start!
 
@@ -235,28 +231,28 @@ public class ScheduledTaskEventsTest
     assertThat(listener.arrivedEvents.get(1), instanceOf(TaskEventStarted.class));
     assertThat(listener.arrivedEvents.get(2), instanceOf(TaskEventStoppedCanceled.class));
   }
-  
+
   @Test
-  public void canceledRunWithNonCancelableTaskWithInterruption() throws Exception {
+  void canceledRunWithNonCancelableTaskWithInterruption() throws Exception {
     final TaskInfo taskInfo = createTask(SleeperTaskDescriptor.TYPE_ID);
     cancelledRun(taskInfo, true);
   }
 
   @Test
-  public void canceledRunWithCancelableTask() throws Exception {
+  void canceledRunWithCancelableTask() throws Exception {
     final TaskInfo taskInfo = createTask(SleeperCancelableTaskDescriptor.TYPE_ID);
     cancelledRun(taskInfo, true);
   }
 
   @Test
-  public void canceledRunByThrowingTaskInterruptedEx() throws Exception {
+  void canceledRunByThrowingTaskInterruptedEx() throws Exception {
     SleeperTask.exception = new TaskInterruptedException("foo", true);
     final TaskInfo taskInfo = createTask(SleeperTaskDescriptor.TYPE_ID);
     cancelledRun(taskInfo, false);
   }
 
   @Test
-  public void canceledRunByThrowingInterruptedEx() throws Exception {
+  void canceledRunByThrowingInterruptedEx() throws Exception {
     SleeperTask.exception = new InterruptedException("foo");
     final TaskInfo taskInfo = createTask(SleeperTaskDescriptor.TYPE_ID);
     cancelledRun(taskInfo, false);
