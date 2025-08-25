@@ -39,7 +39,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.blobstore.compact.internal.CompactBlobStoreTaskDescriptor.TYPE_ID;
-import static org.sonatype.nexus.blobstore.restore.BaseRestoreMetadataTaskDescriptor.BLOB_STORE_NAME_FIELD_ID;
 
 public class CompactBlobStoreTaskTest
     extends TestSupport
@@ -47,6 +46,8 @@ public class CompactBlobStoreTaskTest
   private final String BLOBSTORE_NAME = "test";
 
   private final String TASK_NAME = "test-task";
+
+  private static final String BLOB_STORE_NAME_FIELD_ID = "blobstoreName";
 
   @Mock
   BlobStoreManager blobStoreManager;
@@ -80,7 +81,8 @@ public class CompactBlobStoreTaskTest
     underTest.configure(configuration);
 
     doThrow(new IllegalStateException("conflicting task"))
-        .when(taskUtils).checkForConflictingTasks(anyString(), anyString(), any(List.class), any(Map.class));
+        .when(taskUtils)
+        .checkForConflictingTasks(anyString(), anyString(), any(List.class), any(Map.class));
     when(changeBlobstoreStore.findByBlobStoreName(anyString())).thenReturn(Collections.emptyList());
 
     IllegalStateException exception = assertThrows(IllegalStateException.class, underTest::checkForConflicts);
@@ -96,7 +98,8 @@ public class CompactBlobStoreTaskTest
     underTest.configure(configuration);
 
     doNothing()
-        .when(taskUtils).checkForConflictingTasks(anyString(), anyString(), any(List.class), any(Map.class));
+        .when(taskUtils)
+        .checkForConflictingTasks(anyString(), anyString(), any(List.class), any(Map.class));
     when(changeBlobstoreStore.findByBlobStoreName(anyString())).thenReturn(Collections.singletonList(record));
 
     IllegalStateException exception = assertThrows(IllegalStateException.class, underTest::checkForConflicts);
@@ -108,7 +111,11 @@ public class CompactBlobStoreTaskTest
     verify(changeBlobstoreStore, times(1)).findByBlobStoreName(eq(BLOBSTORE_NAME));
   }
 
-  private ChangeRepositoryBlobStoreConfiguration getRecord(final String name , final String sourceBlobStoreName , final String targetBlobStoreName) {
+  private ChangeRepositoryBlobStoreConfiguration getRecord(
+      final String name,
+      final String sourceBlobStoreName,
+      final String targetBlobStoreName)
+  {
     return new ChangeRepositoryBlobStoreConfiguration()
     {
       @Override

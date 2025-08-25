@@ -35,7 +35,6 @@ import org.springframework.stereotype.Component;
 /**
  * Utility class which checks whether asset blob refs no longer contain node ids.
  *
- * @see RestoreMetadataTask
  */
 @Component
 @Singleton
