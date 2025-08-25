@@ -71,4 +71,14 @@ public class SearchResourceTest
   public void doSearch_withDirectionAllWhitespace() {
     assertDoesNotThrow(() -> underTest.doSearch(null, null, "   \t", null, null));
   }
+
+  @Test
+  public void doSearch_withLastUpdatedSort() {
+    assertDoesNotThrow(() -> underTest.doSearch(null, "last_updated", "asc", null, null));
+  }
+
+  @Test
+  public void doSearch_withLastUpdatedSortDesc() {
+    assertDoesNotThrow(() -> underTest.doSearch(null, "last_updated", "desc", null, null));
+  }
 }

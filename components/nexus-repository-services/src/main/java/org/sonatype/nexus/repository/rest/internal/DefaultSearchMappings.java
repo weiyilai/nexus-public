@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.repository.rest.sql.SearchField.FORMAT;
 import static org.sonatype.nexus.repository.rest.sql.SearchField.KEYWORDS;
+import static org.sonatype.nexus.repository.rest.sql.SearchField.LAST_MODIFIED;
 import static org.sonatype.nexus.repository.rest.sql.SearchField.MD5;
 import static org.sonatype.nexus.repository.rest.sql.SearchField.NAME;
 import static org.sonatype.nexus.repository.rest.sql.SearchField.NAMESPACE;
@@ -64,6 +65,8 @@ public class DefaultSearchMappings
       new SearchMapping(NAME_RAW_ALIAS, NAME_RAW, "Component name", NAME),
       new SearchMapping(VERSION, VERSION, "Component version", SearchField.VERSION),
       new SearchMapping(PRERELEASE, IS_PRERELEASE_KEY, "Prerelease version flag", SearchField.PRERELEASE),
+      new SearchMapping("last_updated", "last_modified", "Asset last modified time", LAST_MODIFIED),
+      new SearchMapping("lastBlobUpdated", "last_modified", "Asset last modified time (UI)", LAST_MODIFIED),
       new SearchMapping("md5", "assets.attributes.checksum.md5", "Specific MD5 hash of component's asset", MD5),
       new SearchMapping("sha1", "assets.attributes.checksum.sha1", "Specific SHA-1 hash of component's asset", SHA1),
       new SearchMapping("sha256", "assets.attributes.checksum.sha256", "Specific SHA-256 hash of component's asset",
