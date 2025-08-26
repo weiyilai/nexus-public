@@ -438,7 +438,7 @@ public class TaskComponent
       executePlanProperties.putAll(planProperties);
       ImmutableMap<String, String> combinedMap = ImmutableMap.copyOf(executePlanProperties.entrySet()
           .stream()
-          .filter(entry -> entry.getValue() != null)
+          .filter(entry -> entry.getKey() != null && entry.getValue() != null)
           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
       executePlanTaskXO.setProperties(combinedMap);
