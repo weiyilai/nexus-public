@@ -41,7 +41,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import jakarta.inject.Inject;
 import javax.sql.DataSource;
 
 import org.sonatype.nexus.common.app.ApplicationDirectories;
@@ -92,6 +91,7 @@ import com.google.common.reflect.TypeToken;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.pool.HikariPool;
+import jakarta.inject.Inject;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.ibatis.builder.xml.XMLConfigBuilder;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
@@ -107,12 +107,9 @@ import org.apache.ibatis.type.OffsetDateTimeTypeHandler;
 import org.apache.ibatis.type.TypeAliasRegistry;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -156,7 +153,7 @@ import static org.sonatype.nexus.datastore.mybatis.SensitiveAttributes.buildSens
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MyBatisDataStore
     extends DataStoreSupport<MyBatisDataSession>
-    implements ApplicationContextAware, Ordered
+    implements Ordered
 {
   private static final String REGISTERED_MESSAGE = "Registered {}";
 
@@ -176,6 +173,8 @@ public class MyBatisDataStore
       isH2JdbcSQLNonTransientConnectionException();
 
   private final List<TransactionalStoreSupport> declaredAccessTypes;
+
+  private final List<TypeHandler> declaredTypeHandlers;
 
   private final Set<Class<?>> registeredAccessTypes = new HashSet<>();
 
@@ -199,8 +198,6 @@ public class MyBatisDataStore
 
   private Optional<Configuration> previousConfig = empty();
 
-  private ApplicationContext context;
-
   @Nullable
   private Predicate<String> sensitiveAttributeFilter;
 
@@ -213,6 +210,7 @@ public class MyBatisDataStore
       final ApplicationDirectories directories,
       final LogManager logManager,
       @Lazy final List<TransactionalStoreSupport> declaredAccessTypes,
+      @Lazy final List<TypeHandler> declaredTypeHandlers,
       @Value(FeatureFlags.ORIENT_WARNING_NAMED_VALUE) final boolean orientWarning)
   {
     checkState(databaseCipher instanceof MyBatisCipher);
@@ -224,6 +222,7 @@ public class MyBatisDataStore
     useMyBatisClassLoaderForEntityProxies();
 
     this.declaredAccessTypes = checkNotNull(declaredAccessTypes);
+    this.declaredTypeHandlers = checkNotNull(declaredTypeHandlers);
     this.orientWarning = orientWarning;
   }
 
@@ -242,6 +241,7 @@ public class MyBatisDataStore
     this.logManager = null;
 
     this.declaredAccessTypes = List.of();
+    this.declaredTypeHandlers = List.of();
     this.orientWarning = false;
   }
 
@@ -291,10 +291,8 @@ public class MyBatisDataStore
 
       registerCommonTypeHandlers();
 
-      if (context != null) {
-        // register the appropriate type handlers with the store
-        context.getBeansOfType(TypeHandler.class).values().forEach(this::register);
-      }
+      // register the appropriate type handlers with the store
+      declaredTypeHandlers.forEach(this::register);
     }
     findDaos();
   }
@@ -308,22 +306,12 @@ public class MyBatisDataStore
   }
 
   @Override
-  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
-    log.trace("setApplicationContext {}", applicationContext);
-    this.context = applicationContext;
-  }
-
-  @Override
   public int getOrder() {
     return -1;
   }
 
   private void findDaos() {
-    if (context == null) {
-      return;
-    }
-    context.getBeansOfType(TransactionalStoreSupport.class)
-        .values()
+    declaredAccessTypes
         .stream()
         .map(TransactionalStoreSupport::getDaoClass)
         .forEach(this::register);
@@ -333,7 +321,6 @@ public class MyBatisDataStore
   protected void doStop() throws Exception {
     previousConfig = ofNullable(mybatisConfig);
     mybatisConfig = null;
-    registeredAccessTypes.clear();
     try {
       dataSource.close();
     }
