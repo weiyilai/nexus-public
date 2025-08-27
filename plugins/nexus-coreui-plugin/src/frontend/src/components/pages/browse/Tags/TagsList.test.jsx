@@ -179,4 +179,114 @@ describe('TagsList', function() {
     userEvent.click(headerBtn);
     await TestUtils.expectToSeeTooltipOnHover(headerBtn, 'First created time descending');
   });
+
+  describe('pagination', function () {
+    const manyTags = Array.from({ length: 60 }, (_, i) => ({
+      id: `tag${String(i + 1).padStart(2, '0')}`,
+      firstCreatedTime: `${i + 1}/1/2020, 1:00:00 AM`,
+      lastUpdatedTime: `${i + 1}/2/2020, 2:00:00 AM`,
+    }));
+
+    it('renders pagination when there are more than 25 tags and correct number of rows', async function () {
+      await renderView(manyTags);
+
+      const pagination = screen.getByRole('navigation', { name: /pagination/i });
+      const buttons = pagination.querySelectorAll('button');
+      const rows = selectors.rows();
+      expect(rows).toHaveLength(25);
+      // first page, second page, last page, next page
+      expect(buttons).toHaveLength(4);
+      expect(pagination).toBeVisible();
+    });
+
+    it('does not render pagination when there are 25 or fewer tags', async function () {
+      const fewTags = manyTags.slice(0, 25);
+      await renderView(fewTags);
+
+      const pagination = screen.queryByRole('navigation', { name: /pagination/i });
+      expect(pagination).not.toBeInTheDocument();
+    });
+
+    it('displays first page by default', async function () {
+      await renderView(manyTags);
+
+      // Should show first 25 tags
+      expect(screen.getByText('tag01')).toBeVisible();
+      expect(screen.getByText('tag25')).toBeVisible();
+      expect(screen.queryByText('tag26')).not.toBeInTheDocument();
+    });
+
+    it('navigates to second page when next button is clicked', async function () {
+      await renderView(manyTags);
+
+      const pagination = screen.getByRole('navigation', { name: /pagination/i });
+      const nextPageButton = within(pagination).getByRole('button', { name: 'goto page 2' });
+
+      // Should show tags 1-25
+      expect(screen.getByText('tag01')).toBeVisible();
+      expect(screen.getByText('tag25')).toBeVisible();
+      expect(screen.queryByText('tag26')).not.toBeInTheDocument();
+      expect(screen.queryByText('tag51')).not.toBeInTheDocument();
+
+      userEvent.click(nextPageButton);
+
+      // Should show tags 26-50
+      expect(screen.getByText('tag26')).toBeVisible();
+      expect(screen.getByText('tag50')).toBeVisible();
+      expect(screen.queryByText('tag25')).not.toBeInTheDocument();
+      expect(screen.queryByText('tag51')).not.toBeInTheDocument();
+    });
+
+    it('resets to first page when filter is applied', async function () {
+      await renderView(manyTags);
+
+      // Navigate to second page first (if possible)
+      const pagination = screen.getByRole('navigation', { name: /pagination/i });
+      const firstPageButton = within(pagination).getByRole('button', { name: 'goto first page' });
+      const secondPageButton = within(pagination).getByRole('button', { name: 'goto page 2' });
+
+      expect(firstPageButton).toHaveClass('selected');
+      expect(secondPageButton).not.toHaveClass('selected');
+
+      userEvent.click(secondPageButton);
+
+      expect(firstPageButton).not.toHaveClass('selected');
+      expect(secondPageButton).toHaveClass('selected');
+
+      // Apply filter
+      const filterInput = selectors.getFilterInput();
+      userEvent.type(filterInput, 'tag');
+
+      expect(firstPageButton).toHaveClass('selected');
+      expect(secondPageButton).not.toHaveClass('selected');
+    });
+
+    it('maintains pagination state when sorting', async function () {
+      await renderView(manyTags);
+
+      const pagination = screen.getByRole('navigation', { name: /pagination/i });
+      const firstPageButton = within(pagination).getByRole('button', { name: 'goto first page' });
+      const lastPageButton = within(pagination).getByRole('button', { name: 'goto last page' });
+
+      expect(firstPageButton).toHaveClass('selected');
+      expect(lastPageButton).not.toHaveClass('selected');
+
+      userEvent.click(lastPageButton);
+
+      expect(firstPageButton).not.toHaveClass('selected');
+      expect(lastPageButton).toHaveClass('selected');
+      expect(screen.getByText('tag60')).toBeVisible();
+      expect(screen.queryByText('tag01')).not.toBeInTheDocument();
+
+      // Sort by name (descending)
+      const nameHeader = selectors.headerCell(NAME);
+      userEvent.click(nameHeader);
+
+      // Should still be on last page
+      expect(firstPageButton).not.toHaveClass('selected');
+      expect(lastPageButton).toHaveClass('selected');
+      expect(screen.queryByText('tag60')).not.toBeInTheDocument();
+      expect(screen.getByText('tag01')).toBeVisible();
+    });
+  });
 });
