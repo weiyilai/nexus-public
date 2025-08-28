@@ -15,13 +15,13 @@ package org.sonatype.nexus.repository.group;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.validation.ConstraintViolation;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.collect.AttributesMap;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.event.EventManager;
+import org.sonatype.nexus.distributed.event.service.api.common.RepositoryCacheSyncTokenEvent;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.cache.CacheController;
@@ -31,6 +31,7 @@ import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.config.ConfigurationFacet;
 import org.sonatype.nexus.repository.group.GroupFacetImpl.Config;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
+import org.sonatype.nexus.repository.manager.internal.RepositoryAttributeService;
 import org.sonatype.nexus.repository.types.GroupType;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.repository.view.Content;
@@ -50,6 +51,7 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.repository.group.GroupFacetImpl.CONFIG_KEY;
 
@@ -76,6 +78,12 @@ public class GroupFacetImplTest
 
   @Mock
   private RepositoryCacheInvalidationService repositoryCacheInvalidationService;
+
+  @Mock
+  private EventManager eventManager;
+
+  @Mock
+  private RepositoryAttributeService repositoryAttributeService;
 
   private Repository repository;
 
@@ -133,6 +141,8 @@ public class GroupFacetImplTest
         Map.of("memberNames", config.memberNames)));
     when(configurationFacet.readSection(configuration, CONFIG_KEY, Config.class)).thenReturn(config);
     when(repository.getConfiguration()).thenReturn(configuration);
+    when(repositoryAttributeService.getRepositoryAttribute(repository, "cacheToken", null)).thenReturn(null);
+    underTest.setRepositoryAttributeService(repositoryAttributeService);
     underTest.init();
     underTest.start();
     assertThat(underTest.leafMembers(), containsInAnyOrder(hosted1, hosted2));
@@ -175,6 +185,67 @@ public class GroupFacetImplTest
     when(cacheController.isStale(cacheInfo)).thenReturn(false);
 
     assertThat(underTest.isStale(content), is(false));
+  }
+
+  @Test
+  public void testDoConfigure_WithStoredToken() throws Exception {
+    String storedToken = "stored-cache-token";
+    Config config = new Config();
+    config.memberNames = Set.of("repository1");
+    Configuration configuration = mock(Configuration.class);
+
+    when(configurationFacet.readSection(configuration, CONFIG_KEY, Config.class)).thenReturn(config);
+    when(repositoryAttributeService.getRepositoryAttribute(repository, "cacheToken", null)).thenReturn(storedToken);
+
+    underTest.setRepositoryAttributeService(repositoryAttributeService);
+    underTest.doConfigure(configuration);
+
+    assertNotNull(underTest.cacheController);
+    verify(repositoryAttributeService).getRepositoryAttribute(repository, "cacheToken", null);
+  }
+
+  @Test
+  public void testDoConfigure_WithNullStoredToken() throws Exception {
+    Config config = new Config();
+    config.memberNames = Set.of("repository1");
+    Configuration configuration = mock(Configuration.class);
+
+    when(configurationFacet.readSection(configuration, CONFIG_KEY, Config.class)).thenReturn(config);
+    when(repositoryAttributeService.getRepositoryAttribute(repository, "cacheToken", null)).thenReturn(null);
+
+    underTest.setRepositoryAttributeService(repositoryAttributeService);
+    underTest.doConfigure(configuration);
+
+    assertNotNull(underTest.cacheController);
+    verify(repositoryAttributeService).getRepositoryAttribute(repository, "cacheToken", null);
+  }
+
+  @Test
+  public void testPostEvent_storesTokenAndPostsEvent() throws Exception {
+    String cacheToken = "test-cache-token";
+
+    underTest.setEventManager(eventManager);
+    underTest.setRepositoryAttributeService(repositoryAttributeService);
+
+    // Directly call the package-private method
+    underTest.postEvent(repository, cacheToken);
+
+    verify(repositoryAttributeService).setRepositoryAttribute(repository, "cacheToken", cacheToken);
+    verify(eventManager).post(org.mockito.ArgumentMatchers.any(RepositoryCacheSyncTokenEvent.class));
+  }
+
+  @Test
+  public void testOnRepositoryCacheSyncTokenEventIgnoresDifferentRepository() {
+    RepositoryCacheSyncTokenEvent event = mock(RepositoryCacheSyncTokenEvent.class);
+    when(event.isLocal()).thenReturn(false);
+    when(event.getRepositoryName()).thenReturn("different-repository");
+
+    CacheController mockCacheController = mock(CacheController.class);
+    underTest.cacheController = mockCacheController;
+
+    underTest.on(event);
+
+    verify(mockCacheController, org.mockito.Mockito.never()).setCache(org.mockito.ArgumentMatchers.any());
   }
 
   private static ConstraintViolationFactory makeConstraintViolationFactory() {

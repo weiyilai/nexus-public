@@ -48,6 +48,10 @@ public class CacheController
     this.cacheToken = newCacheToken();
   }
 
+  public void setCache(final String token) {
+    this.cacheToken = token;
+  }
+
   /**
    * Returns the currently effective {@link CacheInfo} with "now" timestamp.
    */
