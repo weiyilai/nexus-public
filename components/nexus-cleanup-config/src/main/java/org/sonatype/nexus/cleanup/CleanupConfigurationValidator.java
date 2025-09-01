@@ -72,6 +72,11 @@ public class CleanupConfigurationValidator
   @Nullable
   @Override
   public ConstraintViolation<?> validate(final Configuration configuration) {
+    ConstraintViolation<?> cleanupPolicyViolation = validateCleanupPoliciesExistence(configuration);
+
+    if (cleanupPolicyViolation != null) {
+      return cleanupPolicyViolation;
+    }
     List<CleanupPolicy> cleanupPolicies = getCleanupPolicy(configuration);
 
     if (!cleanupPolicies.isEmpty()) {
@@ -130,6 +135,38 @@ public class CleanupConfigurationValidator
       return constraintViolationFactory.createViolation(CLEANUP_ATTRIBUTES_KEY,
           String.format("Repository %s is of format type %s, unable to assign cleanup policy %s of format type %s",
               repoName, repoFormat, cleanupPolicy.getName(), cleanupPolicy.getFormat()));
+    }
+    return null;
+  }
+
+  private ConstraintViolation<?> validateCleanupPoliciesExistence(final Configuration configuration) {
+    Map<String, Object> cleanupAttributes = Optional.ofNullable(configuration.getAttributes())
+        .map(attributes -> attributes.get(CLEANUP_ATTRIBUTES_KEY))
+        .orElse(null);
+
+    if (cleanupAttributes != null && cleanupAttributes.containsKey(CLEANUP_NAME_KEY)) {
+      Object policyNamesObj = cleanupAttributes.get(CLEANUP_NAME_KEY);
+
+      if (!(policyNamesObj instanceof Collection)) {
+        return constraintViolationFactory.createViolation(CLEANUP_ATTRIBUTES_KEY,
+            "Expected a collection for cleanup policy names.");
+      }
+
+      Collection<?> policyNames = (Collection<?>) policyNamesObj;
+      for (Object policyNameObj : policyNames) {
+        if (!(policyNameObj instanceof String)) {
+          return constraintViolationFactory.createViolation(CLEANUP_ATTRIBUTES_KEY,
+              "Policy name should be a string.");
+        }
+
+        String policyName = (String) policyNameObj;
+        CleanupPolicy cleanupPolicy = cleanupPolicyStorage.get(policyName);
+
+        if (cleanupPolicy == null) {
+          String errorMessage = String.format("Cleanup Policy '%s' does not exist.", policyName);
+          return constraintViolationFactory.createViolation(CLEANUP_ATTRIBUTES_KEY, errorMessage);
+        }
+      }
     }
     return null;
   }

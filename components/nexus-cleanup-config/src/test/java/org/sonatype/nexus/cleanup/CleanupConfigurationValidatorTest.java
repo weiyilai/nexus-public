@@ -139,17 +139,26 @@ public class CleanupConfigurationValidatorTest
   }
 
   @Test
-  public void whenCleanupPolicyNotFoundReturnNull() {
+  public void whenCleanupPolicyNotFoundReturnConstraintViolation() {
     when(cleanupPolicyStorage.get(POLICY_NAME)).thenReturn(null);
-
-    assertThat(underTest.validate(configuration), is(nullValue()));
-    verify(constraintFactory, times(0)).createViolation(anyString(), anyString());
+    assertThat(underTest.validate(configuration), is(constraintViolation));
+    verify(constraintFactory).createViolation(CLEANUP_KEY, "Cleanup Policy '" + POLICY_NAME + "' does not exist.");
   }
 
   @Test
-  public void whenValidFormatsReturnNull() {
-    assertThat(underTest.validate(configuration), is(nullValue()));
-    verify(constraintFactory, times(0)).createViolation(anyString(), anyString());
+  public void whenPolicyNamesNotCollectionReturnConstraintViolation() {
+    when(cleanupAttributes.get(POLICY_NAME_KEY)).thenReturn("not-a-collection");
+
+    assertThat(underTest.validate(configuration), is(constraintViolation));
+    verify(constraintFactory).createViolation(CLEANUP_KEY, "Expected a collection for cleanup policy names.");
+  }
+
+  @Test
+  public void whenPolicyNameNotStringReturnConstraintViolation() {
+    when(cleanupAttributes.get(POLICY_NAME_KEY)).thenReturn(ImmutableSet.of(123)); // Integer instead of String
+
+    assertThat(underTest.validate(configuration), is(constraintViolation));
+    verify(constraintFactory).createViolation(CLEANUP_KEY, "Policy name should be a string.");
   }
 
   @Test
