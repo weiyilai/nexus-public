@@ -176,21 +176,10 @@ public class FluentAssetBuilderImpl
     return asset;
   }
 
-  Asset updateAssetBlob(Asset asset) {
+  private Asset updateAssetBlob(Asset asset) {
     if (blob != null) {
-      Optional<AssetBlob> originalAssetBlob = asset.blob();
-
-      AssetBlob assetBlob = getOrCreateAssetBlob(blob, checksums);
-
-      if (!(asset instanceof AssetData)) {
-        throw new IllegalArgumentException("Asset implementation does not support blob updates: " + asset.getClass());
-      }
-
-      ((AssetData) asset).setAssetBlob(assetBlob);
+      ((AssetData) asset).setAssetBlob(getOrCreateAssetBlob(blob, checksums));
       facet.stores().assetStore.updateAssetBlobLink(asset);
-
-      originalAssetBlob.ifPresent(
-          originalBlob -> facet.stores().assetBlobStore.setBlobCreated(assetBlob, originalBlob.blobCreated()));
     }
     return asset;
   }
@@ -242,6 +231,7 @@ public class FluentAssetBuilderImpl
   }
 
   private AssetBlob getOrCreateAssetBlob(final Blob blob, final Map<HashAlgorithm, HashCode> checksums) {
+
     BlobRef blobRef = blobRef(blob);
     return facet.stores().assetBlobStore.readAssetBlob(blobRef)
         .orElseGet(() -> createAssetBlob(blobRef, blob, checksums));
