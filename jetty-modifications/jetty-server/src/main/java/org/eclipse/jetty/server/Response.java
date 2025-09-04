@@ -632,7 +632,7 @@ public interface Response extends Content.Sink
     Request.Handler errorHandler = context.getErrorHandler();
     if (errorHandler != null)
     {
-      Request errorRequest = new ErrorHandler.ErrorRequest(request, status, message, cause);
+      Request errorRequest = new CustomErrorHandler.ErrorRequest(request, status, message, cause);
       try
       {
         if (errorHandler.handle(errorRequest, response, callback))

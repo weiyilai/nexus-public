@@ -45,6 +45,7 @@ import java.util.stream.Stream;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.server.CustomErrorHandler;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -189,6 +190,7 @@ public class JettyServer
     for (Object object : components) {
       if (object instanceof Server) {
         server = (Server) object;
+        server.setErrorHandler(new CustomErrorHandler());
         break;
       }
     }

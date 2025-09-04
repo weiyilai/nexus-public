@@ -62,6 +62,10 @@
       <artifactId>goodies-common</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.sonatype.nexus.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-interpolation</artifactId>
     </dependency>
