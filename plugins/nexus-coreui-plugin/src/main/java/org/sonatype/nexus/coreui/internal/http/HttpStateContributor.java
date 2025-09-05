@@ -35,13 +35,17 @@ public class HttpStateContributor
 
   private boolean featureFlag;
 
+  private final String contextPath;
+
   @Inject
   public HttpStateContributor(
       @Value("${nexus.react.httpSettings:true}") final Boolean featureFlag,
+      @Value("${nexus-context-path:/}") final String contextPath,
       final HttpDefaultsCustomizer customizer)
   {
     this.customizer = customizer;
     this.featureFlag = featureFlag;
+    this.contextPath = contextPath;
   }
 
   @Override
@@ -49,6 +53,7 @@ public class HttpStateContributor
     return ImmutableMap.of(
         "nexus.react.httpSettings", featureFlag,
         "requestTimeout", customizer.getRequestTimeout(),
-        "retryCount", customizer.getRetryCount());
+        "retryCount", customizer.getRetryCount(),
+        "nexus-context-path", contextPath);
   }
 }

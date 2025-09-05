@@ -46,9 +46,11 @@ export default function GlobalHeader() {
 
   const showThemeSelector = window.location.search.includes('showThemeSelector');
 
+  const contextPath = ExtJS.useState(() => ExtJS.state().getValue('nexus-context-path', ''));
+
   return (
       <NxGlobalHeader2
-          homeHref="/"
+          homeHref={ contextPath || "/"}
           logoProps={getLogoProps()}
           className="nxrm-global-header"
       >
