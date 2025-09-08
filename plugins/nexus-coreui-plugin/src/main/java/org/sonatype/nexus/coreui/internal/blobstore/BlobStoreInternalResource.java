@@ -47,7 +47,6 @@ import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.stream.Collectors.toList;
 import static org.sonatype.nexus.coreui.internal.blobstore.BlobStoreInternalResource.RESOURCE_PATH;
 import org.springframework.stereotype.Component;
 
@@ -104,7 +103,7 @@ public class BlobStoreInternalResource
         .entrySet()
         .stream()
         .map(BlobStoreQuotaTypesUIResponse::new)
-        .collect(toList());
+        .toList();
     this.repositoryManager = checkNotNull(repositoryManager);
   }
 
@@ -132,7 +131,7 @@ public class BlobStoreInternalResource
           return new BlobStoreUIResponse(typeId, configuration, metrics, path);
         })
         .filter(Objects::nonNull)
-        .collect(toList());
+        .toList();
   }
 
   // If a blobstore hasn't started due to an error we still want to return it from the api.
@@ -152,28 +151,88 @@ public class BlobStoreInternalResource
 
   private static String getPath(final String typeId, BlobStoreConfiguration configuration) {
     if (typeId.equals(FileBlobStore.TYPE.toLowerCase())) {
-      return configuration.attributes(FileBlobStore.CONFIG_KEY).get(FileBlobStore.PATH_KEY, String.class);
+      return getFilePath(configuration);
     }
     else if (typeId.equals(S3BlobStoreConfigurationHelper.CONFIG_KEY)) {
-      return S3BlobStoreConfigurationHelper.getBucketPrefix(configuration) + configuration
-          .attributes(S3BlobStoreConfigurationHelper.CONFIG_KEY)
-          .get(S3BlobStoreConfigurationHelper.BUCKET_KEY, String.class);
+      return getS3Path(configuration);
     }
     else if (typeId.equals(AZURE_TYPE)) {
-      return configuration.attributes(AZURE_CONFIG).get(CONTAINER_NAME, String.class);
+      return getAzurePath(configuration);
     }
     else if (typeId.equals(BlobStoreGroup.TYPE.toLowerCase())) {
       return "N/A";
     }
     else if (typeId.equals(GOOGLE_TYPE)) {
-      final String prefix = Optional.ofNullable(configuration.attributes(GOOGLE_CONFIG).get(PREFIX_KEY, String.class))
-          .filter(Predicates.not(Strings::isNullOrEmpty))
-          .map(s -> s.replaceFirst("/$", "") + "/")
-          .orElse("");
-      return prefix + configuration.attributes(GOOGLE_CONFIG).get(GOOGLE_BUCKET_KEY, String.class);
+      return getGooglePath(configuration);
     }
     logger.warn("blob store type {} unknown, defaulting to N/A for path", typeId);
     return "N/A";
+  }
+
+  private static String getFilePath(BlobStoreConfiguration configuration) {
+    try {
+      String path = configuration.attributes(FileBlobStore.CONFIG_KEY).get(FileBlobStore.PATH_KEY, String.class);
+      return Strings.isNullOrEmpty(path) ? "N/A" : path;
+    }
+    catch (NullPointerException | ClassCastException e) {
+      logger.warn("Error getting file path from configuration, using N/A", e);
+      return "N/A";
+    }
+  }
+
+  private static String getS3Path(BlobStoreConfiguration configuration) {
+    try {
+      String bucket = configuration
+          .attributes(S3BlobStoreConfigurationHelper.CONFIG_KEY)
+          .get(S3BlobStoreConfigurationHelper.BUCKET_KEY, String.class);
+
+      if (Strings.isNullOrEmpty(bucket)) {
+        return "N/A";
+      }
+
+      String prefix = S3BlobStoreConfigurationHelper.getBucketPrefix(configuration);
+      if (Strings.isNullOrEmpty(prefix)) {
+        return bucket;
+      }
+
+      String cleanPrefix = prefix.replaceFirst("/$", "");
+      return bucket + "/" + cleanPrefix;
+    }
+    catch (NullPointerException | ClassCastException e) {
+      logger.warn("Error getting S3 bucket path from configuration, using N/A", e);
+      return "N/A";
+    }
+  }
+
+  private static String getAzurePath(BlobStoreConfiguration configuration) {
+    try {
+      String containerName = configuration.attributes(AZURE_CONFIG).get(CONTAINER_NAME, String.class);
+      return Strings.isNullOrEmpty(containerName) ? "N/A" : containerName;
+    }
+    catch (NullPointerException | ClassCastException e) {
+      logger.warn("Error getting Azure container path from configuration, using N/A", e);
+      return "N/A";
+    }
+  }
+
+  private static String getGooglePath(BlobStoreConfiguration configuration) {
+    try {
+      String bucketName = configuration.attributes(GOOGLE_CONFIG).get(GOOGLE_BUCKET_KEY, String.class);
+      if (Strings.isNullOrEmpty(bucketName)) {
+        return "N/A";
+      }
+
+      String prefix = Optional.ofNullable(configuration.attributes(GOOGLE_CONFIG).get(PREFIX_KEY, String.class))
+          .filter(Predicates.not(Strings::isNullOrEmpty))
+          .map(s -> s.replaceFirst("/$", ""))
+          .orElse("");
+
+      return Strings.isNullOrEmpty(prefix) ? bucketName : bucketName + "/" + prefix;
+    }
+    catch (NullPointerException | ClassCastException e) {
+      logger.warn("Error getting Google bucket path from configuration, using N/A", e);
+      return "N/A";
+    }
   }
 
   @RequiresAuthentication
@@ -186,7 +245,7 @@ public class BlobStoreInternalResource
         .stream()
         .filter(entry -> entry.getValue().isEnabled())
         .map(BlobStoreTypesUIResponse::new)
-        .collect(toList());
+        .toList();
   }
 
   @RequiresAuthentication

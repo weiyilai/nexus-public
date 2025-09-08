@@ -119,6 +119,7 @@ class BlobStoreInternalResourceTest
     assertThat(responses.size(), is(1));
     BlobStoreUIResponse response = responses.get(0);
     assertThat(response.getName(), is("fileStore"));
+    assertThat(response.getPath(), is("my_path"));
     assertThat(response.getBlobCount(), is(1L));
     assertThat(response.getTypeId(), is(FILE_TYPE_ID));
     assertThat(response.getTypeName(), is(FILE_TYPE));
@@ -137,6 +138,7 @@ class BlobStoreInternalResourceTest
     assertThat(responses.size(), is(3));
     BlobStoreUIResponse response1 = responses.get(0);
     assertThat(response1.getName(), is("fileStore1"));
+    assertThat(response1.getPath(), is("my_path"));
     assertThat(response1.getBlobCount(), is(1L));
     assertThat(response1.getTypeId(), is(FILE_TYPE_ID));
     assertThat(response1.getTypeName(), is(FILE_TYPE));
@@ -155,6 +157,7 @@ class BlobStoreInternalResourceTest
 
     BlobStoreUIResponse response3 = responses.get(2);
     assertThat(response3.getName(), is("s3BlobStore"));
+    assertThat(response3.getPath(), is("my-s3-bucket/my-prefix"));
     assertThat(response3.getBlobCount(), is(1L));
     assertThat(response3.getTypeId(), is(S3_TYPE_ID));
     assertThat(response3.getTypeName(), is(S3_TYPE));
@@ -219,9 +222,20 @@ class BlobStoreInternalResourceTest
     // add configuration
     MockBlobStoreConfiguration mockBlobStoreConfiguration = new MockBlobStoreConfiguration(name, type);
     Map<String, Map<String, Object>> attributes = new HashMap<>();
-    Map<String, Object> attribute = new HashMap<>();
-    attribute.put(FileBlobStore.PATH_KEY, "my_path");
-    attributes.put(FileBlobStore.CONFIG_KEY, attribute);
+
+    // Set up attributes based on blob store type
+    if (FILE_TYPE.equals(type)) {
+      Map<String, Object> fileAttribute = new HashMap<>();
+      fileAttribute.put(FileBlobStore.PATH_KEY, "my_path");
+      attributes.put(FileBlobStore.CONFIG_KEY, fileAttribute);
+    }
+    else if (S3_TYPE.equals(type)) {
+      Map<String, Object> s3Attribute = new HashMap<>();
+      s3Attribute.put("bucket", "my-s3-bucket");
+      s3Attribute.put("prefix", "my-prefix");
+      attributes.put("s3", s3Attribute);
+    }
+
     mockBlobStoreConfiguration.setAttributes(attributes);
     configurations.add(mockBlobStoreConfiguration);
     // return blobstore from blobStoreManager
