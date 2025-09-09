@@ -27,7 +27,6 @@ import org.sonatype.nexus.quartz.internal.SchedulerTestConfiguration.TestJob;
 import org.sonatype.nexus.quartz.internal.SchedulerTestConfiguration.TestJobWithSync;
 import org.sonatype.nexus.quartz.internal.SchedulerTestConfiguration.UncleanShutdownJob;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -289,7 +288,6 @@ public class SchedulerTest
     }
   }
 
-  @Disabled("Disabled unti flakiness can be resolved https://sonatype.atlassian.net/browse/NEXUS-48519")
   @Test
   void testShutdownWithSleepReturnsAfterAllThreadsAreStopped() throws Exception {
     Map<Thread, StackTraceElement[]> allThreadsStart = Thread.getAllStackTraces();
@@ -319,8 +317,13 @@ public class SchedulerTest
         allThreadsEnd.remove(t);
       }
       // Exclude HikariCP connection pool threads that are not part of Quartz scheduler lifecycle
-      if (t.getName().contains("nexus connection adder") && t.getThreadGroup().getName().contains("main")) {
-        allThreadsEnd.remove(t);
+      // These can appear in either "main" group or "QuartzScheduler:nexus" group
+      if (t.getName().contains("nexus connection adder")) {
+        ThreadGroup threadGroup = t.getThreadGroup();
+        if (threadGroup != null &&
+            (threadGroup.getName().contains("main") || threadGroup.getName().contains("QuartzScheduler"))) {
+          allThreadsEnd.remove(t);
+        }
       }
     }
     if (allThreadsEnd.size() > 0) {
