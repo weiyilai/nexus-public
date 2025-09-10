@@ -45,6 +45,8 @@ public class AptFacetHelper
 
   private static final String RELEASE_PATH = "dists/%s/%s";
 
+  private static final String BY_HASH_PATH = "dists/%s/%s/binary-%s/by-hash/%s/%s";
+
   private static final String PACKAGE_PATH = "dists/%s/%s/binary-%s/%s";
 
   private static final String ASSET_PATH = "pool/%s/%s/%s";
@@ -61,7 +63,7 @@ public class AptFacetHelper
    * Returns list of the release indexes specifiers
    *
    * @param isFlat - Type of the repository. Flat repository doesn't have distribution
-   * @param dist   - Apt package distribution
+   * @param dist - Apt package distribution
    * @return - list of the release indexes specifiers
    */
   public static List<ContentSpecifier> getReleaseIndexSpecifiers(boolean isFlat, final String dist) {
@@ -82,15 +84,17 @@ public class AptFacetHelper
   /**
    * Returns list of the release package indexes
    *
-   * @param isFlat    - Type of the repository. Flat repository doesn't have distribution
-   * @param dist      - Apt package distribution
+   * @param isFlat - Type of the repository. Flat repository doesn't have distribution
+   * @param dist - Apt package distribution
    * @param component - Apt Component
-   * @param arch      - Package type of architecture. e.g. amd64
+   * @param arch - Package type of architecture. e.g. amd64
    * @return - list of the release package indexes
    */
-  public static List<ContentSpecifier> getReleasePackageIndexes(boolean isFlat, final String dist,
-                                                                final String component,
-                                                                final String arch)
+  public static List<ContentSpecifier> getReleasePackageIndexes(
+      boolean isFlat,
+      final String dist,
+      final String component,
+      final String arch)
   {
     if (isFlat) {
       return ImmutableList.of(
@@ -100,23 +104,49 @@ public class AptFacetHelper
           new ContentSpecifier(PACKAGES_XZ, SnapshotItem.Role.PACKAGE_INDEX_XZ));
     }
     else {
+      // Store metadata for non-flat repos (needed for by-hash generation)
       return ImmutableList.of(
           new ContentSpecifier(String.format(PACKAGE_PATH, dist, component, arch, PACKAGES),
-              SnapshotItem.Role.PACKAGE_INDEX_RAW),
+              SnapshotItem.Role.PACKAGE_INDEX_RAW, component, arch),
           new ContentSpecifier(String.format(PACKAGE_PATH, dist, component, arch, PACKAGES_GZ),
-              SnapshotItem.Role.PACKAGE_INDEX_GZ),
+              SnapshotItem.Role.PACKAGE_INDEX_GZ, component, arch),
           new ContentSpecifier(String.format(PACKAGE_PATH, dist, component, arch, PACKAGES_BZ2),
-              SnapshotItem.Role.PACKAGE_INDEX_BZ2),
+              SnapshotItem.Role.PACKAGE_INDEX_BZ2, component, arch),
           new ContentSpecifier(String.format(PACKAGE_PATH, dist, component, arch, PACKAGES_XZ),
-              SnapshotItem.Role.PACKAGE_INDEX_XZ));
+              SnapshotItem.Role.PACKAGE_INDEX_XZ, component, arch));
     }
+  }
+
+  /**
+   * Returns ContentSpecifier for a by-hash file
+   *
+   * @param dist - Apt package distribution
+   * @param component - Apt Component
+   * @param arch - Package architecture. e.g. amd64
+   * @param algorithm - Hash algorithm (case-insensitive)
+   * @param hash - The hash value
+   * @param packageRole - the hash file package role
+   * @return - ContentSpecifier for the by-hash file
+   */
+  public static ContentSpecifier getByHashContentSpecifier(
+      final String dist,
+      final String component,
+      final String arch,
+      final String algorithm,
+      final String hash,
+      final SnapshotItem.Role packageRole)
+  {
+    // Normalize algorithm to uppercase for consistency with by-hash directory structure
+    String normalizedAlgorithm = algorithm.toUpperCase();
+    String path = String.format(BY_HASH_PATH, dist, component, arch, normalizedAlgorithm, hash);
+    return new ContentSpecifier(path, packageRole, component, arch);
   }
 
   /**
    * Returns asset name base on the provided parameters
    *
-   * @param packageName  - Debian package name e.g. 'nano'
-   * @param version      - Package version e.g. '2.9.3-2'
+   * @param packageName - Debian package name e.g. 'nano'
+   * @param version - Package version e.g. '2.9.3-2'
    * @param architecture - Package architecture e.g. 'amd64'
    * @return - e.g. 'nano_2.9.3-2_amd64.deb'
    */
@@ -127,8 +157,8 @@ public class AptFacetHelper
   /**
    * Returns asset path with asset name base on the provided parameters
    *
-   * @param packageName  - Debian package name e.g. 'nano'
-   * @param version      - Package version e.g. '2.9.3-2'
+   * @param packageName - Debian package name e.g. 'nano'
+   * @param version - Package version e.g. '2.9.3-2'
    * @param architecture - Package architecture e.g. 'amd64'
    * @return - e.g. 'pool/n/nano/nano_2.9.3-2_amd64.deb'
    */
@@ -151,7 +181,8 @@ public class AptFacetHelper
   }
 
   private static String getValueFromControlFile(final ControlFile controlFile, final String fieldName) {
-    return controlFile.getField(fieldName).map(f -> f.value)
+    return controlFile.getField(fieldName)
+        .map(f -> f.value)
         .orElseThrow(() -> new IllegalStateException(String.format(MISSED_VALUE_MESSAGE, fieldName)));
   }
 
@@ -166,6 +197,6 @@ public class AptFacetHelper
   }
 
   private AptFacetHelper() {
-    //empty
+    // empty
   }
 }

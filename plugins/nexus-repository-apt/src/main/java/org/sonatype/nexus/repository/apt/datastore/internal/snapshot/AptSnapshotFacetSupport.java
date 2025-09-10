@@ -15,11 +15,12 @@ package org.sonatype.nexus.repository.apt.datastore.internal.snapshot;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
-
 import javax.annotation.Nullable;
 
 import org.sonatype.nexus.repository.FacetSupport;
@@ -32,6 +33,9 @@ import org.sonatype.nexus.repository.apt.internal.snapshot.AptFilterInputStream;
 import org.sonatype.nexus.repository.apt.internal.snapshot.AptSnapshotFacet;
 import org.sonatype.nexus.repository.apt.internal.snapshot.SnapshotComponentSelector;
 import org.sonatype.nexus.repository.apt.internal.snapshot.SnapshotItem;
+import org.sonatype.nexus.repository.apt.internal.snapshot.SnapshotItem.ContentSpecifier;
+import org.sonatype.nexus.repository.content.Asset;
+import org.sonatype.nexus.repository.content.AssetBlob;
 import org.sonatype.nexus.repository.view.Content;
 import org.sonatype.nexus.repository.view.payloads.TempBlob;
 
@@ -66,7 +70,7 @@ public abstract class AptSnapshotFacetSupport
     for (SnapshotItem item : snapshots) {
       String assetPath = createAssetPath(id, item.specifier.path);
       try (InputStream is = item.content.openInputStream();
-           TempBlob tempBlob = contentFacet.getTempBlob(is, item.specifier.role.getMimeType())) {
+          TempBlob tempBlob = contentFacet.getTempBlob(is, item.specifier.role.getMimeType())) {
         contentFacet.findOrCreateMetadataAsset(tempBlob, assetPath);
       }
     }
@@ -143,13 +147,115 @@ public abstract class AptSnapshotFacetSupport
       }
     }
 
+    if (!aptFacet.isFlat()) {
+      // Add by-hash files using stored checksums from content attributes
+      result.addAll(fetchByHashPackageItems(result, aptFacet));
+    }
+
     return result;
+  }
+
+  /**
+   * Fetch by-hash files for package indexes using stored checksums
+   */
+  private List<SnapshotItem> fetchByHashPackageItems(
+      final List<SnapshotItem> packageItems,
+      final AptContentFacet aptFacet) throws IOException
+  {
+    List<SnapshotItem> byHashItems = new ArrayList<>();
+    for (SnapshotItem item : packageItems) {
+      // Only process package index files, not release files
+      if (isPackageIndexFile(item.specifier.role)) {
+        byHashItems.addAll(createByHashItems(item, aptFacet));
+      }
+    }
+
+    return byHashItems;
+  }
+
+  /**
+   * Check if the role represents a package index file
+   */
+  private static boolean isPackageIndexFile(final SnapshotItem.Role role) {
+    return role == SnapshotItem.Role.PACKAGE_INDEX_RAW ||
+        role == SnapshotItem.Role.PACKAGE_INDEX_GZ ||
+        role == SnapshotItem.Role.PACKAGE_INDEX_BZ2 ||
+        role == SnapshotItem.Role.PACKAGE_INDEX_XZ;
+  }
+
+  /**
+   * Create by-hash items for a package file using its stored checksums
+   */
+  private List<SnapshotItem> createByHashItems(
+      final SnapshotItem packageItem,
+      final AptContentFacet aptFacet) throws IOException
+  {
+    return Optional.ofNullable(packageItem.content)
+        .map(content -> content.getAttributes().get(Asset.class))
+        .filter(Asset::hasBlob)
+        .flatMap(Asset::blob)
+        .map(AssetBlob::checksums)
+        .filter(checksums -> !checksums.isEmpty())
+        .map(checksums -> {
+          try {
+            return fetchByHashItems(packageItem, aptFacet.getDistribution(), checksums);
+          }
+          catch (IOException e) {
+            log.warn("Failed to fetch by-hash items for: {}", packageItem.specifier.path,
+                log.isDebugEnabled() ? e : null);
+            return Collections.<SnapshotItem>emptyList();
+          }
+        })
+        .orElseGet(() -> {
+          log.debug("No checksums available for: {}", packageItem.specifier.path);
+          return Collections.emptyList();
+        });
+  }
+
+  private List<SnapshotItem> fetchByHashItems(
+      final SnapshotItem packageItem,
+      final String dist,
+      final Map<String, String> checksums) throws IOException
+  {
+    List<SnapshotItem> byHashItems = new ArrayList<>();
+    String component = packageItem.specifier.component;
+    String arch = packageItem.specifier.architecture;
+
+    if (component == null || arch == null) {
+      log.debug("Missing component or architecture metadata for: {}", packageItem.specifier.path);
+      return byHashItems;
+    }
+
+    List<ContentSpecifier> byHashSpecs = new ArrayList<>();
+    for (Map.Entry<String, String> entry : checksums.entrySet()) {
+      String algorithm = entry.getKey();
+      String hash = entry.getValue();
+
+      if (algorithm == null || StringUtils.isBlank(hash)) {
+        continue; // Skip invalid entries
+      }
+
+      ContentSpecifier byHashSpec =
+          AptFacetHelper.getByHashContentSpecifier(dist, component, arch, algorithm, hash, packageItem.specifier.role);
+      byHashSpecs.add(byHashSpec);
+    }
+
+    if (!byHashSpecs.isEmpty()) {
+      List<SnapshotItem> byHashFiles = fetchSnapshotItems(byHashSpecs);
+      byHashItems.addAll(byHashFiles);
+
+      if (!byHashFiles.isEmpty()) {
+        log.debug("Added {} by-hash files for {}", byHashFiles.size(), packageItem.specifier.path);
+      }
+    }
+
+    return byHashItems;
   }
 
   private String createAssetPath(final String id, final String path) {
     return "/snapshots/" + id + "/" + path;
   }
 
-  protected abstract List<SnapshotItem> fetchSnapshotItems(final List<SnapshotItem.ContentSpecifier> specs)
-      throws IOException;
+  protected abstract List<SnapshotItem> fetchSnapshotItems(
+      final List<SnapshotItem.ContentSpecifier> specs) throws IOException;
 }

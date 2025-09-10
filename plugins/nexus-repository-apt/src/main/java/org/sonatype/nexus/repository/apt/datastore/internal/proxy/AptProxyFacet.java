@@ -47,13 +47,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.DateUtils;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.joda.time.DateTime;
-
-import static com.google.common.base.Preconditions.checkState;
-import static org.sonatype.nexus.repository.apt.internal.ReleaseName.RELEASE;
-import static org.sonatype.nexus.repository.apt.debian.Utils.isDebPackageContentType;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import static com.google.common.base.Preconditions.checkState;
+import static org.sonatype.nexus.repository.apt.debian.Utils.isDebPackageContentType;
+import static org.sonatype.nexus.repository.apt.internal.ReleaseName.RELEASE;
 
 /**
  * The implementation of a logic specific to the proxy repository
@@ -134,7 +134,8 @@ public class AptProxyFacet
       contentAttrs.set(Content.CONTENT_LAST_MODIFIED, getDateHeader(response, HttpHeaders.LAST_MODIFIED));
       contentAttrs.set(Content.CONTENT_ETAG, getQuotedStringHeader(response, HttpHeaders.ETAG));
       contentAttrs.set(CacheInfo.class, cacheInfo);
-      Content storedContent = facet(AptContentFacet.class).put(spec.path, fetchedContent).download();
+      Content storedContent =
+          facet(AptContentFacet.class).put(spec.path, fetchedContent).markAsCached(fetchedContent).download();
       return Optional.of(new SnapshotItem(spec, storedContent));
     }
 

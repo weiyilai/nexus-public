@@ -52,10 +52,22 @@ public class SnapshotItem
 
     public final Role role;
 
+    public final String component;
+
+    public final String architecture;
+
     public ContentSpecifier(final String path, final Role role) {
-      super();
       this.path = path;
       this.role = role;
+      this.component = null;
+      this.architecture = null;
+    }
+
+    public ContentSpecifier(final String path, final Role role, final String component, final String architecture) {
+      this.path = path;
+      this.role = role;
+      this.component = component;
+      this.architecture = architecture;
     }
   }
 
