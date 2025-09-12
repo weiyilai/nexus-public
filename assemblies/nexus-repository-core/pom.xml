@@ -504,7 +504,6 @@
                        dest="${project.build.directory}/assembly"
                        overwrite="true">
                   <patternset>
-                    <exclude name="*/etc/jetty/nexus-web.xml"/>
                     <exclude name="*/lib/**"/>
                     <exclude name="sonatype-work/**"/>
                   </patternset>
