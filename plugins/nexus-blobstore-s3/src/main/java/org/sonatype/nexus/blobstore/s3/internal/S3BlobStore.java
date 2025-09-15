@@ -996,7 +996,7 @@ public class S3BlobStore
   }
 
   @Override
-  protected BlobAttributes loadBlobAttributes(final BlobId blobId) throws IOException {
+  public BlobAttributes loadBlobAttributes(final BlobId blobId) throws IOException {
     S3BlobAttributes blobAttributes = new S3BlobAttributes(s3, getConfiguredBucket(), attributePath(blobId));
     return blobAttributes.load() ? blobAttributes : null;
   }

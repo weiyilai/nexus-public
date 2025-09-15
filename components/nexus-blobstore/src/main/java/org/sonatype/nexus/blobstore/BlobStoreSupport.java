@@ -103,7 +103,7 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
 
   private static final int DEFAULT_MAX_RETRIES = 1;
 
-  private static final long DEFAULT_RETRY_DELAY_MS = 500;
+  private static final long DEFAULT_RETRY_DELAY_MS = 100;
 
   private int maxRetries;
 
@@ -128,18 +128,22 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
 
   protected abstract BlobAttributes loadBlobAttributes(final BlobId blobId) throws IOException;
 
-  protected Blob refreshBlob(final BlobSupport blob, final BlobId blobId, final boolean includeDeleted) {
+  public Blob refreshBlob(final BlobSupport blob, final BlobId blobId, final boolean includeDeleted) {
     Lock lock = blob.lock();
     try {
       if (blob.isStale()) {
         BlobAttributes blobAttributes = loadBlobAttributes(blobId);
         if (blobAttributes == null) {
-          log.warn("Attempt to access non-existent blob {}", blobId);
+          if (log.isDebugEnabled()) {
+            log.warn("Attempt to access non-existent blob {}", blobId);
+          }
           return null;
         }
 
         if (blobAttributes.isDeleted() && !includeDeleted) {
-          log.warn("Attempt to access soft-deleted blob {} ({})", blobId, blobAttributes);
+          if (log.isDebugEnabled()) {
+            log.warn("Attempt to access soft-deleted blob {} ({})", blobId, blobAttributes);
+          }
           return null;
         }
 
@@ -224,38 +228,66 @@ public abstract class BlobStoreSupport<T extends AttributesLocation>
   }
 
   private Blob getWithRetries(final BlobId blobId, final boolean includeDeleted) {
-    if (log.isDebugEnabled()) {
-      log.debug("Attempting to get blob {} (includeDeleted={}) with maxRetries={}, retryDelayMs={}",
-          blobId, includeDeleted, maxRetries, retryDelayMs);
+    // First attempt
+    Blob blob = doGet(blobId, includeDeleted);
+    if (blob != null) {
+      return blob;
     }
-    for (int attempt = 0; attempt < this.maxRetries; attempt++) {
-      Blob blob = doGet(blobId, includeDeleted);
-      if (blob != null) {
-        if (log.isDebugEnabled()) {
-          log.debug("Successfully retrieved blob {} on attempt {}", blobId, attempt + 1);
-        }
-        return blob;
-      }
 
-      if (log.isDebugEnabled()) {
-        log.debug("Failed to retrieve blob {} on attempt {}, retrying after {} ms", blobId, attempt + 1, retryDelayMs);
-      }
+    // Check if retries should be skipped for soft-deleted blobs
+    if (shouldSkipRetries(blobId, includeDeleted)) {
+      return null;
+    }
 
-      try {
-        log.warn("Thread interrupted while waiting to retry getting blob {}", blobId);
-        Thread.sleep(this.retryDelayMs);
-      }
-      catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
+    // Retry for non-deleted blobs or when includeDeleted is true
+    return retryGetBlob(blobId, includeDeleted);
+  }
+
+  private boolean shouldSkipRetries(final BlobId blobId, final boolean includeDeleted) {
+    return !includeDeleted && isBlobSoftDeleted(blobId);
+  }
+
+  private Blob retryGetBlob(final BlobId blobId, final boolean includeDeleted) {
+    for (int attempt = 1; attempt <= this.maxRetries; attempt++) {
+      log.debug("Failed to retrieve blob {} on attempt {}, retrying after {} ms", blobId, attempt, retryDelayMs);
+
+      if (sleepBetweenRetries(blobId)) {
         break;
       }
+
+      Blob blob = doGet(blobId, includeDeleted);
+      if (blob != null) {
+        return blob;
+      }
     }
 
-    if (log.isDebugEnabled()) {
-      log.debug("Failed to retrieve blob {} after {} attempts", blobId, maxRetries);
-    }
-
+    log.debug("Failed to retrieve blob {} after {} attempts", blobId, maxRetries);
     return null;
+  }
+
+  private boolean sleepBetweenRetries(final BlobId blobId) {
+    try {
+      Thread.sleep(this.retryDelayMs);
+      return false;
+    }
+    catch (InterruptedException e) {
+      if (log.isDebugEnabled()) {
+        log.warn("Thread interrupted while waiting to retry getting blob {}", blobId);
+      }
+      Thread.currentThread().interrupt();
+      return true;
+    }
+  }
+
+  private boolean isBlobSoftDeleted(final BlobId blobId) {
+    try {
+      BlobAttributes blobAttributes = loadBlobAttributes(blobId);
+      return blobAttributes != null && blobAttributes.isDeleted();
+    }
+    catch (IOException e) {
+      // If we can't load attributes, assume it's not just soft-deleted
+      return false;
+    }
   }
 
   protected final Blob doGet(final BlobId blobId, final boolean includeDeleted) {

@@ -72,6 +72,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.write;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
@@ -500,8 +501,8 @@ public class FileBlobStoreTest
 
   /**
    * This test guarantees we are returning unix-style paths for {@link BlobId}s returned by
-   * {@link FileBlobStore#getDirectPathBlobIdStream(String)}.
-   * This test would fail on Windows if {@link FileBlobStore#toBlobName(Path)} wasn't implemented correctly.
+   * {@link FileBlobStore#getDirectPathBlobIdStream(String)}. This test would fail on Windows if
+   * {@link FileBlobStore#toBlobName(Path)} wasn't implemented correctly.
    */
   @Test
   public void toBlobName() {
@@ -646,6 +647,12 @@ public class FileBlobStoreTest
         nodeAccess, dryRunPrefix, reconciliationLogger, 0L, blobStoreQuotaUsageChecker, fileBlobDeletionIndex));
 
     underTest.init(configuration);
+    try {
+      underTest.start();
+    }
+    catch (Exception e) {
+      throw new RuntimeException(e);
+    }
     underTest.setLiveBlobs(loadingCache);
     return underTest;
   }
@@ -689,7 +696,131 @@ public class FileBlobStoreTest
       super(root, blobIdLocationResolver, fileOperations, metrics, configuration, appDirs, nodeAccess, dryRunPrefix,
           reconciliationLogger, blobStoreQuota, blobStoreQuotaUsageChecker, fileBlobDeletionIndex);
     }
-
   }
 
+  @Test
+  public void testGet_RetriesForSoftDeletedBlobWhenIncludeDeletedIsTrue() {
+    // Given
+    BlobId blobId = new BlobId("soft-deleted-blob");
+
+    // Mock a stale blob that fails refresh on first attempt, then succeeds
+    FileBlobStore.FileBlob staleBlob = mock(FileBlobStore.FileBlob.class);
+    when(staleBlob.isStale()).thenReturn(true);
+
+    // Mock a fresh blob that succeeds
+    FileBlobStore.FileBlob freshBlob = mock(FileBlobStore.FileBlob.class);
+    when(freshBlob.isStale()).thenReturn(false);
+    BlobMetrics mockMetrics = mock(BlobMetrics.class);
+    when(freshBlob.getMetrics()).thenReturn(mockMetrics);
+
+    when(loadingCache.getUnchecked(blobId))
+        .thenReturn(staleBlob)
+        .thenReturn(freshBlob);
+
+    // Create spy and set up retry configuration and cache
+    FileBlobStore spyUnderTest = spy(underTest);
+    spyUnderTest.setRetryConfiguration(2, 50);
+
+    // Mock refreshBlob to return null on first attempt (failure), then fresh blob (success)
+    doReturn(null, freshBlob).when(spyUnderTest).refreshBlob(staleBlob, blobId, true);
+
+    spyUnderTest.setLiveBlobs(loadingCache);
+
+    // When - includeDeleted is true, so it should retry even for soft-deleted blobs
+    Blob result = spyUnderTest.get(blobId, true);
+
+    // Then
+    assertThat(result, is(freshBlob));
+    verify(loadingCache, times(2)).getUnchecked(blobId);
+  }
+
+  @Test
+  public void testGet_ExhaustsAllRetries() {
+    // Given
+    underTest.setRetryConfiguration(3, 25);
+    BlobId blobId = new BlobId("exhausted-retry-blob");
+
+    // Mock a stale blob that consistently fails to refresh
+    FileBlobStore.FileBlob staleBlob = mock(FileBlobStore.FileBlob.class);
+    when(staleBlob.isStale()).thenReturn(true);
+
+    when(loadingCache.getUnchecked(blobId)).thenReturn(staleBlob);
+
+    // Mock the refresh operation to always return null (simulating persistent failure)
+    FileBlobStore spyUnderTest = spy(underTest);
+    doReturn(null).when(spyUnderTest).refreshBlob(staleBlob, blobId, false);
+
+    // Set the mocked cache on the spy
+    spyUnderTest.setLiveBlobs(loadingCache);
+
+    // When - all attempts return null, should exhaust retries
+    Blob result = spyUnderTest.get(blobId, false);
+
+    // Then
+    assertThat(result, is(nullValue()));
+    verify(loadingCache, times(4)).getUnchecked(blobId);
+  }
+
+  @Test
+  public void testGet_IOExceptionDuringBlobAttributesLoad() {
+    // Given
+    BlobId blobId = new BlobId("io-exception-blob");
+
+    // Mock a stale blob that fails refresh on first attempt, then succeeds
+    FileBlobStore.FileBlob staleBlob = mock(FileBlobStore.FileBlob.class);
+    when(staleBlob.isStale()).thenReturn(true);
+
+    // Mock a fresh blob that succeeds
+    FileBlobStore.FileBlob freshBlob = mock(FileBlobStore.FileBlob.class);
+    when(freshBlob.isStale()).thenReturn(false);
+    BlobMetrics mockMetrics = mock(BlobMetrics.class);
+    when(freshBlob.getMetrics()).thenReturn(mockMetrics);
+
+    when(loadingCache.getUnchecked(blobId))
+        .thenReturn(staleBlob)
+        .thenReturn(freshBlob);
+
+    // Create spy and set up retry configuration and cache
+    FileBlobStore spyUnderTest = spy(underTest);
+    spyUnderTest.setRetryConfiguration(2, 50);
+
+    // Mock refreshBlob to return null on first attempt (failure), then fresh blob (success)
+    doReturn(null, freshBlob).when(spyUnderTest).refreshBlob(staleBlob, blobId, false);
+
+    spyUnderTest.setLiveBlobs(loadingCache);
+
+    // When - IOException during attribute loading should trigger retries
+    Blob result = spyUnderTest.get(blobId, false);
+
+    // Then - should retry since IOException means we can't determine if it's soft-deleted
+    assertThat(result, is(freshBlob));
+    verify(loadingCache, times(2)).getUnchecked(blobId);
+  }
+
+  @Test
+  public void testGet_FirstAttemptSucceedsNoRetries() {
+    // Given
+    BlobId blobId = new BlobId("first-success-blob");
+
+    // Mock a non-stale blob that will succeed immediately
+    FileBlobStore.FileBlob fileBlob = mock(FileBlobStore.FileBlob.class);
+    when(fileBlob.isStale()).thenReturn(false);
+    BlobMetrics mockMetrics = mock(BlobMetrics.class);
+    when(fileBlob.getMetrics()).thenReturn(mockMetrics);
+
+    final LoadingCache<BlobId, org.sonatype.nexus.blobstore.BlobSupport> liveBlobsMock = mock(LoadingCache.class);
+    when(liveBlobsMock.getUnchecked(blobId)).thenReturn(fileBlob);
+
+    // Create spy and set up retry configuration and cache
+    FileBlobStore spyUnderTest = spy(underTest);
+    spyUnderTest.setRetryConfiguration(2, 100);
+    spyUnderTest.setLiveBlobs(liveBlobsMock);
+
+    // When
+    Blob result = spyUnderTest.get(blobId, false);
+
+    // Then - should succeed immediately without any retries
+    assertThat(result, is(fileBlob));
+    verify(liveBlobsMock, times(1)).getUnchecked(blobId);
+  }
 }
