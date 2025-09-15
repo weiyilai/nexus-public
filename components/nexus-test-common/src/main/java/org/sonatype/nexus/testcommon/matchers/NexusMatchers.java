@@ -18,13 +18,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.hamcrest.TypeSafeMatcher;
 import org.joda.time.DateTime;
+import org.slf4j.event.Level;
 
 import static org.hamcrest.Matchers.contains;
+import static org.sonatype.nexus.testcommon.extensions.LoggingExtension.convert;
 
 public class NexusMatchers
 {
@@ -60,6 +63,48 @@ public class NexusMatchers
       @Override
       protected boolean matchesSafely(final OffsetDateTime item) {
         return dateTime.isEqual(item);
+      }
+    };
+  }
+
+  /**
+   * Matches {@link ILoggingEvent} instances with the provided {@link Level}
+   *
+   * @param level the logging level to match events with
+   */
+  public static Matcher<ILoggingEvent> logLevel(final Level level) {
+    return new TypeSafeMatcher<ILoggingEvent>()
+    {
+      @Override
+      public void describeTo(final Description description) {
+        description.appendText("an log event with level ").appendText(" ").appendValue(level.toString());
+      }
+
+      @Override
+      protected boolean matchesSafely(final ILoggingEvent item) {
+        return convert(level).equals(item.getLevel());
+      }
+    };
+  }
+
+  /**
+   * Matches {@link ILoggingEvent} instances messages with the provided {@link Matcher<String>}
+   *
+   * @param messageMatcher the matcher to match the logging event's message with
+   */
+  public static Matcher<ILoggingEvent> logMessage(final Matcher<String> messageMatcher) {
+    return new TypeSafeMatcher<ILoggingEvent>()
+    {
+      @Override
+      public void describeTo(final Description description) {
+        description.appendText("an log event with message matching ")
+            .appendText(" ")
+            .appendDescriptionOf(messageMatcher);
+      }
+
+      @Override
+      protected boolean matchesSafely(final ILoggingEvent item) {
+        return messageMatcher.matches(item.getMessage());
       }
     };
   }
