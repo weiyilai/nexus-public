@@ -17,20 +17,21 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
+import java.util.Objects;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.mime.MimeSupport;
 import org.sonatype.nexus.webresources.FileWebResource;
 import org.sonatype.nexus.webresources.WebResource;
+import org.sonatype.nexus.webresources.WebResourceBundle;
 import org.sonatype.nexus.webresources.WebResourceService;
 
 import com.google.common.collect.Maps;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import org.springframework.stereotype.Component;
 
 /**
  * Default {@link WebResourceService} implementation.
@@ -52,11 +53,21 @@ public class WebResourceServiceImpl
   @Inject
   public WebResourceServiceImpl(
       final DevModeResources devModeResources,
-      final MimeSupport mimeSupport)
+      final MimeSupport mimeSupport,
+      final List<WebResourceBundle> bundles,
+      final List<WebResource> resources)
   {
     this.devModeResources = checkNotNull(devModeResources);
     this.mimeSupport = checkNotNull(mimeSupport);
     this.resourcePaths = Maps.newHashMap();
+
+    bundles.stream()
+        .map(WebResourceBundle::getResources)
+        .flatMap(Collection::stream)
+        .filter(Objects::nonNull)
+        .forEach(this::addResource);
+
+    resources.forEach(this::addResource);
 
     // make it clear we have DEV mode enabled
     List<File> locations = devModeResources.getResourceLocations();

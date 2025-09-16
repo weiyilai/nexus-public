@@ -18,11 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
 import org.sonatype.nexus.common.app.ApplicationVersion;
-import org.sonatype.nexus.rest.Component;
 import org.sonatype.nexus.rest.Resource;
 import org.sonatype.nexus.swagger.SwaggerContributor;
 
@@ -35,6 +31,10 @@ import io.swagger.models.Info;
 import io.swagger.models.Model;
 import io.swagger.models.Swagger;
 import io.swagger.models.properties.Property;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -46,7 +46,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @org.springframework.stereotype.Component
 @Singleton
 public class SwaggerModel
-    implements Component
 {
   private final ApplicationVersion applicationVersion;
 
@@ -68,7 +67,17 @@ public class SwaggerModel
     this.reader = new Reader(createSwagger());
   }
 
-  public void scan(final Class<Resource> resourceClass) {
+  @EventListener
+  public void on(final ContextRefreshedEvent event) {
+    event.getApplicationContext()
+        .getBeansOfType(Resource.class)
+        .values()
+        .stream()
+        .map(Resource::getClass)
+        .forEach(this::scan);
+  }
+
+  private void scan(final Class<? extends Resource> resourceClass) {
     reader.read(resourceClass);
     contributors.forEach(c -> c.contribute(getSwagger()));
   }
@@ -115,4 +124,5 @@ public class SwaggerModel
       return null;
     }
   }
+
 }

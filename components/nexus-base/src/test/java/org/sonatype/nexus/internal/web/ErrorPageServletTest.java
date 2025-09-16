@@ -12,6 +12,7 @@
  */
 package org.sonatype.nexus.internal.web;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.sonatype.goodies.common.Time;
@@ -71,7 +72,8 @@ public class ErrorPageServletTest
 
     ServletContextHandler context = new ServletContextHandler();
     context.addServlet(new ServletHolder(new ErrorPageServlet(templateHelper, xFrameOptions)), "/error.html");
-    WebResourceServiceImpl webResources = new WebResourceServiceImpl(new DevModeResources(), new DefaultMimeSupport());
+    WebResourceServiceImpl webResources =
+        new WebResourceServiceImpl(new DevModeResources(), new DefaultMimeSupport(), List.of(), List.of());
     context.addServlet(
         new ServletHolder(new WebResourceServlet(webResources, xFrameOptions, new Time(10, TimeUnit.DAYS))), "/bad/*");
 

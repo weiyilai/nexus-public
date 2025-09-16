@@ -13,9 +13,16 @@
 package org.sonatype.nexus.bootstrap.metrics;
 
 import java.lang.management.ManagementFactory;
+import java.util.List;
 
+import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.QualifierUtil;
+import org.sonatype.nexus.systemchecks.ConditionallyAppliedHealthCheck;
+
+import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SharedMetricRegistries;
+import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.codahale.metrics.jvm.BufferPoolMetricSet;
 import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
@@ -32,11 +39,12 @@ import static com.codahale.metrics.MetricRegistry.name;
 
 @Configuration
 public class MetricsConfiguration
+    extends ComponentSupport
 {
   @Primary
   @Qualifier("nexus")
   @Bean
-  public MetricRegistry nexusMetricRegistry() {
+  public MetricRegistry nexusMetricRegistry(final List<Metric> metrics) {
     MetricRegistry registry = SharedMetricRegistries.getOrCreate("nexus");
     registry.register(name("jvm", "vm"), new JvmAttributeGaugeSet());
     registry.register(name("jvm", "memory"), new MemoryUsageGaugeSet());
@@ -45,11 +53,35 @@ public class MetricsConfiguration
     registry.register(name("jvm", "thread-states"), new ThreadStatesGaugeSet());
     registry.register(name("jvm", "garbage-collectors"), new GarbageCollectorMetricSet());
 
+    for (Metric metric : metrics) {
+      // Avoid adding registry to itself
+      if (!(metric instanceof MetricRegistry)) {
+        log.debug("Registering: {}", metric);
+        String name = QualifierUtil.value(metric)
+            .orElseGet(metric.getClass()::getName);
+        registry.register(name, metric);
+      }
+    }
+
     return registry;
   }
 
   @Bean
-  public HealthCheckRegistry healthCheckRegistry() {
-    return new HealthCheckRegistry();
+  public HealthCheckRegistry healthCheckRegistry(final List<HealthCheck> healthChecks) {
+    HealthCheckRegistry registry = new HealthCheckRegistry();
+
+    for (HealthCheck healthCheck : healthChecks) {
+      String name = QualifierUtil.value(healthCheck)
+          .orElseGet(healthCheck.getClass()::getName);
+      if (healthCheck instanceof ConditionallyAppliedHealthCheck) {
+        log.debug("Delay Registry of {} Until Conditional Registration", name);
+      }
+      else {
+        log.debug("Registering: {}", healthCheck);
+        registry.register(name, healthCheck);
+      }
+    }
+
+    return registry;
   }
 }
