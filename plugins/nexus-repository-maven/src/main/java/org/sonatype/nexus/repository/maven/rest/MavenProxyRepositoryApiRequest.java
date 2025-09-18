@@ -15,6 +15,7 @@ package org.sonatype.nexus.repository.maven.rest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import org.sonatype.nexus.repository.maven.api.MavenAttributes;
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.repository.rest.api.model.CleanupPolicyAttributes;
@@ -55,10 +56,10 @@ public class MavenProxyRepositoryApiRequest
       @JsonProperty("proxy") final ProxyAttributes proxy,
       @JsonProperty("negativeCache") final NegativeCacheAttributes negativeCache,
       @JsonProperty("httpClient") final HttpClientAttributesWithPreemptiveAuth httpClient,
-      @JsonProperty("routingRule") final String routingRule,
+      @JsonProperty("routingRule") @JsonAlias("routingRuleName") final String routingRule,
       @JsonProperty("maven") final MavenAttributes maven,
-      @JsonProperty("replication") @JsonInclude(value = Include.NON_EMPTY, content = Include.NON_NULL)
-      final ReplicationAttributes replication)
+      @JsonProperty("replication") @JsonInclude(value = Include.NON_EMPTY,
+          content = Include.NON_NULL) final ReplicationAttributes replication)
   {
     super(name, Maven2Format.NAME, online, storage, cleanup, proxy, negativeCache, httpClient, routingRule,
         replication);

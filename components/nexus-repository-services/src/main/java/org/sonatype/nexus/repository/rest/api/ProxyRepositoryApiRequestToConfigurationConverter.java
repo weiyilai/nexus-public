@@ -36,6 +36,8 @@ import static org.sonatype.nexus.httpclient.HttpSchemes.HTTPS;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.BLOB_STORE_NAME;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STORAGE;
 import static org.sonatype.nexus.repository.config.ConfigurationConstants.STRICT_CONTENT_TYPE_VALIDATION;
+
+import org.sonatype.nexus.rest.ValidationErrorsException;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -159,6 +161,10 @@ public class ProxyRepositoryApiRequestToConfigurationConverter<T extends ProxyRe
       RoutingRule routingRule = routingRuleStore.getByName(routingRuleName);
       if (nonNull(routingRule)) {
         configuration.setRoutingRuleId(routingRule.id());
+      }
+      else {
+        String errorMessage = String.format("Routing rule '%s' does not exist.", routingRuleName);
+        throw new ValidationErrorsException("routingRule", errorMessage);
       }
     }
   }

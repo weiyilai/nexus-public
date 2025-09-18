@@ -15,6 +15,7 @@ package org.sonatype.nexus.repository.apt.rest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import org.sonatype.nexus.repository.apt.AptFormat;
 import org.sonatype.nexus.repository.rest.api.model.ProxyRepositoryApiRequest;
 import org.sonatype.nexus.repository.rest.api.model.CleanupPolicyAttributes;
@@ -52,9 +53,9 @@ public class AptProxyRepositoryApiRequest
       @JsonProperty("proxy") final ProxyAttributes proxy,
       @JsonProperty("negativeCache") final NegativeCacheAttributes negativeCache,
       @JsonProperty("httpClient") final HttpClientAttributes httpClient,
-      @JsonProperty("routingRule") final String routingRule,
-      @JsonProperty("replication") @JsonInclude(value= Include.NON_EMPTY, content=Include.NON_NULL)
-      final ReplicationAttributes replication)
+      @JsonProperty("routingRule") @JsonAlias("routingRuleName") final String routingRule,
+      @JsonProperty("replication") @JsonInclude(value = Include.NON_EMPTY,
+          content = Include.NON_NULL) final ReplicationAttributes replication)
   {
     super(name, AptFormat.NAME, online, storage, cleanup, proxy, negativeCache, httpClient, routingRule, replication);
     this.apt = apt;

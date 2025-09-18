@@ -12,6 +12,7 @@
  */
 package org.sonatype.nexus.repository.raw.rest;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import org.sonatype.nexus.repository.raw.internal.RawFormat;
 import org.sonatype.nexus.repository.rest.api.model.CleanupPolicyAttributes;
 import org.sonatype.nexus.repository.rest.api.model.HttpClientAttributes;
@@ -46,12 +47,12 @@ public class RawProxyRepositoryApiRequest
       @JsonProperty("storage") final StorageAttributes storage,
       @JsonProperty("cleanup") final CleanupPolicyAttributes cleanup,
       @JsonProperty("proxy") final ProxyAttributes proxy,
-      @JsonProperty("negativeCache")  final NegativeCacheAttributes negativeCache,
+      @JsonProperty("negativeCache") final NegativeCacheAttributes negativeCache,
       @JsonProperty("httpClient") final HttpClientAttributes httpClient,
-      @JsonProperty("routingRule") final String routingRule,
+      @JsonProperty("routingRule") @JsonAlias("routingRuleName") final String routingRule,
       @JsonProperty("raw") final RawAttributes raw,
-      @JsonProperty("replication") @JsonInclude(value= Include.NON_EMPTY, content=Include.NON_NULL)
-      final ReplicationAttributes replication)
+      @JsonProperty("replication") @JsonInclude(value = Include.NON_EMPTY,
+          content = Include.NON_NULL) final ReplicationAttributes replication)
   {
     super(name, RawFormat.NAME, online, storage, cleanup, proxy, negativeCache, httpClient, routingRule, replication);
     this.raw = raw != null ? raw : new RawAttributes(ATTACHMENT);

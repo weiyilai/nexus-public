@@ -15,6 +15,7 @@ package org.sonatype.nexus.repository.rest.api.model;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import org.sonatype.nexus.repository.types.ProxyType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -62,9 +63,9 @@ public class ProxyRepositoryApiRequest
       @JsonProperty("proxy") final ProxyAttributes proxy,
       @JsonProperty("negativeCache") final NegativeCacheAttributes negativeCache,
       @JsonProperty("httpClient") final HttpClientAttributes httpClient,
-      @JsonProperty("routingRule") final String routingRule,
-      @JsonProperty("replication") @JsonInclude(value= Include.NON_EMPTY, content=Include.NON_NULL)
-      final ReplicationAttributes replication)
+      @JsonProperty("routingRule") @JsonAlias("routingRuleName") final String routingRule,
+      @JsonProperty("replication") @JsonInclude(value = Include.NON_EMPTY,
+          content = Include.NON_NULL) final ReplicationAttributes replication)
   {
     super(name, format, ProxyType.NAME, online);
     this.storage = storage;
@@ -100,6 +101,8 @@ public class ProxyRepositoryApiRequest
     return routingRule;
   }
 
-  public ReplicationAttributes getReplication() { return replication; }
+  public ReplicationAttributes getReplication() {
+    return replication;
+  }
 
 }
