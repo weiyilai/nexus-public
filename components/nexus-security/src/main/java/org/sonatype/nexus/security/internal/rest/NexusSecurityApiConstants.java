@@ -43,6 +43,8 @@ public final class NexusSecurityApiConstants
 
   public static final String USER_NOT_FOUND = "User not found in the system.";
 
+  public static final String SUCCESS = "Success";
+
   public static final String USER_OR_SOURCE_NOT_FOUND = "User or user source not found in the system.";
 
   public static final String PRIVILEGE_MISCONFIGURED = "Privilege object not configured properly.";

@@ -47,7 +47,8 @@ public interface UserApiResourceDoc
   @ApiOperation("Update an existing user.")
   @ApiResponses(value = {@ApiResponse(code = 400, message = PASSWORD_REQUIRED),
       @ApiResponse(code = 403, message = NexusSecurityApiConstants.INVALID_PERMISSIONS),
-      @ApiResponse(code = 404, message = NexusSecurityApiConstants.USER_OR_SOURCE_NOT_FOUND)})
+      @ApiResponse(code = 404, message = NexusSecurityApiConstants.USER_OR_SOURCE_NOT_FOUND),
+      @ApiResponse(code = 204, message = NexusSecurityApiConstants.SUCCESS)})
   void updateUser(
       @ApiParam(value = USER_ID_DESCRIPTION) String userId,
       @ApiParam("A representation of the user to update.") @NotNull @Valid ApiUser user);
@@ -55,7 +56,8 @@ public interface UserApiResourceDoc
   @ApiOperation("Change a user's password.")
   @ApiResponses(value = {@ApiResponse(code = 400, message = PASSWORD_REQUIRED),
       @ApiResponse(code = 403, message = NexusSecurityApiConstants.INVALID_PERMISSIONS),
-      @ApiResponse(code = 404, message = NexusSecurityApiConstants.USER_NOT_FOUND)})
+      @ApiResponse(code = 404, message = NexusSecurityApiConstants.USER_NOT_FOUND),
+      @ApiResponse(code = 204, message = NexusSecurityApiConstants.SUCCESS)})
   void changePassword(
       @ApiParam(value = USER_ID_DESCRIPTION) String userId,
       @ApiParam(value = PASSWORD_DESCRIPTION) @NotNull(message = "Password must be supplied.") String password);
