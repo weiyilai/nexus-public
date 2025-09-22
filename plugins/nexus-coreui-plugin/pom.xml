@@ -131,6 +131,39 @@
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-react-sources</id>
+            <phase>package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <zip destfile="${project.build.directory}/${project.artifactId}-${project.version}-sources.jar"
+                     update="true">
+                  <zipfileset dir="${project.basedir}/src/frontend" prefix="${project.artifactId}/src/frontend"/>
+                  <zipfileset dir="${project.basedir}/src/art" prefix="${project.artifactId}/src/art"/>
+                  <zipfileset dir="${project.basedir}" includes=".swcrc" prefix="${project.artifactId}"/>
+                  <zipfileset dir="${project.basedir}" includes="rspack*.js" prefix="${project.artifactId}"/>
+                  <zipfileset dir="${project.basedir}" includes="package.json" prefix="${project.artifactId}"/>
+                  <!-- Include yarn lock from root for building -->
+                  <zipfileset dir="${project.basedir}/../../" includes="yarn.lock" prefix="${project.artifactId}/"/>
+                </zip>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
         <groupId>org.sonatype.nexus.buildsupport</groupId>
         <artifactId>extjs-maven-plugin</artifactId>
         <configuration>
