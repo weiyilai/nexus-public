@@ -100,7 +100,7 @@ Ext.define('NX.coreui.view.user.UserSettingsForm', {
       },
       {
         xtype: 'displayfield',
-        name: 'appliedDefultRole',
+        name: 'appliedDefaultRole',
         value: me.defaultRoleName(),
         fieldLabel: NX.I18n.get('User_UserSettingsForm_DefaultRole_FieldLabel'),
         labelSeparator: '',
