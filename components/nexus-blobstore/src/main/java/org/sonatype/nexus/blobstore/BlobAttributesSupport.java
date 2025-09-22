@@ -157,7 +157,9 @@ public abstract class BlobAttributesSupport<T extends Properties>
     if (blobMetrics.getLastDownloaded() != null) {
       properties.setProperty(LAST_DOWNLOADED_ATTRIBUTE, blobMetrics.getLastDownloaded().toString());
     }
-
+    if (originalLocation != null) {
+      properties.put(ORIGINAL_LOCATION_ATTRIBUTE, originalLocation);
+    }
     if (deleted) {
       properties.put(DELETED_ATTRIBUTE, Boolean.toString(deleted));
       properties.put(DELETED_REASON_ATTRIBUTE, getDeletedReason());
@@ -166,9 +168,6 @@ public abstract class BlobAttributesSupport<T extends Properties>
       }
       if (softDeletedLocation != null) {
         properties.put(SOFT_DELETED_LOCATION_ATTRIBUTE, softDeletedLocation);
-      }
-      if (originalLocation != null) {
-        properties.put(ORIGINAL_LOCATION_ATTRIBUTE, originalLocation);
       }
     }
     else {

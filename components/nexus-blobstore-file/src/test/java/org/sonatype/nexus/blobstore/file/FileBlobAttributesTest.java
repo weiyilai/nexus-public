@@ -91,6 +91,21 @@ public class FileBlobAttributesTest
     assertThat(properties.remove("deleted"), is("true"));
     assertThat(properties.remove("deletedReason"), is("Spring cleaning"));
     assertThat(properties.keySet(), is(empty()));
+
+    original.setOriginalLocation(path.toString());
+    original.store();
+
+    try (FileReader reader = new FileReader(original.getPath().toFile())) {
+      properties.load(reader);
+    }
+
+    assertThat(properties.remove("@hello"), is("world"));
+    assertThat(properties.remove("creationTime"), is("987654321"));
+    assertThat(properties.remove("sha1"), is("0123456789ABCDEF"));
+    assertThat(properties.remove("size"), is("42"));
+    assertThat(properties.remove("deleted"), is("true"));
+    assertThat(properties.remove("deletedReason"), is("Spring cleaning"));
+    assertThat(properties.remove("originalLocation"), is(path.toString()));
   }
 
   @Test
