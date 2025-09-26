@@ -12,7 +12,9 @@
  */
 package org.sonatype.nexus.content.raw;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -20,6 +22,7 @@ import java.util.Set;
 
 import org.sonatype.nexus.repository.content.fluent.FluentBlobs;
 import org.sonatype.nexus.repository.importtask.ImportFileConfiguration;
+import org.sonatype.nexus.repository.importtask.ImportStreamConfiguration;
 import org.sonatype.nexus.repository.raw.RawUploadHandlerTestSupport;
 import org.sonatype.nexus.repository.rest.UploadDefinitionExtension;
 import org.sonatype.nexus.repository.security.ContentPermissionChecker;
@@ -64,9 +67,10 @@ public class RawUploadHandlerTest
   TempBlob tempBlob;
 
   @Override
-  protected UploadHandler newRawUploadHandler(final ContentPermissionChecker contentPermissionChecker,
-                                              final VariableResolverAdapter variableResolverAdapter,
-                                              final Set<UploadDefinitionExtension> uploadDefinitionExtensions)
+  protected UploadHandler newRawUploadHandler(
+      final ContentPermissionChecker contentPermissionChecker,
+      final VariableResolverAdapter variableResolverAdapter,
+      final Set<UploadDefinitionExtension> uploadDefinitionExtensions)
   {
     return new RawUploadHandler(contentPermissionChecker, variableResolverAdapter, uploadDefinitionExtensions);
   }
@@ -123,15 +127,137 @@ public class RawUploadHandlerTest
 
     when(blobs.ingest(eq(contentPath), any(), any(), eq(true))).thenReturn(tempBlob);
 
-    Content importResponse = underTest.handle(new ImportFileConfiguration(repository, contentPath.toFile(), path, true));
+    Content importResponse =
+        underTest.handle(new ImportFileConfiguration(repository, contentPath.toFile(), path, true));
 
     verify(rawFacet).put(eq(path), any(TempBlobPayload.class));
     assertThat(importResponse, is(content));
   }
 
+  @Test
+  public void testHandleStreamImport() throws IOException {
+    String assetName = "test.jar";
+    String testContent = "test content for stream import";
+    InputStream inputStream = new ByteArrayInputStream(testContent.getBytes());
+
+    Content content = mock(Content.class);
+    when(rawFacet.put(eq(assetName), any(TempBlobPayload.class))).thenReturn(content);
+    when(blobs.ingest(eq(inputStream), any(), any())).thenReturn(tempBlob);
+
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+    Content importResponse = underTest.handle(configuration);
+
+    verify(rawFacet).put(eq(assetName), any(TempBlobPayload.class));
+    assertThat(importResponse, is(content));
+  }
+
+  @Test
+  public void testHandleStreamImportWithJarFile() throws IOException {
+    String assetName = "example-1.0.0.jar";
+    String testContent = "jar file content";
+    InputStream inputStream = new ByteArrayInputStream(testContent.getBytes());
+
+    Content content = mock(Content.class);
+    when(rawFacet.put(eq(assetName), any(TempBlobPayload.class))).thenReturn(content);
+    when(blobs.ingest(eq(inputStream), any(), any())).thenReturn(tempBlob);
+
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+    Content importResponse = underTest.handle(configuration);
+
+    verify(rawFacet).put(eq(assetName), any(TempBlobPayload.class));
+    assertThat(importResponse, is(content));
+  }
+
+  @Test
+  public void testHandleStreamImportWithTextFile() throws IOException {
+    String assetName = "readme.txt";
+    String testContent = "This is a text file";
+    InputStream inputStream = new ByteArrayInputStream(testContent.getBytes());
+
+    Content content = mock(Content.class);
+    when(rawFacet.put(eq(assetName), any(TempBlobPayload.class))).thenReturn(content);
+    when(blobs.ingest(eq(inputStream), any(), any())).thenReturn(tempBlob);
+
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+    Content importResponse = underTest.handle(configuration);
+
+    verify(rawFacet).put(eq(assetName), any(TempBlobPayload.class));
+    assertThat(importResponse, is(content));
+  }
+
+  @Test
+  public void testHandleStreamImportWithBinaryFile() throws IOException {
+    String assetName = "image.png";
+    byte[] binaryContent = {(byte) 0x89, 0x50, 0x4E, 0x47}; // PNG signature
+    InputStream inputStream = new ByteArrayInputStream(binaryContent);
+
+    Content content = mock(Content.class);
+    when(rawFacet.put(eq(assetName), any(TempBlobPayload.class))).thenReturn(content);
+    when(blobs.ingest(eq(inputStream), any(), any())).thenReturn(tempBlob);
+
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+    Content importResponse = underTest.handle(configuration);
+
+    verify(rawFacet).put(eq(assetName), any(TempBlobPayload.class));
+    assertThat(importResponse, is(content));
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void testHandleStreamImportWithNullConfiguration() throws IOException {
+    underTest.handle((ImportStreamConfiguration) null);
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void testHandleStreamImportWithNullInputStream() throws IOException {
+    String assetName = "test.txt";
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, null, assetName);
+    underTest.handle(configuration);
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void testHandleStreamImportWithNullAssetName() throws IOException {
+    InputStream inputStream = new ByteArrayInputStream("test".getBytes());
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, null);
+    underTest.handle(configuration);
+  }
+
+  @Test
+  public void testDetermineContentTypeFromPath() throws IOException {
+    // Test the content type determination method through stream import
+    String[] testCases = {
+        "test.jar",
+        "document.pdf",
+        "image.png",
+        "archive.zip",
+        "script.sh",
+        "data.xml",
+        "unknown.xyz"
+    };
+
+    for (String assetName : testCases) {
+      InputStream inputStream = new ByteArrayInputStream("test content".getBytes());
+      Content content = mock(Content.class);
+
+      when(rawFacet.put(eq(assetName), any(TempBlobPayload.class))).thenReturn(content);
+      when(blobs.ingest(eq(inputStream), any(), any())).thenReturn(tempBlob);
+
+      ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+      Content importResponse = underTest.handle(configuration);
+
+      verify(rawFacet).put(eq(assetName), any(TempBlobPayload.class));
+      assertThat(importResponse, is(content));
+
+      reset(rawFacet, blobs);
+      when(repository.facet(RawContentFacet.class)).thenReturn(rawFacet);
+      when(rawFacet.blobs()).thenReturn(blobs);
+    }
+  }
+
   @Override
-  protected void testNormalizePath(final String directory, final String file, final String expectedPath)
-      throws IOException
+  protected void testNormalizePath(
+      final String directory,
+      final String file,
+      final String expectedPath) throws IOException
   {
     reset(rawFacet);
     ComponentUpload component = new ComponentUpload();

@@ -12,9 +12,12 @@
  */
 package org.sonatype.nexus.repository.content.rest.internal.resources;
 
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.entity.Continuation;
@@ -36,7 +39,7 @@ import static org.sonatype.nexus.repository.content.store.InternalIds.toInternal
  *
  * @since 3.27
  */
-abstract class AssetsResourceSupport
+public abstract class AssetsResourceSupport
     extends ComponentSupport
 {
   /**
@@ -44,9 +47,11 @@ abstract class AssetsResourceSupport
    */
   protected static final int PAGE_SIZE_LIMIT = 100;
 
+  protected static final int INCREASED_PAGE_SIZE_LIMIT = 5000;
+
   private final ContentAuthHelper contentAuthHelper;
 
-  AssetsResourceSupport(final ContentAuthHelper contentAuthHelper) {
+  public AssetsResourceSupport(final ContentAuthHelper contentAuthHelper) {
     this.contentAuthHelper = checkNotNull(contentAuthHelper);
   }
 
@@ -62,13 +67,94 @@ abstract class AssetsResourceSupport
     return trim(permittedAssets, PAGE_SIZE_LIMIT);
   }
 
+  public List<FluentAsset> browseEager(
+      final Repository repository,
+      final String continuationToken)
+  {
+    return browseEager(repository, continuationToken, PAGE_SIZE_LIMIT, null, null);
+  }
+
+  public List<FluentAsset> browseEager(
+      final Repository repository,
+      final String continuationToken,
+      final int pageSize,
+      @Nullable final String newerThan,
+      @Nullable final String olderThan)
+  {
+
+    // Parse timestamps if provided
+    OffsetDateTime olderThanTimestamp = parseTimestamp(olderThan);
+    OffsetDateTime newerThanTimestamp = parseTimestamp(newerThan);
+
+    List<FluentAsset> permittedAssets = new ArrayList<>();
+    String internalToken = toInternalToken(continuationToken);
+    Continuation<FluentAsset> assetContinuation =
+        getAssetsEager(repository, internalToken, PAGE_SIZE_LIMIT, newerThanTimestamp, olderThanTimestamp);
+
+    while (permittedAssets.size() < PAGE_SIZE_LIMIT && !assetContinuation.isEmpty()) {
+      permittedAssets.addAll(removeAssetsNotPermitted(repository, assetContinuation));
+      assetContinuation = getAssetsEager(repository, assetContinuation.nextContinuationToken(), PAGE_SIZE_LIMIT,
+          newerThanTimestamp, olderThanTimestamp);
+    }
+    return trim(permittedAssets, PAGE_SIZE_LIMIT);
+  }
+
   private Continuation<FluentAsset> getAssets(Repository repository, final String continuationToken) {
     // helper for users, if they query by group chances are they want the list of member content
     if (GroupType.NAME.equals(repository.getType().getValue())) {
-      return repository.facet(ContentFacet.class).assets().withOnlyGroupMemberContent()
+      return repository.facet(ContentFacet.class)
+          .assets()
+          .withOnlyGroupMemberContent()
           .browse(PAGE_SIZE_LIMIT, continuationToken);
     }
     return repository.facet(ContentFacet.class).assets().browse(PAGE_SIZE_LIMIT, continuationToken);
+  }
+
+  private Continuation<FluentAsset> getAssetsEager(
+      Repository repository,
+      final String continuationToken,
+      final int pageLimit)
+  {
+    return getAssetsEager(repository, continuationToken, pageLimit, null, null);
+  }
+
+  private Continuation<FluentAsset> getAssetsEager(
+      Repository repository,
+      final String continuationToken,
+      final int pageLimit,
+      @Nullable final OffsetDateTime newerThan,
+      @Nullable final OffsetDateTime olderThan)
+  {
+    // For now, we only support timestamp filtering on direct repository calls, not group member content
+    if (GroupType.NAME.equals(repository.getType().getValue()) || (olderThan == null && newerThan == null)) {
+      if (GroupType.NAME.equals(repository.getType().getValue())) {
+        return repository.facet(ContentFacet.class)
+            .assets()
+            .withOnlyGroupMemberContent()
+            .browseEager(pageLimit, continuationToken);
+      }
+      return repository.facet(ContentFacet.class).assets().browseEager(pageLimit, continuationToken);
+    }
+
+    // Use the new method with timestamp filtering
+    return ((org.sonatype.nexus.repository.content.fluent.internal.FluentAssetsImpl) repository
+        .facet(ContentFacet.class)
+        .assets())
+            .browseEager(pageLimit, continuationToken, newerThan, olderThan);
+  }
+
+  @Nullable
+  private OffsetDateTime parseTimestamp(@Nullable final String timestamp) {
+    if (timestamp == null || timestamp.trim().isEmpty()) {
+      return null;
+    }
+    try {
+      return OffsetDateTime.parse(timestamp, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    }
+    catch (Exception e) {
+      log.warn("Invalid timestamp format: {}. Expected ISO-8601 format.", timestamp);
+      return null;
+    }
   }
 
   private List<FluentAsset> removeAssetsNotPermitted(

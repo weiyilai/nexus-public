@@ -47,6 +47,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
 import static org.sonatype.nexus.repository.content.rest.AssetXOBuilder.fromAsset;
 import static org.sonatype.nexus.repository.content.store.InternalIds.internalAssetId;
 import static org.sonatype.nexus.repository.content.store.InternalIds.toExternalId;
@@ -135,7 +136,7 @@ public class AssetsResource
     }
   }
 
-  private static List<AssetXO> toAssetXOs(
+  protected static List<AssetXO> toAssetXOs(
       final Repository repository,
       final List<FluentAsset> assets,
       final Map<String, AssetXODescriptor> assetDescriptors)

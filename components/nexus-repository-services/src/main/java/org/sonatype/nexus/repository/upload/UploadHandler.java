@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.importtask.ImportResult;
 import org.sonatype.nexus.repository.importtask.ImportFileConfiguration;
+import org.sonatype.nexus.repository.importtask.ImportStreamConfiguration;
 import org.sonatype.nexus.repository.security.ContentPermissionChecker;
 import org.sonatype.nexus.repository.security.VariableResolverAdapter;
 import org.sonatype.nexus.repository.view.Content;
@@ -69,10 +70,11 @@ public interface UploadHandler
    * @param path the path within the repository that will represent the asset (should not be prefixed with a slash)
    * @param coordinates a map containing the coordinate fields and their values
    */
-  default void ensurePermitted(final String repositoryName,
-                               final String format,
-                               final String path,
-                               final Map<String, String> coordinates)
+  default void ensurePermitted(
+      final String repositoryName,
+      final String format,
+      final String path,
+      final Map<String, String> coordinates)
   {
     boolean dotSegment = Stream.of(path.split("/")).anyMatch(segment -> segment.equals(".") || segment.equals(".."));
     if (dotSegment) {
@@ -106,16 +108,31 @@ public interface UploadHandler
   default Content handle(
       final Repository repository,
       final File content,
-      final String path)
-      throws IOException
+      final String path) throws IOException
   {
-    throw new UnsupportedOperationException(
+    throw new UnsupportedImportException(
         "Import not supported for " + repository.getFormat().getValue() + " format.");
   }
 
   default Content handle(final ImportFileConfiguration configuration) throws IOException {
     String format = configuration.getRepository().getFormat().getValue();
-    throw new UnsupportedOperationException("Import using hard links not supported for " + format + " format");
+    throw new UnsupportedImportException("Import using hard links not supported for " + format + " format");
+  }
+
+  /**
+   * Import content from an InputStream into a repository.
+   *
+   * Default implementation creates a temporary file from the stream and delegates to existing
+   * file-based import. Formats can override this for optimized stream handling.
+   *
+   * @since 3.31
+   *
+   * @param configuration the {@link ImportStreamConfiguration} containing the stream and metadata
+   * @throws IOException
+   */
+  default Content handle(final ImportStreamConfiguration configuration) throws IOException {
+    String format = configuration.getRepository().getFormat().getValue();
+    throw new UnsupportedImportException("Stream import not supported for " + format + " format");
   }
 
   /**
@@ -129,6 +146,7 @@ public interface UploadHandler
 
   /**
    * Denote if the format is supported using upload through the UI
+   * 
    * @since 3.26
    */
   default boolean supportsUiUpload() {
@@ -137,6 +155,7 @@ public interface UploadHandler
 
   /**
    * Denote if the format is supported using the export/import task
+   * 
    * @since 3.24
    */
   default boolean supportsExportImport() {

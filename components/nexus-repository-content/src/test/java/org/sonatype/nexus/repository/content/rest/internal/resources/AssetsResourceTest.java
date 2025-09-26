@@ -39,6 +39,7 @@ import org.sonatype.nexus.repository.selector.ContentAuthHelper;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.rest.Page;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -103,6 +104,9 @@ public class AssetsResourceTest
 
   @Mock
   private ContentAuthHelper contentAuthHelper;
+
+  @Mock
+  private ObjectMapper objectMapper;
 
   private AssetsResource underTest;
 

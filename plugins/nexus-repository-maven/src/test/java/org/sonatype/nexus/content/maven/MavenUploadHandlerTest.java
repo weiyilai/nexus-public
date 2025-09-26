@@ -12,8 +12,10 @@
  */
 package org.sonatype.nexus.content.maven;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,7 @@ import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.Asset;
 import org.sonatype.nexus.repository.content.AssetBlob;
 import org.sonatype.nexus.repository.content.fluent.FluentBlobs;
+import org.sonatype.nexus.repository.importtask.ImportStreamConfiguration;
 import org.sonatype.nexus.repository.maven.LayoutPolicy;
 import org.sonatype.nexus.repository.maven.MavenFacet;
 import org.sonatype.nexus.repository.maven.MavenMetadataRebuildFacet;
@@ -54,6 +57,7 @@ import org.sonatype.nexus.repository.view.payloads.TempBlob;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 import org.sonatype.nexus.security.BreadActions;
 import org.sonatype.nexus.selector.VariableSource;
+import org.sonatype.nexus.mime.MimeSupport;
 
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
@@ -126,6 +130,9 @@ public class MavenUploadHandlerTest
   @Mock
   private MavenPomGenerator mavenPomGenerator;
 
+  @Mock
+  private MimeSupport mimeSupport;
+
   @Captor
   private ArgumentCaptor<VariableSource> captor;
 
@@ -137,9 +144,12 @@ public class MavenUploadHandlerTest
 
     when(mavenPomGenerator.generatePom(any(), any(), any(), any())).thenReturn("<project/>");
 
+    // Setup MimeSupport mock to return application/octet-stream for all extensions by default
+    when(mimeSupport.guessMimeTypeFromPath(any())).thenReturn("application/octet-stream");
+
     Maven2MavenPathParser pathParser = new Maven2MavenPathParser();
     underTest = new MavenUploadHandler(pathParser, new MavenVariableResolverAdapter(pathParser),
-        contentPermissionChecker, versionPolicyValidator, mavenPomGenerator, emptySet());
+        contentPermissionChecker, versionPolicyValidator, mavenPomGenerator, emptySet(), mimeSupport);
 
     when(repository.getName()).thenReturn(REPO_NAME);
     when(repository.getFormat()).thenReturn(new Maven2Format());
@@ -179,7 +189,8 @@ public class MavenUploadHandlerTest
         field("groupId", "Group ID", null, false, STRING, GROUP_NAME_COORDINATES),
         field("artifactId", "Artifact ID", null, false, STRING, GROUP_NAME_COORDINATES),
         field("version", "Version", null, false, STRING, GROUP_NAME_COORDINATES),
-        field("generate-pom", "Generate a POM file with these coordinates", null, true, BOOLEAN, GROUP_NAME_COORDINATES),
+        field("generate-pom", "Generate a POM file with these coordinates", null, true, BOOLEAN,
+            GROUP_NAME_COORDINATES),
         field("packaging", "Packaging", null, true, STRING, GROUP_NAME_COORDINATES)));
     assertThat(def.getAssetFields(), contains(
         field("classifier", "Classifier", null, true, STRING, null),
@@ -188,10 +199,10 @@ public class MavenUploadHandlerTest
 
   @Test
   public void testGetDefinitionWithExtensionContributions() {
-    //Rebuilding the uploadhandler to provide a set of definition extensions
+    // Rebuilding the uploadhandler to provide a set of definition extensions
     Maven2MavenPathParser pathParser = new Maven2MavenPathParser();
     underTest = new MavenUploadHandler(pathParser, new MavenVariableResolverAdapter(pathParser),
-        contentPermissionChecker, versionPolicyValidator, mavenPomGenerator, getDefinitionExtensions());
+        contentPermissionChecker, versionPolicyValidator, mavenPomGenerator, getDefinitionExtensions(), mimeSupport);
     UploadDefinition def = underTest.getDefinition();
 
     assertThat(def.isMultipleUpload(), is(true));
@@ -200,7 +211,8 @@ public class MavenUploadHandlerTest
         field("groupId", "Group ID", null, false, STRING, GROUP_NAME_COORDINATES),
         field("artifactId", "Artifact ID", null, false, STRING, GROUP_NAME_COORDINATES),
         field("version", "Version", null, false, STRING, GROUP_NAME_COORDINATES),
-        field("generate-pom", "Generate a POM file with these coordinates", null, true, BOOLEAN, GROUP_NAME_COORDINATES),
+        field("generate-pom", "Generate a POM file with these coordinates", null, true, BOOLEAN,
+            GROUP_NAME_COORDINATES),
         field("packaging", "Packaging", null, true, STRING, GROUP_NAME_COORDINATES),
         field("foo", "Foo", null, true, STRING, "bar")));
 
@@ -450,7 +462,7 @@ public class MavenUploadHandlerTest
   public void testHandle_nullCoordinates() throws Exception {
     ComponentUpload componentUpload = new ComponentUpload();
 
-    //note the slashes here are causing the MavenPathParser to choke
+    // note the slashes here are causing the MavenPathParser to choke
     componentUpload.getFields().put("groupId", "a</groupId>");
     componentUpload.getFields().put("artifactId", "a</artifactId>");
     componentUpload.getFields().put("version", "a</version>");
@@ -680,13 +692,283 @@ public class MavenUploadHandlerTest
     assertNull(result);
   }
 
-  private static void assertVariableSource(final VariableSource source,
-                                           final String path,
-                                           final String groupId,
-                                           final String artifactId,
-                                           final String version,
-                                           final String classifier,
-                                           final String extension)
+  // ========================= Stream Import Tests =========================
+
+  @Test
+  public void testHandleStreamConfiguration_jarFile() throws IOException {
+    // Setup test data
+    byte[] jarContent = "fake jar content".getBytes();
+    InputStream inputStream = new ByteArrayInputStream(jarContent);
+    String assetName = "/org/apache/maven/tomcat/5.0.28/tomcat-5.0.28.jar";
+
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+
+    // Mock blob ingestion to return the content from stream
+    FluentBlobs blobs = mock(FluentBlobs.class);
+    when(mavenFacet.blobs()).thenReturn(blobs);
+    when(blobs.ingest(eq(inputStream), eq(null), any())).thenReturn(tempBlob);
+
+    // Execute
+    Content result = underTest.doPut(configuration);
+
+    // Verify
+    assertNotNull(result);
+
+    // Verify that stream was ingested
+    verify(blobs).ingest(eq(inputStream), eq(null), any());
+
+    // Verify the payload was passed to underlying doPut with correct content type
+    ArgumentCaptor<Payload> payloadCaptor = ArgumentCaptor.forClass(Payload.class);
+    ArgumentCaptor<MavenPath> pathCaptor = ArgumentCaptor.forClass(MavenPath.class);
+    verify(mavenFacet, times(2)).put(pathCaptor.capture(), payloadCaptor.capture());
+
+    // First call should be the main JAR file
+    List<MavenPath> capturedPaths = pathCaptor.getAllValues();
+    List<Payload> capturedPayloads = payloadCaptor.getAllValues();
+
+    MavenPath jarPath = capturedPaths.get(0);
+    Payload jarPayload = capturedPayloads.get(0);
+    assertThat(jarPath.getPath(), is("org/apache/maven/tomcat/5.0.28/tomcat-5.0.28.jar"));
+    assertThat(jarPayload.getContentType(), is("application/java-archive"));
+
+    // Second call should be the generated checksum file
+    MavenPath checksumPath = capturedPaths.get(1);
+    assertThat(checksumPath.getPath(), is("org/apache/maven/tomcat/5.0.28/tomcat-5.0.28.jar.sha1"));
+  }
+
+  @Test
+  public void testHandleStreamConfiguration_pomFile() throws IOException {
+    // Setup test data
+    byte[] pomContent = "<project></project>".getBytes();
+    InputStream inputStream = new ByteArrayInputStream(pomContent);
+    String assetName = "/org/apache/maven/tomcat/5.0.28/tomcat-5.0.28.pom";
+
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+
+    // Setup specific mock for POM file MIME type
+    when(mimeSupport.guessMimeTypeFromPath("/org/apache/maven/tomcat/5.0.28/tomcat-5.0.28.pom"))
+        .thenReturn("application/xml");
+
+    // Mock blob ingestion
+    FluentBlobs blobs = mock(FluentBlobs.class);
+    when(mavenFacet.blobs()).thenReturn(blobs);
+    when(blobs.ingest(eq(inputStream), eq(null), any())).thenReturn(tempBlob);
+
+    // Execute
+    Content result = underTest.doPut(configuration);
+
+    // Verify
+    assertNotNull(result);
+    verify(blobs).ingest(eq(inputStream), eq(null), any());
+
+    // Verify content type was set correctly - POM files also generate checksum files
+    ArgumentCaptor<Payload> payloadCaptor = ArgumentCaptor.forClass(Payload.class);
+    ArgumentCaptor<MavenPath> pathCaptor = ArgumentCaptor.forClass(MavenPath.class);
+    verify(mavenFacet, times(2)).put(pathCaptor.capture(), payloadCaptor.capture());
+
+    // First call should be the main POM file
+    List<MavenPath> capturedPaths = pathCaptor.getAllValues();
+    List<Payload> capturedPayloads = payloadCaptor.getAllValues();
+
+    MavenPath pomPath = capturedPaths.get(0);
+    Payload pomPayload = capturedPayloads.get(0);
+    assertThat(pomPath.getPath(), is("org/apache/maven/tomcat/5.0.28/tomcat-5.0.28.pom"));
+    assertThat(pomPayload.getContentType(), is("application/xml"));
+
+    // Second call should be the generated checksum file
+    MavenPath checksumPath = capturedPaths.get(1);
+    assertThat(checksumPath.getPath(), is("org/apache/maven/tomcat/5.0.28/tomcat-5.0.28.pom.sha1"));
+  }
+
+  @Test
+  public void testHandleStreamConfiguration_hashFile() throws IOException {
+    // Setup test data - hash files should be skipped like in file-based imports
+    byte[] hashContent = "da39a3ee5e6b4b0d3255bfef95601890afd80709".getBytes();
+    InputStream inputStream = new ByteArrayInputStream(hashContent);
+    String assetName = "/org/apache/maven/tomcat/5.0.28/tomcat-5.0.28.jar.sha1";
+
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+
+    // Execute - hash files should be skipped in stream imports (like file imports)
+    Content result = underTest.handle(configuration);
+
+    // Verify hash files are skipped (return null) to match file-based behavior
+    assertNull(result);
+
+    // Verify no blob ingestion occurred since hash files are skipped
+    verify(mavenFacet.blobs(), times(0)).ingest(any(InputStream.class), any(), any());
+  }
+
+  @Test
+  public void testDetermineContentTypeFromPath_variousExtensions() {
+    // Setup specific mock behaviors for different file paths
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.jar")).thenReturn("application/java-archive");
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.war")).thenReturn("application/java-archive");
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.ear")).thenReturn("application/java-archive");
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.JAR")).thenReturn("application/java-archive");
+
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.pom")).thenReturn("application/xml");
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.xml")).thenReturn("application/xml");
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.POM")).thenReturn("application/xml");
+
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.jar.md5")).thenReturn("text/plain");
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.jar.sha1")).thenReturn("text/plain");
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.jar.sha256")).thenReturn("text/plain");
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.jar.sha512")).thenReturn("text/plain");
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.jar.asc")).thenReturn("text/plain");
+
+    when(mimeSupport.guessMimeTypeFromPath("/path/to/file.unknown")).thenReturn("application/octet-stream");
+
+    // Test JAR files
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.jar"), is("application/java-archive"));
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.war"), is("application/java-archive"));
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.ear"), is("application/java-archive"));
+
+    // Test XML files
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.pom"), is("application/xml"));
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.xml"), is("application/xml"));
+
+    // Test hash/signature files
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.jar.md5"), is("text/plain"));
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.jar.sha1"), is("text/plain"));
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.jar.sha256"), is("text/plain"));
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.jar.sha512"), is("text/plain"));
+
+    // Test unknown extension
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.unknown"), is("application/octet-stream"));
+
+    // Test case insensitivity
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.JAR"), is("application/java-archive"));
+    assertThat(underTest.determineContentTypeFromPath("/path/to/file.POM"), is("application/xml"));
+  }
+
+  @Test
+  public void testHandleStreamConfiguration_withMavenValidation() throws IOException {
+    // Setup test data
+    byte[] jarContent = "fake jar content".getBytes();
+    InputStream inputStream = new ByteArrayInputStream(jarContent);
+    String assetName = "/org/apache/maven/tomcat/5.0.28/tomcat-5.0.28.jar";
+
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+
+    // Mock blob ingestion
+    FluentBlobs blobs = mock(FluentBlobs.class);
+    when(mavenFacet.blobs()).thenReturn(blobs);
+    when(blobs.ingest(any(InputStream.class), eq(null), any())).thenReturn(tempBlob);
+
+    // Execute - call handle() not doPut() to trigger validation logic
+    Content result = underTest.handle(configuration);
+
+    // Verify Maven validation was applied
+    verify(versionPolicyValidator).validArtifactPath(eq(VersionPolicy.RELEASE), any(Coordinates.class));
+    assertNotNull(result);
+  }
+
+  @Test
+  public void testHandleStreamConfiguration_ignoredPath() throws IOException {
+    // Setup test data - archetype catalog should be ignored
+    byte[] content = "catalog content".getBytes();
+    InputStream inputStream = new ByteArrayInputStream(content);
+    String assetName = "/archetype-catalog.xml";
+
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+
+    // Execute
+    Content result = underTest.handle(configuration);
+
+    // Verify ignored files return null
+    assertNull(result);
+
+    // Verify no interaction with blob store
+    verify(mavenFacet.blobs(), times(0)).ingest(any(InputStream.class), any(), any());
+  }
+
+  @Test
+  public void testHandleStreamConfiguration_validationFailure() throws IOException {
+    // Setup validation failure
+    when(versionPolicyValidator.validArtifactPath(any(), any())).thenReturn(false);
+    
+    // Setup test data
+    byte[] jarContent = "fake jar content".getBytes();
+    InputStream inputStream = new ByteArrayInputStream(jarContent);
+    String assetName = "/org/apache/maven/tomcat/5.0.28-SNAPSHOT/tomcat-5.0.28-SNAPSHOT.jar";
+    
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+    
+    // Execute
+    Content result = underTest.handle(configuration);
+    
+    // Verify validation failure results in null
+    assertNull(result);
+  }
+
+  @Test
+  public void testHandleStreamConfiguration_hashFileSkipped() throws IOException {
+    // Setup test data - hash files should be skipped when hardlinking is disabled (default)
+    byte[] hashContent = "da39a3ee5e6b4b0d3255bfef95601890afd80709".getBytes();
+    InputStream inputStream = new ByteArrayInputStream(hashContent);
+    String assetName = "/org/apache/maven/tomcat/5.0.28/tomcat-5.0.28.jar.sha1";
+
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+
+    // Execute
+    Content result = underTest.handle(configuration);
+
+    // Verify hash files are skipped when hardlinking is not enabled
+    assertNull(result);
+
+    // Verify no blob ingestion occurred
+    verify(mavenFacet.blobs(), times(0)).ingest(any(InputStream.class), any(), any());
+  }
+
+  @Test
+  public void testHandleStreamConfiguration_properPathParsing() throws IOException {
+    // Setup test data
+    byte[] jarContent = "fake jar content".getBytes();
+    InputStream inputStream = new ByteArrayInputStream(jarContent);
+    String assetName = "/com/example/my-artifact/1.2.3/my-artifact-1.2.3-sources.jar";
+
+    ImportStreamConfiguration configuration = new ImportStreamConfiguration(repository, inputStream, assetName);
+
+    // Mock blob ingestion
+    FluentBlobs blobs = mock(FluentBlobs.class);
+    when(mavenFacet.blobs()).thenReturn(blobs);
+    when(blobs.ingest(any(InputStream.class), eq(null), any())).thenReturn(tempBlob);
+
+    // Execute
+    Content result = underTest.doPut(configuration);
+
+    // Verify Maven path was parsed correctly - will have multiple calls due to checksum generation
+    ArgumentCaptor<MavenPath> pathCaptor = ArgumentCaptor.forClass(MavenPath.class);
+    verify(mavenFacet, times(2)).put(pathCaptor.capture(), any(Payload.class));
+
+    // First call should be the main JAR file
+    List<MavenPath> capturedPaths = pathCaptor.getAllValues();
+    MavenPath capturedPath = capturedPaths.get(0);
+    assertThat(capturedPath.getPath(), is("com/example/my-artifact/1.2.3/my-artifact-1.2.3-sources.jar"));
+
+    Coordinates coords = capturedPath.getCoordinates();
+    assertThat(coords.getGroupId(), is("com.example"));
+    assertThat(coords.getArtifactId(), is("my-artifact"));
+    assertThat(coords.getVersion(), is("1.2.3"));
+    assertThat(coords.getClassifier(), is("sources"));
+    assertThat(coords.getExtension(), is("jar"));
+
+    // Second call should be the generated checksum file
+    MavenPath checksumPath = capturedPaths.get(1);
+    assertThat(checksumPath.getPath(), is("com/example/my-artifact/1.2.3/my-artifact-1.2.3-sources.jar.sha1"));
+
+    assertNotNull(result);
+  }
+
+  private static void assertVariableSource(
+      final VariableSource source,
+      final String path,
+      final String groupId,
+      final String artifactId,
+      final String version,
+      final String classifier,
+      final String extension)
   {
     int size = (classifier == null) ? 6 : 7;
 
@@ -702,12 +984,13 @@ public class MavenUploadHandlerTest
     assertThat(source.get("coordinate.extension"), is(Optional.of(extension)));
   }
 
-  private static void assertCoordinates(final Coordinates actual,
-                                        final String groupId,
-                                        final String artifactId,
-                                        final String version,
-                                        final String classifier,
-                                        final String extension)
+  private static void assertCoordinates(
+      final Coordinates actual,
+      final String groupId,
+      final String artifactId,
+      final String version,
+      final String classifier,
+      final String extension)
   {
     assertThat(actual.getGroupId(), is(groupId));
     assertThat(actual.getArtifactId(), is(artifactId));
@@ -719,12 +1002,13 @@ public class MavenUploadHandlerTest
     assertNull(actual.getTimestamp());
   }
 
-  private UploadFieldDefinition field(final String name,
-                                      final String displayName,
-                                      final String helpText,
-                                      final boolean optional,
-                                      final Type type,
-                                      final String group)
+  private UploadFieldDefinition field(
+      final String name,
+      final String displayName,
+      final String helpText,
+      final boolean optional,
+      final Type type,
+      final String group)
   {
     return new UploadFieldDefinition(name, displayName, helpText, optional, type, group);
   }

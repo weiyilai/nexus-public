@@ -893,7 +893,7 @@ public abstract class AssetDAOTestSupport
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO dao = session.access(TestAssetDAO.class);
 
-      Continuation<Asset> assets = dao.browseEagerAssetsInRepository(repositoryId, null, 10);
+      Continuation<Asset> assets = dao.browseEagerAssetsInRepository(repositoryId, null, 10, null, null);
       assertThat(assets.size(), is(5));
       // each asset should contain a blob and should belong to a component
       for (Asset asset : assets) {

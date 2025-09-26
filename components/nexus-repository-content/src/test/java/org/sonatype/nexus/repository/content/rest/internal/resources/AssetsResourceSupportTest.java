@@ -38,7 +38,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -61,7 +60,7 @@ public class AssetsResourceSupportTest
   private static final String A_FORMAT = "A_Format";
 
   // tests assume we've stored more assets than the page limit
-  private static final int NUMBER_OF_ASSETS = PAGE_SIZE_LIMIT + 2; ;
+  private static final int NUMBER_OF_ASSETS = PAGE_SIZE_LIMIT + 2;
 
   private static final String ASSET_PATH = "/junit/junit/4.12/junit-4.12.jar";
 
@@ -143,7 +142,8 @@ public class AssetsResourceSupportTest
 
     when(assetContinuation.isEmpty()).thenReturn(false).thenReturn(true);
     when(contentAuthHelper.checkPathPermissions(ASSET_PATH, A_FORMAT, REPOSITORY_NAME))
-        .thenReturn(false).thenReturn(false, false, false, true);
+        .thenReturn(false)
+        .thenReturn(false, false, false, true);
 
     List<FluentAsset> assets = underTest.browse(repository, null);
 
@@ -205,12 +205,12 @@ public class AssetsResourceSupportTest
     when(fluentAssets.browse(PAGE_SIZE_LIMIT, null))
         .thenReturn(new FluentContinuation<>(assetContinuation, asset -> aFluentAsset()));
 
-    List<FluentAsset> assets = range(0, NUMBER_OF_ASSETS).mapToObj(i -> aFluentAsset()).collect(toList());
+    List<FluentAsset> assets = range(0, NUMBER_OF_ASSETS).mapToObj(i -> aFluentAsset()).toList();
     when(assetContinuation.iterator()).thenReturn(assets.iterator());
   }
 
   private FluentAsset aFluentAsset() {
-    return new FluentAssetImpl(contentFacetSupport,anAsset());
+    return new FluentAssetImpl(contentFacetSupport, anAsset());
   }
 
   private AssetData anAsset() {

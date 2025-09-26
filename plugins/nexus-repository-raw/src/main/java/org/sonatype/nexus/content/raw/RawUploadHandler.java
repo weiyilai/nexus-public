@@ -25,6 +25,7 @@ import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.importtask.ImportFileConfiguration;
+import org.sonatype.nexus.repository.importtask.ImportStreamConfiguration;
 import org.sonatype.nexus.repository.raw.RawUploadHandlerSupport;
 import org.sonatype.nexus.repository.raw.internal.RawFormat;
 import org.sonatype.nexus.repository.rest.UploadDefinitionExtension;
@@ -90,6 +91,35 @@ public class RawUploadHandler
             configuration.isHardLinkingEnabled())) {
       return contentFacet.put(path, new TempBlobPayload(blob, contentType));
     }
+  }
+
+  @Override
+  protected Content doPut(final ImportStreamConfiguration configuration) throws IOException {
+    Repository repository = configuration.getRepository();
+    String path = configuration.getAssetName();
+
+    RawContentFacet contentFacet = repository.facet(RawContentFacet.class);
+    String contentType = determineContentTypeFromPath(configuration.getAssetName());
+    try (TempBlob blob = contentFacet.blobs()
+        .ingest(configuration.getInputStream(), contentType, RawContentFacet.HASHING)) {
+      return contentFacet.put(path, new TempBlobPayload(blob, contentType));
+    }
+  }
+
+  protected String determineContentTypeFromPath(String assetName) {
+    // First try Java's built-in content type detection
+    try {
+      String detectedType = Files.probeContentType(java.nio.file.Paths.get(assetName));
+      if (detectedType != null) {
+        return detectedType;
+      }
+    }
+    catch (Exception e) {
+      // Fall through to extension-based detection
+    }
+
+    // Fall back to application/octet-stream for raw files
+    return "application/octet-stream";
   }
 
   @Override

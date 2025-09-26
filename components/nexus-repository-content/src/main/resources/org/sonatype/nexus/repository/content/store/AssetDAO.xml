@@ -94,7 +94,7 @@
     <result property="attributes" column="attributes"/>
     <result property="created" column="created"/>
     <result property="lastUpdated" column="last_updated"/>
-    <association property="component" resultMap="ComponentDataResult"/>
+    <association property="component" resultMap="ComponentDataResult" notNullColumn="component_id"/>
     <association property="assetBlob" resultMap="AssetBlobResult"/>
   </resultMap>
 
@@ -145,17 +145,20 @@
 
   <select id="browseEagerAssetsInRepository" resultMap="assetResultMap">
     WITH assetIds as (
-      SELECT asset_id
-      FROM ${format}_asset
-      WHERE repository_id = #{repositoryId}
-      <if test="continuationToken != null">AND asset_id > #{continuationToken}</if>
-      ORDER BY asset_id
+      SELECT asset.asset_id
+      FROM ${format}_asset asset
+      INNER JOIN ${format}_asset_blob blob ON blob.asset_blob_id = asset.asset_blob_id
+      WHERE asset.repository_id = #{repositoryId}
+      <if test="newerThan != null">AND blob.blob_created > #{newerThan}</if>
+      <if test="olderThan != null">AND blob.blob_created &lt; #{olderThan}</if>
+      <if test="continuationToken != null">AND asset.asset_id &lt; #{continuationToken}</if>
+      ORDER BY blob.blob_created desc
       LIMIT #{limit})
     SELECT A.*, C.*, B.* FROM ${format}_asset as A
-                         INNER JOIN ${format}_component C ON C.component_id = A.component_id
+                         LEFT JOIN ${format}_component C ON C.component_id = A.component_id
                          INNER JOIN ${format}_asset_blob B ON B.asset_blob_id = A.asset_blob_id
-    where A.asset_id in (SELECT asset_id FROM assetIds)
-    ORDER BY A.asset_id
+                         INNER JOIN assetIds ON assetIds.asset_id = A.asset_id
+    ORDER BY B.blob_created desc;
   </select>
 
   <select id="browseAssetsInRepositories" resultMap="assetResult">

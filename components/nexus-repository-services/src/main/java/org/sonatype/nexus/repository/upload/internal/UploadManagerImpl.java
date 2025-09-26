@@ -12,7 +12,10 @@
  */
 package org.sonatype.nexus.repository.upload.internal;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +33,7 @@ import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.importtask.ImportFileConfiguration;
+import org.sonatype.nexus.repository.importtask.ImportStreamConfiguration;
 import org.sonatype.nexus.repository.importtask.ImportResult;
 import org.sonatype.nexus.repository.rest.ComponentUploadExtension;
 import org.sonatype.nexus.repository.rest.internal.resources.ComponentUploadUtils;
@@ -41,6 +45,7 @@ import org.sonatype.nexus.repository.upload.UploadHandler;
 import org.sonatype.nexus.repository.upload.UploadManager;
 import org.sonatype.nexus.repository.upload.UploadProcessor;
 import org.sonatype.nexus.repository.upload.UploadResponse;
+import org.sonatype.nexus.repository.upload.UnsupportedImportException;
 import org.sonatype.nexus.repository.view.Content;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 
@@ -169,6 +174,21 @@ public class UploadManagerImpl
   }
 
   @Override
+  public Content handle(final ImportStreamConfiguration importStreamConfiguration) throws IOException {
+    UploadHandler uploadHandler = getUploadHandler(importStreamConfiguration.getRepository());
+
+    try {
+      return uploadHandler.handle(importStreamConfiguration);
+    }
+    catch (UnsupportedImportException e) {
+      // Fallback to file-based import if format-specific handler doesn't support stream imports
+      log.info("Format-specific handler doesn't support stream import, falling back to file import: {}",
+          e.getMessage());
+      return handleStreamWithFileImport(uploadHandler, importStreamConfiguration);
+    }
+  }
+
+  @Override
   public void handleAfterImport(final ImportResult importResult) throws IOException {
     Repository repository = importResult.getRepository();
     UploadHandler uploadHandler = getUploadHandler(repository);
@@ -201,6 +221,57 @@ public class UploadManagerImpl
     }
 
     return uploadHandler;
+  }
+
+  /**
+   * Handle stream import by creating a temporary file and using file-based import as fallback.
+   * This allows formats that support file import but not stream import to still work.
+   */
+  private Content handleStreamWithFileImport(
+      final UploadHandler uploadHandler,
+      final ImportStreamConfiguration importStreamConfiguration) throws IOException
+  {
+    // Create a temporary file from the input stream
+    File tempFile = null;
+    try {
+      // Create temporary file with appropriate suffix based on asset name
+      String assetName = importStreamConfiguration.getAssetName();
+      String suffix = "";
+      int lastDot = assetName.lastIndexOf('.');
+      if (lastDot > 0 && lastDot < assetName.length() - 1) {
+        suffix = assetName.substring(lastDot);
+      }
+
+      tempFile = Files.createTempFile("nexus-import-", suffix).toFile();
+
+      // Copy stream content to temporary file
+      Files.copy(importStreamConfiguration.getInputStream(), tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+      log.debug("Created temporary file for stream import: {} -> {}", assetName, tempFile.getAbsolutePath());
+
+      // Try file-based import using the same upload handler
+      try {
+        return uploadHandler.handle(
+            importStreamConfiguration.getRepository(),
+            tempFile,
+            importStreamConfiguration.getAssetName());
+      }
+      catch (UnsupportedImportException fileException) {
+        // If file import also fails, throw the original stream exception with more context
+        throw new UnsupportedImportException(
+            format("Neither stream nor file import supported for %s format",
+                importStreamConfiguration.getRepository().getFormat().getValue()),
+            fileException);
+      }
+    }
+    finally {
+      // Clean up temporary file
+      if (tempFile != null && tempFile.exists()) {
+        if (!tempFile.delete()) {
+          log.warn("Failed to delete temporary file: {}", tempFile.getAbsolutePath());
+        }
+      }
+    }
   }
 
   private void logUploadDetails(final ComponentUpload componentUpload, final Repository repository) {

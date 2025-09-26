@@ -137,7 +137,30 @@ public class AssetStore<T extends AssetDAO>
       @Nullable final String continuationToken,
       final int limit)
   {
-    return dao().browseEagerAssetsInRepository(repositoryId, continuationToken, limit);
+    return dao().browseEagerAssetsInRepository(repositoryId, continuationToken, limit, null, null);
+  }
+
+  /**
+   * Browse all assets with corresponding components and blobs in the given repository in a paged fashion,
+   * with optional timestamp filtering. The returned assets will be sorted by asset id in ascending order.
+   *
+   * @param repositoryId the repository to browse
+   * @param continuationToken optional token to continue from a previous request
+   * @param limit maximum number of assets to return
+   * @param olderThan optional timestamp to filter assets updated before this time
+   * @param newerThan optional timestamp to filter assets updated after this time
+   * @return collection of assets and the next continuation token
+   * @see Continuation#nextContinuationToken()
+   */
+  @Transactional
+  public Continuation<Asset> browseEagerAssets(
+      final int repositoryId,
+      @Nullable final String continuationToken,
+      final int limit,
+      @Nullable final OffsetDateTime newerThan,
+      @Nullable final OffsetDateTime olderThan)
+  {
+    return dao().browseEagerAssetsInRepository(repositoryId, continuationToken, limit, newerThan, olderThan);
   }
 
   /**

@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.importtask.ImportFileConfiguration;
+import org.sonatype.nexus.repository.importtask.ImportStreamConfiguration;
 import org.sonatype.nexus.repository.maven.MavenPath.Coordinates;
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.repository.maven.internal.Maven2MavenPathParser;
@@ -115,7 +116,7 @@ public abstract class MavenUploadHandlerSupport
 
   private UploadDefinition definition;
 
-  public MavenUploadHandlerSupport (
+  public MavenUploadHandlerSupport(
       final Maven2MavenPathParser parser,
       final VariableResolverAdapter variableResolverAdapter,
       final ContentPermissionChecker contentPermissionChecker,
@@ -144,8 +145,8 @@ public abstract class MavenUploadHandlerSupport
 
     AssetUpload pomAsset = findPomAsset(upload);
 
-    //purposefully not using a try with resources, as this will only be used in case of an included pom file, which
-    //isn't required
+    // purposefully not using a try with resources, as this will only be used in case of an included pom file, which
+    // isn't required
     TempBlob pom = null;
 
     try {
@@ -188,12 +189,42 @@ public abstract class MavenUploadHandlerSupport
 
     try {
       doImportValidation(repository, mavenPath);
-    } catch (ValidationErrorsException e) {
+    }
+    catch (ValidationErrorsException e) {
       log.warn(e.getMessage(), log.isDebugEnabled() ? e : null);
       return null;
     }
 
     if (!configuration.isHardLinkingEnabled() && mavenPath.getHashType() != null) {
+      log.debug("skipping hash file {}", mavenPath);
+      return null;
+    }
+
+    return doPut(configuration);
+  }
+
+  @Override
+  public Content handle(final ImportStreamConfiguration configuration) throws IOException {
+    final Repository repository = configuration.getRepository();
+    final String path = configuration.getAssetName();
+
+    if (ignoredPaths.contains(path)) {
+      log.debug("skipping {} as it is on the ignore list.", path);
+      return null;
+    }
+
+    MavenPath mavenPath = parser.parsePath(path);
+
+    try {
+      doImportValidation(repository, mavenPath);
+    }
+    catch (ValidationErrorsException e) {
+      log.warn(e.getMessage(), log.isDebugEnabled() ? e : null);
+      return null;
+    }
+
+    // Skip hash files in stream imports (hardlinking is not supported for streams)
+    if (mavenPath.getHashType() != null) {
       log.debug("skipping hash file {}", mavenPath);
       return null;
     }
@@ -240,11 +271,11 @@ public abstract class MavenUploadHandlerSupport
     return new MavenValidatingComponentUpload(getDefinition(), componentUpload);
   }
 
-  protected void maybeGeneratePom(final Repository repository,
-                                  final ComponentUpload componentUpload,
-                                  final String basePath,
-                                  final ContentAndAssetPathResponseData responseData)
-      throws IOException
+  protected void maybeGeneratePom(
+      final Repository repository,
+      final ComponentUpload componentUpload,
+      final String basePath,
+      final ContentAndAssetPathResponseData responseData) throws IOException
   {
     if (isGeneratePom(componentUpload.getField(GENERATE_POM))) {
       String pomPath = generatePom(repository, basePath, componentUpload.getFields().get(GROUP_ID),
@@ -258,42 +289,49 @@ public abstract class MavenUploadHandlerSupport
   protected void validateVersionPolicy(final Repository repository, final MavenPath mavenPath) {
     VersionPolicy versionPolicy = getVersionPolicy(repository);
 
-    boolean valid = parser.isRepositoryMetadata(mavenPath) ?
-        versionPolicyValidator.validMetadataPath(versionPolicy, mavenPath.main().getPath()) :
-        versionPolicyValidator.validArtifactPath(versionPolicy, mavenPath.getCoordinates());
+    boolean valid = parser.isRepositoryMetadata(mavenPath)
+        ? versionPolicyValidator.validMetadataPath(versionPolicy, mavenPath.main().getPath())
+        : versionPolicyValidator.validArtifactPath(versionPolicy, mavenPath.getCoordinates());
 
     if (!valid) {
       throw new ValidationErrorsException(
           format("Version policy mismatch, cannot upload %s content to %s repositories for file '%s'",
-              versionPolicy.equals(VersionPolicy.RELEASE) ? VersionPolicy.SNAPSHOT.name() : VersionPolicy.RELEASE.name(),
+              versionPolicy.equals(VersionPolicy.RELEASE)
+                  ? VersionPolicy.SNAPSHOT.name()
+                  : VersionPolicy.RELEASE.name(),
               versionPolicy.name(),
               mavenPath.getPath()));
     }
   }
 
-  protected abstract UploadResponse getUploadResponse(Repository repository,
-                                                                       ComponentUpload componentUpload,
-                                                                       String basePath)
-      throws IOException;
+  protected abstract UploadResponse getUploadResponse(
+      Repository repository,
+      ComponentUpload componentUpload,
+      String basePath) throws IOException;
 
-  protected abstract Content doPut(final Repository repository, final MavenPath mavenPath, final Payload payload)
-      throws IOException;
+  protected abstract Content doPut(
+      final Repository repository,
+      final MavenPath mavenPath,
+      final Payload payload) throws IOException;
 
   protected abstract Content doPut(ImportFileConfiguration configuration) throws IOException;
+
+  protected abstract Content doPut(ImportStreamConfiguration configuration) throws IOException;
 
   protected abstract VersionPolicy getVersionPolicy(Repository repository);
 
   protected abstract TempBlob createTempBlob(Repository repository, PartPayload payload);
 
-  protected void doValidation(final Repository repository,
-                              final String basePath,
-                              final List<AssetUpload> assetUploads)
+  protected void doValidation(
+      final Repository repository,
+      final String basePath,
+      final List<AssetUpload> assetUploads)
   {
     for (AssetUpload asset : assetUploads) {
       MavenPath mavenPath = getMavenPath(basePath, asset);
       doCoordinatesValidation(mavenPath);
       validateVersionPolicy(repository, mavenPath);
-      String path  = datastoreEnabled ? prependIfMissing(mavenPath.getPath(), "/") : mavenPath.getPath();
+      String path = datastoreEnabled ? prependIfMissing(mavenPath.getPath(), "/") : mavenPath.getPath();
       ensurePermitted(repository.getName(), Maven2Format.NAME, path, toMap(mavenPath.getCoordinates()));
     }
   }
@@ -306,7 +344,7 @@ public abstract class MavenUploadHandlerSupport
       }
       validateVersionPolicy(repository, mavenPath);
     }
-    String path  = datastoreEnabled ? prependIfMissing(mavenPath.getPath(), "/") : mavenPath.getPath();
+    String path = datastoreEnabled ? prependIfMissing(mavenPath.getPath(), "/") : mavenPath.getPath();
     ensurePermitted(repository.getName(), Maven2Format.NAME, path, toMap(mavenPath.getCoordinates()));
   }
 
@@ -317,13 +355,13 @@ public abstract class MavenUploadHandlerSupport
     }
   }
 
-  protected String generatePom(final Repository repository,
-                               final String basePath,
-                               final String groupId,
-                               final String artifactId,
-                               final String version,
-                               @Nullable final String packaging)
-      throws IOException
+  protected String generatePom(
+      final Repository repository,
+      final String basePath,
+      final String groupId,
+      final String artifactId,
+      final String version,
+      @Nullable final String packaging) throws IOException
   {
     log.debug("Generating pom for {} {} {} with packaging {}", groupId, artifactId, version, packaging);
 
@@ -337,19 +375,21 @@ public abstract class MavenUploadHandlerSupport
   }
 
   protected AssetUpload findPomAsset(final ComponentUpload componentUpload) {
-    return componentUpload.getAssetUploads().stream()
+    return componentUpload.getAssetUploads()
+        .stream()
         .filter(asset -> "pom".equals(asset.getField(EXTENSION)) && isBlank(asset.getField(CLASSIFIER)))
-        .findFirst().orElse(null);
+        .findFirst()
+        .orElse(null);
   }
 
   protected static boolean isGeneratePom(final String generatePom) {
     return ("on".equals(generatePom) || Boolean.parseBoolean(generatePom));
   }
 
-  protected ContentAndAssetPathResponseData createAssets(final Repository repository,
-                                                         final String basePath,
-                                                         final List<AssetUpload> assetUploads)
-      throws IOException
+  protected ContentAndAssetPathResponseData createAssets(
+      final Repository repository,
+      final String basePath,
+      final List<AssetUpload> assetUploads) throws IOException
   {
     ContentAndAssetPathResponseData responseData = new ContentAndAssetPathResponseData();
 
@@ -358,13 +398,13 @@ public abstract class MavenUploadHandlerSupport
 
       Content content = storeAssetContent(repository, mavenPath, asset.getPayload());
 
-      //We only need to set the component id one time
-      if(responseData.getContent() == null) {
+      // We only need to set the component id one time
+      if (responseData.getContent() == null) {
         responseData.setContent(content);
       }
       responseData.addAssetPath(mavenPath.getPath());
 
-      //All assets belong to same component, so just grab the coordinates for one of them
+      // All assets belong to same component, so just grab the coordinates for one of them
       if (responseData.getCoordinates() == null) {
         responseData.setCoordinates(mavenPath.getCoordinates());
       }
@@ -385,16 +425,16 @@ public abstract class MavenUploadHandlerSupport
     return parser.parsePath(path.toString());
   }
 
-  protected Content storeAssetContent(final Repository repository,
-                                      final MavenPath mavenPath,
-                                      final Payload payload) throws IOException
+  protected Content storeAssetContent(
+      final Repository repository,
+      final MavenPath mavenPath,
+      final Payload payload) throws IOException
   {
 
     return doPut(repository, mavenPath, payload);
   }
 
-  protected String getBasePath(final ComponentUpload componentUpload, final TempBlob pom) throws IOException
-  {
+  protected String getBasePath(final ComponentUpload componentUpload, final TempBlob pom) throws IOException {
     if (pom != null) {
       return createBasePathFromPom(pom);
     }
@@ -480,9 +520,12 @@ public abstract class MavenUploadHandlerSupport
    * Simple data carrier used to collect data needed
    * to populate the {@link UploadResponse}
    */
-  public static class ContentAndAssetPathResponseData {
+  public static class ContentAndAssetPathResponseData
+  {
     Content content;
+
     List<String> assetPaths = newArrayList();
+
     Coordinates coordinates;
 
     public void setContent(final Content content) {
@@ -497,13 +540,17 @@ public abstract class MavenUploadHandlerSupport
       this.assetPaths.add(assetPath);
     }
 
-    public Content getContent() {return this.content;}
+    public Content getContent() {
+      return this.content;
+    }
 
     public Coordinates getCoordinates() {
       return this.coordinates;
     }
 
-    public List<String> getAssetPaths() { return this.assetPaths;}
+    public List<String> getAssetPaths() {
+      return this.assetPaths;
+    }
 
     public UploadResponse uploadResponse() {
       return new UploadResponse(content, assetPaths);

@@ -82,18 +82,23 @@ public interface AssetDAO
 
   /**
    * Browse all assets with corresponding components and blobs in the given repository in a paged fashion. The returned
-   * assets will be sorted by asset id in ascending order. Blob and the Component are eagerly populated.
+   * assets will be sorted by asset id in ascending order, or by last_updated descending if timestamp filters are used.
+   * Blob and the Component are eagerly populated.
    *
    * @param repositoryId the repository to browse
    * @param continuationToken optional token to continue from a previous request
    * @param limit maximum number of assets to return
+   * @param olderThan optional timestamp to filter assets updated before this time
+   * @param newerThan optional timestamp to filter assets updated after this time
    * @return collection of assets and the next continuation token
    * @see Continuation#nextContinuationToken()
    */
   Continuation<Asset> browseEagerAssetsInRepository(
       @Param("repositoryId") int repositoryId,
       @Nullable @Param("continuationToken") String continuationToken,
-      @Param("limit") int limit);
+      @Param("limit") int limit,
+      @Nullable @Param("newerThan") OffsetDateTime newerThan,
+      @Nullable @Param("olderThan") OffsetDateTime olderThan);
 
   /**
    * Browse all assets in the given repositories in a paged fashion. The returned assets will be sorted by asset id in

@@ -36,11 +36,11 @@ public interface AssetsResourceDoc
       @ApiResponse(code = 422, message = "Parameter 'repository' is required")
   })
   Page<AssetXO> getAssets(
-      @ApiParam(value = "A token returned by a prior request. If present, the next page of results are returned")
-      final String continuationToken,
+      @ApiParam(
+          value = "A token returned by a prior request. If present, the next page of results are returned") final String continuationToken,
 
-      @ApiParam(value = "Repository from which you would like to retrieve assets.", required = true)
-      final String repository);
+      @ApiParam(value = "Repository from which you would like to retrieve assets.",
+          required = true) final String repository);
 
   @ApiOperation("Get a single asset")
   @ApiResponses(value = {
@@ -58,4 +58,5 @@ public interface AssetsResourceDoc
       @ApiResponse(code = 422, message = "Malformed ID")
   })
   void deleteAsset(@ApiParam(value = "Id of the asset to delete") final String id);
+
 }

@@ -30,6 +30,7 @@ import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.content.Asset;
 import org.sonatype.nexus.repository.content.AssetBlob;
 import org.sonatype.nexus.repository.importtask.ImportFileConfiguration;
+import org.sonatype.nexus.repository.importtask.ImportStreamConfiguration;
 import org.sonatype.nexus.repository.maven.MavenMetadataRebuildFacet;
 import org.sonatype.nexus.repository.maven.MavenPath;
 import org.sonatype.nexus.repository.maven.MavenPath.Coordinates;
@@ -51,6 +52,7 @@ import org.sonatype.nexus.repository.view.Payload;
 import org.sonatype.nexus.repository.view.payloads.StringPayload;
 import org.sonatype.nexus.repository.view.payloads.TempBlob;
 import org.sonatype.nexus.repository.view.payloads.TempBlobPayload;
+import org.sonatype.nexus.mime.MimeSupport;
 
 import org.joda.time.DateTime;
 
@@ -72,6 +74,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 public class MavenUploadHandler
     extends MavenUploadHandlerSupport
 {
+  private final MimeSupport mimeSupport;
+
   @Inject
   public MavenUploadHandler(
       final Maven2MavenPathParser parser,
@@ -79,10 +83,12 @@ public class MavenUploadHandler
       final ContentPermissionChecker contentPermissionChecker,
       final VersionPolicyValidator versionPolicyValidator,
       final MavenPomGenerator mavenPomGenerator,
-      final Set<UploadDefinitionExtension> uploadDefinitionExtensions)
+      final Set<UploadDefinitionExtension> uploadDefinitionExtensions,
+      final MimeSupport mimeSupport)
   {
     super(parser, variableResolverAdapter, contentPermissionChecker, versionPolicyValidator, mavenPomGenerator,
         uploadDefinitionExtensions, true);
+    this.mimeSupport = mimeSupport;
   }
 
   @Override
@@ -126,6 +132,37 @@ public class MavenUploadHandler
             configuration.isHardLinkingEnabled())) {
       return doPut(repository, mavenPath, new TempBlobPayload(blob, contentType));
     }
+  }
+
+  @Override
+  protected Content doPut(final ImportStreamConfiguration configuration) throws IOException {
+    Repository repository = configuration.getRepository();
+    MavenPath mavenPath = parser.parsePath(configuration.getAssetName());
+
+    MavenContentFacet contentFacet = repository.facet(MavenContentFacet.class);
+    // Use the same approach as Files.probeContentType but with fallback to extension-based detection
+    String contentType = determineContentTypeFromPath(configuration.getAssetName());
+    try (TempBlob blob = contentFacet.blobs()
+        .ingest(configuration.getInputStream(), null, MavenPath.HashType.ALGORITHMS)) {
+      // Create TempBlobPayload with explicit content type to override any detected type
+      return doPut(repository, mavenPath, new TempBlobPayload(blob, contentType));
+    }
+  }
+
+  protected String determineContentTypeFromPath(String assetName) {
+    // First try Java's built-in content type detection
+    try {
+      String detectedType = Files.probeContentType(java.nio.file.Paths.get(assetName));
+      if (detectedType != null) {
+        return detectedType;
+      }
+    }
+    catch (Exception e) {
+      // Fall through to extension-based detection
+    }
+
+    // Use MimeSupport for comprehensive MIME type detection
+    return mimeSupport.guessMimeTypeFromPath(assetName);
   }
 
   @Override

@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.importtask.ImportFileConfiguration;
+import org.sonatype.nexus.repository.importtask.ImportStreamConfiguration;
 import org.sonatype.nexus.repository.importtask.ImportResult;
 import org.sonatype.nexus.repository.view.Content;
 
@@ -54,7 +55,7 @@ public interface UploadManager
   UploadResponse handle(Repository repository, HttpServletRequest request) throws IOException;
 
   /**
-   * Import a file and its attributes into a repository.  Will fail if the repository format does not have an
+   * Import a file and its attributes into a repository. Will fail if the repository format does not have an
    * available handler.
    *
    * @since 3.22
@@ -65,14 +66,28 @@ public interface UploadManager
   Content handle(final ImportFileConfiguration configuration) throws IOException;
 
   /**
+   * Import content from an InputStream into a repository. Will fail if the repository format does not have an
+   * available handler.
+   *
+   * @since 3.31
+   *
+   * @param configuration
+   * @throws IOException
+   */
+  Content handle(final ImportStreamConfiguration configuration) throws IOException;
+
+  /**
    * This is a hook that allows to handle situations where additional work is required.
    * One example of this is when some repository-spanning metadata can be updated after they are processed.
    */
   void handleAfterImport(final ImportResult importResult) throws IOException;
 
-  class UIUploadEvent {
+  class UIUploadEvent
+  {
     private final Repository repository;
+
     private final List<String> assetPaths;
+
     public UIUploadEvent(final Repository repository, final List<String> assetPaths) {
       this.repository = checkNotNull(repository);
       this.assetPaths = checkNotNull(assetPaths);

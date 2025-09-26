@@ -12,12 +12,12 @@
  */
 package org.sonatype.nexus.repository.content.fluent.internal;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 import org.sonatype.nexus.common.entity.Continuation;
@@ -97,7 +97,19 @@ public class FluentAssetsImpl
 
   @Override
   public Continuation<FluentAsset> browseEager(final int limit, @Nullable final String continuationToken) {
-    throw new UnsupportedOperationException();
+    return new FluentContinuation<>(assetStore.browseEagerAssets(facet.contentRepositoryId(), continuationToken, limit),
+        this::with);
+  }
+
+  public Continuation<FluentAsset> browseEager(
+      final int limit,
+      @Nullable final String continuationToken,
+      @Nullable final OffsetDateTime newerThan,
+      @Nullable final OffsetDateTime olderThan)
+  {
+    return new FluentContinuation<>(
+        assetStore.browseEagerAssets(facet.contentRepositoryId(), continuationToken, limit, newerThan, olderThan),
+        this::with);
   }
 
   Continuation<FluentAsset> doBrowse(
@@ -150,7 +162,10 @@ public class FluentAssetsImpl
       return true;
     }
     else if (facet.repository().getType() instanceof GroupType) {
-      return facet.repository().facet(GroupFacet.class).allMembers().stream()
+      return facet.repository()
+          .facet(GroupFacet.class)
+          .allMembers()
+          .stream()
           .map(InternalIds::contentRepositoryId)
           .filter(Optional::isPresent)
           .map(Optional::get)
