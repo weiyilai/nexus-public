@@ -217,6 +217,10 @@ public interface SearchRecord
 
   void setNamespace(String namespace);
 
+  void addNamespaceNames(String namespace);
+
+  Collection<String> getNamespaceNames();
+
   void setNormalisedVersion(String normalisedVersion);
 
   void setPrerelease(boolean prerelease);
@@ -224,6 +228,10 @@ public interface SearchRecord
   void setTags(Collection<String> values);
 
   void setVersion(String version);
+
+  void addVersionNames(String version);
+
+  Collection<String> getVersionNames();
 
   Collection<SearchAssetRecord> getSearchAssetRecords();
 
