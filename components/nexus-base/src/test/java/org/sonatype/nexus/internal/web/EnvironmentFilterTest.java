@@ -12,6 +12,8 @@
  */
 package org.sonatype.nexus.internal.web;
 
+import java.io.IOException;
+
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -20,21 +22,21 @@ import javax.servlet.http.HttpServletResponse;
 import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.common.app.BaseUrlManager;
 
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import static com.google.common.net.HttpHeaders.CONTENT_SECURITY_POLICY;
+import static com.google.common.net.HttpHeaders.SERVER;
 import static com.google.common.net.HttpHeaders.STRICT_TRANSPORT_SECURITY;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import static com.google.common.net.HttpHeaders.CONTENT_SECURITY_POLICY;
 import static org.sonatype.nexus.internal.web.EnvironmentFilter.SANDBOX;
 import static org.sonatype.nexus.internal.web.EnvironmentFilter.STS_VALUE;
 
@@ -54,8 +56,21 @@ public class EnvironmentFilterTest
   }
 
   @Test
+  public void doFilter_headerDisabled() throws ServletException, IOException {
+    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/", false);
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getRequestURI()).thenReturn("/anything");
+    HttpServletResponse response = mock(HttpServletResponse.class);
+    FilterChain chain = mock(FilterChain.class);
+
+    filter.doFilter(request, response, chain);
+
+    verify(response, never()).setHeader(eq(SERVER), anyString());
+  }
+
+  @Test
   public void doFilter_ContentSecurityPolicy_is_set() throws ServletException, IOException {
-    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/");
+    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/", true);
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getRequestURI()).thenReturn("/anything");
     HttpServletResponse response = mock(HttpServletResponse.class);
@@ -68,7 +83,7 @@ public class EnvironmentFilterTest
 
   @Test
   public void doFilter_ContentSecurityPolicy_sandbox_for_repository_content() throws ServletException, IOException {
-    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/");
+    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/", true);
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getRequestURI()).thenReturn("/repository/raw/some-content.html");
     HttpServletResponse response = mock(HttpServletResponse.class);
@@ -81,7 +96,7 @@ public class EnvironmentFilterTest
 
   @Test
   public void doFilter_ContentSecurityPolicy_sandbox_for_repository_content_contextPath_set() throws ServletException, IOException {
-    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/nxrm/");
+    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/nxrm/", true);
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getRequestURI()).thenReturn("/nxrm/repository/raw/some-content.html");
     HttpServletResponse response = mock(HttpServletResponse.class);
@@ -94,7 +109,7 @@ public class EnvironmentFilterTest
 
   @Test
   public void doFilter_ContentSecurityPolicy_sandbox_contextPath_no_trailing_slash() throws ServletException, IOException {
-    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/nxrm");
+    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/nxrm", true);
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getRequestURI()).thenReturn("/nxrm/repository/raw/some-content.html");
     HttpServletResponse response = mock(HttpServletResponse.class);
@@ -107,7 +122,7 @@ public class EnvironmentFilterTest
 
   @Test
   public void doFilter_StrictTransportSecurity_for_https() throws ServletException, IOException {
-    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/");
+    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/", true);
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getRequestURI()).thenReturn("/anything");
     when(request.getScheme()).thenReturn("https");

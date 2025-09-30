@@ -12,6 +12,19 @@
  */
 package org.sonatype.nexus.bootstrap.entrypoint.jetty;
 
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.EventListener;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 import javax.servlet.ServletContextListener;
@@ -31,17 +44,6 @@ import org.sonatype.nexus.common.text.Strings2;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.EventListener;
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
@@ -438,9 +440,14 @@ public class JettyServer
 
       try {
         ApplicationVersion applicationVersion = applicationContext.getBean(ApplicationVersion.class);
-        banner = String.format("Sonatype Nexus %s %s",
+        String revision = Optional.ofNullable(applicationVersion.getBuildRevision())
+            .filter(rev -> rev.length() >= 8)
+            .map(rev -> rev.substring(0, 8))
+            .orElse("");
+        banner = "Sonatype Nexus %s %s (%s)".formatted(
             applicationVersion.getEdition(),
-            applicationVersion.getVersion());
+            applicationVersion.getVersion(),
+            revision);
       }
       catch (Exception e) {
         LOG.error("ApplicationVersion not available for banner", e);

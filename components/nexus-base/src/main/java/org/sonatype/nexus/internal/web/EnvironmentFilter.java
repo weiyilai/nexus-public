@@ -29,6 +29,7 @@ import org.sonatype.nexus.common.app.BaseUrlManager;
 import org.sonatype.nexus.common.app.WebFilterPriority;
 import org.sonatype.nexus.security.UserIdMdcHelper;
 
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,6 +60,7 @@ public class EnvironmentFilter
 
   static final String STS_VALUE = "max-age=31536000; includeSubDomains;";
 
+  @Nullable
   private final String serverHeader;
 
   private final BaseUrlManager baseUrlManager;
@@ -69,14 +71,15 @@ public class EnvironmentFilter
   public EnvironmentFilter(
       final ApplicationVersion applicationVersion,
       final BaseUrlManager baseUrlManager,
-      @Value("nexus-context-path") final String contextPath)
+      @Value("nexus-context-path") final String contextPath,
+      @Value("${nexus.header.server:true}") final boolean includeServerHeader)
   {
     // cache "Server" header value
     checkNotNull(applicationVersion);
 
-    this.serverHeader = String.format("Nexus/%s (%s)",
-        applicationVersion.getVersion(),
-        applicationVersion.getEdition());
+    this.serverHeader = includeServerHeader
+        ? "Nexus/%s (%s)".formatted(applicationVersion.getVersion(), applicationVersion.getEdition())
+        : null;
 
     this.baseUrlManager = checkNotNull(baseUrlManager);
     this.contextPath = resolveContextPath(contextPath);
@@ -115,7 +118,9 @@ public class EnvironmentFilter
    * Add default headers to servlet response.
    */
   private void defaultHeaders(final HttpServletRequest request, final HttpServletResponse response) {
-    response.setHeader(SERVER, serverHeader);
+    if (serverHeader != null) {
+      response.setHeader(SERVER, serverHeader);
+    }
 
     // NEXUS-5023 disable IE for sniffing into response content
     response.setHeader(X_CONTENT_TYPE_OPTIONS, "nosniff");
