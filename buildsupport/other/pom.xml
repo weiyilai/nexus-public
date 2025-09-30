@@ -30,6 +30,13 @@
   <properties>
     <aws-java-sdk.version>1.12.658</aws-java-sdk.version>
     <woodstox-core.version>6.5.0</woodstox-core.version>
+    <!--
+      IMPORTANT: When upgrading azure-storage-blob.version check if the security override
+      of azure-core-http-netty can be removed from dependencyManagement below.
+     -->
+    <azure-storage-blob.version>12.31.2</azure-storage-blob.version>
+    <azure-identity.version>1.18.0</azure-identity.version>
+    <azure-json.version>1.5.0</azure-json.version>
   </properties>
 
   <dependencyManagement>
@@ -424,6 +431,39 @@
         <groupId>com.fasterxml.woodstox</groupId>
         <artifactId>woodstox-core</artifactId>
         <version>${woodstox-core.version}</version>
+      </dependency>
+
+      <!-- Azure dependencies for blob storage functionality -->
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-storage-blob</artifactId>
+        <version>${azure-storage-blob.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-identity</artifactId>
+        <version>${azure-identity.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-json</artifactId>
+        <version>${azure-json.version}</version>
+      </dependency>
+
+      <!--
+        Security fix: azure-storage-blob 12.31.2 depends on azure-core-http-netty 1.16.0,
+        which includes vulnerable netty-codec and netty-codec-http (version 4.1.124.Final).
+        Overriding to 1.16.1 to address these vulnerabilities.
+
+        TODO: Remove this override after azure-storage-blob updates its dependency to 1.16.1 or higher.
+              Check for updates when upgrading azure-storage-blob.version above.
+      -->
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-core-http-netty</artifactId>
+        <version>1.16.1</version>
       </dependency>
 
     </dependencies>
