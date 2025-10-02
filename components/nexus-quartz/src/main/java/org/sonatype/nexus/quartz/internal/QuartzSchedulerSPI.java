@@ -26,10 +26,7 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
 import javax.annotation.Nullable;
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.event.EventHelper;
@@ -61,6 +58,8 @@ import org.sonatype.nexus.thread.DatabaseStatusDelayedExecutor;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -108,6 +107,8 @@ public abstract class QuartzSchedulerSPI
     implements SchedulerSPI
 {
   public static final String MISSING_TRIGGER_RECOVERY = ".missingTriggerRecovery";
+
+  public static final String MISSING_TRIGGER_DEFAULT_MESSAGE = "Job with key '%s' is missing its trigger";
 
   public static final String PLAN_RECONCILIATION_TASK_ID = "blobstore.planReconciliation";
 
@@ -587,21 +588,38 @@ public abstract class QuartzSchedulerSPI
   @Guarded(by = STARTED)
   public List<String> getMissingTriggerDescriptions() {
     try {
-      try (TcclBlock tccl = TcclBlock.begin(this)) {
-        Set<JobKey> jobKeys = scheduler.getJobKeys(jobGroupEquals(GROUP_NAME));
-        List<String> missingJobDescriptions = new ArrayList<>();
-        for (JobKey jobKey : jobKeys) {
-          Trigger trigger = scheduler.getTrigger(triggerKey(jobKey.getName(), jobKey.getGroup()));
-          if (trigger.getJobDataMap().containsKey(MISSING_TRIGGER_RECOVERY)) {
-            missingJobDescriptions.add(trigger.getDescription());
-          }
+      Set<JobKey> jobKeys = scheduler.getJobKeys(jobGroupEquals(GROUP_NAME));
+      List<String> missingJobDescriptions = new ArrayList<>();
+      for (JobKey jobKey : jobKeys) {
+        Optional<Trigger> trigger = getTrigger(jobKey);
+
+        if (trigger.isEmpty()) {
+          missingJobDescriptions.add(MISSING_TRIGGER_DEFAULT_MESSAGE.formatted(jobKey));
+          continue;
         }
-        return missingJobDescriptions;
+
+        if (isTriggerMissing(trigger.get())) {
+          missingJobDescriptions.add(trigger.get().getDescription());
+        }
       }
+      return missingJobDescriptions;
     }
     catch (SchedulerException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Override
+  public boolean isTriggerMissing(final TaskInfo taskInfo) {
+    checkNotNull(taskInfo);
+
+    if (!(taskInfo instanceof QuartzTaskInfo quartzTaskInfo)) {
+      return false;
+    }
+
+    return getTrigger(quartzTaskInfo.getJobKey())
+        .map(QuartzSchedulerSPI::isTriggerMissing)
+        .orElse(false);
   }
 
   @Override
@@ -627,6 +645,17 @@ public abstract class QuartzSchedulerSPI
     }
     catch (SchedulerException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private Optional<Trigger> getTrigger(final JobKey jobKey) {
+    try {
+      return Optional.ofNullable(scheduler.getTrigger(triggerKey(jobKey.getName(), jobKey.getGroup())));
+    }
+    catch (SchedulerException e) {
+      log.warn("Unable to get trigger for job key {}", jobKey,
+          log.isDebugEnabled() ? e : e.getMessage());
+      return Optional.empty();
     }
   }
 
@@ -1023,6 +1052,11 @@ public abstract class QuartzSchedulerSPI
 
   private static boolean isInterruptedJob(final JobDetail jobDetail) {
     return INTERRUPTED.name().equals(jobDetail.getJobDataMap().getString(LAST_RUN_STATE_END_STATE));
+  }
+
+  private static boolean isTriggerMissing(final Trigger trigger) {
+    // Trigger is missing if it's null or has the recovery marker
+    return trigger == null || trigger.getJobDataMap().containsKey(MISSING_TRIGGER_RECOVERY);
   }
 
   protected static long getNextFireMillis(final Trigger trigger) {

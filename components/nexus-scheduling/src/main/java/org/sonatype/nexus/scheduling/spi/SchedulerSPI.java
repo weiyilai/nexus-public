@@ -75,6 +75,14 @@ public interface SchedulerSPI
   List<String> getMissingTriggerDescriptions();
 
   /**
+   * Checks if the trigger is missing for a given TaskInfo.
+   *
+   * @param taskInfo the TaskInfo to check
+   * @return true if the trigger is missing, false otherwise
+   */
+  boolean isTriggerMissing(TaskInfo taskInfo);
+
+  /**
    * Schedule a task with the given scheduler.
    *
    * If a task already exists with the same task identifier, the task will be updated.
@@ -96,13 +104,13 @@ public interface SchedulerSPI
   int getExecutedTaskCount();
 
   /**
-   * Attempts to cancel execution of the task ({@code id}).  This attempt will
+   * Attempts to cancel execution of the task ({@code id}). This attempt will
    * fail if the task has already completed, has already been cancelled,
-   *  or could not be cancelled for some other reason.
+   * or could not be cancelled for some other reason.
    *
    * @return {@code false} if the task could not be cancelled,
-   * typically because it has already completed normally;
-   * {@code true} otherwise
+   *         typically because it has already completed normally;
+   *         {@code true} otherwise
    *
    * @since 3.19
    */
