@@ -136,6 +136,73 @@ export default class ExtJS {
   }
 
   /**
+   * Request a session for supplied credentials, reusing the ExtJS security flow
+   * @param {string} username
+   * @param {string} password
+   * @returns {Promise}
+   */
+  static requestSession(username, password) {
+    const b64u = NX.util.Base64.encode(username);
+    const b64p = NX.util.Base64.encode(password);
+
+    return new Promise((resolve, reject) => {
+      NX.Security.requestSession(b64u, b64p).then(
+        (response) => {
+          const normalizedResponse = ExtJS.normalizeAjaxResponse(response);
+
+          // Set user state on successful authentication
+          if (normalizedResponse.status >= 200 && normalizedResponse.status < 300) {
+            NX.State.setUser({id: username});
+          }
+
+          resolve({response: normalizedResponse});
+        },
+        (error) => reject({response: ExtJS.normalizeAjaxResponse(error)})
+      );
+    });
+  }
+
+  static normalizeAjaxResponse(response) {
+    if (response?.response) {
+      response = response.response;
+    }
+
+    if (!response) {
+      return {status: undefined, data: undefined};
+    }
+
+    let data;
+
+    if (response.responseJSON !== undefined) {
+      data = response.responseJSON;
+    }
+    else if (response.responseText !== undefined) {
+      const text = response.responseText;
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        }
+        catch {
+          data = text;
+        }
+      }
+    }
+    else if (response.data !== undefined) {
+      data = response.data;
+    }
+
+    const normalized = {
+      status: response.status
+    };
+
+    if (data !== undefined) {
+      normalized.data = data;
+    }
+
+    return normalized;
+  }
+
+  /**
    * Prompt the user to re-authenticate to fetch an authentication token
    * @param message prompt shown to user
    * @returns {Promise}

@@ -11,18 +11,13 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-import React, { useState } from 'react';
-import { 
-  NxTile, 
-  NxButton, 
-  NxTextInput,
-  NxFieldset,
-  NxFormGroup
-} from '@sonatype/react-shared-components';
-import LoginLayout from '../../layout/LoginLayout';
+import React from 'react';
+import { NxTile } from '@sonatype/react-shared-components';
 import UIStrings from '../../../constants/UIStrings';
+import LoginLayout from '../../layout/LoginLayout';
+import LoginForm from './LoginForm';
 
-const {LOGIN_TITLE, LOGIN_SUBTITLE, USERNAME_LABEL, PASSWORD_LABEL, LOGIN_BUTTON} = UIStrings;
+const { LOGIN_TITLE, LOGIN_SUBTITLE } = UIStrings;
 
 import './LoginPage.scss';
 
@@ -32,11 +27,15 @@ import './LoginPage.scss';
  * @param {Object} logoConfig - Logo configuration passed to LoginLayout
  */
 export default function LoginPage({ logoConfig }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const handleLoginSuccess = ({ username }) => {
+    console.log(`User ${username} authenticated successfully`);
+    // TODO: Additional success handling can be added here
+    // For example: redirect to dashboard, show success message, etc.
+  };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const handleLoginError = (error) => {
+    console.error('Login failed:', error);
+    // TODO: Additional error handling can be added here
   };
 
   return (
@@ -44,47 +43,12 @@ export default function LoginPage({ logoConfig }) {
       <div className="login-page">
         <NxTile className="login-tile" data-testid="login-tile">
           <NxTile.Header>
-            <NxTile.HeaderTitle>
-              {LOGIN_TITLE}
-            </NxTile.HeaderTitle>
-            <NxTile.HeaderSubtitle>
-              {LOGIN_SUBTITLE}
-            </NxTile.HeaderSubtitle>
+            <NxTile.HeaderTitle>{LOGIN_TITLE}</NxTile.HeaderTitle>
+            <NxTile.HeaderSubtitle>{LOGIN_SUBTITLE}</NxTile.HeaderSubtitle>
           </NxTile.Header>
           <NxTile.Content>
-            <div className="login-content">              
-              <form className="login-form" onSubmit={handleSubmit}>
-                <NxFieldset>
-                  <NxFormGroup label={USERNAME_LABEL} className="username-field">
-                    <NxTextInput
-                      id="username"
-                      value={username}
-                      onChange={setUsername}
-                      placeholder={USERNAME_LABEL}
-                      isPristine={false}
-                    />
-                  </NxFormGroup>
-                  
-                  <NxFormGroup label={PASSWORD_LABEL}>
-                    <NxTextInput
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={setPassword}
-                      placeholder={PASSWORD_LABEL}
-                      isPristine={false}
-                    />
-                  </NxFormGroup>
-                  
-                  <NxButton
-                    type="submit"
-                    variant="primary"
-                    className="login-button"
-                  >
-                    {LOGIN_BUTTON}
-                  </NxButton>
-                </NxFieldset>
-              </form>
+            <div className="login-content">
+              <LoginForm onSuccess={handleLoginSuccess} onError={handleLoginError} primaryButton={true} />
             </div>
           </NxTile.Content>
         </NxTile>

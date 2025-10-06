@@ -73,6 +73,37 @@ Ext.define('NX.Security', {
     if (me.controller()) {
       me.controller().signOut();
     }
+  },
+
+  /**
+   * Shared helper for creating a server-side session using base64 credentials.
+   *
+   * NOTE: This function does NOT perform the base64 encoding. It expects
+   *       `b64username` and `b64password` to be already encoded before calling.
+   * @param {String} b64username
+   * @param {String} b64password
+   * @returns {Ext.promise.Promise}
+   */
+  requestSession: function (b64username, b64password) {
+    var deferred = new Ext.Deferred();
+
+    Ext.Ajax.request({
+      url: NX.util.Url.urlOf('service/rapture/session'),
+      method: 'POST',
+      params: {
+        username: b64username,
+        password: b64password
+      },
+      suppressStatus: true,
+      success: function (response) {
+        deferred.resolve(response);
+      },
+      failure: function (response) {
+        deferred.reject(response);
+      }
+    });
+
+    return deferred.promise;
   }
 
 });

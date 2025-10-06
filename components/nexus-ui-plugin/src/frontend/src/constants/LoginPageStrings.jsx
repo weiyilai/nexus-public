@@ -16,5 +16,13 @@ export default {
   LOGIN_SUBTITLE: 'Login to Continue',
   USERNAME_LABEL: 'Username',
   PASSWORD_LABEL: 'Password',
-  LOGIN_BUTTON: 'Log in'
+  LOGIN_BUTTON: 'Log in',
+  LOGIN_BUTTON_LOADING: 'Signing in...',
+  ERRORS: {
+    WRONG_CREDENTIALS: 'Wrong username or password',
+    CONNECTION_FAILED: 'Connection failed. Please check your network connection.',
+    AUTHENTICATION_FAILED: 'An error occurred during authentication',
+    USERNAME_REQUIRED: 'Username is required',
+    PASSWORD_REQUIRED: 'Password is required'
+  }
 };

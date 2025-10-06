@@ -79,10 +79,12 @@ global.NX = {
   State: {
     getValue: jest.fn(),
     getUser: jest.fn(),
-    getEdition: jest.fn()
+    getEdition: jest.fn(),
+    setUser: jest.fn()
   },
   Security: {
     hasUser: jest.fn(),
-    askToAuthenticate: jest.fn()
+    askToAuthenticate: jest.fn(),
+    requestSession: jest.fn(() => Promise.resolve({status: 204, responseText: ''}))
   }
 };

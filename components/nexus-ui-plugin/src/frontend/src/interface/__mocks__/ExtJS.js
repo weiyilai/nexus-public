@@ -42,6 +42,8 @@ export default class ExtJS {
 
   static requestConfirmation = jest.fn(() => Promise.resolve());
   static fetchAuthenticationToken = jest.fn(() => Promise.resolve('mock-token'));
+  static requestSession = jest.fn(() => Promise.resolve({status: 200}));
+  static normalizeAjaxResponse = jest.fn((response) => response);
   static requestAuthenticationToken = jest.fn(() => Promise.resolve('mock-auth-token'));
   static downloadUrl = jest.fn();
 
