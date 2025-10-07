@@ -28,7 +28,6 @@ import org.sonatype.nexus.repository.view.Request;
 import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.repository.view.Status;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.net.HttpHeaders;
 import org.apache.http.client.utils.DateUtils;
 import org.joda.time.DateTime;
@@ -53,8 +52,7 @@ public class HttpConditions
   /**
    * Request attribute containing the stashed conditions.
    */
-  @VisibleForTesting
-  public static final String HTTP_CONDITIONS = HttpConditions.class.getName() + ".conditions";
+  private static final String HTTP_CONDITIONS = HttpConditions.class.getName() + ".conditions";
 
   /**
    * List of supported headers. This list must be in sync with headers supported in {@link #requestPredicate(Request)}.
@@ -209,8 +207,6 @@ public class HttpConditions
     final Response.Builder responseBuilder = new Response.Builder().status(Status.success(NOT_MODIFIED));
     Optional.ofNullable(response.getHeaders().get(HttpHeaders.ETAG))
         .ifPresent(eTag -> responseBuilder.header(HttpHeaders.ETAG, eTag));
-    Optional.ofNullable(response.getHeaders().get(NxrmHttpHeaders.PCCS_HASH))
-        .ifPresent(pccsHash -> responseBuilder.header(NxrmHttpHeaders.PCCS_HASH, pccsHash));
     return responseBuilder.build();
   }
 

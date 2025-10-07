@@ -25,7 +25,6 @@ import org.sonatype.nexus.repository.view.Request;
 import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.repository.view.ViewFacet;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 
 import org.springframework.stereotype.Component;
@@ -52,7 +51,6 @@ import static org.sonatype.nexus.repository.http.HttpMethods.PUT;
  * @see Content
  * @since 3.0
  */
-@Primary
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class ConditionalRequestHandler

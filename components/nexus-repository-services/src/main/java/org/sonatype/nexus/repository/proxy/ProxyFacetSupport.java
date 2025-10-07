@@ -555,7 +555,6 @@ public abstract class ProxyFacetSupport
     checkState(config.remoteUrl.isAbsolute(),
         "Invalid remote URL '%s' for proxy repository %s, please fix your configuration", config.remoteUrl,
         getRepository().getName());
-
     URI uri;
     try {
       uri = config.remoteUrl.resolve(encodeUrl(url));
@@ -564,9 +563,17 @@ public abstract class ProxyFacetSupport
       log.warn("Unable to resolve url. Reason: {}", e.getMessage());
       throw new BadRequestException("Invalid repository path");
     }
-
-    HttpRequestBase request = buildFetchHttpRequest(uri, context, stale);
-
+    HttpRequestBase request = buildFetchHttpRequest(uri, context);
+    if (stale != null) {
+      final DateTime lastModified = stale.getAttributes().get(Content.CONTENT_LAST_MODIFIED, DateTime.class);
+      if (lastModified != null) {
+        request.addHeader(HttpHeaders.IF_MODIFIED_SINCE, DateUtils.formatDate(lastModified.toDate()));
+      }
+      final String etag = stale.getAttributes().get(Content.CONTENT_ETAG, String.class);
+      if (etag != null) {
+        request.addHeader(HttpHeaders.IF_NONE_MATCH, ETagHeaderUtils.quote(etag));
+      }
+    }
     log.debug("Fetching: {}", request);
     log.debug("Fetching Request Headers: {}", Arrays.toString(request.getAllHeaders()));
 
@@ -593,69 +600,33 @@ public abstract class ProxyFacetSupport
     boolean isUnmodified = isNotModified(response, stale);
 
     if (status.getStatusCode() == HttpStatus.SC_OK && !isUnmodified) {
-      return buildOkResponseContent(context, request, response, cacheInfo);
+      HttpEntity entity = response.getEntity();
+      log.debug("Entity: {}", entity);
+
+      final Content result = createContent(context, response);
+      result.getAttributes().set(Content.CONTENT_LAST_MODIFIED, extractLastModified(request, response));
+      final Header etagHeader = response.getLastHeader(HttpHeaders.ETAG);
+      result.getAttributes()
+          .set(Content.CONTENT_ETAG, etagHeader == null ? null : ETagHeaderUtils.extract(etagHeader.getValue()));
+
+      result.getAttributes().set(CacheInfo.class, cacheInfo);
+      return result;
     }
 
     try {
-      return build3xxResponseContent(context, uri, stale, response, cacheInfo, isUnmodified);
+      if (status.getStatusCode() == HttpStatus.SC_MULTIPLE_CHOICES) {
+        return handle300MultipleChoicesError(context, stale, uri, response);
+      }
+      if (isUnmodified) {
+        checkState(stale != null, "Received 304 without conditional GET (bad server?) from %s", uri);
+        indicateVerified(context, stale, cacheInfo);
+      }
+      mayThrowProxyServiceException(response);
     }
     finally {
       HttpClientUtils.closeQuietly(response);
     }
-  }
 
-  protected HttpRequestBase buildFetchHttpRequest(final URI uri, final Context context, final Content stale) {
-    HttpRequestBase request = buildFetchHttpRequest(uri, context);
-    if (stale != null) {
-      final DateTime lastModified = stale.getAttributes().get(Content.CONTENT_LAST_MODIFIED, DateTime.class);
-      if (lastModified != null) {
-        request.addHeader(HttpHeaders.IF_MODIFIED_SINCE, DateUtils.formatDate(lastModified.toDate()));
-      }
-      final String etag = stale.getAttributes().get(Content.CONTENT_ETAG, String.class);
-      if (etag != null) {
-        request.addHeader(HttpHeaders.IF_NONE_MATCH, ETagHeaderUtils.quote(etag));
-      }
-    }
-    return request;
-  }
-
-  protected Content buildOkResponseContent(
-      final Context context,
-      final HttpRequestBase request,
-      final HttpResponse response,
-      final CacheInfo cacheInfo)
-  {
-    HttpEntity entity = response.getEntity();
-    log.debug("Entity: {}", entity);
-
-    final Header etagHeader = response.getLastHeader(HttpHeaders.ETAG);
-    final String etag = etagHeader != null ? ETagHeaderUtils.extract(etagHeader.getValue()) : null;
-
-    final Content content = createContent(context, response);
-    content.getAttributes().set(Content.CONTENT_LAST_MODIFIED, extractLastModified(request, response));
-    content.getAttributes().set(Content.CONTENT_ETAG, etag);
-    content.getAttributes().set(CacheInfo.class, cacheInfo);
-
-    return content;
-  }
-
-  protected Content build3xxResponseContent(
-      final Context context,
-      final URI uri,
-      final Content stale,
-      final HttpResponse response,
-      final CacheInfo cacheInfo,
-      final boolean isUnmodified) throws ProxyServiceException, IOException
-  {
-    StatusLine status = response.getStatusLine();
-    if (status.getStatusCode() == HttpStatus.SC_MULTIPLE_CHOICES) {
-      return handle300MultipleChoicesError(context, stale, uri, response);
-    }
-    if (isUnmodified) {
-      checkState(stale != null, "Received 304 without conditional GET (bad server?) from %s", uri);
-      indicateVerified(context, stale, cacheInfo);
-    }
-    mayThrowProxyServiceException(response);
     return null;
   }
 
