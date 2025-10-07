@@ -61,7 +61,7 @@ public class DefaultSearchMappings
       new SearchMapping("q", "keyword", "Query by keyword", KEYWORDS, false),
       new SearchMapping("repository", REPOSITORY_NAME, "Repository name", SearchField.REPOSITORY_NAME),
       new SearchMapping("format", "format", "Query by format", FORMAT),
-      new SearchMapping("group", GROUP_RAW, "Component group", NAMESPACE),
+      new SearchMapping("group", GROUP_RAW, "Component group", NAMESPACE, false),
       new SearchMapping(NAME_RAW_ALIAS, NAME_RAW, "Component name", NAME),
       new SearchMapping(VERSION, VERSION, "Component version", SearchField.VERSION),
       new SearchMapping(PRERELEASE, IS_PRERELEASE_KEY, "Prerelease version flag", SearchField.PRERELEASE),

@@ -35,6 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.StreamSupport.stream;
+import static org.sonatype.nexus.repository.rest.internal.DefaultSearchMappings.GROUP_RAW;
 
 /**
  * @since 3.38
@@ -106,9 +107,18 @@ public class SearchUtils
             .stream()
             .map(value -> {
               String key = searchParams.getOrDefault(entry.getKey(), entry.getKey());
-              return new SearchFilter(key, value);
+              // Normalize case for namespace-related fields to match database storage
+              String normalizedValue = shouldNormalizeCase(key) ? value.toLowerCase() : value;
+              return new SearchFilter(key, normalizedValue);
             }))
         .collect(toList());
+  }
+
+  private boolean shouldNormalizeCase(String key) {
+    // Normalize case for fields that map to namespace/group (stored lowercase in tsvector_namespace)
+    return GROUP_RAW.equals(key) ||
+        "namespace".equals(key) ||
+        "group".equals(key);
   }
 
   public boolean isAssetSearchParam(final String assetSearchParam) {
