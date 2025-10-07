@@ -33,7 +33,7 @@ export function useNavigationLinkState(name, selectedState, params) {
   }
 
   const data = state?.data || {};
-  const { icon, visibilityRequirements } = data;
+  const { text, icon, visibilityRequirements } = data;
 
   const isSelected = useIsActive(selectedState || name);
 
@@ -41,5 +41,5 @@ export function useNavigationLinkState(name, selectedState, params) {
 
   const isVisible = useIsVisible(visibilityRequirements);
 
-  return { isVisible, href, isSelected, icon };
+  return { isVisible, href, isSelected, text, icon };
 }
