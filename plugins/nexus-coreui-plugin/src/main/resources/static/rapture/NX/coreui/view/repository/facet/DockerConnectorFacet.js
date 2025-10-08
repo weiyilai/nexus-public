@@ -103,6 +103,7 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
                 var form = group.up('form');
                 var nameField = form && form.down('#name');
                 var repoName = nameField ? nameField.getValue() : 'repo-name';
+                var isCreateMode = !repoName || repoName.trim() === '';
                 var items = group.items.items;
                 items.forEach(function (item) {
                   if (item.boxLabel && item.boxLabel.indexOf('{{repoName}}') !== -1) {
@@ -112,13 +113,11 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
                 var value = group.getValue()['attributes.docker.pathEnabled'];
                 // Ensure value is explicitly 'true' or 'false'; default to 'true' otherwise
                 if (!['true', 'false'].includes(value)) {
-                  // if not explicit, then look at existing config and make it explicit
-                  var subdomainCheckboxField = form && form.down('[name=dockercheckboxsubdomain]');
-                  var httpPortCheckboxField = form && form.down('[name=dockercheckboxhttp]');
-                  var httpsPortCheckboxField = form && form.down('[name=dockercheckboxhttps]');
-                  value = ((subdomainCheckboxField && subdomainCheckboxField.getValue()) ||
-                      (httpPortCheckboxField && httpPortCheckboxField.getValue()) ||
-                      (httpsPortCheckboxField && httpsPortCheckboxField.getValue())) ? 'false' : 'true';
+                  // If not explicit, default based on mode:
+                  // - Create mode: default to 'true' (path-based routing)
+                  // - Edit mode: default to 'false' to preserve existing repos with alternate access methods
+                  //   (repos may have no connectors configured if using reverse proxy, subdomain or ports.)
+                  value = isCreateMode ? 'true' : 'false';
 
                   group.setValue({ 'attributes.docker.pathEnabled': value });
                   // Reset the original value of the radiogroup to ensure that the newly set default value
