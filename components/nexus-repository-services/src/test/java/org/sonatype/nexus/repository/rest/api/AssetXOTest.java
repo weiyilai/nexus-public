@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.repository.Format;
@@ -26,47 +26,63 @@ import org.sonatype.nexus.repository.config.Configuration;
 import org.sonatype.nexus.repository.manager.internal.RepositoryImpl;
 import org.sonatype.nexus.repository.rest.api.SimpleApiRepositoryAdapterTest.SimpleConfiguration;
 import org.sonatype.nexus.repository.search.AssetSearchResult;
+import org.sonatype.nexus.repository.types.GroupType;
 import org.sonatype.nexus.repository.types.HostedType;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
 import org.mockito.Mockito;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 
-@RunWith(JUnitParamsRunner.class)
-public class AssetXOTest
-    extends TestSupport
+class AssetXOTest
+    extends Test5Support
 {
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     BaseUrlHolder.set("https://nexus-url", "");
   }
 
-  @Test
-  @Parameters({
+  @ParameterizedTest
+  @CsvSource({
       "hosted, /path/to/resource, /hosted/path/to/resource",
       "hosted, path/to/resource, /hosted/path/to/resource"
   })
-  public void testFrom(String repositoryName, String path, String expectedUrl) throws Exception {
+  void testFrom(String repositoryName, String path, String expectedUrl) throws Exception {
     Repository repository = createRepository(new HostedType(), repositoryName);
     AssetSearchResult assetSearchResult = Mockito.mock(AssetSearchResult.class);
+    when(assetSearchResult.getRepository()).thenReturn(repositoryName);
     when(assetSearchResult.getPath()).thenReturn(path);
     when(assetSearchResult.getId()).thenReturn("resource-id");
     when(assetSearchResult.getFormat()).thenReturn("test-format");
     AssetXO assetXO = AssetXO.from(assetSearchResult, repository, null);
-    Assert.assertTrue(assetXO.getDownloadUrl().contains(expectedUrl));
+    assertThat(assetXO.getDownloadUrl(), containsString(expectedUrl));
   }
 
   @Test
-  public void testGetExpandedAttributes_withExposedKeys() {
+  void testFromForGroup() throws Exception {
+    Repository repository = createRepository(new GroupType(), "group");
+    AssetSearchResult assetSearchResult = Mockito.mock(AssetSearchResult.class);
+    when(assetSearchResult.getRepository()).thenReturn("hosted");
+    when(assetSearchResult.getPath()).thenReturn("/path/to/resource");
+    when(assetSearchResult.getId()).thenReturn("resource-id");
+    when(assetSearchResult.getFormat()).thenReturn("test-format");
+    AssetXO assetXO = AssetXO.from(assetSearchResult, repository, null);
+    assertThat(assetXO.getDownloadUrl(), containsString("/group/path/to/resource"));
+    // it should use the repository where it lives, not the group repository
+    assertThat(assetXO.getRepository(), is("hosted"));
+  }
+
+  @Test
+  void testGetExpandedAttributes_withExposedKeys() {
     Map<String, Object> attributes = new HashMap<>();
     Map<String, Object> formatAttributes = new HashMap<>();
     formatAttributes.put("key1", "value1");
@@ -79,15 +95,15 @@ public class AssetXOTest
 
     Map<String, Object> result = AssetXO.getExpandedAttributes(attributes, "test-format", assetDescriptors);
 
-    assertEquals(1, result.size());
-    assertTrue(result.containsKey("test-format"));
+    assertThat(result.size(), is(1));
+    assertThat(result, hasKey("test-format"));
     Map<String, Object> resultFormatAttributes = (Map<String, Object>) result.get("test-format");
-    assertEquals(1, resultFormatAttributes.size());
-    assertEquals("value1", resultFormatAttributes.get("key1"));
+    assertThat(resultFormatAttributes.size(), is(1));
+    assertThat(resultFormatAttributes.get("key1"), is("value1"));
   }
 
   @Test
-  public void testGetExpandedAttributes_withoutExposedKeys() {
+  void testGetExpandedAttributes_withoutExposedKeys() {
     Map<String, Object> attributes = new HashMap<>();
     Map<String, Object> formatAttributes = new HashMap<>();
     formatAttributes.put("key1", "value1");
@@ -100,14 +116,14 @@ public class AssetXOTest
 
     Map<String, Object> result = AssetXO.getExpandedAttributes(attributes, "test-format", assetDescriptors);
 
-    assertEquals(1, result.size());
-    assertTrue(result.containsKey("test-format"));
+    assertThat(result.size(), is(1));
+    assertThat(result, hasKey("test-format"));
     Map<String, Object> resultFormatAttributes = (Map<String, Object>) result.get("test-format");
-    assertTrue(resultFormatAttributes.isEmpty());
+    assertThat(resultFormatAttributes.isEmpty(), is(true));
   }
 
   @Test
-  public void testGetExpandedAttributes_withNullDescriptors() {
+  void testGetExpandedAttributes_withNullDescriptors() {
     Map<String, Object> attributes = new HashMap<>();
     Map<String, Object> formatAttributes = new HashMap<>();
     formatAttributes.put("key1", "value1");
@@ -116,10 +132,10 @@ public class AssetXOTest
 
     Map<String, Object> result = AssetXO.getExpandedAttributes(attributes, "test-format", null);
 
-    assertEquals(1, result.size());
-    assertTrue(result.containsKey("test-format"));
+    assertThat(result.size(), is(1));
+    assertThat(result, hasKey("test-format"));
     Map<String, Object> resultFormatAttributes = (Map<String, Object>) result.get("test-format");
-    assertTrue(resultFormatAttributes.isEmpty());
+    assertThat(resultFormatAttributes.isEmpty(), is(true));
   }
 
   private static Repository createRepository(final Type type, String repositoryName) throws Exception {

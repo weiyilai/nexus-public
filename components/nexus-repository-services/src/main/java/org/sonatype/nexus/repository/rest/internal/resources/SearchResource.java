@@ -17,12 +17,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -41,6 +43,8 @@ import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.repository.Repository;
+import org.sonatype.nexus.repository.group.GroupFacet;
+import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.rest.SearchResourceExtension;
 import org.sonatype.nexus.repository.rest.api.AssetXO;
 import org.sonatype.nexus.repository.rest.api.AssetXODescriptor;
@@ -61,7 +65,10 @@ import org.sonatype.nexus.rest.Page;
 import org.sonatype.nexus.rest.Resource;
 
 import com.google.common.annotations.VisibleForTesting;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -72,7 +79,6 @@ import static org.sonatype.nexus.repository.search.SearchUtils.CONTINUATION_TOKE
 import static org.sonatype.nexus.repository.search.SearchUtils.SORT_DIRECTION;
 import static org.sonatype.nexus.repository.search.SearchUtils.SORT_FIELD;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
-import org.springframework.stereotype.Component;
 
 /**
  * @since 3.4
@@ -108,6 +114,8 @@ public class SearchResource
 
   private final EventManager eventManager;
 
+  private final RepositoryManager repositoryManager;
+
   private int pageSize = 50;
 
   @Inject
@@ -118,6 +126,7 @@ public class SearchResource
       final ComponentXOFactory componentXOFactory,
       final Set<SearchResourceExtension> searchResourceExtensions,
       final EventManager eventManager,
+      final RepositoryManager repositoryManager,
       @Nullable final List<AssetXODescriptor> assetDescriptorsList)
   {
     this.searchUtils = checkNotNull(searchUtils);
@@ -125,6 +134,7 @@ public class SearchResource
     this.searchService = checkNotNull(searchService);
     this.componentXOFactory = checkNotNull(componentXOFactory);
     this.searchResourceExtensions = checkNotNull(searchResourceExtensions);
+    this.repositoryManager = checkNotNull(repositoryManager);
     this.assetDescriptors =
         assetDescriptorsList != null ? QualifierUtil.buildQualifierBeanMap(assetDescriptorsList) : null;
     this.eventManager = checkNotNull(eventManager);
@@ -141,10 +151,11 @@ public class SearchResource
   {
     SearchResponse response = doSearch(continuationToken, sort, direction, seconds, uriInfo);
     List<SearchFilter> searchFilters = searchUtils.getSearchFilters(uriInfo);
-    Optional<String> repositoryName = tryExtractRepositoryFromSearch(searchFilters);
+    Function<String, String> repositoryNames = tryExtractRepositoryFromSearch(searchFilters);
+
     List<ComponentXO> componentXOs = response.getSearchResults()
         .stream()
-        .map(componentHit -> this.toComponent(componentHit, repositoryName.orElse(null)))
+        .map(componentHit -> this.toComponent(componentHit, repositoryNames))
         .collect(toList());
 
     return new Page<>(componentXOs, response.getContinuationToken());
@@ -198,13 +209,13 @@ public class SearchResource
 
     MultivaluedMap<String, String> assetParams = getAssetParams(uriInfo);
 
-    Optional<String> repositoryName = tryExtractRepositoryFromSearch(searchUtils.getSearchFilters(uriInfo));
+    Function<String, String> repositoryNames = tryExtractRepositoryFromSearch(searchUtils.getSearchFilters(uriInfo));
 
     // Filter Assets by the criteria
     List<AssetXO> assets = response.getSearchResults()
         .stream()
         .flatMap(component -> searchResultFilterUtils.filterComponentAssets(component, assetParams))
-        .map(asset -> AssetXO.from(asset, searchUtils.getRepository(repositoryName.orElse(asset.getRepository())),
+        .map(asset -> AssetXO.from(asset, searchUtils.getRepository(repositoryNames.apply(asset.getRepository())),
             assetDescriptors))
         .collect(toList());
 
@@ -238,16 +249,18 @@ public class SearchResource
     return searchService.search(request);
   }
 
-  private ComponentXO toComponent(final ComponentSearchResult componentHit, final String optionalRepository) {
+  private ComponentXO toComponent(
+      final ComponentSearchResult componentHit,
+      final Function<String, String> repositoryAccessMap)
+  {
     ComponentXO componentXO = componentXOFactory.createComponentXO();
-    Repository repository =
-        searchUtils.getRepository(optionalRepository != null ? optionalRepository : componentHit.getRepositoryName());
+    Repository repository = searchUtils.getRepository(repositoryAccessMap.apply(componentHit.getRepositoryName()));
 
     componentXO.setGroup(componentHit.getGroup());
     componentXO.setName(componentHit.getName());
     componentXO.setVersion(componentHit.getVersion());
-    componentXO.setId(new RepositoryItemIDXO(repository.getName(), componentHit.getId()).getValue());
-    componentXO.setRepository(repository.getName());
+    componentXO.setId(new RepositoryItemIDXO(componentHit.getRepositoryName(), componentHit.getId()).getValue());
+    componentXO.setRepository(componentHit.getRepositoryName());
     componentXO.setFormat(componentHit.getFormat());
 
     List<AssetXO> assets = componentHit.getAssets()
@@ -290,11 +303,31 @@ public class SearchResource
    * If we have specified a specific Repository for a Search, extract the name of that Repository.
    * This is necessary to ensure that downloadUrls for Group Repositories don't expose details of internal members.
    */
-  private static Optional<String> tryExtractRepositoryFromSearch(final List<SearchFilter> searchFilters) {
-    return searchFilters
+  @VisibleForTesting
+  Function<String, String> tryExtractRepositoryFromSearch(final List<SearchFilter> searchFilters) {
+    // Handle repositoryName="foo or bar"
+    Map<String, String> nameMap = searchFilters
         .stream()
         .filter(filter -> filter.getProperty().equals("repository_name"))
         .findFirst()
-        .map(SearchFilter::getValue);
+        .map(SearchFilter::getValue)
+        .map(filter -> Stream.of(filter.split(" ")))
+        .orElseGet(Stream::empty)
+        .map(repositoryManager::get)
+        .filter(Objects::nonNull)
+        .map(Repository::getName)
+        .collect(Collectors.toMap(Function.identity(), Function.identity()));
+
+    // If any of the specified repositories are groups then add leaf members missing from the map referencing the group
+    for (String repositoryName : Set.copyOf(nameMap.keySet())) {
+      Repository repository = repositoryManager.get(repositoryName);
+      repository.optionalFacet(GroupFacet.class).ifPresent(groupFacet -> {
+        groupFacet.leafMembers()
+            .stream()
+            .map(Repository::getName)
+            .forEach(memberName -> nameMap.putIfAbsent(memberName, repositoryName));
+      });
+    }
+    return repositoryName -> nameMap.getOrDefault(repositoryName, repositoryName);
   }
 }

@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
@@ -25,6 +23,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
 import org.sonatype.nexus.common.event.EventManager;
+import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.rest.SearchResourceExtension;
 import org.sonatype.nexus.repository.rest.api.AssetXO;
 import org.sonatype.nexus.repository.rest.api.AssetXODescriptor;
@@ -38,13 +37,15 @@ import org.sonatype.nexus.rest.Page;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_TABLE_SEARCH;
 import static org.sonatype.nexus.repository.search.SearchUtils.CONTINUATION_TOKEN;
 import static org.sonatype.nexus.repository.search.SearchUtils.SORT_DIRECTION;
 import static org.sonatype.nexus.repository.search.SearchUtils.SORT_FIELD;
-import org.springframework.stereotype.Component;
 
 /**
  * SQL Search REST endpoints.
@@ -69,10 +70,11 @@ public class SqlSearchResource
       final ComponentXOFactory componentXOFactory,
       final Set<SearchResourceExtension> searchResourceExtensions,
       final EventManager eventManager,
+      final RepositoryManager repositoryManager,
       @Nullable final List<AssetXODescriptor> assetDescriptors)
   {
     super(searchUtils, searchResultFilterUtils, searchService, componentXOFactory, searchResourceExtensions,
-        eventManager, assetDescriptors);
+        eventManager, repositoryManager, assetDescriptors);
   }
 
   @GET
