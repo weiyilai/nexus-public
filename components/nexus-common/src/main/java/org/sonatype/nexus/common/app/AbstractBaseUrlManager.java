@@ -38,15 +38,6 @@ public abstract class AbstractBaseUrlManager
     this.requestProvider = checkNotNull(requestProvider);
   }
 
-  @Override
-  public String getOrDetect() {
-    if (Strings.isNullOrEmpty(url)) {
-      log.debug("Base-url not set, attempting to detect");
-      return detectUrl();
-    }
-    return url;
-  }
-
   @Nullable
   @Override
   public String detectUrl() {

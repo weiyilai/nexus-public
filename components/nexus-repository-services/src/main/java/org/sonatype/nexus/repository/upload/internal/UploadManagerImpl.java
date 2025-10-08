@@ -235,12 +235,12 @@ public class UploadManagerImpl
     File tempFile = null;
     try {
       // Create temporary file with appropriate suffix based on asset name
-      // Files.createTempFile requires: prefix at least 3 chars, suffix can be null but not empty string
-      // Extract just the filename from the path to avoid dots in directory names
       String assetName = importStreamConfiguration.getAssetName();
-      String fileName = assetName.substring(assetName.lastIndexOf('/') + 1);
-      int lastDot = fileName.lastIndexOf('.');
-      String suffix = (lastDot > 0 && lastDot < fileName.length() - 1) ? fileName.substring(lastDot) : null;
+      String suffix = "";
+      int lastDot = assetName.lastIndexOf('.');
+      if (lastDot > 0 && lastDot < assetName.length() - 1) {
+        suffix = assetName.substring(lastDot);
+      }
 
       tempFile = Files.createTempFile("nexus-import-", suffix).toFile();
 

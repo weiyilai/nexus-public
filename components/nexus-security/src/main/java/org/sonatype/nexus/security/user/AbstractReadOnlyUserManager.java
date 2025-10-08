@@ -12,8 +12,6 @@
  */
 package org.sonatype.nexus.security.user;
 
-import org.sonatype.nexus.common.event.EventManager;
-
 /**
  * Read-only {@link UserManager}, which just throws exceptions for all the write methods.
  *
@@ -22,10 +20,6 @@ import org.sonatype.nexus.common.event.EventManager;
 public abstract class AbstractReadOnlyUserManager
     extends AbstractUserManager
 {
-  public AbstractReadOnlyUserManager(EventManager eventManager) {
-    super(eventManager);
-  }
-
   /**
    * @return Always {@code false}
    */
@@ -35,7 +29,7 @@ public abstract class AbstractReadOnlyUserManager
   }
 
   @Override
-  public User doAddUser(final User user, final String password) {
+  public User addUser(final User user, final String password) {
     throw new UnsupportedOperationException();
   }
 
@@ -45,12 +39,12 @@ public abstract class AbstractReadOnlyUserManager
   }
 
   @Override
-  public User doDeleteUser(final String userId) throws UserNotFoundException {
+  public void deleteUser(final String userId) throws UserNotFoundException {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public User doUpdateUser(final User user) throws UserNotFoundException {
+  public User updateUser(final User user) throws UserNotFoundException {
     throw new UnsupportedOperationException();
   }
 }

@@ -25,11 +25,6 @@ public interface BaseUrlManager
 
   String getUrl();
 
-  /**
-   * Attempts to get the configured url , otherwise tries to detect it from the current request environment.
-   */
-  String getOrDetect();
-
   boolean isForce();
 
   void setForce(boolean force);

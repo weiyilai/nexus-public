@@ -130,12 +130,15 @@ public class JwtHelper
 
     String username = subject.getPrincipal().toString();
     Optional<String> realm = subject.getPrincipals().getRealmNames().stream().findFirst();
+    Optional<String> idToken = Optional.of(subject.getSession())
+        .map(session -> session.getAttribute(ID_TOKEN))
+        .map(Object::toString);
     String userSessionId = Optional.of(subject.getSession())
         .map(Session::getId)
         .map(Object::toString)
         .orElseGet(() -> UUID.randomUUID().toString());
 
-    String token = createToken(username, realm.orElse(null), userSessionId);
+    String token = createToken(username, realm.orElse(null), idToken.orElse(null), userSessionId);
 
     return createCookie(token, secureRequest);
   }
@@ -153,6 +156,7 @@ public class JwtHelper
     String newJwt = createToken(
         decoded.getClaim(USER).asString(),
         decoded.getClaim(REALM).asString(),
+        decoded.getClaim(ID_TOKEN).asString(),
         decoded.getClaim(USER_SESSION_ID).asString());
 
     return createCookie(newJwt, secureRequest);
@@ -186,6 +190,7 @@ public class JwtHelper
   private String createToken(
       final String user,
       final String realm,
+      final String idToken,
       final String userSessionId)
   {
     Date issuedAt = new Date();
@@ -201,6 +206,9 @@ public class JwtHelper
       jwtBuilder.withClaim(REALM, realm);
     }
 
+    if (idToken != null) {
+      jwtBuilder.withClaim(ID_TOKEN, idToken);
+    }
     return jwtBuilder.sign(verifier.getAlgorithm());
   }
 

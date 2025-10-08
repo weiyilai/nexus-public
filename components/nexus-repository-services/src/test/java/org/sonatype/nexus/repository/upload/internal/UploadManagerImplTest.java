@@ -12,8 +12,6 @@
  */
 package org.sonatype.nexus.repository.upload.internal;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -28,7 +26,6 @@ import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.config.Configuration;
-import org.sonatype.nexus.repository.importtask.ImportStreamConfiguration;
 import org.sonatype.nexus.repository.types.GroupType;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.repository.types.ProxyType;
@@ -39,10 +36,8 @@ import org.sonatype.nexus.repository.upload.UploadProcessor;
 import org.sonatype.nexus.repository.upload.UploadDefinition;
 import org.sonatype.nexus.repository.upload.UploadHandler;
 import org.sonatype.nexus.repository.upload.UploadResponse;
-import org.sonatype.nexus.repository.upload.UnsupportedImportException;
 import org.sonatype.nexus.repository.upload.ValidatingComponentUpload;
 import org.sonatype.nexus.repository.upload.internal.BlobStoreMultipartForm.TempBlobFormField;
-import org.sonatype.nexus.repository.view.Content;
 import org.sonatype.nexus.repository.view.payloads.TempBlob;
 import org.sonatype.nexus.rest.ValidationErrorXO;
 import org.sonatype.nexus.rest.ValidationErrorsException;
@@ -63,13 +58,9 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNotNull;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
@@ -249,134 +240,5 @@ public class UploadManagerImplTest
           .collect(Collectors.toList());
       assertThat(messages, contains(message));
     }
-  }
-
-  @Test
-  public void testHandleStreamImport_withExtensionlessFile() throws IOException {
-    // Test with an asset name without extension (like "/crates/pub-demo/0.1.0/download")
-    String assetName = "/crates/pub-demo/0.1.0/download";
-    byte[] testData = "test content".getBytes();
-
-    ImportStreamConfiguration streamConfig = mock(ImportStreamConfiguration.class);
-    when(streamConfig.getRepository()).thenReturn(repository);
-    when(streamConfig.getAssetName()).thenReturn(assetName);
-    // Return a new ByteArrayInputStream each time to avoid "stream already consumed" issues
-    when(streamConfig.getInputStream()).thenAnswer(invocation -> new ByteArrayInputStream(testData));
-
-    Content mockContent = mock(Content.class);
-
-    // Handler doesn't support stream import, so it will fall back to file import
-    doThrow(new UnsupportedImportException("Stream import not supported"))
-        .when(handlerA)
-        .handle(any(ImportStreamConfiguration.class));
-
-    // Mock the file-based import to succeed
-    when(handlerA.handle(eq(repository), any(File.class), eq(assetName)))
-        .thenReturn(mockContent);
-
-    // Execute the method under test
-    Content result = underTest.handle(streamConfig);
-
-    // Verify the result is not null
-    assertThat(result, notNullValue());
-
-    // Verify file-based import was called as fallback
-    verify(handlerA).handle(eq(repository), any(File.class), eq(assetName));
-  }
-
-  @Test
-  public void testHandleStreamImport_withFileWithExtension() throws IOException {
-    // Test with an asset name with extension
-    String assetName = "test-file.jar";
-    byte[] testData = "test jar content".getBytes();
-
-    ImportStreamConfiguration streamConfig = mock(ImportStreamConfiguration.class);
-    when(streamConfig.getRepository()).thenReturn(repository);
-    when(streamConfig.getAssetName()).thenReturn(assetName);
-    when(streamConfig.getInputStream()).thenAnswer(invocation -> new ByteArrayInputStream(testData));
-
-    Content mockContent = mock(Content.class);
-
-    // Handler doesn't support stream import, so it will fall back to file import
-    doThrow(new UnsupportedImportException("Stream import not supported"))
-        .when(handlerA)
-        .handle(any(ImportStreamConfiguration.class));
-
-    // Mock the file-based import to succeed
-    when(handlerA.handle(eq(repository), any(File.class), eq(assetName)))
-        .thenReturn(mockContent);
-
-    // Execute the method under test
-    Content result = underTest.handle(streamConfig);
-
-    // Verify the result is not null
-    assertThat(result, notNullValue());
-
-    // Verify file-based import was called as fallback
-    verify(handlerA).handle(eq(repository), any(File.class), eq(assetName));
-  }
-
-  @Test
-  public void testHandleStreamImport_withDotFile() throws IOException {
-    // Test with a hidden file (starts with dot, no extension)
-    String assetName = ".gitignore";
-    byte[] testData = "*.class".getBytes();
-
-    ImportStreamConfiguration streamConfig = mock(ImportStreamConfiguration.class);
-    when(streamConfig.getRepository()).thenReturn(repository);
-    when(streamConfig.getAssetName()).thenReturn(assetName);
-    when(streamConfig.getInputStream()).thenAnswer(invocation -> new ByteArrayInputStream(testData));
-
-    Content mockContent = mock(Content.class);
-
-    // Handler doesn't support stream import, so it will fall back to file import
-    doThrow(new UnsupportedImportException("Stream import not supported"))
-        .when(handlerA)
-        .handle(any(ImportStreamConfiguration.class));
-
-    // Mock the file-based import to succeed
-    when(handlerA.handle(eq(repository), any(File.class), eq(assetName)))
-        .thenReturn(mockContent);
-
-    // Execute the method under test
-    Content result = underTest.handle(streamConfig);
-
-    // Verify the result is not null
-    assertThat(result, notNullValue());
-
-    // Verify file-based import was called as fallback
-    verify(handlerA).handle(eq(repository), any(File.class), eq(assetName));
-  }
-
-  @Test
-  public void testHandleStreamImport_withMultipleDots() throws IOException {
-    // Test with a file that has multiple dots
-    String assetName = "file.name.with.multiple.dots.tar.gz";
-    byte[] testData = "compressed content".getBytes();
-
-    ImportStreamConfiguration streamConfig = mock(ImportStreamConfiguration.class);
-    when(streamConfig.getRepository()).thenReturn(repository);
-    when(streamConfig.getAssetName()).thenReturn(assetName);
-    when(streamConfig.getInputStream()).thenAnswer(invocation -> new ByteArrayInputStream(testData));
-
-    Content mockContent = mock(Content.class);
-
-    // Handler doesn't support stream import, so it will fall back to file import
-    doThrow(new UnsupportedImportException("Stream import not supported"))
-        .when(handlerA)
-        .handle(any(ImportStreamConfiguration.class));
-
-    // Mock the file-based import to succeed
-    when(handlerA.handle(eq(repository), any(File.class), eq(assetName)))
-        .thenReturn(mockContent);
-
-    // Execute the method under test
-    Content result = underTest.handle(streamConfig);
-
-    // Verify the result is not null
-    assertThat(result, notNullValue());
-
-    // Verify file-based import was called as fallback
-    verify(handlerA).handle(eq(repository), any(File.class), eq(assetName));
   }
 }

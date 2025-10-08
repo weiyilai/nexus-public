@@ -33,6 +33,8 @@ import org.sonatype.nexus.security.user.NoSuchRoleMappingException;
 import org.sonatype.nexus.security.user.NoSuchUserManagerException;
 import org.sonatype.nexus.security.user.RoleMappingUserManager;
 import org.sonatype.nexus.security.user.User;
+import org.sonatype.nexus.security.user.UserCreatedEvent;
+import org.sonatype.nexus.security.user.UserDeletedEvent;
 import org.sonatype.nexus.security.user.UserManager;
 import org.sonatype.nexus.security.user.UserNotFoundException;
 import org.sonatype.nexus.security.user.UserRoleMappingCreatedEvent;
@@ -49,6 +51,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.security.config.CUser.STATUS_ACTIVE;
 import static org.sonatype.nexus.security.config.CUser.STATUS_CHANGE_PASSWORD;
 
@@ -64,6 +67,8 @@ public class UserManagerImpl
     extends AbstractUserManager
     implements RoleMappingUserManager
 {
+  private final EventManager eventManager;
+
   private final SecurityConfigurationManager configuration;
 
   private final SecuritySystem securitySystem;
@@ -80,7 +85,7 @@ public class UserManagerImpl
       final PasswordService passwordService,
       final PasswordValidator passwordValidator)
   {
-    super(eventManager);
+    this.eventManager = checkNotNull(eventManager);
     this.configuration = configuration;
     this.securitySystem = securitySystem;
     this.passwordService = passwordService;
@@ -195,11 +200,15 @@ public class UserManagerImpl
   }
 
   @Override
-  public User doAddUser(final User user, final String password) {
+  public User addUser(final User user, final String password) {
     final CUser secUser = this.toUser(user);
     secUser.setPassword(this.hashPassword(password));
 
     configuration.createUser(secUser, getRoleIdsFromUser(user));
+
+    eventManager.post(new UserCreatedEvent(user));
+
+    // TODO: i am starting to feel we shouldn't return a user.
     return user;
   }
 
@@ -217,21 +226,25 @@ public class UserManagerImpl
   }
 
   @Override
-  public User doUpdateUser(final User user) throws UserNotFoundException {
+  public User updateUser(final User user) throws UserNotFoundException {
     // we need to pull the users password off off the old user object
     CUser oldSecUser = configuration.readUser(user.getUserId());
     CUser newSecUser = toUser(user);
     newSecUser.setPassword(oldSecUser.getPassword());
 
     configuration.updateUser(newSecUser, getRoleIdsFromUser(user));
+
+    eventManager.post(new UserUpdatedEvent(user));
+
     return user;
   }
 
   @Override
-  public User doDeleteUser(final String userId) throws UserNotFoundException {
+  public void deleteUser(final String userId) throws UserNotFoundException {
     User user = getUser(userId);
     configuration.deleteUser(userId);
-    return user;
+
+    eventManager.post(new UserDeletedEvent(user));
   }
 
   @Override
