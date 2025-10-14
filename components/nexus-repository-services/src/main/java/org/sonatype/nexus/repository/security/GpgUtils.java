@@ -22,7 +22,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 import com.google.common.io.ByteStreams;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.openpgp.PGPException;
@@ -106,7 +106,7 @@ public class GpgUtils
   /**
    * Check is configured GPG key pair.
    *
-   * @param secretKey  the GPG secret/private key.
+   * @param secretKey the GPG secret/private key.
    * @param passphrase the password for the secret key or {@code null}.
    * @return whether GPG key is configured and accessible.
    */
@@ -130,12 +130,14 @@ public class GpgUtils
   /**
    * Sign input data with GPG.
    *
-   * @param secretKey  the GPG secret/private key.
+   * @param secretKey the GPG secret/private key.
    * @param passphrase the password for the secret key or {@code null}.
    * @return ASCII-armored GPG signature for a given input
    */
-  public static byte[] signExternal(final InputStream input, final String secretKey, @Nullable final String passphrase)
-      throws IOException
+  public static byte[] signExternal(
+      final InputStream input,
+      final String secretKey,
+      @Nullable final String passphrase) throws IOException
   {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     try {
@@ -147,7 +149,7 @@ public class GpgUtils
       }
     }
     catch (PGPException e) {
-      throw new RuntimeException(e); //NOSONAR
+      throw new RuntimeException(e); // NOSONAR
     }
 
     return buffer.toByteArray();
@@ -156,12 +158,14 @@ public class GpgUtils
   /**
    * Sign input data with GPG.
    *
-   * @param secretKey  the GPG secret/private key.
+   * @param secretKey the GPG secret/private key.
    * @param passphrase the password for the secret key.
    * @return ASCII-armored GPG signature for a given input.
    */
-  public static byte[] signInline(final String input, final String secretKey, final String passphrase)
-      throws IOException
+  public static byte[] signInline(
+      final String input,
+      final String secretKey,
+      final String passphrase) throws IOException
   {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     try {
@@ -192,7 +196,7 @@ public class GpgUtils
       }
     }
     catch (PGPException e) {
-      throw new RuntimeException(e); //NOSONAR
+      throw new RuntimeException(e); // NOSONAR
     }
     return buffer.toByteArray();
   }
@@ -233,7 +237,7 @@ public class GpgUtils
       }
     }
     catch (PGPException e) {
-      throw new RuntimeException(e); //NOSONAR
+      throw new RuntimeException(e); // NOSONAR
     }
 
     throw new IllegalStateException("Can't find signing key in key ring.");
@@ -242,8 +246,7 @@ public class GpgUtils
   private static PGPSignatureGenerator initPgpSignatureGenerator(
       final String secretKey,
       final String passphrase,
-      final int pgpSignature)
-      throws IOException, PGPException
+      final int pgpSignature) throws IOException, PGPException
   {
     PBESecretKeyDecryptor keyDecryptor = getSecretKeyDecryptor(passphrase);
     PGPSecretKey signKey = readSecretKey(secretKey);

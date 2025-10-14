@@ -38,7 +38,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.apache.commons.lang.ArrayUtils.subarray;
+import static org.apache.commons.lang3.ArrayUtils.subarray;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -159,7 +159,10 @@ public class PartialFetchHandlerTest
   public void testHandle() throws Exception {
     Request request = createGetRequestBuilder().header(RANGE, RANGE_HEADER).build();
     Response response = createOkResponseBuilder()
-        .header(ETAG, ETAG_VALUE).header(LAST_MODIFIED, LAST_MODIFIED_VALUE).payload(PAYLOAD).build();
+        .header(ETAG, ETAG_VALUE)
+        .header(LAST_MODIFIED, LAST_MODIFIED_VALUE)
+        .payload(PAYLOAD)
+        .build();
     when(rangeParser.parseRangeSpec(RANGE_HEADER, PAYLOAD.getSize())).thenReturn(singletonList(ZERO_TO_TWO_RANGE));
 
     verifyHandleReturnsPartialResponse(request, response);
@@ -168,9 +171,14 @@ public class PartialFetchHandlerTest
   @Test
   public void testHandleWhenIfRangeCheckFailsToMatchOnEtag() throws Exception {
     Request request = createGetRequestBuilder()
-        .header(RANGE, RANGE_HEADER).header(IF_RANGE, "\"aNonMatchingEtag\"").build();
+        .header(RANGE, RANGE_HEADER)
+        .header(IF_RANGE, "\"aNonMatchingEtag\"")
+        .build();
     Response response = createOkResponseBuilder()
-        .header(ETAG, ETAG_VALUE).header(LAST_MODIFIED, LAST_MODIFIED_VALUE).payload(PAYLOAD).build();
+        .header(ETAG, ETAG_VALUE)
+        .header(LAST_MODIFIED, LAST_MODIFIED_VALUE)
+        .payload(PAYLOAD)
+        .build();
     when(rangeParser.parseRangeSpec(RANGE_HEADER, PAYLOAD.getSize())).thenReturn(singletonList(ZERO_TO_TWO_RANGE));
 
     assertThat(doHandle(request, response), is(sameInstance(response)));
@@ -180,7 +188,10 @@ public class PartialFetchHandlerTest
   public void testHandleWhenIfRangeCheckMatchesOnEtag() throws Exception {
     Request request = createGetRequestBuilder().header(RANGE, RANGE_HEADER).header(IF_RANGE, ETAG_VALUE).build();
     Response response = createOkResponseBuilder()
-        .header(ETAG, ETAG_VALUE).header(LAST_MODIFIED, LAST_MODIFIED_VALUE).payload(PAYLOAD).build();
+        .header(ETAG, ETAG_VALUE)
+        .header(LAST_MODIFIED, LAST_MODIFIED_VALUE)
+        .payload(PAYLOAD)
+        .build();
     when(rangeParser.parseRangeSpec(RANGE_HEADER, PAYLOAD.getSize())).thenReturn(singletonList(ZERO_TO_TWO_RANGE));
 
     verifyHandleReturnsPartialResponse(request, response);
@@ -189,9 +200,14 @@ public class PartialFetchHandlerTest
   @Test
   public void testHandleWhenIfRangeCheckFailsToMatchOnLastModified() throws Exception {
     Request request = createGetRequestBuilder()
-        .header(RANGE, RANGE_HEADER).header(IF_RANGE, "Wed, 17 Jun 2015 11:31:00 GMT").build();
+        .header(RANGE, RANGE_HEADER)
+        .header(IF_RANGE, "Wed, 17 Jun 2015 11:31:00 GMT")
+        .build();
     Response response = createOkResponseBuilder()
-        .header(ETAG, ETAG_VALUE).header(LAST_MODIFIED, LAST_MODIFIED_VALUE).payload(PAYLOAD).build();
+        .header(ETAG, ETAG_VALUE)
+        .header(LAST_MODIFIED, LAST_MODIFIED_VALUE)
+        .payload(PAYLOAD)
+        .build();
     when(rangeParser.parseRangeSpec(RANGE_HEADER, PAYLOAD.getSize())).thenReturn(singletonList(ZERO_TO_TWO_RANGE));
 
     assertThat(doHandle(request, response), is(sameInstance(response)));
@@ -200,9 +216,14 @@ public class PartialFetchHandlerTest
   @Test
   public void testHandleWhenIfRangeCheckFailsBecauseIfRangeIsNotValidDateTime() throws Exception {
     Request request = createGetRequestBuilder()
-        .header(RANGE, RANGE_HEADER).header(IF_RANGE, "notValidDateTime").build();
+        .header(RANGE, RANGE_HEADER)
+        .header(IF_RANGE, "notValidDateTime")
+        .build();
     Response response = createOkResponseBuilder()
-        .header(ETAG, ETAG_VALUE).header(LAST_MODIFIED, LAST_MODIFIED_VALUE).payload(PAYLOAD).build();
+        .header(ETAG, ETAG_VALUE)
+        .header(LAST_MODIFIED, LAST_MODIFIED_VALUE)
+        .payload(PAYLOAD)
+        .build();
     when(rangeParser.parseRangeSpec(RANGE_HEADER, PAYLOAD.getSize())).thenReturn(singletonList(ZERO_TO_TWO_RANGE));
 
     assertThat(doHandle(request, response), is(sameInstance(response)));
@@ -211,9 +232,14 @@ public class PartialFetchHandlerTest
   @Test
   public void testHandleWhenIfRangeCheckFailsBecauseRequestLastModifiedIsNotValidDateTime() throws Exception {
     Request request = createGetRequestBuilder()
-        .header(RANGE, RANGE_HEADER).header(IF_RANGE, LAST_MODIFIED_VALUE).build();
+        .header(RANGE, RANGE_HEADER)
+        .header(IF_RANGE, LAST_MODIFIED_VALUE)
+        .build();
     Response response = createOkResponseBuilder()
-        .header(ETAG, ETAG_VALUE).header(LAST_MODIFIED, "notValidDateTime").payload(PAYLOAD).build();
+        .header(ETAG, ETAG_VALUE)
+        .header(LAST_MODIFIED, "notValidDateTime")
+        .payload(PAYLOAD)
+        .build();
     when(rangeParser.parseRangeSpec(RANGE_HEADER, PAYLOAD.getSize())).thenReturn(singletonList(ZERO_TO_TWO_RANGE));
 
     assertThat(doHandle(request, response), is(sameInstance(response)));
@@ -222,9 +248,14 @@ public class PartialFetchHandlerTest
   @Test
   public void testHandleWhenIfRangeCheckMatchesOnLastModified() throws Exception {
     Request request = createGetRequestBuilder()
-        .header(RANGE, RANGE_HEADER).header(IF_RANGE, LAST_MODIFIED_VALUE).build();
+        .header(RANGE, RANGE_HEADER)
+        .header(IF_RANGE, LAST_MODIFIED_VALUE)
+        .build();
     Response response = createOkResponseBuilder()
-        .header(ETAG, ETAG_VALUE).header(LAST_MODIFIED, LAST_MODIFIED_VALUE).payload(PAYLOAD).build();
+        .header(ETAG, ETAG_VALUE)
+        .header(LAST_MODIFIED, LAST_MODIFIED_VALUE)
+        .payload(PAYLOAD)
+        .build();
     when(rangeParser.parseRangeSpec(RANGE_HEADER, PAYLOAD.getSize())).thenReturn(singletonList(ZERO_TO_TWO_RANGE));
 
     verifyHandleReturnsPartialResponse(request, response);

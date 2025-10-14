@@ -25,7 +25,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang.time.DateUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -194,7 +193,7 @@ public class DateHelper
     if (date1 == null || date2 == null) {
       return 0;
     }
-    return (int) ((date2.getTime() - date1.getTime()) / DateUtils.MILLIS_PER_DAY);
+    return (int) ((date2.getTime() - date1.getTime()) / MILLIS_PER_DAY);
   }
 
   /**

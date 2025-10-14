@@ -40,7 +40,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace;
 import static org.sonatype.nexus.blobstore.file.FileBlobStore.BASEDIR;
 import static org.sonatype.nexus.blobstore.file.FileBlobStore.CONFIG_KEY;
 import static org.sonatype.nexus.blobstore.file.FileBlobStore.PATH_KEY;
@@ -133,8 +132,7 @@ public class DatastoreBlobReconciliationLogMigrator_1_11
       FileUtils.deleteDirectory(sourceDir);
     }
     catch (IOException e) {
-      log.warn("Skipping copy of reconciliation logs contained in {} because of error {}", sourceDir,
-          getFullStackTrace(e));
+      log.warn("Skipping copy of reconciliation logs contained in {} because of error", sourceDir, e);
     }
   }
 

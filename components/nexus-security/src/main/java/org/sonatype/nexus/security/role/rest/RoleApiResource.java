@@ -44,7 +44,7 @@ import org.sonatype.nexus.security.role.ReadonlyRoleException;
 import org.sonatype.nexus.security.role.Role;
 import org.sonatype.nexus.security.role.RoleContainsItselfException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import javax.validation.constraints.NotEmpty;

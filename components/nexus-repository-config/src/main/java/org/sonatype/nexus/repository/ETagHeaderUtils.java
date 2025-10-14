@@ -12,7 +12,7 @@
  */
 package org.sonatype.nexus.repository;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class ETagHeaderUtils
 {
@@ -28,7 +28,8 @@ public class ETagHeaderUtils
   public static String quote(final String etag) {
     if (etag.startsWith(WEAK_DESIGNATOR)) {
       return etag;
-    } else {
+    }
+    else {
       return "\"" + etag + "\"";
     }
   }
@@ -39,7 +40,8 @@ public class ETagHeaderUtils
   public static String extract(final String etag) {
     if (!isEmpty(etag) && etag.startsWith("\"") && etag.endsWith("\"")) {
       return etag.substring(1, etag.length() - 1);
-    } else {
+    }
+    else {
       return etag;
     }
   }

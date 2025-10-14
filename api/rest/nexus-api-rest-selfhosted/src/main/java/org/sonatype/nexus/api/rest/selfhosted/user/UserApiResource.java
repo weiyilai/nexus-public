@@ -46,7 +46,7 @@ import org.sonatype.nexus.validation.Validate;
 
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.inject.Inject;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 

@@ -29,7 +29,7 @@ import org.sonatype.nexus.rest.WebApplicationMessageException;
 import org.sonatype.nexus.security.SecuritySystem;
 import org.sonatype.nexus.security.authz.NoSuchAuthorizationManagerException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 

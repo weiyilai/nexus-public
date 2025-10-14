@@ -18,7 +18,7 @@ import org.sonatype.nexus.security.config.MemorySecurityConfiguration;
 import org.sonatype.nexus.security.config.SecurityContributor;
 import org.sonatype.nexus.security.config.SecurityContributorSupport;
 
-import static org.apache.commons.lang.StringUtils.capitalize;
+import static org.apache.commons.lang3.StringUtils.capitalize;
 import org.springframework.stereotype.Component;
 
 /**

@@ -27,7 +27,7 @@ import org.sonatype.nexus.security.config.memory.MemoryCUser;
 import org.sonatype.nexus.security.config.memory.MemoryCUserRoleMapping;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authc.credential.PasswordService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

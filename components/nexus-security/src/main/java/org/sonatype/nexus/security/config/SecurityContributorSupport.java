@@ -20,7 +20,7 @@ import org.sonatype.nexus.security.config.memory.MemoryCPrivilege;
 import org.sonatype.nexus.security.config.memory.MemoryCPrivilege.MemoryCPrivilegeBuilder;
 import org.sonatype.nexus.security.config.memory.MemoryCRole;
 
-import static org.apache.commons.lang.StringUtils.capitalize;
+import static org.apache.commons.lang3.StringUtils.capitalize;
 
 /**
  * @since 3.37
@@ -86,7 +86,8 @@ public abstract class SecurityContributorSupport
         .readOnly(true)
         .name(id)
         .property(APPLICATION_DOMAIN, domain)
-        .property(APPLICATION_ACTIONS, actions).build();
+        .property(APPLICATION_ACTIONS, actions)
+        .build();
   }
 
   protected List<MemoryCPrivilege> createCrudApplicationPrivileges(

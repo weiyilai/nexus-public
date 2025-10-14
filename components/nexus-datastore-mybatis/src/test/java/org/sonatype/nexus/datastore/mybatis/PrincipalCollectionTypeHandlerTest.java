@@ -27,7 +27,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import static org.apache.commons.lang.SerializationUtils.serialize;
+import static org.apache.commons.lang3.SerializationUtils.serialize;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNull;
 import static org.hamcrest.MatcherAssert.assertThat;

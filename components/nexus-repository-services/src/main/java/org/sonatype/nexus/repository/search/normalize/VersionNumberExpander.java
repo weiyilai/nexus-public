@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 import org.sonatype.goodies.common.Loggers;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -38,7 +38,8 @@ public class VersionNumberExpander
 {
   private static final String NUMBER_FORMAT = "%09d";
 
-  private VersionNumberExpander() {}
+  private VersionNumberExpander() {
+  }
 
   public static final Logger log = Loggers.getLogger(VersionNumberExpander.class);
 

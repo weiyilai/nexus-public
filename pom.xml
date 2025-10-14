@@ -1231,6 +1231,11 @@
                     <exclude>commons-beanutils:commons-beanutils-core</exclude>
                     <exclude>commons-collections:commons-collections</exclude>
                     <!--
+                    Ban commons-lang 2.x for compile and runtime (used in some unit tests)
+                    -->
+                    <exclude>commons-lang:commons-lang:*:jar:compile</exclude>
+                    <exclude>commons-lang:commons-lang:*:jar:runtime</exclude>
+                    <!--
                     Security hazard: osvdb-68314
                     -->
                     <exclude>xmlrpc:*</exclude>

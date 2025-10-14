@@ -25,7 +25,7 @@ import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 
 import org.junit.Test;
 
-import static org.apache.commons.lang.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;

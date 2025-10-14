@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 
 import org.springframework.beans.factory.annotation.Value;

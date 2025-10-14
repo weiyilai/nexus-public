@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 
 import org.sonatype.nexus.common.encoding.EncodingUtil;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 
 import static java.util.stream.Collectors.joining;
 
@@ -29,7 +29,7 @@ import static java.util.stream.Collectors.joining;
 public class EscapeHelper
 {
   public String html(final String value) {
-    return StringEscapeUtils.escapeHtml(value);
+    return StringEscapeUtils.escapeHtml4(value);
   }
 
   public String html(final Object value) {
@@ -50,7 +50,7 @@ public class EscapeHelper
   }
 
   public String xml(final String value) {
-    return StringEscapeUtils.escapeXml(value);
+    return StringEscapeUtils.escapeXml10(value);
   }
 
   public String xml(final Object value) {

@@ -14,7 +14,7 @@ package org.sonatype.nexus.elasticsearch.internal.repository.contributions;
 
 import org.sonatype.nexus.elasticsearch.ElasticSearchContribution;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.classic.QueryParserBase;
 
 /**

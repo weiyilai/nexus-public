@@ -63,7 +63,7 @@ import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -76,7 +76,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.net.HttpHeaders.X_FRAME_OPTIONS;
 import static com.softwarementors.extjs.djn.router.RequestType.FORM_UPLOAD_POST;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 import static org.sonatype.nexus.servlet.XFrameOptions.DENY;
 
@@ -165,7 +165,7 @@ public class ExtDirectServlet
         response.getWriter()
             .append("<html><body><textarea>{\"tid\":" + tid +
                 ",\"action\":\"coreui_Upload\",\"method\":\"doUpload\",\"result\":{\"success\": false,\"message\":\"" +
-                escapeHtml(fileUploadException.getMessage()) + "\"},\"type\":\"rpc\"}</textarea></body></html>")
+                escapeHtml4(fileUploadException.getMessage()) + "\"},\"type\":\"rpc\"}</textarea></body></html>")
             .flush();
       }
       catch (Exception e) {

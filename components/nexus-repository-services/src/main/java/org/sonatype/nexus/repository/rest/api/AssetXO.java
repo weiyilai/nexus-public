@@ -27,7 +27,7 @@ import org.sonatype.nexus.repository.search.AssetSearchResult;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Asset transfer object for REST APIs.

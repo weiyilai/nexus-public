@@ -35,7 +35,7 @@ import org.sonatype.nexus.servlet.XFrameOptions;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.shiro.web.servlet.ShiroHttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,7 +154,7 @@ public class ErrorPageServlet
     response.setContentType("text/html");
 
     // ensure sanity of passed in strings which are used to render html content
-    String errorDescription = errorMessage != null ? StringEscapeUtils.escapeHtml(errorMessage) : "Unknown error";
+    String errorDescription = errorMessage != null ? StringEscapeUtils.escapeHtml4(errorMessage) : "Unknown error";
 
     TemplateParameters params = templateHelper.parameters();
     params.set("errorCode", errorCode);

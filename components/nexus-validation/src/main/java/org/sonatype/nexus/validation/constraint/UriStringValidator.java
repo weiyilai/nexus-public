@@ -19,7 +19,7 @@ import javax.validation.ConstraintValidatorContext;
 
 import org.sonatype.nexus.validation.ConstraintValidatorSupport;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * Validates a URI.

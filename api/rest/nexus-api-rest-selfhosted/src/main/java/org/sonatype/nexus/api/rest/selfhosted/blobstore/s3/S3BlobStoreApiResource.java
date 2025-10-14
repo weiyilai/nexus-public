@@ -55,8 +55,8 @@ import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.PAYMENT_REQUIRED;
 import static javax.ws.rs.core.Response.status;
-import static org.apache.commons.lang.StringUtils.equalsIgnoreCase;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.sonatype.nexus.api.rest.common.blobstore.s3.S3BlobStoreApiModelMapper.map;
 
 /**

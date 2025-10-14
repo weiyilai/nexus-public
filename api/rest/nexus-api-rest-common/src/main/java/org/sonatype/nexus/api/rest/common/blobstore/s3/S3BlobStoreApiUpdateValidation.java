@@ -30,11 +30,11 @@ import org.sonatype.nexus.blobstore.api.BlobStoreManager;
 import org.sonatype.nexus.rest.ValidationErrorXO;
 import org.sonatype.nexus.rest.ValidationErrorsException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.sonatype.nexus.api.rest.common.blobstore.s3.model.S3BlobStoreApiBucketConfiguration.FAILOVER_BUCKETS;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.TYPE;
 import static org.sonatype.nexus.api.rest.common.blobstore.s3.S3BlobStoreApiConstants.BLOB_STORE_NAME_UPDATE_ERROR_MESSAGE;
