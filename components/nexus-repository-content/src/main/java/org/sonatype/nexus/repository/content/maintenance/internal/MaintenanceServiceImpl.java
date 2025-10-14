@@ -210,11 +210,28 @@ public class MaintenanceServiceImpl
 
   protected void deleteBrowseNode(final Repository repository, final Asset asset) {
     if (isPostgresql()) {
+      // For NPM repositories, only delete browse nodes for PACKAGE_ROOT assets during asset deletion
+      // This preserves the UI tree structure when only metadata is being deleted
+      if (isNpmRepository(repository) && shouldPreserveBrowseNode(asset)) {
+        log.debug("Preserving browse node for NPM asset: {} (kind: {})", asset.path(), asset.kind());
+        return;
+      }
+
       Integer internalAssetId = InternalIds.internalAssetId(asset);
 
       repository.optionalFacet(BrowseFacet.class)
           .ifPresent(facet -> facet.deleteByAssetIdAndPath(internalAssetId, asset.path()));
     }
+  }
+
+  private boolean isNpmRepository(final Repository repository) {
+    return "npm".equals(repository.getFormat().getValue());
+  }
+
+  private boolean shouldPreserveBrowseNode(final Asset asset) {
+    // For NPM, preserve browse nodes for TARBALL assets (only delete for PACKAGE_ROOT)
+    String assetKind = asset.kind();
+    return "PACKAGE_ROOT".equals(assetKind);
   }
 
   private void deleteBrowseNode(final Repository repository, final Component component) {

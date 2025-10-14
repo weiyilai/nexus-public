@@ -22,7 +22,9 @@ import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
+import org.sonatype.nexus.repository.content.Asset;
 import org.sonatype.nexus.repository.content.Component;
+import org.sonatype.nexus.repository.content.browse.BrowseFacet;
 import org.sonatype.nexus.repository.content.facet.ContentFacet;
 import org.sonatype.nexus.repository.content.facet.ContentFacetStores;
 import org.sonatype.nexus.repository.content.facet.ContentFacetSupport;
@@ -47,6 +49,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -54,6 +57,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.sonatype.nexus.security.BreadActions.DELETE;
 
 public class MaintenanceServiceImplTest
     extends TestSupport
@@ -90,6 +94,9 @@ public class MaintenanceServiceImplTest
 
   @Mock
   private ContentMaintenanceFacet contentMaintenanceFacet;
+
+  @Mock
+  private BrowseFacet browseFacet;
 
   private MaintenanceServiceImpl underTest;
 
@@ -202,5 +209,31 @@ public class MaintenanceServiceImplTest
         any(VariableSource.class))).thenReturn(true);
     when(contentMaintenanceFacet.deleteComponent(any(Component.class))).thenReturn(Set.of("asset1", "asset2"));
     when(variableResolverAdapterManager.get(any())).thenReturn(variableResolverAdapter);
+  }
+
+  @Test
+  public void testDeleteAsset_NpmPackageRoot_PreservesBrowseNode() {
+    MaintenanceServiceImpl underTestSpy = spy(underTest);
+    Asset asset = mock(Asset.class);
+    Format format = mock(Format.class);
+
+    when(asset.kind()).thenReturn("PACKAGE_ROOT");
+    when(asset.path()).thenReturn("/test/package");
+    when(repository.getFormat()).thenReturn(format);
+    when(repository.getName()).thenReturn("npm-repo");
+    when(format.getValue()).thenReturn("npm");
+    when(databaseCheck.isPostgresql()).thenReturn(true);
+    when(repository.facet(ContentMaintenanceFacet.class)).thenReturn(contentMaintenanceFacet);
+    when(contentMaintenanceFacet.deleteAsset(asset)).thenReturn(Set.of("/test/package"));
+    when(contentPermissionChecker.isPermitted(anyString(), anyString(), eq(DELETE), any())).thenReturn(true);
+    when(variableResolverAdapterManager.get("npm")).thenReturn(mock(VariableResolverAdapter.class));
+    when(variableResolverAdapterManager.get("npm").fromPath(anyString(), anyString()))
+        .thenReturn(mock(VariableSource.class));
+    when(repository.optionalFacet(BrowseFacet.class)).thenReturn(Optional.of(browseFacet));
+
+    Set<String> result = underTestSpy.deleteAsset(repository, asset);
+
+    verify(browseFacet, never()).deleteByAssetIdAndPath(any(), anyString());
+    assertEquals(Set.of("/test/package"), result);
   }
 }
