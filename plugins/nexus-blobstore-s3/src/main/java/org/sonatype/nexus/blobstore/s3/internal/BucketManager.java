@@ -18,10 +18,8 @@ import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.StorageLocationManager;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -32,6 +30,7 @@ import static org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper.get
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.ACCESS_DENIED_CODE;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.INVALID_ACCESS_KEY_ID_CODE;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.METHOD_NOT_ALLOWED_CODE;
+import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.NO_SUCH_BUCKET_POLICY_CODE;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.SIGNATURE_DOES_NOT_MATCH_CODE;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.bucketOwnershipError;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.buildException;
@@ -54,7 +53,7 @@ public class BucketManager
 
   static final String LIFECYCLE_EXPIRATION_RULE_ID_PREFIX = "Expire soft-deleted objects in blobstore ";
 
-  private AmazonS3 s3;
+  private EncryptingS3Client s3;
 
   private final BucketOwnershipCheckFeatureFlag ownershipCheckFeatureFlag;
 
@@ -69,7 +68,7 @@ public class BucketManager
     this.bucketOperations = checkNotNull(bucketOperations);
   }
 
-  public void setS3(final AmazonS3 s3) {
+  public void setS3(final EncryptingS3Client s3) {
     this.s3 = s3;
   }
 
@@ -77,12 +76,12 @@ public class BucketManager
   public void prepareStorageLocation(final BlobStoreConfiguration blobStoreConfiguration) {
     String bucket = getConfiguredBucket(blobStoreConfiguration);
     checkPermissions(getConfiguredBucket(blobStoreConfiguration));
-    if (!s3.doesBucketExistV2(bucket)) {
+    if (!s3.doesBucketExist(bucket)) {
       try {
         s3.createBucket(bucket);
       }
-      catch (AmazonS3Exception e) {
-        if (ACCESS_DENIED_CODE.equals(e.getErrorCode())) {
+      catch (S3Exception e) {
+        if (ACCESS_DENIED_CODE.equals(e.awsErrorDetails().errorCode())) {
           log.debug("Error creating bucket {}", bucket, e);
           throw insufficientCreatePermissionsError();
         }
@@ -95,8 +94,8 @@ public class BucketManager
   @Override
   public void deleteStorageLocation(final BlobStoreConfiguration blobStoreConfiguration) {
     String bucket = getConfiguredBucket(blobStoreConfiguration);
-    ObjectListing listing = s3.listObjects(new ListObjectsRequest().withBucketName(bucket).withMaxKeys(1));
-    if (listing.getObjectSummaries().isEmpty()) {
+    ListObjectsV2Response listing = s3.listObjectsV2(bucket, "");
+    if (listing.contents().isEmpty()) {
       s3.deleteBucket(bucket);
     }
     else {
@@ -109,18 +108,18 @@ public class BucketManager
 
   private void checkPermissions(final String bucket) {
     checkCredentials(bucket);
-    if (!ownershipCheckFeatureFlag.isDisabled() && s3.doesBucketExistV2(bucket)) {
+    if (!ownershipCheckFeatureFlag.isDisabled() && s3.doesBucketExist(bucket)) {
       checkBucketOwner(bucket);
     }
   }
 
   private void checkCredentials(final String bucket) {
     try {
-      s3.doesBucketExistV2(bucket);
+      s3.doesBucketExist(bucket);
     }
-    catch (AmazonS3Exception e) {
-      if (INVALID_ACCESS_KEY_ID_CODE.equals(e.getErrorCode()) ||
-          SIGNATURE_DOES_NOT_MATCH_CODE.equals(e.getErrorCode())) {
+    catch (S3Exception e) {
+      if (INVALID_ACCESS_KEY_ID_CODE.equals(e.awsErrorDetails().errorCode()) ||
+          SIGNATURE_DOES_NOT_MATCH_CODE.equals(e.awsErrorDetails().errorCode())) {
         log.debug("Exception thrown checking AWS credentials", e);
         throw buildException(e);
       }
@@ -133,8 +132,8 @@ public class BucketManager
     try {
       s3.getBucketPolicy(bucket);
     }
-    catch (AmazonS3Exception e) {
-      String errorCode = e.getErrorCode();
+    catch (S3Exception e) {
+      String errorCode = e.awsErrorDetails().errorCode();
       String logMessage = String.format("Exception thrown checking ownership of \"%s\" bucket.", bucket);
       if (ACCESS_DENIED_CODE.equals(errorCode)) {
         log.debug(logMessage, e);
@@ -143,6 +142,11 @@ public class BucketManager
       if (METHOD_NOT_ALLOWED_CODE.equals(errorCode)) {
         log.debug(logMessage, e);
         throw invalidIdentityError();
+      }
+      if (NO_SUCH_BUCKET_POLICY_CODE.equals(errorCode)) {
+        // AWS SDK 2.x: NoSuchBucketPolicy means bucket has default permissions - this is normal and valid
+        log.debug("Bucket \"{}\" has no bucket policy (using default permissions) - ownership check passed", bucket);
+        return;
       }
       log.info(logMessage, log.isDebugEnabled() ? e : e.getMessage());
       throw unexpectedError("checking bucket ownership");

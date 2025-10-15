@@ -19,8 +19,7 @@ import org.sonatype.nexus.blobstore.AccumulatingBlobStoreMetrics;
 import org.sonatype.nexus.blobstore.BlobStoreMetricsNotAvailableException;
 import org.sonatype.nexus.blobstore.metrics.BlobStoreMetricsPropertiesReaderSupport;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import com.google.common.collect.ImmutableMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -50,7 +49,7 @@ public class S3BlobStoreMetricsPropertiesReader
 
   private String bucketPrefix;
 
-  private AmazonS3 s3;
+  private EncryptingS3Client s3;
 
   @Override
   protected AccumulatingBlobStoreMetrics getAccumulatingBlobStoreMetrics() {
@@ -64,12 +63,12 @@ public class S3BlobStoreMetricsPropertiesReader
         return Stream.empty();
       }
       else {
-        return s3.listObjects(bucket, bucketPrefix)
-            .getObjectSummaries()
+        return s3.listObjectsV2(bucket, bucketPrefix)
+            .contents()
             .stream()
             .filter(Objects::nonNull)
-            .filter(summary -> summary.getKey().endsWith(METRICS_FILENAME))
-            .map(summary -> new S3PropertiesFile(s3, bucket, summary.getKey()));
+            .filter(s3Object -> s3Object.key().endsWith(METRICS_FILENAME))
+            .map(s3Object -> new S3PropertiesFile(s3, bucket, s3Object.key()));
       }
     }
     catch (SdkClientException e) {

@@ -19,8 +19,8 @@ import org.sonatype.nexus.blobstore.BlobAttributesSupport;
 import org.sonatype.nexus.blobstore.api.BlobAttributes;
 import org.sonatype.nexus.blobstore.api.BlobMetrics;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,12 +32,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class S3BlobAttributes
     extends BlobAttributesSupport<S3PropertiesFile>
 {
-  public S3BlobAttributes(final AmazonS3 s3, final String bucket, final String key) {
+  public S3BlobAttributes(final EncryptingS3Client s3, final String bucket, final String key) {
     super(new S3PropertiesFile(s3, bucket, key), null, null);
   }
 
   public S3BlobAttributes(
-      final AmazonS3 s3,
+      final EncryptingS3Client s3,
       final String bucket,
       final String key,
       final Map<String, String> headers,
@@ -52,8 +52,12 @@ public class S3BlobAttributes
       readFrom(propertiesFile);
       return true;
     }
-    catch (AmazonS3Exception e) {
-      if (e.getStatusCode() != 404) {
+    catch (NoSuchKeyException e) {
+      // AWS SDK 2.x throws NoSuchKeyException for missing objects
+      return false;
+    }
+    catch (S3Exception e) {
+      if (e.statusCode() != 404) {
         throw e;
       }
       return false;

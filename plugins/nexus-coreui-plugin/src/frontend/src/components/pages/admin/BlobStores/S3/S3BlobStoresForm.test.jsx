@@ -82,7 +82,6 @@ const selectors = {
   querySessionToken: () => screen.queryByLabelText('Session Token'),
   queryEncryptionType: () => screen.queryByLabelText('Encryption Type'),
   queryKmsKeyId: () => screen.queryByLabelText('KMS Key ID (Optional)'),
-  querySignatureVersion: () => screen.queryByLabelText('Signature Version'),
   queryReplicationBucketRegionSelects: () => screen.queryAllByLabelText('Region').slice(1),
   queryReplicationBucketBucketNames: () => screen.queryAllByLabelText('Bucket Name'),
   queryMaxConnectionPoolSize: () => screen.queryByLabelText('Max Connection Pool Size'),
@@ -159,7 +158,6 @@ describe('BlobStoresForm-S3', () => {
     expect(selectors.queryEndpointURL()).toBeInTheDocument();
     expect(selectors.queryEncryptionType()).toBeInTheDocument();
     expect(selectors.queryKmsKeyId()).toBeInTheDocument();
-    expect(selectors.querySignatureVersion()).toBeInTheDocument();
     expect(selectors.getUsePathStyle()).toBeInTheDocument();
   });
 

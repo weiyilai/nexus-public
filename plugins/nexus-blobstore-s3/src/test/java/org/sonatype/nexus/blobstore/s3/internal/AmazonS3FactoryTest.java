@@ -15,19 +15,30 @@ package org.sonatype.nexus.blobstore.s3.internal;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.MockBlobStoreConfiguration;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsFactory;
 
-import com.amazonaws.services.s3.AmazonS3;
-import org.apache.commons.lang3.reflect.MethodUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.http.SdkHttpClient;
+import software.amazon.awssdk.metrics.publishers.cloudwatch.CloudWatchMetricPublisher;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.S3Configuration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.ACCESS_KEY_ID_KEY;
@@ -38,7 +49,22 @@ import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStore.SESSION_TOKEN
  * {@link AmazonS3Factory} tests.
  */
 public class AmazonS3FactoryTest
+    extends TestSupport
 {
+
+  MockedStatic<S3Client> s3ClientMockedStatic;
+
+  MockedStatic<CloudWatchMetricPublisher> cloudWatchMetricPublisher;
+
+  @Mock
+  S3ClientBuilder s3ClientBuilder;
+
+  @Mock
+  CloudWatchMetricPublisher.Builder cloudWatchMetricsPublisherBuilder;
+
+  @Mock
+  CloudWatchMetricPublisher cloudWatchMetricPublisherInstance;
+
   private SecretsFactory secretsFactory = mock(SecretsFactory.class);
 
   private AmazonS3Factory amazonS3Factory = new AmazonS3Factory(-1, null, false, "", secretsFactory);
@@ -47,6 +73,20 @@ public class AmazonS3FactoryTest
 
   @Before
   public void setup() {
+    s3ClientMockedStatic = mockStatic(S3Client.class);
+    s3ClientMockedStatic.when(S3Client::builder).thenReturn(s3ClientBuilder);
+
+    cloudWatchMetricPublisher = mockStatic(CloudWatchMetricPublisher.class);
+    cloudWatchMetricPublisher.when(CloudWatchMetricPublisher::builder).thenReturn(cloudWatchMetricsPublisherBuilder);
+    when(cloudWatchMetricsPublisherBuilder.build()).thenReturn(cloudWatchMetricPublisherInstance);
+
+    when(s3ClientBuilder.httpClient(any(SdkHttpClient.class))).thenReturn(s3ClientBuilder);
+    when(s3ClientBuilder.serviceConfiguration(any(S3Configuration.class))).thenReturn(s3ClientBuilder);
+    when(s3ClientBuilder.credentialsProvider(any(StaticCredentialsProvider.class))).thenReturn(s3ClientBuilder);
+    when(s3ClientBuilder.forcePathStyle(anyBoolean())).thenReturn(s3ClientBuilder);
+    when(s3ClientBuilder.endpointOverride(any(URI.class))).thenReturn(s3ClientBuilder);
+    when(s3ClientBuilder.region(any(Region.class))).thenReturn(s3ClientBuilder);
+
     Map<String, Object> s3Map = new HashMap<>();
     s3Map.put("bucket", "mybucket");
     Map<String, Map<String, Object>> attributes = new HashMap<>();
@@ -59,50 +99,36 @@ public class AmazonS3FactoryTest
     config.getAttributes().get("s3").put("endpoint", "http://localhost/");
     config.getAttributes().get("s3").put("region", "us-west-2");
 
-    AmazonS3 s3 = amazonS3Factory.create(config);
-    URI endpoint = (URI) MethodUtils.invokeMethod(s3, true, "getEndpoint");
-    assertEquals(new URI("http://localhost/"), endpoint);
+    amazonS3Factory.create(config);
+    verify(s3ClientBuilder).endpointOverride(URI.create("http://localhost/"));
+    verify(s3ClientBuilder).region(Region.US_WEST_2);
   }
 
   @Test
-  public void endpointIsSetWhenProvidedInConfigWithDefaultRegion() throws Exception {
+  public void endpointIsSetWhenProvidedInConfigWithDefaultRegion() {
     config.getAttributes().get("s3").put("endpoint", "http://localhost/");
 
-    AmazonS3 s3 = amazonS3Factory.create(config);
-    URI endpoint = (URI) MethodUtils.invokeMethod(s3, true, "getEndpoint");
-    assertEquals(new URI("http://localhost/"), endpoint);
+    amazonS3Factory.create(config);
+    verify(s3ClientBuilder).endpointOverride(URI.create("http://localhost/"));
   }
 
   @Test
-  public void signingAlgorithmIsSetWhenProvidedInConfig() throws Exception {
-    config.getAttributes().get("s3").put("signertype", "AWSS3V4SignerType");
+  public void regionIsSetWhenProvidedInConfig() {
     config.getAttributes().get("s3").put("region", "us-west-2");
 
-    AmazonS3 s3 = amazonS3Factory.create(config);
-    assertEquals("AWSS3V4SignerType", getSignerOverride(s3));
+    amazonS3Factory.create(config);
+    verify(s3ClientBuilder).region(Region.US_WEST_2);
   }
 
   @Test
-  public void nullSignerDoesNotOverrideConfigValue() throws Exception {
-    testSignerOverrideWith(null);
-  }
+  public void cloudWatchMetricsAreEnabledWhenSet() {
+    final String givenNamespace = "some-namepace";
+    amazonS3Factory = new AmazonS3Factory(-1, null, true, givenNamespace, secretsFactory);
 
-  @Test
-  public void emptySignerDoesNotOverrideConfigValue() throws Exception {
-    testSignerOverrideWith("");
-  }
+    amazonS3Factory.create(config);
 
-  @Test
-  public void defaultSignerDoesNotOverrideConfigValue() throws Exception {
-    testSignerOverrideWith("DEFAULT");
-  }
-
-  private void testSignerOverrideWith(String signer) throws Exception {
-    config.getAttributes().get("s3").put("region", "us-west-2");
-    config.getAttributes().get("s3").put("signertype", signer);
-
-    AmazonS3 s3 = amazonS3Factory.create(config);
-    assertNull(getSignerOverride(s3));
+    verify(cloudWatchMetricsPublisherBuilder).namespace(givenNamespace);
+    verify(s3ClientBuilder).overrideConfiguration(any(Consumer.class));
   }
 
   @Test
@@ -110,8 +136,10 @@ public class AmazonS3FactoryTest
     config.getAttributes().get("s3").put("region", "us-west-2");
     config.getAttributes().get("s3").put("forcepathstyle", "true");
 
-    AmazonS3 s3 = amazonS3Factory.create(config);
-    assertEquals("/bucket/key", s3.getUrl("bucket", "key").getPath());
+    amazonS3Factory.create(config);
+
+    verify(s3ClientBuilder).region(Region.US_WEST_2);
+    verify(s3ClientBuilder).forcePathStyle(true);
   }
 
   @Test
@@ -136,8 +164,10 @@ public class AmazonS3FactoryTest
     verify(sessionTokenMock).decrypt();
   }
 
-  private String getSignerOverride(AmazonS3 s3) throws Exception {
-    Object clientConfiguration = MethodUtils.invokeMethod(s3, true, "getClientConfiguration");
-    return (String) MethodUtils.invokeMethod(clientConfiguration, true, "getSignerOverride");
+  @After
+  public void tearDown() {
+    s3ClientMockedStatic.close();
+    cloudWatchMetricPublisher.close();
+    ;
   }
 }

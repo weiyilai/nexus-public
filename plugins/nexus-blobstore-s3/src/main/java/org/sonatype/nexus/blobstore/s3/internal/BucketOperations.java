@@ -12,12 +12,10 @@
  */
 package org.sonatype.nexus.blobstore.s3.internal;
 
-import com.amazonaws.services.s3.AmazonS3;
-
 /**
  * Handlers for additional processing needed during s3 bucket operations
  */
 public interface BucketOperations
 {
-  void delete(final String blobstoreName, final String bucketName, final AmazonS3 amazonS3);
+  void delete(final String blobstoreName, final String bucketName, final EncryptingS3Client s3Client);
 }

@@ -12,7 +12,6 @@
  */
 package org.sonatype.nexus.blobstore.s3.internal;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,14 +19,6 @@ import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.MockBlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.BucketLifecycleConfiguration;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import junitparams.JUnitParamsRunner;
 import junitparams.NamedParameters;
@@ -36,10 +27,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -63,7 +57,7 @@ public class BucketManagerTest
     extends TestSupport
 {
   @Mock
-  private AmazonS3 s3;
+  private EncryptingS3Client s3;
 
   @Mock
   private BucketOwnershipCheckFeatureFlag featureFlag;
@@ -82,10 +76,8 @@ public class BucketManagerTest
 
   @Test
   public void deleteStorageLocationRemovesBucketIfEmpty() {
-    ObjectListing listingMock = mock(ObjectListing.class);
-    when(listingMock.getObjectSummaries()).thenReturn(new ArrayList<>());
-    when(s3.listObjects(any(ListObjectsRequest.class))).thenReturn(listingMock);
-    underTest.setS3(s3);
+    ListObjectsV2Response listingMock = mock(ListObjectsV2Response.class);
+    when(s3.listObjectsV2(anyString(), anyString())).thenReturn(listingMock);
 
     BlobStoreConfiguration cfg = new MockBlobStoreConfiguration();
     Map<String, Map<String, Object>> attr = ImmutableMap.of("s3", ImmutableMap
@@ -99,11 +91,9 @@ public class BucketManagerTest
 
   @Test
   public void deleteStorageLocationDoesNotRemoveBucketIfNotEmpty() {
-    ObjectListing listingMock = mock(ObjectListing.class);
-    when(listingMock.getObjectSummaries()).thenReturn(ImmutableList.of(new S3ObjectSummary()));
-    when(s3.listObjects(any(ListObjectsRequest.class))).thenReturn(listingMock);
-    when(s3.getBucketLifecycleConfiguration(anyString())).thenReturn(mock(BucketLifecycleConfiguration.class));
-    underTest.setS3(s3);
+    ListObjectsV2Response listingMock = mock(ListObjectsV2Response.class);
+    when(listingMock.contents()).thenReturn(List.of(S3Object.builder().build(), S3Object.builder().build()));
+    when(s3.listObjectsV2("mybucket", "")).thenReturn(listingMock);
 
     BlobStoreConfiguration cfg = new MockBlobStoreConfiguration();
     Map<String, Map<String, Object>> attr = ImmutableMap.of("s3", ImmutableMap
@@ -118,8 +108,8 @@ public class BucketManagerTest
   @Test
   public void testOwnershipErrorIsNotThrownOnDisabledOwnershipCheck() {
     String bucketName = "bucketName";
-    when(s3.doesBucketExistV2(anyString())).thenReturn(true);
-    when(s3.getBucketPolicy(anyString())).thenThrow(AmazonClientException.class);
+    when(s3.doesBucketExist(anyString())).thenReturn(true);
+    when(s3.getBucketPolicy(anyString())).thenThrow(S3Exception.class);
     when(featureFlag.isDisabled()).thenReturn(true);
 
     Map<String, Map<String, Object>> cfgAttributes = ImmutableMap.of(CONFIG_KEY,
@@ -135,9 +125,10 @@ public class BucketManagerTest
 
   @Test
   public void deleteCallsBucketOperationsImpl() {
-    ObjectListing listingMock = mock(ObjectListing.class);
-    when(listingMock.getObjectSummaries()).thenReturn(ImmutableList.of(new S3ObjectSummary()));
-    when(s3.listObjects(any(ListObjectsRequest.class))).thenReturn(listingMock);
+    ListObjectsV2Response listingMock = mock(ListObjectsV2Response.class);
+    when(listingMock.contents()).thenReturn(List.of(S3Object.builder().build(), S3Object.builder().build()));
+    when(s3.listObjectsV2("mybucket", "")).thenReturn(listingMock);
+
     underTest.setS3(s3);
 
     BlobStoreConfiguration cfg = new MockBlobStoreConfiguration();
@@ -158,9 +149,12 @@ public class BucketManagerTest
       final String message)
   {
     String bucketName = "bucketName";
-    when(s3.doesBucketExistV2(anyString())).thenReturn(false);
-    AmazonS3Exception s3Exception = mock(AmazonS3Exception.class);
-    when(s3Exception.getErrorCode()).thenReturn(errorCode);
+    when(s3.doesBucketExist(anyString())).thenReturn(false);
+    S3Exception s3Exception = mock(S3Exception.class);
+    when(s3Exception.awsErrorDetails()).thenReturn(
+        AwsErrorDetails.builder()
+            .errorCode(errorCode)
+            .build());
     when(s3.createBucket(anyString())).thenThrow(s3Exception);
 
     Map<String, Map<String, Object>> cfgAttributes = ImmutableMap.of(CONFIG_KEY,
@@ -192,9 +186,12 @@ public class BucketManagerTest
       final String message)
   {
     String bucketName = "bucketName";
-    AmazonS3Exception s3Exception = mock(AmazonS3Exception.class);
-    when(s3Exception.getErrorCode()).thenReturn(errorCode);
-    when(s3.doesBucketExistV2(anyString())).thenThrow(s3Exception);
+    S3Exception s3Exception = mock(S3Exception.class);
+    when(s3Exception.awsErrorDetails()).thenReturn(
+        AwsErrorDetails.builder()
+            .errorCode(errorCode)
+            .build());
+    when(s3.doesBucketExist(anyString())).thenThrow(s3Exception);
 
     Map<String, Map<String, Object>> cfgAttributes = ImmutableMap.of(CONFIG_KEY,
         ImmutableMap.of(BUCKET_KEY, bucketName));
@@ -229,9 +226,12 @@ public class BucketManagerTest
       final String message)
   {
     String bucketName = "bucketName";
-    when(s3.doesBucketExistV2(anyString())).thenReturn(true);
-    AmazonS3Exception s3Exception = mock(AmazonS3Exception.class);
-    when(s3Exception.getErrorCode()).thenReturn(errorCode);
+    when(s3.doesBucketExist(anyString())).thenReturn(true);
+    S3Exception s3Exception = mock(S3Exception.class);
+    when(s3Exception.awsErrorDetails()).thenReturn(
+        AwsErrorDetails.builder()
+            .errorCode(errorCode)
+            .build());
     when(s3.getBucketPolicy(anyString())).thenThrow(s3Exception);
 
     Map<String, Map<String, Object>> cfgAttributes = ImmutableMap.of(CONFIG_KEY,

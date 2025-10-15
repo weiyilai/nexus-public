@@ -103,44 +103,45 @@
     </dependency>
 
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-s3</artifactId>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-sts</artifactId>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sts</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-core</artifactId>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>kms</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-kms</artifactId>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>cloudwatch</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>jmespath-java</artifactId>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>dynamodb</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-cloudwatch</artifactId>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3-transfer-manager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>apache-client</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-cloudwatchmetrics</artifactId>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>cloudwatch-metric-publisher</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-dynamodb</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>org.sonatype.nexus</groupId>
       <artifactId>nexus-upgrade</artifactId>

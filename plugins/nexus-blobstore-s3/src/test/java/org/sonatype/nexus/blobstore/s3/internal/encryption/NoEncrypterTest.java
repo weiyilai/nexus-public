@@ -14,9 +14,9 @@ package org.sonatype.nexus.blobstore.s3.internal.encryption;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 
-import com.amazonaws.services.s3.model.AbstractPutObjectRequest;
-import com.amazonaws.services.s3.model.CopyObjectRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -29,29 +29,29 @@ public class NoEncrypterTest
   private final NoEncrypter noEncrypter = new NoEncrypter();
 
   @Mock
-  private InitiateMultipartUploadRequest initiateMultipartUploadRequest;
+  private CreateMultipartUploadRequest.Builder createMultipartUploadRequestBuilder;
 
   @Mock
-  private AbstractPutObjectRequest abstractPutObjectRequest;
+  private PutObjectRequest.Builder putObjectRequestBuilder;
 
   @Mock
-  private CopyObjectRequest copyObjectRequest;
+  private CopyObjectRequest.Builder copyObjectRequestBuilder;
 
   @Test
   public void testNoEncrypterDoesNothingToInitiateMultipartUploadRequest() {
-    noEncrypter.addEncryption(initiateMultipartUploadRequest);
-    verifyNoInteractions(initiateMultipartUploadRequest);
+    noEncrypter.addEncryption(createMultipartUploadRequestBuilder);
+    verifyNoInteractions(createMultipartUploadRequestBuilder);
   }
 
   @Test
   public void testNoEncrypterDoesNothingToAbstractPutObjectRequest() {
-    noEncrypter.addEncryption(abstractPutObjectRequest);
-    verifyNoInteractions(abstractPutObjectRequest);
+    noEncrypter.addEncryption(putObjectRequestBuilder);
+    verifyNoInteractions(putObjectRequestBuilder);
   }
 
   @Test
   public void testNoEncrypterDoesNothingToCopyObjectRequest() {
-    noEncrypter.addEncryption(copyObjectRequest);
-    verifyNoInteractions(copyObjectRequest);
+    noEncrypter.addEncryption(copyObjectRequestBuilder);
+    verifyNoInteractions(copyObjectRequestBuilder);
   }
 }

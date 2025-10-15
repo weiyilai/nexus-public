@@ -22,8 +22,7 @@ import javax.annotation.Nullable;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
@@ -118,12 +117,11 @@ public class S3BlobStoreConfigurationHelper
     if (!regionLoaded) {
       regionLoaded = true;
       try {
-        region = Optional.ofNullable(Regions.getCurrentRegion())
-            .map(Region::getName)
-            .orElse(null);
+        region = DefaultAwsRegionProviderChain.builder().build().getRegion().id();
       }
       catch (Exception e) {
         log.debug("Failed to retrieve region", e);
+        region = null;
       }
     }
     log.trace("Current region {}", region);

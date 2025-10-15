@@ -14,6 +14,7 @@ package org.sonatype.nexus.blobstore.s3.internal;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionService;
@@ -27,11 +28,10 @@ import org.sonatype.nexus.blobstore.api.BlobStoreException;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.thread.NexusThreadFactory;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
-import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.PartETag;
+import software.amazon.awssdk.services.s3.model.AbortMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
@@ -51,13 +51,12 @@ public abstract class ParallelRequester
   private final ExecutorService executorService;
 
   /**
-   * @param chunkSize       - the number of bytes to be processed in one parallel request
+   * @param chunkSize - the number of bytes to be processed in one parallel request
    * @param numberOfThreads - a non-negative integer, either 0 to indicate that number of threads should be dynamically
-   *                        selected based on the env, or a postive int to set a fixed number of threads
+   *          selected based on the env, or a postive int to set a fixed number of threads
    * @param threadGroupName - a human readable name for the threads
    */
-  public ParallelRequester(final int chunkSize, final int numberOfThreads, final String threadGroupName)
-  {
+  public ParallelRequester(final int chunkSize, final int numberOfThreads, final String threadGroupName) {
     checkArgument(numberOfThreads >= 0, "Must use a non-negative parallelism");
     checkArgument(chunkSize >= 0, "Must use a non-negative chunkSize");
     this.chunkSize = chunkSize;
@@ -72,44 +71,59 @@ public abstract class ParallelRequester
     executorService.shutdownNow();
   }
 
-
   @FunctionalInterface
   protected interface IOFunction<T, R>
   {
     R apply(T v) throws IOException;
   }
 
-  protected void parallelRequests(final AmazonS3 s3,
-                                  final String bucket,
-                                  final String key,
-                                  final Supplier<IOFunction<String, List<PartETag>>> operations)
+  protected void parallelRequests(
+      final EncryptingS3Client s3,
+      final String bucket,
+      final String key,
+      final Supplier<IOFunction<String, List<CompletedPart>>> operations)
   {
-    InitiateMultipartUploadRequest initiateRequest = new InitiateMultipartUploadRequest(bucket, key);
-    String uploadId = s3.initiateMultipartUpload(initiateRequest).getUploadId();
 
-    CompletionService<List<PartETag>> completionService = new ExecutorCompletionService<>(executorService);
+    final String uploadId = s3.createMultipartUpload(bucket, key).uploadId();
+
+    CompletionService<List<CompletedPart>> completionService = new ExecutorCompletionService<>(executorService);
     try {
       for (int i = 0; i < parallelism; i++) {
         completionService.submit(() -> operations.get().apply(uploadId));
       }
 
-      List<PartETag> partETags = new ArrayList<>();
+      List<CompletedPart> completedParts = new ArrayList<>();
       for (int i = 0; i < parallelism; i++) {
-        partETags.addAll(completionService.take().get());
+        completedParts.addAll(completionService.take().get());
       }
 
-      s3.completeMultipartUpload(new CompleteMultipartUploadRequest()
-          .withBucketName(bucket)
-          .withKey(key)
-          .withUploadId(uploadId)
-          .withPartETags(partETags));
+      // AWS S3 requires parts to be in ascending order by part number (according the Claude Code)
+      completedParts.sort(Comparator.comparingInt(CompletedPart::partNumber));
+
+      final CompletedMultipartUpload completedUpload = CompletedMultipartUpload.builder()
+          .parts(completedParts)
+          .build();
+      s3.completeMultipartUpload(CompleteMultipartUploadRequest.builder()
+          .bucket(bucket)
+          .key(key)
+          .uploadId(uploadId)
+          .multipartUpload(completedUpload)
+          .build());
     }
     catch (InterruptedException interrupted) {
-      s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, key, uploadId));
+      s3.abortMultipartUpload(AbortMultipartUploadRequest.builder()
+          .bucket(bucket)
+          .key(key)
+          .uploadId(uploadId)
+          .build());
       Thread.currentThread().interrupt();
     }
     catch (CancellationException | ExecutionException ex) {
-      s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, key, uploadId));
+      s3.abortMultipartUpload(AbortMultipartUploadRequest.builder()
+          .bucket(bucket)
+          .key(key)
+          .uploadId(uploadId)
+          .build());
       throw new BlobStoreException(
           format("Error executing parallel requests for bucket:%s key:%s with uploadId:%s", bucket, key, uploadId), ex,
           null);

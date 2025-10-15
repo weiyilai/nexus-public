@@ -28,7 +28,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <aws-java-sdk.version>1.12.658</aws-java-sdk.version>
+    <aws-java-sdk.version>2.33.5</aws-java-sdk.version>
     <woodstox-core.version>6.5.0</woodstox-core.version>
     <!--
       IMPORTANT: When upgrading azure-storage-blob.version check if the security override
@@ -284,99 +284,69 @@
       </dependency>
 
       <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-core</artifactId>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>aws-core</artifactId>
         <version>${aws-java-sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-s3</artifactId>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>s3</artifactId>
         <version>${aws-java-sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-sts</artifactId>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>sts</artifactId>
         <version>${aws-java-sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-kms</artifactId>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>kms</artifactId>
         <version>${aws-java-sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
-        <groupId>com.amazonaws</groupId>
+        <groupId>software.amazon.awssdk</groupId>
         <artifactId>jmespath-java</artifactId>
-        <version>${aws-java-sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
+        <version>2.0.0-preview-2</version>
       </dependency>
 
       <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-cloudwatch</artifactId>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>cloudwatch</artifactId>
         <version>${aws-java-sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-cloudwatchmetrics</artifactId>
-        <version>${aws-java-sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>cloudwatchmetrics</artifactId>
+        <version>2.0.0-preview-2</version>
       </dependency>
 
       <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-dynamodb</artifactId>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>dynamodb</artifactId>
         <version>${aws-java-sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>apache-client</artifactId>
+        <version>${aws-java-sdk.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>s3-transfer-manager</artifactId>
+        <version>${aws-java-sdk.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>cloudwatch-metric-publisher</artifactId>
+        <version>${aws-java-sdk.version}</version>
       </dependency>
 
       <dependency>

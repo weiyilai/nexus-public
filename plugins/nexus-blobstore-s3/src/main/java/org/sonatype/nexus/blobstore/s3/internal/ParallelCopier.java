@@ -21,10 +21,10 @@ import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.CopyPartRequest;
-import com.amazonaws.services.s3.model.PartETag;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+import software.amazon.awssdk.services.s3.model.UploadPartCopyRequest;
+import software.amazon.awssdk.services.s3.model.UploadPartCopyResponse;
 import com.codahale.metrics.annotation.Timed;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -58,8 +58,8 @@ public class ParallelCopier
 
   @Override
   @Timed
-  public void copy(final AmazonS3 s3, final String bucket, final String srcKey, final String destKey) {
-    long length = s3.getObjectMetadata(bucket, srcKey).getContentLength();
+  public void copy(final EncryptingS3Client s3, final String bucket, final String srcKey, final String destKey) {
+    long length = s3.getObjectMetadata(bucket, srcKey).contentLength();
 
     try {
       if (length < chunkSize) {
@@ -76,8 +76,8 @@ public class ParallelCopier
     }
   }
 
-  private List<PartETag> copyParts(
-      final AmazonS3 s3,
+  private List<CompletedPart> copyParts(
+      final EncryptingS3Client s3,
       final String uploadId,
       final String bucket,
       final String srcKey,
@@ -85,24 +85,30 @@ public class ParallelCopier
       final long size,
       final AtomicInteger offset)
   {
-    List<PartETag> tags = new ArrayList<>();
+    List<CompletedPart> completedParts = new ArrayList<>();
     int partNumber;
 
     while (getFirstByte((partNumber = offset.getAndIncrement()), chunkSize) < size) {
-      CopyPartRequest request = new CopyPartRequest()
-          .withSourceBucketName(bucket)
-          .withSourceKey(srcKey)
-          .withDestinationBucketName(bucket)
-          .withDestinationKey(destKey)
-          .withUploadId(uploadId)
-          .withPartNumber(partNumber)
-          .withFirstByte(getFirstByte(partNumber, chunkSize))
-          .withLastByte(getLastByte(size, partNumber, chunkSize));
+      final long firstByte = getFirstByte(partNumber, chunkSize);
+      final long lastByte = getLastByte(size, partNumber, chunkSize);
+      UploadPartCopyRequest request = UploadPartCopyRequest.builder()
+          .sourceBucket(bucket)
+          .sourceKey(srcKey)
+          .destinationBucket(bucket)
+          .destinationKey(destKey)
+          .uploadId(uploadId)
+          .partNumber(partNumber)
+          .copySourceRange("bytes=" + firstByte + "-" + lastByte)
+          .build();
 
-      tags.add(s3.copyPart(request).getPartETag());
+      UploadPartCopyResponse response = s3.uploadPartCopy(request);
+      completedParts.add(CompletedPart.builder()
+          .partNumber(partNumber)
+          .eTag(response.copyPartResult().eTag())
+          .build());
     }
 
-    return tags;
+    return completedParts;
   }
 
   static long getFirstByte(final long partNumber, final long chunkSize) {

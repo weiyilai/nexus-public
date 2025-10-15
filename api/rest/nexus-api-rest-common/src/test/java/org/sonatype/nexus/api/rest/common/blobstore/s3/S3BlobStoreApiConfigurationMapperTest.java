@@ -31,8 +31,6 @@ import org.sonatype.nexus.api.rest.common.blobstore.s3.model.S3BlobStoreApiBucke
 import org.sonatype.nexus.api.rest.common.blobstore.s3.model.S3BlobStoreApiEncryption;
 import org.sonatype.nexus.api.rest.common.blobstore.s3.model.S3BlobStoreApiModel;
 
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.google.common.collect.ImmutableMap;
 import org.junit.After;
 import org.junit.Before;
@@ -40,11 +38,14 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.blobstore.quota.BlobStoreQuotaSupport.LIMIT_KEY;
 import static org.sonatype.nexus.blobstore.quota.BlobStoreQuotaSupport.ROOT_KEY;
 import static org.sonatype.nexus.blobstore.quota.BlobStoreQuotaSupport.TYPE_KEY;
@@ -89,13 +90,11 @@ public class S3BlobStoreApiConfigurationMapperTest
 
   private static final boolean FORCE_PATH_STYLE = true;
 
-  private static int MAX_CONNECTION_POOL = 5;
-
-  private static final int BUCKET_EXPIRATION = 5;
+  private static final int MAX_CONNECTION_POOL = 5;
 
   private static final int QUOTA_LIMIT = 2;
 
-  private MockedStatic<Regions> regionsMock;
+  private MockedStatic<DefaultAwsRegionProviderChain> regionProviderMock;
 
   @Mock
   private Region regionMock;
@@ -106,14 +105,26 @@ public class S3BlobStoreApiConfigurationMapperTest
   @Before
   public void setup() throws Exception {
     resetS3BlobStoreConfigHelper();
-    regionsMock = Mockito.mockStatic(Regions.class);
-    Mockito.when(regionMock.getName()).thenReturn(AWS_REGION);
-    regionsMock.when(Regions::getCurrentRegion).thenReturn(regionMock);
+
+    // Mock the static DefaultAwsRegionProviderChain
+    regionProviderMock = Mockito.mockStatic(DefaultAwsRegionProviderChain.class);
+
+    // Create a mock builder and chain
+    DefaultAwsRegionProviderChain.Builder mockBuilder = Mockito.mock(DefaultAwsRegionProviderChain.Builder.class);
+    DefaultAwsRegionProviderChain mockChain = Mockito.mock(DefaultAwsRegionProviderChain.class);
+
+    when(mockBuilder.build()).thenReturn(mockChain);
+    when(mockChain.getRegion()).thenReturn(regionMock);
+    when(regionMock.id()).thenReturn(AWS_REGION);
+
+    regionProviderMock.when(DefaultAwsRegionProviderChain::builder).thenReturn(mockBuilder);
   }
 
   @After
   public void tearDown() {
-    regionsMock.close();
+    if (regionProviderMock != null) {
+      regionProviderMock.close();
+    }
   }
 
   @Test
@@ -170,7 +181,7 @@ public class S3BlobStoreApiConfigurationMapperTest
 
   @Test
   public void testConvertConfigurationToModelWithFailoverBuckets() throws Exception {
-    Mockito.when(regionMock.getName()).thenReturn(FAIL_OVER_REGION_1);
+    when(regionMock.id()).thenReturn(FAIL_OVER_REGION_1);
 
     BlobStoreConfiguration configuration = aFullySetBlobStoreConfiguration();
     S3BlobStoreApiModel model = underTest.apply(configuration);
@@ -186,7 +197,7 @@ public class S3BlobStoreApiConfigurationMapperTest
     assertThat(bucketConfiguration.getActiveRegion(), is(FAIL_OVER_REGION_1));
 
     resetS3BlobStoreConfigHelper();
-    Mockito.when(regionMock.getName()).thenReturn(FAIL_OVER_REGION_2);
+    when(regionMock.id()).thenReturn(FAIL_OVER_REGION_2);
     model = underTest.apply(configuration);
     bucketConfiguration = model.getBucketConfiguration();
 

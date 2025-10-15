@@ -18,11 +18,11 @@ import org.junit.Test;
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.CopyPartResult;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
-import com.amazonaws.services.s3.model.ObjectMetadata;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.services.s3.model.CopyPartResult;
+import software.amazon.awssdk.services.s3.model.UploadPartCopyResponse;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 
 import org.mockito.Mock;
 
@@ -36,10 +36,10 @@ public class MultipartCopierTest
   private MultipartCopier multipartCopier;
 
   @Mock
-  private AmazonS3 s3;
+  private EncryptingS3Client s3;
 
   @Mock
-  private InitiateMultipartUploadResult initiateMultipartUploadResult;
+  private CreateMultipartUploadResponse createMultipartUploadResponse;
 
   @Before
   public void setUp() {
@@ -48,65 +48,73 @@ public class MultipartCopierTest
 
   @Test
   public void testCopyWithMultipartApi() {
-    when(s3.initiateMultipartUpload(any())).thenReturn(initiateMultipartUploadResult);
-    when(s3.getObjectMetadata("bucketName", "source")).thenReturn(new ObjectMetadata() {{
-      setContentLength(101);
-    }});
-    when(s3.copyPart(any())).thenReturn(new CopyPartResult());
+    when(s3.createMultipartUpload(any())).thenReturn(createMultipartUploadResponse);
+    when(s3.getObjectMetadata("bucketName", "source")).thenReturn(HeadObjectResponse.builder()
+        .contentLength(101L)
+        .build());
+    when(s3.uploadPartCopy(any())).thenReturn(UploadPartCopyResponse.builder()
+        .copyPartResult(CopyPartResult.builder()
+            .eTag("test-etag")
+            .build())
+        .build());
 
     multipartCopier.copy(s3, "bucketName", "source", "destination");
 
-    verify(s3).initiateMultipartUpload(any());
+    verify(s3).createMultipartUpload(any());
     verify(s3).getObjectMetadata("bucketName", "source");
-    verify(s3, times(2)).copyPart(any());
+    verify(s3, times(2)).uploadPartCopy(any());
     verify(s3).completeMultipartUpload(any());
     verify(s3, never()).abortMultipartUpload(any());
   }
 
   @Test
   public void testCopyAbortsMultipartOnError() {
-    when(initiateMultipartUploadResult.getUploadId()).thenReturn("uploadId");
-    when(s3.initiateMultipartUpload(any())).thenReturn(initiateMultipartUploadResult);
-    when(s3.getObjectMetadata("bucketName", "source")).thenReturn(new ObjectMetadata() {{
-      setContentLength(101);
-    }});
-    when(s3.copyPart(any())).thenThrow(new SdkClientException(""));
+    when(createMultipartUploadResponse.uploadId()).thenReturn("uploadId");
+    when(s3.createMultipartUpload(any())).thenReturn(createMultipartUploadResponse);
+    when(s3.getObjectMetadata("bucketName", "source")).thenReturn(HeadObjectResponse.builder()
+        .contentLength(101L)
+        .build());
+    when(s3.uploadPartCopy(any())).thenThrow(SdkClientException.builder().build());
 
     assertThrows(BlobStoreException.class , () -> multipartCopier.copy(s3, "bucketName", "source", "destination"));
 
-    verify(s3).initiateMultipartUpload(any());
+    verify(s3).createMultipartUpload(any());
     verify(s3).getObjectMetadata("bucketName", "source");
-    verify(s3).copyPart(any());
+    verify(s3).uploadPartCopy(any());
     verify(s3).abortMultipartUpload(any());
   }
 
   @Test
   public void testCopySplitsParts() {
-    when(s3.initiateMultipartUpload(any())).thenReturn(initiateMultipartUploadResult);
-    when(s3.getObjectMetadata("bucketName", "source")).thenReturn(new ObjectMetadata() {{
-      setContentLength(345);
-    }});
-    when(s3.copyPart(any())).thenReturn(new CopyPartResult());
+    when(s3.createMultipartUpload(any())).thenReturn(createMultipartUploadResponse);
+    when(s3.getObjectMetadata("bucketName", "source")).thenReturn(HeadObjectResponse.builder()
+        .contentLength(345L)
+        .build());
+    when(s3.uploadPartCopy(any())).thenReturn(UploadPartCopyResponse.builder()
+        .copyPartResult(CopyPartResult.builder()
+            .eTag("test-etag")
+            .build())
+        .build());
 
     multipartCopier.copy(s3, "bucketName", "source", "destination");
 
-    verify(s3).initiateMultipartUpload(any());
+    verify(s3).createMultipartUpload(any());
     verify(s3).getObjectMetadata("bucketName", "source");
-    verify(s3, times(4)).copyPart(any());
+    verify(s3, times(4)).uploadPartCopy(any());
     verify(s3).completeMultipartUpload(any());
     verify(s3, never()).abortMultipartUpload(any());
   }
 
   @Test
   public void testCopyUsesCopyObjectForSmallCopies() {
-    when(s3.getObjectMetadata("bucketName", "source")).thenReturn(new ObjectMetadata() {{
-      setContentLength(99);
-    }});
+    when(s3.getObjectMetadata("bucketName", "source")).thenReturn(HeadObjectResponse.builder()
+        .contentLength(99L)
+        .build());
 
     multipartCopier.copy(s3, "bucketName", "source", "destination");
 
     verify(s3).getObjectMetadata("bucketName", "source");
-    verify(s3).copyObject(any(), any(), any(), any());
-    verify(s3, never()).initiateMultipartUpload(any());
+    verify(s3).copyObject(anyString(), anyString(), anyString(), anyString());
+    verify(s3, never()).createMultipartUpload(any());
   }
 }

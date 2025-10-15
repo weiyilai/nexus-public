@@ -12,22 +12,17 @@
  */
 package org.sonatype.nexus.blobstore.s3.internal.encryption;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
-import com.amazonaws.services.s3.model.AbstractPutObjectRequest;
-import com.amazonaws.services.s3.model.CopyObjectRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-
-import static java.util.Optional.ofNullable;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
- * Adds S3 managed encryption to S3 requests.
+ * Adds S3 managed encryption to S3 requests using AWS SDK 2.x.
  * 
  * @since 3.19
  */
@@ -42,26 +37,17 @@ public class S3ManagedEncrypter
   public static final String NAME = "S3 Managed Encryption";
 
   @Override
-  public <T extends InitiateMultipartUploadRequest> T addEncryption(final T request) {
-    setEncryption(request::getObjectMetadata, request::setObjectMetadata);
-    return request;
+  public CreateMultipartUploadRequest.Builder addEncryption(final CreateMultipartUploadRequest.Builder requestBuilder) {
+    return requestBuilder.serverSideEncryption(ServerSideEncryption.AES256);
   }
 
   @Override
-  public <T extends AbstractPutObjectRequest> T addEncryption(final T request) {
-    setEncryption(request::getMetadata, request::setMetadata);
-    return request;
+  public PutObjectRequest.Builder addEncryption(final PutObjectRequest.Builder requestBuilder) {
+    return requestBuilder.serverSideEncryption(ServerSideEncryption.AES256);
   }
 
   @Override
-  public <T extends CopyObjectRequest> T addEncryption(final T request) {
-    setEncryption(request::getNewObjectMetadata, request::setNewObjectMetadata);
-    return request;
-  }
-
-  private void setEncryption(final Supplier<ObjectMetadata> getter, final Consumer<ObjectMetadata> setter) {
-    ObjectMetadata objectMetadata = ofNullable(getter.get()).orElse(new ObjectMetadata());
-    objectMetadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
-    setter.accept(objectMetadata);
+  public CopyObjectRequest.Builder addEncryption(final CopyObjectRequest.Builder requestBuilder) {
+    return requestBuilder.serverSideEncryption(ServerSideEncryption.AES256);
   }
 }

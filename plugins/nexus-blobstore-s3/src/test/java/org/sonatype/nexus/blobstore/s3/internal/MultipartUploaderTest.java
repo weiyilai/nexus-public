@@ -18,10 +18,9 @@ import org.junit.Test;
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
-import com.amazonaws.services.s3.model.UploadPartResult;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
+import software.amazon.awssdk.services.s3.model.UploadPartResponse;
 import org.mockito.Mock;
 
 import java.io.ByteArrayInputStream;
@@ -43,27 +42,27 @@ public class MultipartUploaderTest
   private MultipartUploader multipartUploader;
 
   @Mock
-  private AmazonS3 s3;
+  private EncryptingS3Client s3;
 
   @Mock
-  private InitiateMultipartUploadResult initiateMultipartUploadResult;
+  private CreateMultipartUploadResponse createMultipartUploadResponse;
 
   @Before
   public void setUp() {
-    when(initiateMultipartUploadResult.getUploadId()).thenReturn("uploadId");
+    when(createMultipartUploadResponse.uploadId()).thenReturn("uploadId");
     multipartUploader = new MultipartUploader(100);
   }
 
   @Test
   public void testUploadWithMultipartApi() {
     InputStream input = new ByteArrayInputStream(new byte[100]);
-    when(s3.initiateMultipartUpload(any())).thenReturn(initiateMultipartUploadResult);
-    when(s3.uploadPart(any())).thenReturn(new UploadPartResult());
+    when(s3.createMultipartUpload(any())).thenReturn(createMultipartUploadResponse);
+    when(s3.uploadPart(any(), any())).thenReturn(UploadPartResponse.builder().build());
 
     multipartUploader.upload(s3, "bucketName", "key", input);
 
-    verify(s3).initiateMultipartUpload(any());
-    verify(s3).uploadPart(any());
+    verify(s3).createMultipartUpload(any());
+    verify(s3).uploadPart(any(), any());
     verify(s3).completeMultipartUpload(any());
     verify(s3, never()).abortMultipartUpload(any());
   }
@@ -71,13 +70,13 @@ public class MultipartUploaderTest
   @Test
   public void testUploadAbortsMultipartUploadsOnError() {
     InputStream input = new ByteArrayInputStream(new byte[100]);
-    when(s3.initiateMultipartUpload(any())).thenReturn(initiateMultipartUploadResult);
-    when(s3.uploadPart(any())).thenThrow(new SdkClientException(""));
+    when(s3.createMultipartUpload(any())).thenReturn(createMultipartUploadResponse);
+    when(s3.uploadPart(any(), any())).thenThrow(SdkClientException.builder().build());
 
     assertThrows(BlobStoreException.class, () -> multipartUploader.upload(s3, "bucketName", "key", input));
 
-    verify(s3).initiateMultipartUpload(any());
-    verify(s3).uploadPart(any());
+    verify(s3).createMultipartUpload(any());
+    verify(s3).uploadPart(any(), any());
     verify(s3).abortMultipartUpload(any());
   }
 
@@ -120,7 +119,7 @@ public class MultipartUploaderTest
     InputStream input = new ByteArrayInputStream(new byte[50]);
     multipartUploader.upload(s3, "bucketName", "key", input);
 
-    verify(s3).putObject(any(), any(), any(), any());
-    verify(s3, never()).initiateMultipartUpload(any());
+    verify(s3).putObject(any(), any());
+    verify(s3, never()).createMultipartUpload(any());
   }
 }

@@ -23,14 +23,16 @@ import jakarta.inject.Inject;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
-import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.UploadPartRequest;
-import com.amazonaws.services.s3.model.UploadPartResult;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.AbortMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.UploadPartRequest;
+import software.amazon.awssdk.services.s3.model.UploadPartResponse;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,7 +68,7 @@ public class MultipartUploader
   }
 
   @Override
-  public void upload(final AmazonS3 s3, final String bucket, final String key, final InputStream contents) {
+  public void upload(final EncryptingS3Client s3, final String bucket, final String key, final InputStream contents) {
     try (InputStream input = contents) {
       InputStream chunkOne = readChunk(input);
       if (chunkOne.available() < chunkSize) {
@@ -82,19 +84,22 @@ public class MultipartUploader
   }
 
   private void uploadSinglePart(
-      final AmazonS3 s3,
+      final EncryptingS3Client s3,
       final String bucket,
       final String key,
       final InputStream contents) throws IOException
   {
     log.debug("Starting upload to key {} in bucket {} of {} bytes", key, bucket, contents.available());
-    ObjectMetadata metadata = new ObjectMetadata();
-    metadata.setContentLength(contents.available());
-    s3.putObject(bucket, key, contents, metadata);
+    PutObjectRequest putRequest = PutObjectRequest.builder()
+        .bucket(bucket)
+        .key(key)
+        .contentLength((long) contents.available())
+        .build();
+    s3.putObject(putRequest, RequestBody.fromInputStream(contents, contents.available()));
   }
 
   private void uploadMultiPart(
-      final AmazonS3 s3,
+      final EncryptingS3Client s3,
       final String bucket,
       final String key,
       final InputStream firstChunk,
@@ -103,12 +108,15 @@ public class MultipartUploader
     checkState(firstChunk.available() > 0);
     String uploadId = null;
     try {
-      InitiateMultipartUploadRequest initiateRequest = new InitiateMultipartUploadRequest(bucket, key);
-      uploadId = s3.initiateMultipartUpload(initiateRequest).getUploadId();
+      CreateMultipartUploadRequest initiateRequest = CreateMultipartUploadRequest.builder()
+          .bucket(bucket)
+          .key(key)
+          .build();
+      uploadId = s3.createMultipartUpload(initiateRequest).uploadId();
 
       log.debug("Starting multipart upload {} to key {} in bucket {}", uploadId, key, bucket);
 
-      List<UploadPartResult> results = new ArrayList<>();
+      final List<CompletedPart> completedParts = new ArrayList<>();
       for (int partNumber = 1;; partNumber++) {
         InputStream chunk = partNumber == 1 ? firstChunk : readChunk(restOfContents);
         if (chunk.available() == 0) {
@@ -116,21 +124,30 @@ public class MultipartUploader
         }
         else {
           log.debug("Uploading chunk {} for {} of {} bytes", partNumber, uploadId, chunk.available());
-          UploadPartRequest part = new UploadPartRequest()
-              .withBucketName(bucket)
-              .withKey(key)
-              .withUploadId(uploadId)
-              .withPartNumber(partNumber)
-              .withInputStream(chunk)
-              .withPartSize(chunk.available());
-          results.add(s3.uploadPart(part));
+          UploadPartRequest part = UploadPartRequest.builder()
+              .bucket(bucket)
+              .key(key)
+              .uploadId(uploadId)
+              .partNumber(partNumber)
+              .contentLength((long) chunk.available())
+              .build();
+          final UploadPartResponse response =
+              s3.uploadPart(part, RequestBody.fromInputStream(chunk, chunk.available()));
+          completedParts.add(CompletedPart.builder()
+              .partNumber(partNumber)
+              .eTag(response.eTag())
+              .build());
         }
       }
-      CompleteMultipartUploadRequest compRequest = new CompleteMultipartUploadRequest()
-          .withBucketName(bucket)
-          .withKey(key)
-          .withUploadId(uploadId)
-          .withPartETags(results);
+      CompletedMultipartUpload completedUpload = CompletedMultipartUpload.builder()
+          .parts(completedParts)
+          .build();
+      CompleteMultipartUploadRequest compRequest = CompleteMultipartUploadRequest.builder()
+          .bucket(bucket)
+          .key(key)
+          .uploadId(uploadId)
+          .multipartUpload(completedUpload)
+          .build();
       s3.completeMultipartUpload(compRequest);
       log.debug("Upload {} complete", uploadId);
       uploadId = null;
@@ -138,11 +155,15 @@ public class MultipartUploader
     finally {
       if (uploadId != null) {
         try {
-          s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, key, uploadId));
+          s3.abortMultipartUpload(AbortMultipartUploadRequest.builder()
+              .bucket(bucket)
+              .key(key)
+              .uploadId(uploadId)
+              .build());
         }
         catch (Exception e) {
-          log.error("Error aborting S3 multipart upload to bucket {} with key {}", bucket, key,
-              log.isDebugEnabled() ? e : null);
+          log.error("Error aborting S3 multipart upload to bucket {} with key {} {}", bucket, key,
+              log.isDebugEnabled() ? "Inner Exception: " + e : null);
         }
       }
     }

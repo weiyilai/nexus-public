@@ -153,8 +153,9 @@
   <logger name="org.eclipse.jetty.ee8.webapp" level="INFO"/>
   <logger name="org.eclipse.jetty.ee8.webapp.StandardDescriptorProcessor" level="WARN"/>
 
-  <logger name="com.amazonaws.internal.InstanceMetadataServiceResourceFetcher" level="ERROR"/>
-  <logger name="com.amazonaws.util.EC2MetadataUtils" level="ERROR"/>
+  <logger name="software.amazon.awssdk.services.ec2metadata" level="ERROR"/>
+  <logger name="software.amazon.awssdk.auth.credentials" level="ERROR"/>
+  <logger name="software.amazon.awssdk.regions" level="ERROR"/>
 
   <include file="${karaf.data}/etc/logback/logback-tasklogfile-appender-override.xml" optional="true"/>
 

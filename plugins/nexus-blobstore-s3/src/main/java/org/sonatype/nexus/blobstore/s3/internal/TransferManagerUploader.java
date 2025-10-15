@@ -16,10 +16,6 @@ import java.io.InputStream;
 
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -41,13 +37,16 @@ public class TransferManagerUploader
     implements S3Uploader
 {
   @Override
-  public void upload(final AmazonS3 s3, final String bucket, final String key, final InputStream contents) {
+  public void upload(
+      final EncryptingS3Client s3,
+      final String bucket,
+      final String key,
+      final InputStream contents)
+  {
     try {
-      TransferManager transferManager = TransferManagerBuilder.standard().withS3Client(s3).build();
-      transferManager.upload(bucket, key, contents, new ObjectMetadata())
-          .waitForCompletion();
+      s3.uploadWithTransferManger(bucket, key, contents);
     }
-    catch (InterruptedException e) {
+    catch (Exception e) {
       throw new BlobStoreException("error uploading blob", e, null);
     }
   }

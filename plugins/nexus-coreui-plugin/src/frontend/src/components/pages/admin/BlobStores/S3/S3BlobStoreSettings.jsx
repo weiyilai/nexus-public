@@ -239,18 +239,6 @@ export default function S3BlobStoreSettings({service}) {
         <NxTextInput {...FormUtils.fieldProps(advancedField('maxConnectionPoolSize'), current)}
           onChange={FormUtils.handleUpdate(advancedField('maxConnectionPoolSize'), send)} />
       </NxFormGroup>
-      <NxFormGroup
-          label={FIELDS.S3BlobStore_AdvancedConnectionSettings_SignatureVersion_FieldLabel}
-          sublabel={FIELDS.S3BlobStore_AdvancedConnectionSettings_SignatureVersion_HelpText}
-      >
-        <NxFormSelect {...FormUtils.fieldProps(advancedField('signerType'), current)}
-                onChange={FormUtils.handleUpdate(advancedField('signerType'), send)}>
-          <option value={null}></option>
-          {dropDownValues?.signerTypes?.map(signerType =>
-              <option key={signerType.id} value={signerType.id}>{signerType.name}</option>
-          )}
-        </NxFormSelect>
-      </NxFormGroup>
       <NxFieldset label={FIELDS.S3BlobStore_AdvancedConnectionSettings_PathStyleAccess_FieldLabel}>
         <NxCheckbox {...FormUtils.checkboxProps(advancedField('forcePathStyle'), current)}
                     onChange={FormUtils.handleUpdate(advancedField('forcePathStyle'), send)}>

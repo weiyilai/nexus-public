@@ -32,6 +32,7 @@ public class S3LogConfigurationCustomizer
   @Override
   public void customize(final Configuration configuration) {
     // limit noisy S3 logger
-    configuration.setLoggerLevel("com.amazonaws.services.s3.internal.S3AbortableInputStream", LoggerLevel.ERROR);
+    configuration.setLoggerLevel("software.amazon.awssdk.services.s3.internal.sync.S3AbortableInputStream",
+        LoggerLevel.ERROR);
   }
 }

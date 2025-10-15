@@ -16,76 +16,86 @@ import java.util.Optional;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 
-import com.amazonaws.services.s3.model.AbstractPutObjectRequest;
-import com.amazonaws.services.s3.model.CopyObjectRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class KMSEncrypterTest
     extends TestSupport
 {
 
   @Mock
-  private InitiateMultipartUploadRequest initiateMultipartUploadRequest;
+  private CreateMultipartUploadRequest.Builder createMultipartUploadRequestBuilder;
 
   @Mock
-  private AbstractPutObjectRequest abstractPutObjectRequest;
+  private PutObjectRequest.Builder putObjectRequestBuilder;
 
   @Mock
-  private CopyObjectRequest copyObjectRequest;
-
-  @Captor
-  private ArgumentCaptor<SSEAwsKeyManagementParams> sseAwsKeyManagementParamsCaptor;
+  private CopyObjectRequest.Builder copyObjectRequestBuilder;
 
   @Test
   public void testConstructorHandlesKmsId() {
-    assertThat(new KMSEncrypter(Optional.empty()).getKmsParameters().getAwsKmsKeyId(), nullValue());
-    assertThat(new KMSEncrypter(Optional.of("")).getKmsParameters().getAwsKmsKeyId(), nullValue());
-    assertThat(new KMSEncrypter(Optional.of(" ")).getKmsParameters().getAwsKmsKeyId(), nullValue());
-    assertThat(new KMSEncrypter(Optional.of("   ")).getKmsParameters().getAwsKmsKeyId(), nullValue());
-    assertThat(new KMSEncrypter(Optional.of("aProperKeyId")).getKmsParameters().getAwsKmsKeyId(), is("aProperKeyId"));
+    assertThat(new KMSEncrypter(Optional.empty()).getKmsKeyId(), nullValue());
+    assertThat(new KMSEncrypter(Optional.of("")).getKmsKeyId(), nullValue());
+    assertThat(new KMSEncrypter(Optional.of(" ")).getKmsKeyId(), nullValue());
+    assertThat(new KMSEncrypter(Optional.of("   ")).getKmsKeyId(), nullValue());
+    assertThat(new KMSEncrypter(Optional.of("aProperKeyId")).getKmsKeyId(), is("aProperKeyId"));
   }
 
   @Test
   public void testSupplyingNoKmsIdAddsCorrectKmsParameters() {
     KMSEncrypter kmsEncrypter = new KMSEncrypter();
 
-    kmsEncrypter.addEncryption(initiateMultipartUploadRequest);
-    verify(initiateMultipartUploadRequest).setSSEAwsKeyManagementParams(sseAwsKeyManagementParamsCaptor.capture());
-    assertThat(sseAwsKeyManagementParamsCaptor.getValue().getAwsKmsKeyId(), nullValue());
+    when(createMultipartUploadRequestBuilder.serverSideEncryption(any(ServerSideEncryption.class)))
+        .thenReturn(createMultipartUploadRequestBuilder);
+    kmsEncrypter.addEncryption(createMultipartUploadRequestBuilder);
+    verify(createMultipartUploadRequestBuilder).serverSideEncryption(ServerSideEncryption.AWS_KMS);
 
-    kmsEncrypter.addEncryption(abstractPutObjectRequest);
-    verify(abstractPutObjectRequest).setSSEAwsKeyManagementParams(sseAwsKeyManagementParamsCaptor.capture());
-    assertThat(sseAwsKeyManagementParamsCaptor.getValue().getAwsKmsKeyId(), nullValue());
+    when(putObjectRequestBuilder.serverSideEncryption(any(ServerSideEncryption.class)))
+        .thenReturn(putObjectRequestBuilder);
+    kmsEncrypter.addEncryption(putObjectRequestBuilder);
+    verify(putObjectRequestBuilder).serverSideEncryption(ServerSideEncryption.AWS_KMS);
 
-    kmsEncrypter.addEncryption(copyObjectRequest);
-    verify(copyObjectRequest).setSSEAwsKeyManagementParams(sseAwsKeyManagementParamsCaptor.capture());
-    assertThat(sseAwsKeyManagementParamsCaptor.getValue().getAwsKmsKeyId(), nullValue());
+    when(copyObjectRequestBuilder.serverSideEncryption(any(ServerSideEncryption.class)))
+        .thenReturn(copyObjectRequestBuilder);
+    kmsEncrypter.addEncryption(copyObjectRequestBuilder);
+    verify(copyObjectRequestBuilder).serverSideEncryption(ServerSideEncryption.AWS_KMS);
   }
 
   @Test
   public void testAddsCorrectKmsParametersWithKeyId() {
     KMSEncrypter kmsEncrypter = new KMSEncrypter(Optional.of("FakeKeyId"));
 
-    kmsEncrypter.addEncryption(initiateMultipartUploadRequest);
-    verify(initiateMultipartUploadRequest).setSSEAwsKeyManagementParams(sseAwsKeyManagementParamsCaptor.capture());
-    assertThat(sseAwsKeyManagementParamsCaptor.getValue().getAwsKmsKeyId(), is("FakeKeyId"));
+    when(createMultipartUploadRequestBuilder.serverSideEncryption(any(ServerSideEncryption.class)))
+        .thenReturn(createMultipartUploadRequestBuilder);
+    when(createMultipartUploadRequestBuilder.ssekmsKeyId(anyString())).thenReturn(createMultipartUploadRequestBuilder);
+    kmsEncrypter.addEncryption(createMultipartUploadRequestBuilder);
+    verify(createMultipartUploadRequestBuilder).serverSideEncryption(ServerSideEncryption.AWS_KMS);
+    verify(createMultipartUploadRequestBuilder).ssekmsKeyId("FakeKeyId");
 
-    kmsEncrypter.addEncryption(abstractPutObjectRequest);
-    verify(abstractPutObjectRequest).setSSEAwsKeyManagementParams(sseAwsKeyManagementParamsCaptor.capture());
-    assertThat(sseAwsKeyManagementParamsCaptor.getValue().getAwsKmsKeyId(), is("FakeKeyId"));
+    when(putObjectRequestBuilder.serverSideEncryption(any(ServerSideEncryption.class)))
+        .thenReturn(putObjectRequestBuilder);
+    when(putObjectRequestBuilder.ssekmsKeyId(anyString())).thenReturn(putObjectRequestBuilder);
+    kmsEncrypter.addEncryption(putObjectRequestBuilder);
+    verify(putObjectRequestBuilder).serverSideEncryption(ServerSideEncryption.AWS_KMS);
+    verify(putObjectRequestBuilder).ssekmsKeyId("FakeKeyId");
 
-    kmsEncrypter.addEncryption(copyObjectRequest);
-    verify(copyObjectRequest).setSSEAwsKeyManagementParams(sseAwsKeyManagementParamsCaptor.capture());
-    assertThat(sseAwsKeyManagementParamsCaptor.getValue().getAwsKmsKeyId(), is("FakeKeyId"));
+    when(copyObjectRequestBuilder.serverSideEncryption(any(ServerSideEncryption.class)))
+        .thenReturn(copyObjectRequestBuilder);
+    when(copyObjectRequestBuilder.ssekmsKeyId(anyString())).thenReturn(copyObjectRequestBuilder);
+    kmsEncrypter.addEncryption(copyObjectRequestBuilder);
+    verify(copyObjectRequestBuilder).serverSideEncryption(ServerSideEncryption.AWS_KMS);
+    verify(copyObjectRequestBuilder).ssekmsKeyId("FakeKeyId");
   }
 }

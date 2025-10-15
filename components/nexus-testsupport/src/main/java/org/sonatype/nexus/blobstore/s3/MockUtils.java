@@ -10,22 +10,27 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.blobstore.s3.internal.encryption;
 
-import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
-import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+package org.sonatype.nexus.blobstore.s3;
 
-/**
- * Adds any encryption necessary to S3 requests for AWS SDK 2.x.
- *
- * @since 3.19
- */
-public interface S3Encrypter
+import java.util.Arrays;
+import java.util.List;
+
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.S3Object;
+
+public class MockUtils
 {
-  CreateMultipartUploadRequest.Builder addEncryption(CreateMultipartUploadRequest.Builder requestBuilder);
+  public static ListObjectsV2Response getListObjectResponseForKeys(
+      String... keys)
+  {
+    final List<S3Object> s3Objects = Arrays.stream(keys)
+        .map(key -> S3Object.builder().key(key).build())
+        .toList();
 
-  PutObjectRequest.Builder addEncryption(PutObjectRequest.Builder requestBuilder);
-
-  CopyObjectRequest.Builder addEncryption(CopyObjectRequest.Builder requestBuilder);
+    return ListObjectsV2Response.builder()
+        .isTruncated(false)
+        .contents(s3Objects)
+        .build();
+  }
 }

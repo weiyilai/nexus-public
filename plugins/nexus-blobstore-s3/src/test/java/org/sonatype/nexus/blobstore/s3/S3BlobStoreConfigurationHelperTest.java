@@ -19,11 +19,12 @@ import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import software.amazon.awssdk.regions.Region;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
-import org.mockito.MockedStatic;
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -55,10 +56,10 @@ public class S3BlobStoreConfigurationHelperTest
     withRegion(null, () -> assertThat(getConfiguredBucket(configuration), is("def-bucket")));
 
     // Match fail over region
-    withRegion(Regions.US_EAST_1, () -> assertThat(getConfiguredBucket(configuration), is("us-e-bucket")));
+    withRegion(Region.US_EAST_1, () -> assertThat(getConfiguredBucket(configuration), is("us-e-bucket")));
 
     // Running region doesn't match anything, use primary
-    withRegion(Regions.AF_SOUTH_1, () -> assertThat(getConfiguredBucket(configuration), is("def-bucket")));
+    withRegion(Region.AF_SOUTH_1, () -> assertThat(getConfiguredBucket(configuration), is("def-bucket")));
   }
 
   @Test
@@ -79,24 +80,26 @@ public class S3BlobStoreConfigurationHelperTest
     withRegion(null, () -> assertThat(getConfiguredRegion(configuration), is("default")));
 
     // Match fail over region
-    withRegion(Regions.US_EAST_1, () -> assertThat(getConfiguredRegion(configuration), is("us-east-1")));
+    withRegion(Region.US_EAST_1, () -> assertThat(getConfiguredRegion(configuration), is("us-east-1")));
 
     // Running region doesn't match anything, use primary
-    withRegion(Regions.AF_SOUTH_1, () -> assertThat(getConfiguredRegion(configuration), is("default")));
+    withRegion(Region.AF_SOUTH_1, () -> assertThat(getConfiguredRegion(configuration), is("default")));
   }
 
-  private static void withRegion(final Regions regions, final Runnable runnable) {
+  private static void withRegion(final Region region, final Runnable runnable) {
     S3BlobStoreConfigurationHelper.region = null;
     S3BlobStoreConfigurationHelper.regionLoaded = false;
 
-    try (MockedStatic<Regions> regionsMock = mockStatic(Regions.class)) {
+    try (MockedStatic<DefaultAwsRegionProviderChain> regionProviderMock =
+        mockStatic(DefaultAwsRegionProviderChain.class)) {
+      DefaultAwsRegionProviderChain mockChain = Mockito.mock(DefaultAwsRegionProviderChain.class);
 
-      Region region = null;
-      if (regions != null) {
-        region = mock(Region.class);
-        when(region.getName()).thenReturn(regions.getName());
-      }
-      when(Regions.getCurrentRegion()).thenReturn(region);
+      DefaultAwsRegionProviderChain.Builder mockBuilder = Mockito.mock(DefaultAwsRegionProviderChain.Builder.class);
+      when(mockBuilder.build()).thenReturn(mockChain);
+      when(mockChain.getRegion()).thenReturn(region);
+
+      regionProviderMock.when(DefaultAwsRegionProviderChain::builder).thenReturn(mockBuilder);
+
       runnable.run();
     }
   }

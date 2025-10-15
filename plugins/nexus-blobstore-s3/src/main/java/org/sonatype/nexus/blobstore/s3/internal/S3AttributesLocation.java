@@ -14,7 +14,7 @@ package org.sonatype.nexus.blobstore.s3.internal;
 
 import org.sonatype.nexus.blobstore.AttributesLocation;
 
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -28,9 +28,9 @@ public class S3AttributesLocation
 {
   private final String key;
 
-  public S3AttributesLocation(final S3ObjectSummary summary) {
-    checkNotNull(summary);
-    this.key = summary.getKey();
+  public S3AttributesLocation(final S3Object s3Object) {
+    checkNotNull(s3Object);
+    this.key = s3Object.key();
   }
 
   @Override

@@ -15,7 +15,6 @@ package org.sonatype.nexus.api.extdirect.selfhosted.s3;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.IntStream;
 import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.blobstore.s3.internal.AmazonS3Factory;
@@ -26,9 +25,8 @@ import org.sonatype.nexus.extdirect.DirectComponent;
 import org.sonatype.nexus.extdirect.DirectComponentSupport;
 import org.sonatype.nexus.api.extdirect.selfhosted.s3.model.S3EncryptionTypeXO;
 import org.sonatype.nexus.api.extdirect.selfhosted.s3.model.S3RegionXO;
-import org.sonatype.nexus.api.extdirect.selfhosted.s3.model.S3SignerTypeXO;
 
-import com.amazonaws.services.s3.model.Region;
+import software.amazon.awssdk.regions.Region;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.softwarementors.extjs.djn.config.annotations.DirectAction;
@@ -49,32 +47,24 @@ public class S3Component
 {
   private static final String DEFAULT_LABEL = "Default";
 
-  private static final String S3_SIGNER = "S3SignerType";
-
-  private static final String S3_V4_SIGNER = "AWSS3V4SignerType";
-
   private final List<S3RegionXO> regions;
-
-  private final List<S3SignerTypeXO> signerTypes;
 
   private final List<S3EncryptionTypeXO> encryptionTypes;
 
   public S3Component() {
     regions = new ArrayList<>();
     regions.add(new S3RegionXO().withOrder(0).withId(AmazonS3Factory.DEFAULT).withName(DEFAULT_LABEL));
-    IntStream.range(0, Region.values().length)
-        .mapToObj(index -> {
-          Region item = Region.values()[index];
-          return new S3RegionXO()
-              .withOrder(index + 1)
-              .withId(item.toAWSRegion().getName())
-              .withName(item.toAWSRegion().getName());
-        })
-        .forEach(s3RegionXO -> regions.add(s3RegionXO));
-    this.signerTypes = Arrays.asList(
-        new S3SignerTypeXO().withOrder(0).withId(AmazonS3Factory.DEFAULT).withName(DEFAULT_LABEL),
-        new S3SignerTypeXO().withOrder(1).withId(S3_SIGNER).withName(S3_SIGNER),
-        new S3SignerTypeXO().withOrder(2).withId(S3_V4_SIGNER).withName(S3_V4_SIGNER));
+
+    // Add all AWS SDK 2.x regions
+    var regionValues = Region.regions();
+    int index = 0;
+    for (Region region : regionValues) {
+      regions.add(new S3RegionXO()
+          .withOrder(index + 1)
+          .withId(region.id())
+          .withName(region.id()));
+      index++;
+    }
 
     this.encryptionTypes = Arrays.asList(
         new S3EncryptionTypeXO().withOrder(0).withId(NoEncrypter.ID).withName(NoEncrypter.NAME),
@@ -84,10 +74,6 @@ public class S3Component
 
   public List<S3RegionXO> getRegions() {
     return regions;
-  }
-
-  public List<S3SignerTypeXO> getSignerTypes() {
-    return signerTypes;
   }
 
   public List<S3EncryptionTypeXO> getEncryptionTypes() {
@@ -103,17 +89,6 @@ public class S3Component
   @RequiresPermissions("nexus:settings:read")
   public List<S3RegionXO> regions() {
     return regions;
-  }
-
-  /**
-   * S3 signer types
-   */
-  @DirectMethod
-  @Timed
-  @ExceptionMetered
-  @RequiresPermissions("nexus:settings:read")
-  public List<S3SignerTypeXO> signertypes() {
-    return signerTypes;
   }
 
   /**

@@ -14,13 +14,14 @@ package org.sonatype.nexus.blobstore.s3.internal.encryption;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 
-import com.amazonaws.services.s3.model.AbstractPutObjectRequest;
-import com.amazonaws.services.s3.model.CopyObjectRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class S3ManagedEncrypterTest
@@ -28,46 +29,43 @@ public class S3ManagedEncrypterTest
 {
 
   @Mock
-  private InitiateMultipartUploadRequest initiateMultipartUploadRequest;
+  private CreateMultipartUploadRequest.Builder createMultipartUploadRequestBuilder;
 
   @Mock
-  private AbstractPutObjectRequest abstractPutObjectRequest;
+  private PutObjectRequest.Builder putObjectRequestBuilder;
 
   @Mock
-  private CopyObjectRequest copyObjectRequest;
-
-  @Mock
-  private ObjectMetadata objectMetadata;
+  private CopyObjectRequest.Builder copyObjectRequestBuilder;
 
   private final S3ManagedEncrypter encrypter = new S3ManagedEncrypter();
 
   @Test
-  public void testS3ManagedServerSideEncWorksForInitiateMultipartUploadRequest() {
-    when(initiateMultipartUploadRequest.getObjectMetadata()).thenReturn(objectMetadata);
+  public void testS3ManagedServerSideEncWorksForCreateMultipartUploadRequest() {
+    when(createMultipartUploadRequestBuilder.serverSideEncryption(any(ServerSideEncryption.class)))
+        .thenReturn(createMultipartUploadRequestBuilder);
 
-    encrypter.addEncryption(initiateMultipartUploadRequest);
+    encrypter.addEncryption(createMultipartUploadRequestBuilder);
 
-    verify(initiateMultipartUploadRequest).setObjectMetadata(objectMetadata);
-    verify(objectMetadata).setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+    verify(createMultipartUploadRequestBuilder).serverSideEncryption(ServerSideEncryption.AES256);
   }
 
   @Test
-  public void testS3ManagedServerSideEncWorksForAbstractPutObjectRequest() {
-    when(abstractPutObjectRequest.getMetadata()).thenReturn(objectMetadata);
+  public void testS3ManagedServerSideEncWorksForPutObjectRequest() {
+    when(putObjectRequestBuilder.serverSideEncryption(any(ServerSideEncryption.class)))
+        .thenReturn(putObjectRequestBuilder);
 
-    encrypter.addEncryption(abstractPutObjectRequest);
+    encrypter.addEncryption(putObjectRequestBuilder);
 
-    verify(abstractPutObjectRequest).setMetadata(objectMetadata);
-    verify(objectMetadata).setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+    verify(putObjectRequestBuilder).serverSideEncryption(ServerSideEncryption.AES256);
   }
 
   @Test
   public void testS3ManagedServerSideEncWorksForCopyObjectRequest() {
-    when(copyObjectRequest.getNewObjectMetadata()).thenReturn(objectMetadata);
+    when(copyObjectRequestBuilder.serverSideEncryption(any(ServerSideEncryption.class)))
+        .thenReturn(copyObjectRequestBuilder);
 
-    encrypter.addEncryption(copyObjectRequest);
+    encrypter.addEncryption(copyObjectRequestBuilder);
 
-    verify(copyObjectRequest).setNewObjectMetadata(objectMetadata);
-    verify(objectMetadata).setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+    verify(copyObjectRequestBuilder).serverSideEncryption(ServerSideEncryption.AES256);
   }
 }

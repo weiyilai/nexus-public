@@ -20,15 +20,15 @@ import jakarta.inject.Inject;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
-import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
-import com.amazonaws.services.s3.model.CopyPartRequest;
-import com.amazonaws.services.s3.model.CopyPartResult;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PartETag;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.services.s3.model.AbortMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.UploadPartCopyRequest;
+import software.amazon.awssdk.services.s3.model.UploadPartCopyResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -38,7 +38,6 @@ import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Math.min;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Copies a file, using multipart copy if the file is larger or equal to the chunk size. A normal copyObject request is
@@ -65,9 +64,14 @@ public class MultipartCopier
   }
 
   @Override
-  public void copy(final AmazonS3 s3, final String bucket, final String sourcePath, final String destinationPath) {
-    ObjectMetadata metadataResult = s3.getObjectMetadata(bucket, sourcePath);
-    long length = metadataResult.getContentLength();
+  public void copy(
+      final EncryptingS3Client s3,
+      final String bucket,
+      final String sourcePath,
+      final String destinationPath)
+  {
+    final HeadObjectResponse metadataResult = s3.getObjectMetadata(bucket, sourcePath);
+    long length = metadataResult.contentLength();
 
     try {
       if (length < chunkSize) {
@@ -83,7 +87,7 @@ public class MultipartCopier
   }
 
   private void copySinglePart(
-      final AmazonS3 s3,
+      final EncryptingS3Client s3,
       final String bucket,
       final String sourcePath,
       final String destinationPath)
@@ -92,7 +96,7 @@ public class MultipartCopier
   }
 
   private void copyMultiPart(
-      final AmazonS3 s3,
+      final EncryptingS3Client s3,
       final String bucket,
       final String sourcePath,
       final String destinationPath,
@@ -104,12 +108,15 @@ public class MultipartCopier
       long remaining = length;
       long offset = 0;
 
-      InitiateMultipartUploadRequest initiateRequest = new InitiateMultipartUploadRequest(bucket, destinationPath);
-      uploadId = s3.initiateMultipartUpload(initiateRequest).getUploadId();
+      CreateMultipartUploadRequest initiateRequest = CreateMultipartUploadRequest.builder()
+          .bucket(bucket)
+          .key(destinationPath)
+          .build();
+      uploadId = s3.createMultipartUpload(initiateRequest).uploadId();
 
       log.debug("Starting multipart copy {} to key {} from key {}", uploadId, destinationPath, sourcePath);
 
-      List<CopyPartResult> results = new ArrayList<>();
+      final List<CompletedPart> completedParts = new ArrayList<>();
       for (int partNumber = 1;; partNumber++) {
         if (remaining <= 0) {
           break;
@@ -118,36 +125,49 @@ public class MultipartCopier
           long partSize = min(remaining, chunkSize);
           log.trace("Copying chunk {} for {} from byte {} to {}, size {}", partNumber, uploadId, offset,
               offset + partSize - 1, partSize);
-          CopyPartRequest part = new CopyPartRequest()
-              .withSourceBucketName(bucket)
-              .withSourceKey(sourcePath)
-              .withDestinationBucketName(bucket)
-              .withDestinationKey(destinationPath)
-              .withUploadId(uploadId)
-              .withPartNumber(partNumber)
-              .withFirstByte(offset)
-              .withLastByte(offset + partSize - 1);
-          results.add(s3.copyPart(part));
+          UploadPartCopyRequest part = UploadPartCopyRequest.builder()
+              .sourceBucket(bucket)
+              .sourceKey(sourcePath)
+              .destinationBucket(bucket)
+              .destinationKey(destinationPath)
+              .uploadId(uploadId)
+              .partNumber(partNumber)
+              .copySourceRange("bytes=" + offset + "-" + (offset + partSize - 1))
+              .build();
+
+          final UploadPartCopyResponse response = s3.uploadPartCopy(part);
+          completedParts.add(CompletedPart.builder()
+              .partNumber(partNumber)
+              .eTag(response.copyPartResult().eTag())
+              .build());
           offset += partSize;
           remaining -= partSize;
         }
       }
-      CompleteMultipartUploadRequest compRequest = new CompleteMultipartUploadRequest()
-          .withBucketName(bucket)
-          .withKey(destinationPath)
-          .withUploadId(uploadId)
-          .withPartETags(results.stream().map(r -> new PartETag(r.getPartNumber(), r.getETag())).collect(toList()));
+      CompletedMultipartUpload completedUpload = CompletedMultipartUpload.builder()
+          .parts(completedParts)
+          .build();
+      CompleteMultipartUploadRequest compRequest = CompleteMultipartUploadRequest.builder()
+          .bucket(bucket)
+          .key(destinationPath)
+          .uploadId(uploadId)
+          .multipartUpload(completedUpload)
+          .build();
       s3.completeMultipartUpload(compRequest);
       log.debug("Copy {} complete", uploadId);
     }
     catch (SdkClientException e) {
       if (uploadId != null) {
         try {
-          s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, destinationPath, uploadId));
+          s3.abortMultipartUpload(AbortMultipartUploadRequest.builder()
+              .bucket(bucket)
+              .key(destinationPath)
+              .uploadId(uploadId)
+              .build());
         }
         catch (Exception inner) {
-          log.error("Error aborting S3 multipart copy to bucket {} with key {}", bucket, destinationPath,
-              log.isDebugEnabled() ? inner : null);
+          log.error("Error aborting S3 multipart copy to bucket {} with key {} {}", bucket, destinationPath,
+              log.isDebugEnabled() ? "Inner Exception: " + inner : null);
         }
       }
       throw e;

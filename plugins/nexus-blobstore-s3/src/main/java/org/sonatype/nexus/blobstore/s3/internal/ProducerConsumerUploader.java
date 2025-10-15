@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
@@ -37,15 +38,15 @@ import org.sonatype.nexus.jmx.reflect.ManagedObject;
 import org.sonatype.nexus.jmx.reflect.ManagedOperation;
 import org.sonatype.nexus.thread.NexusThreadFactory;
 
-import com.amazonaws.SdkBaseException;
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
-import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PartETag;
-import com.amazonaws.services.s3.model.UploadPartRequest;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.AbortMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.annotation.Timed;
@@ -66,7 +67,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Uploads are published to a queue via the calling thread.
- * A pool of tasks consumes the upload requests and returns the {@link PartETag}
+ * A pool of tasks consumes the upload requests and returns the {@link CompletedPart}
  *
  * @since 3.28
  */
@@ -82,7 +83,7 @@ public class ProducerConsumerUploader
 {
   private static final String METRIC_NAME = "uploader";
 
-  private static final PartETag POISON_TAG = new PartETag(MIN_VALUE, "failure");
+  private static final CompletedPart POISON_TAG = CompletedPart.builder().partNumber(MIN_VALUE).eTag("failure").build();
 
   private static final Chunk EMPTY_CHUNK = new ChunkReader.Chunk(0, new byte[0], 0);
 
@@ -144,7 +145,7 @@ public class ProducerConsumerUploader
   @Override
   @Guarded(by = STARTED)
   @Timed
-  public void upload(final AmazonS3 s3, final String bucket, final String key, final InputStream contents) {
+  public void upload(final EncryptingS3Client s3, final String bucket, final String key, final InputStream contents) {
 
     try (InputStream input = new BufferedInputStream(contents, chunkSize)) {
       log.debug("Starting upload to key {} in bucket {}", key, bucket);
@@ -154,28 +155,47 @@ public class ProducerConsumerUploader
       input.reset();
 
       if (firstChunk.dataLength < chunkSize) {
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(firstChunk.dataLength);
-        s3.putObject(bucket, key, new ByteArrayInputStream(firstChunk.data, 0, firstChunk.dataLength), metadata);
+        PutObjectRequest putRequest = PutObjectRequest.builder()
+            .bucket(bucket)
+            .key(key)
+            .contentLength((long) firstChunk.dataLength)
+            .build();
+        s3.putObject(putRequest, RequestBody.fromInputStream(
+            new ByteArrayInputStream(firstChunk.data, 0, firstChunk.dataLength), firstChunk.dataLength));
       }
       else {
-        InitiateMultipartUploadRequest initiateRequest = new InitiateMultipartUploadRequest(bucket, key);
-        final String uploadId = s3.initiateMultipartUpload(initiateRequest).getUploadId();
+        CreateMultipartUploadRequest initiateRequest = CreateMultipartUploadRequest.builder()
+            .bucket(bucket)
+            .key(key)
+            .build();
+        final String uploadId = s3.createMultipartUpload(initiateRequest).uploadId();
         try (Timer.Context uploadContext = multipartUpload.time()) {
-          List<PartETag> partETags = submitPartUploads(input, bucket, key, uploadId, s3);
+          List<CompletedPart> completedParts = submitPartUploads(input, bucket, key, uploadId, s3);
 
-          s3.completeMultipartUpload(new CompleteMultipartUploadRequest()
-              .withBucketName(bucket)
-              .withKey(key)
-              .withUploadId(uploadId)
-              .withPartETags(partETags));
+          CompletedMultipartUpload completedUpload = CompletedMultipartUpload.builder()
+              .parts(completedParts)
+              .build();
+          s3.completeMultipartUpload(CompleteMultipartUploadRequest.builder()
+              .bucket(bucket)
+              .key(key)
+              .uploadId(uploadId)
+              .multipartUpload(completedUpload)
+              .build());
         }
         catch (InterruptedException interrupted) {
-          s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, key, uploadId));
+          s3.abortMultipartUpload(AbortMultipartUploadRequest.builder()
+              .bucket(bucket)
+              .key(key)
+              .uploadId(uploadId)
+              .build());
           Thread.currentThread().interrupt();
         }
-        catch (CancellationException | SdkBaseException ex) {
-          s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, key, uploadId));
+        catch (CancellationException | SdkClientException ex) {
+          s3.abortMultipartUpload(AbortMultipartUploadRequest.builder()
+              .bucket(bucket)
+              .key(key)
+              .uploadId(uploadId)
+              .build());
           throw new BlobStoreException(
               format("Error executing parallel requests for bucket:%s key:%s with uploadId:%s", bucket, key,
                   uploadId),
@@ -190,14 +210,14 @@ public class ProducerConsumerUploader
     }
   }
 
-  private List<PartETag> submitPartUploads(
+  private List<CompletedPart> submitPartUploads(
       final InputStream input,
       final String bucket,
       final String key,
       final String uploadId,
-      final AmazonS3 s3) throws IOException, InterruptedException
+      final EncryptingS3Client s3) throws IOException, InterruptedException
   {
-    BlockingQueue<PartETag> tags = new LinkedBlockingQueue<>();
+    BlockingQueue<CompletedPart> tags = new LinkedBlockingQueue<>();
     ChunkReader parallelReader = new ChunkReader(input, readChunk);
 
     Optional<Chunk> optionalChunk;
@@ -205,54 +225,62 @@ public class ProducerConsumerUploader
     while ((optionalChunk = parallelReader.readChunk(chunkSize)).isPresent()) {
       Chunk chunk = optionalChunk.get();
       chunkCount++;
-      UploadPartRequest request = buildRequest(bucket, key, uploadId, chunk);
-      waitingRequests.put(new UploadBundle(s3, request, tags));
+      waitingRequests.put(buildUploadBundle(bucket, key, uploadId, chunk, s3, tags));
     }
 
-    List<PartETag> partETags = new ArrayList<>(chunkCount);
+    List<CompletedPart> completedParts = new ArrayList<>(chunkCount);
     for (int idx = 0; idx < chunkCount; idx++) {
-      PartETag partETag = tags.take();
-      if (partETag == POISON_TAG) {
+      CompletedPart completedPart = tags.take();
+      if (completedPart == POISON_TAG) {
         throw new CancellationException("Part upload failed");
       }
       else {
-        partETags.add(partETag);
+        completedParts.add(completedPart);
       }
     }
 
-    return partETags;
+    completedParts.sort(Comparator.comparing(CompletedPart::partNumber));
+    return completedParts;
   }
 
-  private UploadPartRequest buildRequest(
+  private UploadBundle buildUploadBundle(
       final String bucket,
       final String key,
       final String uploadId,
-      final Chunk chunk)
+      final Chunk chunk,
+      final EncryptingS3Client s3,
+      final BlockingQueue<CompletedPart> tags)
   {
-    return new UploadPartRequest()
-        .withBucketName(bucket)
-        .withKey(key)
-        .withUploadId(uploadId)
-        .withPartNumber(chunk.chunkNumber)
-        .withInputStream(new ByteArrayInputStream(chunk.data, 0, chunk.dataLength))
-        .withPartSize(chunk.dataLength);
+    UploadPartRequest request = UploadPartRequest.builder()
+        .bucket(bucket)
+        .key(key)
+        .uploadId(uploadId)
+        .partNumber(chunk.chunkNumber)
+        .contentLength((long) chunk.dataLength)
+        .build();
+    return new UploadBundle(s3, request,
+        RequestBody.fromInputStream(new ByteArrayInputStream(chunk.data, 0, chunk.dataLength), chunk.dataLength), tags);
   }
 
   public static class UploadBundle
   {
-    public final AmazonS3 s3;
+    public final EncryptingS3Client s3;
 
     public final UploadPartRequest request;
 
-    public final BlockingQueue<PartETag> tags;
+    public final RequestBody requestBody;
+
+    public final BlockingQueue<CompletedPart> tags;
 
     public UploadBundle(
-        final AmazonS3 s3,
+        final EncryptingS3Client s3,
         final UploadPartRequest request,
-        final BlockingQueue<PartETag> tags)
+        final RequestBody requestBody,
+        final BlockingQueue<CompletedPart> tags)
     {
       this.s3 = s3;
       this.request = request;
+      this.requestBody = requestBody;
       this.tags = tags;
     }
   }
@@ -321,11 +349,15 @@ public class ProducerConsumerUploader
       while (true) { // NOSONAR
         try {
           UploadBundle bundle = bundles.take();
-          AmazonS3 s3 = bundle.s3;
-          BlockingQueue<PartETag> tags = bundle.tags;
+          EncryptingS3Client s3 = bundle.s3;
+          BlockingQueue<CompletedPart> tags = bundle.tags;
           UploadPartRequest request = bundle.request;
+          RequestBody requestBody = bundle.requestBody;
           try (Timer.Context uploadContext = uploadChunk.time()) {
-            tags.put(s3.uploadPart(request).getPartETag());
+            tags.put(CompletedPart.builder()
+                .partNumber(request.partNumber())
+                .eTag(s3.uploadPart(request, requestBody).eTag())
+                .build());
           }
           catch (Exception ex) {
             log.error("Error uploading part of multipart upload", ex);

@@ -21,10 +21,13 @@ import org.junit.Test;
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
-import com.amazonaws.services.s3.model.UploadPartResult;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.AbortMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
+import software.amazon.awssdk.services.s3.model.UploadPartRequest;
+import software.amazon.awssdk.services.s3.model.UploadPartResponse;
 import org.mockito.Mock;
 
 import static org.junit.Assert.assertThrows;
@@ -37,13 +40,15 @@ public class ParallelUploaderTest
   private ParallelUploader parallelUploader;
 
   @Mock
-  private AmazonS3 s3;
+  private EncryptingS3Client s3;
 
   @Mock
-  private InitiateMultipartUploadResult initiateMultipartUploadResult;
+  private CreateMultipartUploadResponse createMultipartUploadResponse;
 
   @Before
   public void setUp() {
+    when(createMultipartUploadResponse.uploadId()).thenReturn("some-upload-sid");
+
     parallelUploader = new ParallelUploader(100, 4);
   }
 
@@ -52,35 +57,35 @@ public class ParallelUploaderTest
     InputStream input = new ByteArrayInputStream(new byte[0]);
     parallelUploader.upload(s3, "bucketName", "key", input);
 
-    verify(s3).putObject(any(), any(), any(), any());
-    verify(s3, times(0)).initiateMultipartUpload(any());
+    verify(s3).putObject(any(), any());
+    verify(s3, times(0)).createMultipartUpload(any());
   }
 
   @Test
   public void testUploadWithMultipartApi() {
     InputStream input = new ByteArrayInputStream(new byte[100]);
-    when(s3.initiateMultipartUpload(any())).thenReturn(initiateMultipartUploadResult);
-    when(s3.uploadPart(any())).thenReturn(new UploadPartResult());
+    when(s3.createMultipartUpload(anyString(), anyString())).thenReturn(createMultipartUploadResponse);
+    when(s3.uploadPart(any(), any())).thenReturn(UploadPartResponse.builder().eTag("some-etag").build());
 
     parallelUploader.upload(s3, "bucketName", "key", input);
 
-    verify(s3).initiateMultipartUpload(any());
-    verify(s3).uploadPart(any());
+    verify(s3).createMultipartUpload(anyString(), anyString());
+    verify(s3).uploadPart(any(), any());
     verify(s3).completeMultipartUpload(any());
-    verify(s3, never()).abortMultipartUpload(any());
+    verify(s3, never()).abortMultipartUpload(any(AbortMultipartUploadRequest.class));
   }
 
   @Test
   public void testUploadAbortsMultipartUploadsOnError() {
     InputStream input = new ByteArrayInputStream(new byte[100]);
-    when(s3.initiateMultipartUpload(any())).thenReturn(initiateMultipartUploadResult);
-    when(s3.uploadPart(any())).thenThrow(new SdkClientException(""));
+    when(s3.createMultipartUpload(anyString(), anyString())).thenReturn(createMultipartUploadResponse);
+    when(s3.uploadPart(any(), any())).thenThrow(SdkClientException.builder().build());
 
     assertThrows(BlobStoreException.class, () -> parallelUploader.upload(s3, "bucketName", "key", input));
 
-    verify(s3).initiateMultipartUpload(any());
-    verify(s3).uploadPart(any());
-    verify(s3).abortMultipartUpload(any());
+    verify(s3).createMultipartUpload("bucketName", "key");
+    verify(s3).uploadPart(any(UploadPartRequest.class), any(RequestBody.class));
+    verify(s3).abortMultipartUpload(any(AbortMultipartUploadRequest.class));
   }
 
   @Test
@@ -88,7 +93,7 @@ public class ParallelUploaderTest
     InputStream input = new ByteArrayInputStream(new byte[50]);
     parallelUploader.upload(s3, "bucketName", "key", input);
 
-    verify(s3).putObject(any(), any(), any(), any());
-    verify(s3, never()).initiateMultipartUpload(any());
+    verify(s3).putObject(any(), any());
+    verify(s3, never()).createMultipartUpload(any(CreateMultipartUploadRequest.class));
   }
 }

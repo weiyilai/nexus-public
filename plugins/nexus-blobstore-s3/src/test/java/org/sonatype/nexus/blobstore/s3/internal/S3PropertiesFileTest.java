@@ -14,10 +14,10 @@ package org.sonatype.nexus.blobstore.s3.internal;
 
 import java.io.ByteArrayInputStream;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -40,22 +40,22 @@ public class S3PropertiesFileTest
   private static final String TEST_PROPERTIES = "propertyName = value\n";
 
   @Mock
-  private AmazonS3 s3;
+  private EncryptingS3Client s3;
 
   @Captor
-  private ArgumentCaptor<ByteArrayInputStream> byteArrayCaptor;
+  ArgumentCaptor<PutObjectRequest> putObjectRequestCaptor;
 
   @Captor
-  private ArgumentCaptor<ObjectMetadata> metadataCaptor;
+  ArgumentCaptor<RequestBody> requestBodyArgumentCaptor;
 
   @Test
   public void testLoadIngestsPropertiesFromS3Object() throws Exception {
     S3PropertiesFile propertiesFile = new S3PropertiesFile(s3, "mybucket", "mykey");
-    S3Object s3Object = mock(S3Object.class);
+    ResponseInputStream<GetObjectResponse> responseStream =
+        new ResponseInputStream<>(GetObjectResponse.builder().build(),
+            new ByteArrayInputStream(TEST_PROPERTIES.getBytes()));
 
-    when(s3.getObject("mybucket", "mykey")).thenReturn(s3Object);
-    when(s3Object.getObjectContent())
-        .thenReturn(new S3ObjectInputStream(new ByteArrayInputStream(TEST_PROPERTIES.getBytes()), null));
+    when(s3.getObject("mybucket", "mykey")).thenReturn(responseStream);
 
     propertiesFile.load();
 
@@ -69,14 +69,16 @@ public class S3PropertiesFileTest
     propertiesFile.setProperty("testProperty", "newValue");
     propertiesFile.store();
 
-    verify(s3).putObject(eq("mybucket"), eq("mykey"), byteArrayCaptor.capture(), metadataCaptor.capture());
+    verify(s3).putObject(putObjectRequestCaptor.capture(), requestBodyArgumentCaptor.capture());
 
-    String text = new String(byteArrayCaptor.getValue().readAllBytes());
-    ObjectMetadata metadata = metadataCaptor.getValue();
+    assertThat(putObjectRequestCaptor.getValue().bucket(), is("mybucket"));
+    assertThat(putObjectRequestCaptor.getValue().key(), is("mykey"));
+
+    String text = new String(requestBodyArgumentCaptor.getValue().contentStreamProvider().newStream().readAllBytes());
 
     assertThat(text, containsString("testProperty=newValue\n"));
-    assertThat(metadata.getContentLength(), is((long) text.length()));
-    assertThat(metadata.getUserMetadata(), not(hasKey(TEMPORARY_BLOB_HEADER)));
+    assertThat(requestBodyArgumentCaptor.getValue().optionalContentLength().orElse(null), is((long) text.length()));
+    assertThat(putObjectRequestCaptor.getValue().metadata(), not(hasKey(TEMPORARY_BLOB_HEADER)));
   }
 
   @Test
@@ -97,13 +99,14 @@ public class S3PropertiesFileTest
     propertiesFile.setProperty(HEADER_PREFIX + TEMPORARY_BLOB_HEADER, "true");
     propertiesFile.store();
 
-    verify(s3).putObject(eq("mybucket"), eq("mykey"), byteArrayCaptor.capture(), metadataCaptor.capture());
+    verify(s3).putObject(putObjectRequestCaptor.capture(), requestBodyArgumentCaptor.capture());
 
-    String text = new String(byteArrayCaptor.getValue().readAllBytes());
-    ObjectMetadata metadata = metadataCaptor.getValue();
+    PutObjectRequest putObjectRequest = putObjectRequestCaptor.getValue();
+    RequestBody requestBody = requestBodyArgumentCaptor.getValue();
+    String text = new String(requestBody.contentStreamProvider().newStream().readAllBytes());
 
     assertThat(text, containsString("BlobStore.temporary-blob=true\n"));
-    assertThat(metadata.getContentLength(), is((long) text.length()));
-    assertThat(metadata.getUserMetadata(), hasEntry(TEMPORARY_BLOB_HEADER, "true"));
+    assertThat(requestBody.contentLength(), is((long) text.length()));
+    assertThat(putObjectRequest.metadata(), hasEntry(TEMPORARY_BLOB_HEADER, "true"));
   }
 }

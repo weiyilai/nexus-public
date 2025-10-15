@@ -12,16 +12,16 @@
  */
 package org.sonatype.nexus.blobstore.s3.internal;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.Map;
 
 import org.sonatype.nexus.blobstore.CloudBlobPropertiesSupport;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,17 +36,17 @@ import static org.sonatype.nexus.blobstore.api.BlobStore.TEMPORARY_BLOB_HEADER;
  * @since 3.6.1
  */
 public class S3PropertiesFile
-    extends CloudBlobPropertiesSupport<ObjectMetadata>
+    extends CloudBlobPropertiesSupport<PutObjectRequest.Builder>
 {
   private static final Logger log = LoggerFactory.getLogger(S3PropertiesFile.class);
 
-  private final AmazonS3 s3;
+  private final EncryptingS3Client s3;
 
   private final String bucket;
 
   private final String key;
 
-  public S3PropertiesFile(final AmazonS3 s3, final String bucket, final String key) {
+  public S3PropertiesFile(final EncryptingS3Client s3, final String bucket, final String key) {
     this.s3 = checkNotNull(s3);
     this.bucket = checkNotNull(bucket);
     this.key = checkNotNull(key);
@@ -55,18 +55,18 @@ public class S3PropertiesFile
   public void load() throws IOException {
     log.debug("Loading: {}/{}", bucket, key);
 
-    try (S3Object object = s3.getObject(bucket, key)) {
-      try (InputStream inputStream = object.getObjectContent()) {
-        load(inputStream);
-      }
+    try (ResponseInputStream<GetObjectResponse> object = s3.getObject(bucket, key)) {
+      load(object);
     }
   }
 
   @Override
-  public ObjectMetadata getMetadata() {
-    ObjectMetadata metadata = new ObjectMetadata();
-    maybePutTempBlobUserMetadata(metadata);
-    return metadata;
+  public PutObjectRequest.Builder getMetadata() {
+    PutObjectRequest.Builder requestBuilder = PutObjectRequest.builder()
+        .bucket(bucket)
+        .key(key);
+    maybePutTempBlobUserMetadata(requestBuilder);
+    return requestBuilder;
   }
 
   @Override
@@ -77,16 +77,16 @@ public class S3PropertiesFile
   }
 
   @Override
-  protected void write(final ByteArrayOutputStream data, final ObjectMetadata metadata) {
+  protected void write(final ByteArrayOutputStream data, final PutObjectRequest.Builder requestBuilder) {
     log.debug("Storing: {}/{}", bucket, key);
     byte[] buffer = data.toByteArray();
-    metadata.setContentLength(buffer.length);
-    s3.putObject(bucket, key, new ByteArrayInputStream(buffer), metadata);
+    RequestBody requestBody = RequestBody.fromBytes(buffer);
+    s3.putObject(requestBuilder.build(), requestBody);
   }
 
-  private void maybePutTempBlobUserMetadata(final ObjectMetadata metadata) {
+  private void maybePutTempBlobUserMetadata(final PutObjectRequest.Builder requestBuilder) {
     if (containsKey(HEADER_PREFIX + TEMPORARY_BLOB_HEADER)) {
-      metadata.addUserMetadata(TEMPORARY_BLOB_HEADER, "true");
+      requestBuilder.metadata(Map.of(TEMPORARY_BLOB_HEADER, "true"));
     }
   }
 
@@ -106,11 +106,10 @@ public class S3PropertiesFile
   public boolean equals(Object object) {
     if (object instanceof S3PropertiesFile) {
       S3PropertiesFile other = (S3PropertiesFile) object;
-      return
-          s3.equals(other.s3) &&
-              bucket.equals(other.bucket) &&
-              key.equals(other.key) &&
-              super.equals(object);
+      return s3.equals(other.s3) &&
+          bucket.equals(other.bucket) &&
+          key.equals(other.key) &&
+          super.equals(object);
     }
     else {
       return false;
@@ -119,10 +118,9 @@ public class S3PropertiesFile
 
   @Override
   public int hashCode() {
-    return
-        s3.hashCode() +
-            bucket.hashCode() +
-            key.hashCode() +
-            super.hashCode();
+    return s3.hashCode() +
+        bucket.hashCode() +
+        key.hashCode() +
+        super.hashCode();
   }
 }

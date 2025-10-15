@@ -12,7 +12,6 @@
  */
 package org.sonatype.nexus.blobstore.s3.internal;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,7 @@ import org.sonatype.nexus.capability.CapabilityType;
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.FormField;
 
-import com.amazonaws.services.s3.model.Region;
+import software.amazon.awssdk.regions.Region;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
@@ -77,10 +76,6 @@ public class S3BlobStoreDescriptor
     extends BlobStoreDescriptorSupport
 {
   private static final String DEFAULT_LABEL = "Default";
-
-  private static final String S3_SIGNER = "S3SignerType";
-
-  private static final String S3_V4_SIGNER = "AWSS3V4SignerType";
 
   public static final String TYPE = "S3";
 
@@ -154,7 +149,7 @@ public class S3BlobStoreDescriptor
 
   private Map<String, List<SelectOption>> initializeSelectOptions() {
     return ImmutableMap
-        .of("regions", getRegionOptions(), "encryptionTypes", getEncryptionTypes(), "signerTypes", getSignerTypes());
+        .of("regions", getRegionOptions(), "encryptionTypes", getEncryptionTypes());
   }
 
   protected List<SelectOption> getRegionOptions() {
@@ -163,8 +158,9 @@ public class S3BlobStoreDescriptor
     }
 
     return Stream
-        .concat(Stream.of(new SelectOption(AmazonS3Factory.DEFAULT, DEFAULT_LABEL)), Arrays.stream(Region.values())
-            .map(region -> new SelectOption(region.toAWSRegion().getName(), region.toAWSRegion().getName())))
+        .concat(Stream.of(new SelectOption(AmazonS3Factory.DEFAULT, DEFAULT_LABEL)), Region.regions()
+            .stream()
+            .map(region -> new SelectOption(region.id(), region.id())))
         .collect(ImmutableList.toImmutableList());
   }
 
@@ -186,13 +182,6 @@ public class S3BlobStoreDescriptor
         .map(CustomS3RegionCapability::getConfig)
         .map(CustomS3RegionCapabilityConfiguration::getRegionsList)
         .orElse(Collections.emptyList());
-  }
-
-  private List<SelectOption> getSignerTypes() {
-    return new Builder<SelectOption>().add(new SelectOption(AmazonS3Factory.DEFAULT, DEFAULT_LABEL))
-        .add(new SelectOption(S3_SIGNER, S3_SIGNER))
-        .add(new SelectOption(S3_V4_SIGNER, S3_V4_SIGNER))
-        .build();
   }
 
   private List<SelectOption> getEncryptionTypes() {

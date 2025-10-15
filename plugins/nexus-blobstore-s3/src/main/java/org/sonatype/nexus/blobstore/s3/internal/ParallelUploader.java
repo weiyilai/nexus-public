@@ -27,11 +27,11 @@ import jakarta.inject.Singleton;
 import org.sonatype.nexus.blobstore.api.BlobStoreException;
 import org.sonatype.nexus.blobstore.s3.internal.ParallelUploader.ChunkReader.Chunk;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PartETag;
-import com.amazonaws.services.s3.model.UploadPartRequest;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
@@ -41,6 +41,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Qualifier;
+import software.amazon.awssdk.services.s3.model.UploadPartResponse;
 
 /**
  * Uploads an InputStream, using multipart upload in parallel if the file is larger or equal to the chunk size.
@@ -67,7 +68,7 @@ public class ParallelUploader
   }
 
   @Override
-  public void upload(final AmazonS3 s3, final String bucket, final String key, final InputStream contents) {
+  public void upload(final EncryptingS3Client s3, final String bucket, final String key, final InputStream contents) {
     try (InputStream input = new BufferedInputStream(contents, chunkSize)) {
       log.debug("Starting upload to key {} in bucket {}", key, bucket);
 
@@ -77,9 +78,15 @@ public class ParallelUploader
       input.reset();
 
       if (chunk.dataLength < chunkSize) {
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(chunk.dataLength);
-        s3.putObject(bucket, key, new ByteArrayInputStream(chunk.data, 0, chunk.dataLength), metadata);
+        final PutObjectRequest putRequest = PutObjectRequest.builder()
+            .bucket(bucket)
+            .key(key)
+            .contentLength((long) chunk.dataLength)
+            .build();
+
+        final RequestBody requestBody = RequestBody.fromInputStream(
+            new ByteArrayInputStream(chunk.data, 0, chunk.dataLength), chunk.dataLength);
+        s3.putObject(putRequest, requestBody);
       }
       else {
         ChunkReader parallelReader = new ChunkReader(input);
@@ -93,29 +100,47 @@ public class ParallelUploader
     }
   }
 
-  private List<PartETag> uploadChunks(
-      final AmazonS3 s3,
+  private List<CompletedPart> uploadChunks(
+      final EncryptingS3Client s3,
       final String bucket,
       final String key,
       final String uploadId,
       final ChunkReader chunkReader) throws IOException
   {
-    List<PartETag> tags = new ArrayList<>();
-    Optional<Chunk> chunk;
+    List<CompletedPart> tags = new ArrayList<>();
+    Optional<Chunk> chunkOpt;
 
-    while ((chunk = chunkReader.readChunk(chunkSize)).isPresent()) {
-      UploadPartRequest request = new UploadPartRequest()
-          .withBucketName(bucket)
-          .withKey(key)
-          .withUploadId(uploadId)
-          .withPartNumber(chunk.get().chunkNumber)
-          .withInputStream(new ByteArrayInputStream(chunk.get().data, 0, chunk.get().dataLength))
-          .withPartSize(chunk.get().dataLength);
+    while ((chunkOpt = chunkReader.readChunk(chunkSize)).isPresent()) {
+      final Chunk chunk = chunkOpt.get();
 
-      tags.add(s3.uploadPart(request).getPartETag());
+      UploadPartRequest request = UploadPartRequest.builder()
+          .bucket(bucket)
+          .key(key)
+          .uploadId(uploadId)
+          .partNumber(chunk.chunkNumber)
+          .contentLength((long) chunk.dataLength)
+          .build();
+
+      final UploadPartResponse uploadedPart = uploadPart(s3, request, chunk);
+
+      tags.add(CompletedPart.builder()
+          .partNumber(chunk.chunkNumber)
+          .eTag(uploadedPart.eTag())
+          .build());
     }
 
     return tags;
+  }
+
+  private UploadPartResponse uploadPart(
+      final EncryptingS3Client s3,
+      final UploadPartRequest request,
+      final Chunk chunk)
+  {
+    return s3.uploadPart(request,
+        RequestBody.fromInputStream(
+            new ByteArrayInputStream(chunk.data, 0, chunk.dataLength),
+            chunk.dataLength));
   }
 
   static class ChunkReader

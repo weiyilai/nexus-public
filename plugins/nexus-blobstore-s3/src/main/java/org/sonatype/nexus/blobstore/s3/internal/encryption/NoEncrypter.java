@@ -12,9 +12,9 @@
  */
 package org.sonatype.nexus.blobstore.s3.internal.encryption;
 
-import com.amazonaws.services.s3.model.AbstractPutObjectRequest;
-import com.amazonaws.services.s3.model.CopyObjectRequest;
-import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -38,17 +38,17 @@ public class NoEncrypter
   public static final NoEncrypter INSTANCE = new NoEncrypter();
 
   @Override
-  public <T extends InitiateMultipartUploadRequest> T addEncryption(final T request) {
-    return request;
+  public CreateMultipartUploadRequest.Builder addEncryption(final CreateMultipartUploadRequest.Builder requestBuilder) {
+    return requestBuilder;
   }
 
   @Override
-  public <T extends AbstractPutObjectRequest> T addEncryption(final T request) {
-    return request;
+  public PutObjectRequest.Builder addEncryption(final PutObjectRequest.Builder requestBuilder) {
+    return requestBuilder;
   }
 
   @Override
-  public <T extends CopyObjectRequest> T addEncryption(final T request) {
-    return request;
+  public CopyObjectRequest.Builder addEncryption(final CopyObjectRequest.Builder requestBuilder) {
+    return requestBuilder;
   }
 }

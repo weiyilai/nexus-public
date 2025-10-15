@@ -18,6 +18,8 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -65,16 +67,15 @@ import org.sonatype.nexus.scheduling.CancelableHelper;
 import org.sonatype.nexus.scheduling.TaskInterruptedException;
 import org.sonatype.nexus.thread.NexusThreadFactory;
 
-import com.amazonaws.SdkBaseException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.iterable.S3Objects;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.DeleteObjectsRequest;
-import com.amazonaws.services.s3.model.ListObjectsV2Request;
-import com.amazonaws.services.s3.model.ListObjectsV2Result;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.services.s3.model.Delete;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SharedMetricRegistries;
 import com.codahale.metrics.Timer;
@@ -100,7 +101,6 @@ import static com.google.common.cache.CacheLoader.from;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newFixedThreadPool;
-import static java.util.stream.StreamSupport.stream;
 import static org.sonatype.nexus.blobstore.DirectPathLocationStrategy.DIRECT_PATH_ROOT;
 import static org.sonatype.nexus.blobstore.api.OperationType.UPLOAD;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.buildException;
@@ -176,7 +176,7 @@ public class S3BlobStore
 
   private BlobStoreQuotaUsageChecker blobStoreQuotaUsageChecker;
 
-  private AmazonS3 s3;
+  private EncryptingS3Client s3;
 
   private ExecutorService executorService;
 
@@ -630,7 +630,7 @@ public class S3BlobStore
 
       deletedBlobIndex.init(this);
     }
-    catch (AmazonS3Exception e) {
+    catch (S3Exception e) {
       throw buildException(e);
     }
     catch (S3BlobStoreException e) {
@@ -642,9 +642,19 @@ public class S3BlobStore
   }
 
   private boolean batchDelete(final String... paths) {
-    DeleteObjectsRequest request = new DeleteObjectsRequest(getConfiguredBucket())
-        .withKeys(paths);
-    return s3.deleteObjects(request).getDeletedObjects().size() == paths.length;
+    final ObjectIdentifier[] identifiers = Arrays.stream(paths)
+        .map(path -> ObjectIdentifier.builder().key(path).build())
+        .toArray(ObjectIdentifier[]::new);
+
+    final Delete delete = Delete.builder()
+        .objects(identifiers)
+        .build();
+
+    DeleteObjectsRequest request = DeleteObjectsRequest.builder()
+        .bucket(getConfiguredBucket())
+        .delete(delete)
+        .build();
+    return s3.deleteObjects(request).deleted().size() == paths.length;
   }
 
   private void deleteQuietly(final String path) {
@@ -659,7 +669,7 @@ public class S3BlobStore
     return S3BlobStoreConfigurationHelper.getBucketPrefix(blobStoreConfiguration);
   }
 
-  protected AmazonS3 getS3() {
+  protected EncryptingS3Client getS3() {
     return s3;
   }
 
@@ -675,13 +685,6 @@ public class S3BlobStore
   }
 
   /**
-   * @return the complete content prefix to Volume/Chapter location, including the trailing slash
-   */
-  private String getContentVolumePrefix() {
-    return getContentPrefix() + "vol-";
-  }
-
-  /**
    * Delete files known to be part of the S3BlobStore implementation if the content directory is empty.
    */
   @Override
@@ -690,7 +693,7 @@ public class S3BlobStore
     try {
       metricsService.remove();
 
-      boolean contentEmpty = s3.listObjects(getConfiguredBucket(), getContentPrefix()).getObjectSummaries().isEmpty();
+      boolean contentEmpty = s3.listObjectsV2(getConfiguredBucket(), getContentPrefix()).contents().isEmpty();
       if (contentEmpty) {
         S3PropertiesFile metadata = new S3PropertiesFile(s3, getConfiguredBucket(), metadataFilePath());
         metadata.remove();
@@ -701,8 +704,8 @@ public class S3BlobStore
         log.warn("Unable to delete non-empty blob store content directory in bucket {}", getConfiguredBucket());
       }
     }
-    catch (AmazonS3Exception s3Exception) {
-      if ("BucketNotEmpty".equals(s3Exception.getErrorCode())) {
+    catch (S3Exception s3Exception) {
+      if ("BucketNotEmpty".equals(s3Exception.awsErrorDetails().errorCode())) {
         log.warn("Unable to delete non-empty blob store bucket {}", getConfiguredBucket());
       }
       else {
@@ -723,8 +726,8 @@ public class S3BlobStore
 
     @Override
     protected InputStream doGetInputStream() {
-      S3Object object = s3.getObject(getConfiguredBucket(), contentPath(getId()));
-      return performanceLogger.maybeWrapForPerformanceLogging(object.getObjectContent());
+      final InputStream inputStream = s3.getObject(getConfiguredBucket(), contentPath(getId()));
+      return performanceLogger.maybeWrapForPerformanceLogging(inputStream);
     }
 
     @VisibleForTesting
@@ -741,8 +744,7 @@ public class S3BlobStore
   @Override
   @Timed
   public Stream<BlobId> getBlobIdStream() {
-    Iterable<S3ObjectSummary> summaries = S3Objects.withPrefix(s3, getConfiguredBucket(), getContentPrefix());
-    return blobIdStream(stream(summaries.spliterator(), false));
+    return blobIdStream(s3.listObjectsWithPrefix(getContentPrefix()));
   }
 
   @Override
@@ -771,33 +773,33 @@ public class S3BlobStore
       final int pageSize)
   {
     String fullPrefix = getContentPrefix() + prefix;
-    ListObjectsV2Request request = new ListObjectsV2Request()
-        .withBucketName(getConfiguredBucket())
-        .withPrefix(fullPrefix)
-        .withMaxKeys(pageSize)
-        .withContinuationToken(continuationToken);
-    ListObjectsV2Result result = s3.listObjectsV2(request);
-    List<BlobId> blobIds = result.getObjectSummaries()
+    ListObjectsV2Request request = ListObjectsV2Request.builder()
+        .bucket(getConfiguredBucket())
+        .prefix(fullPrefix)
+        .maxKeys(pageSize)
+        .continuationToken(continuationToken)
+        .build();
+    ListObjectsV2Response result = s3.listObjectsV2(request);
+    List<BlobId> blobIds = result.contents()
         .stream()
-        .filter(o -> o.getKey().endsWith(BLOB_FILE_ATTRIBUTES_SUFFIX) || o.getKey().endsWith(BLOB_FILE_CONTENT_SUFFIX))
+        .filter(o -> o.key().endsWith(BLOB_FILE_ATTRIBUTES_SUFFIX) || o.key().endsWith(BLOB_FILE_CONTENT_SUFFIX))
         .filter(this::isNotTempBlob)
-        .filter(s3Obj -> s3Obj.getLastModified().toInstant().atOffset(ZoneOffset.UTC).isAfter(fromDateTime) &&
-            s3Obj.getLastModified().toInstant().atOffset(ZoneOffset.UTC).isBefore(toDateTime))
+        .filter(s3Obj -> s3Obj.lastModified().atOffset(ZoneOffset.UTC).isAfter(fromDateTime) &&
+            s3Obj.lastModified().atOffset(ZoneOffset.UTC).isBefore(toDateTime))
         .map(S3AttributesLocation::new)
         .map(this::getBlobIdFromAttributeFilePath)
         .filter(Objects::nonNull)
         .distinct()
         .collect(Collectors.toList());
-    String nextContinuationToken = result.isTruncated() ? result.getNextContinuationToken() : null;
+    String nextContinuationToken = result.isTruncated() ? result.nextContinuationToken() : null;
     return new PaginatedResult<>(blobIds, nextContinuationToken);
   }
 
   private Stream<BlobId> getBlobIdStream(final String prefix, final OffsetDateTime fromDateTime) {
-    Iterable<S3ObjectSummary> summaries = S3Objects.withPrefix(s3, getConfiguredBucket(), prefix);
-    return stream(summaries.spliterator(), false)
-        .filter(o -> o.getKey().endsWith(BLOB_FILE_ATTRIBUTES_SUFFIX) || o.getKey().endsWith(BLOB_FILE_CONTENT_SUFFIX))
+    return s3.listObjectsWithPrefix(prefix)
+        .filter(o -> o.key().endsWith(BLOB_FILE_ATTRIBUTES_SUFFIX) || o.key().endsWith(BLOB_FILE_CONTENT_SUFFIX))
         .filter(this::isNotTempBlob)
-        .filter(s3Obj -> s3Obj.getLastModified().toInstant().atOffset(ZoneOffset.UTC).isAfter(fromDateTime))
+        .filter(s3Obj -> s3Obj.lastModified().atOffset(ZoneOffset.UTC).isAfter(fromDateTime))
         .map(S3AttributesLocation::new)
         .map(this::getBlobIdFromAttributeFilePath)
         .filter(Objects::nonNull);
@@ -807,23 +809,22 @@ public class S3BlobStore
   @Timed
   public Stream<BlobId> getDirectPathBlobIdStream(final String prefix) {
     String subpath = getBucketPrefix() + format("%s/%s", DIRECT_PATH_PREFIX, prefix);
-    Iterable<S3ObjectSummary> summaries = S3Objects.withPrefix(s3, getConfiguredBucket(), subpath);
-    return stream(summaries.spliterator(), false)
-        .map(S3ObjectSummary::getKey)
+    return s3.listObjectsWithPrefix(subpath)
+        .map(S3Object::key)
         .filter(key -> key.endsWith(BLOB_FILE_ATTRIBUTES_SUFFIX))
         .map(this::attributePathToDirectPathBlobId);
   }
 
-  private Stream<S3ObjectSummary> nonTempBlobPropertiesFileStream(final Stream<S3ObjectSummary> summaries) {
+  private Stream<S3Object> nonTempBlobPropertiesFileStream(final Stream<S3Object> summaries) {
     return summaries
-        .filter(o -> o.getKey().endsWith(BLOB_FILE_ATTRIBUTES_SUFFIX))
+        .filter(o -> o.key().endsWith(BLOB_FILE_ATTRIBUTES_SUFFIX))
         .filter(this::isNotTempBlob);
   }
 
-  private boolean isNotTempBlob(final S3ObjectSummary object) {
+  private boolean isNotTempBlob(final S3Object object) {
     try {
-      ObjectMetadata objectMetadata = s3.getObjectMetadata(getConfiguredBucket(), object.getKey());
-      Map<String, String> userMetadata = objectMetadata.getUserMetadata();
+      final HeadObjectResponse response = s3.getObjectMetadata(getConfiguredBucket(), object.key());
+      Map<String, String> userMetadata = response.metadata();
       return !userMetadata.containsKey(TEMPORARY_BLOB_HEADER);
     }
     catch (Exception e) {
@@ -833,7 +834,7 @@ public class S3BlobStore
     }
   }
 
-  private Stream<BlobId> blobIdStream(final Stream<S3ObjectSummary> summaries) {
+  private Stream<BlobId> blobIdStream(final Stream<S3Object> summaries) {
     return nonTempBlobPropertiesFileStream(summaries)
         .map(S3AttributesLocation::new)
         .map(this::getBlobIdFromAttributeFilePath)
@@ -896,9 +897,9 @@ public class S3BlobStore
   @Timed
   public boolean isStorageAvailable() {
     try {
-      return s3.doesBucketExistV2(getConfiguredBucket());
+      return s3.doesBucketExist(getConfiguredBucket());
     }
-    catch (SdkBaseException e) {
+    catch (SdkClientException e) {
       log.warn("S3 bucket '{}' is not writable.", getConfiguredBucket(), e);
       return false;
     }
@@ -979,13 +980,14 @@ public class S3BlobStore
   public Optional<ExternalMetadata> getExternalMetadata(final BlobId blobId) {
     String path = contentPath(blobId);
     try {
-      ObjectMetadata object = s3.getObjectMetadata(getConfiguredBucket(), path);
+      final HeadObjectResponse objectMetadata = s3.getObjectMetadata(getConfiguredBucket(), path);
 
-      return Optional.of(new ExternalMetadata(object.getETag(), DateHelper.toOffsetDateTime(object.getLastModified())));
+      return Optional.of(new ExternalMetadata(objectMetadata.eTag(),
+          DateHelper.toOffsetDateTime(Date.from(objectMetadata.lastModified()))));
     }
     catch (Exception e) {
-      log.warn("Unable to retrieve remote metadata for path {} cause {}", path, e.getMessage(),
-          log.isDebugEnabled() ? e : null);
+      log.warn("Unable to retrieve remote metadata for path {} cause {} {}", path, e.getMessage(),
+          log.isDebugEnabled() ? "Internal Exception: " + e : null);
     }
     return Optional.empty();
   }

@@ -17,7 +17,6 @@ import java.util.List;
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.extdirect.selfhosted.s3.model.S3EncryptionTypeXO;
 import org.sonatype.nexus.extdirect.selfhosted.s3.model.S3RegionXO;
-import org.sonatype.nexus.extdirect.selfhosted.s3.model.S3SignerTypeXO;
 
 import org.junit.Test;
 
@@ -37,14 +36,6 @@ public class S3ComponentTest
   }
 
   @Test
-  public void testSignerTypes() throws Exception {
-    List<S3SignerTypeXO> signerTypes = underTest.signertypes();
-    assertSignerType(signerTypes.get(0), 0, "DEFAULT", "Default");
-    assertSignerType(signerTypes.get(1), 1, "S3SignerType", "S3SignerType");
-    assertSignerType(signerTypes.get(2), 2, "AWSS3V4SignerType", "AWSS3V4SignerType");
-  }
-
-  @Test
   public void testEncryptionTypes() throws Exception {
     List<S3EncryptionTypeXO> encryptionTypes = underTest.encryptionTypes();
     assertEncryptionType(encryptionTypes.get(0), 0, "none", "None");
@@ -56,12 +47,6 @@ public class S3ComponentTest
     assertThat(region.getOrder(), is(order));
     assertThat(region.getId(), is(id));
     assertThat(region.getName(), is(name));
-  }
-
-  private void assertSignerType(final S3SignerTypeXO signerType, final int order, final String id, final String name) {
-    assertThat(signerType.getOrder(), is(order));
-    assertThat(signerType.getId(), is(id));
-    assertThat(signerType.getName(), is(name));
   }
 
   private void assertEncryptionType(

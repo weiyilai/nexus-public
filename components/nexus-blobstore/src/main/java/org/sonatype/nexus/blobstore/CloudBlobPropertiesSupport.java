@@ -22,7 +22,7 @@ import org.sonatype.nexus.common.property.ImplicitSourcePropertiesFile;
  * properties file is for a TempBlob
  *
  * @param <T> The metadata type for that cloud blob store e.g.
- *          <code>com.amazonaws.services.s3.model.ObjectMetadata</code>
+ *          <code>software.amazon.awssdk.services.s3.model.PutObjectRequest.Builder</code>
  *          for AWS S3 BlobStore implementation.
  * @see CloudBlobStoreSupport
  * @since 3.37
@@ -32,7 +32,8 @@ public abstract class CloudBlobPropertiesSupport<T>
 {
   /**
    * An instance of the metadata type for that particular blob store implementation. E.g for the S3 blob store, this
-   * would be an instance of <code>com.amazonaws.services.s3.model.ObjectMetadata</code> which would contain a key value
+   * would be an instance of <code>software.amazon.awssdk.services.s3.model.PutObjectRequest.Builder</code> which would
+   * contain a key value
    * pair which indicates whether or not the blob associated with the property file being written is a TempBlob or not.
    * Thus, subclasses should use this metadata instance to specify whether a blob properties file is for a blob which is
    * still temporary i.e. a TempBlob.
