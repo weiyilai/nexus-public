@@ -45,12 +45,12 @@ import org.springframework.stereotype.Component;
 @ManagedLifecycle(phase = UPGRADE)
 @Component
 @Singleton
-public class S3BlobStoreMetricsMigrationStep
+public class S3BlobStoreMetricsMigrationStep_2_20
     extends BlobStoreMetricsDatabaseMigrationStepSupport
 {
   private static final String BLOB_STORE_TYPE = "S3";
 
-  private static final String NAME = S3BlobStoreMetricsMigrationStep.class.getSimpleName();
+  private static final String NAME = S3BlobStoreMetricsMigrationStep_2_20.class.getSimpleName();
 
   private final ObjectMapper objectMapper;
 
@@ -61,7 +61,7 @@ public class S3BlobStoreMetricsMigrationStep
   private Set<String> namesToMigrate;
 
   @Inject
-  public S3BlobStoreMetricsMigrationStep(
+  public S3BlobStoreMetricsMigrationStep_2_20(
       final GlobalKeyValueStore kv,
       final ObjectMapper objectMapper,
       final Cooperation2Factory cooperationFactory)
@@ -101,8 +101,8 @@ public class S3BlobStoreMetricsMigrationStep
   }
 
   @Override
-  public Integer getChecksum() {
-    return 0;
+  public Optional<String> version() {
+    return Optional.of("2.20");
   }
 
   @Override
