@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import jakarta.inject.Inject;
 import javax.validation.constraints.NotNull;
 
 import org.sonatype.nexus.repository.Facet;
@@ -51,6 +50,8 @@ import org.sonatype.nexus.repository.view.payloads.TempBlob;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import jakarta.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -198,7 +199,7 @@ public class AptContentFacetImpl
     FormatAttributesUtils.setFormatAttributes(asset, formatAttributes);
   }
 
-  private String buildIndexSection(final ControlFile controlFile, final FluentAsset asset) {
+  private static String buildIndexSection(final ControlFile controlFile, final FluentAsset asset) {
     AssetBlob assetBlob = asset.blob()
         .orElseThrow(() -> new IllegalStateException(
             "Impossible build " + P_INDEX_SECTION + ". Asset blob couldn't be found for asset: " + asset.path()));
@@ -207,7 +208,7 @@ public class AptContentFacetImpl
     return controlFile.getParagraphs()
         .get(0)
         .withFields(Arrays.asList(
-            new ControlFile.ControlField("Filename", asset.path()),
+            new ControlFile.ControlField("Filename", StringUtils.removeStart(asset.path(), '/')),
             new ControlFile.ControlField("Size", Long.toString(assetBlob.blobSize())),
             new ControlFile.ControlField("MD5Sum", checksums.get(MD5.name())),
             new ControlFile.ControlField("SHA1", checksums.get(SHA1.name())),
