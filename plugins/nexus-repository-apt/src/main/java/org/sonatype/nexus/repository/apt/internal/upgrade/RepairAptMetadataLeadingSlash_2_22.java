@@ -32,19 +32,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class RepairAptMetadataLeadingSlash_2_19
+public class RepairAptMetadataLeadingSlash_2_22
     implements DatabaseMigrationStep
 {
   private final UpgradeTaskScheduler taskScheduler;
 
   @Autowired
-  public RepairAptMetadataLeadingSlash_2_19(final UpgradeTaskScheduler taskScheduler) {
+  public RepairAptMetadataLeadingSlash_2_22(final UpgradeTaskScheduler taskScheduler) {
     this.taskScheduler = checkNotNull(taskScheduler);
   }
 
   @Override
   public Optional<String> version() {
-    return Optional.of("2.19");
+    return Optional.of("2.22");
   }
 
   @Override
