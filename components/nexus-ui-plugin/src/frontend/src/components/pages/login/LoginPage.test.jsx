@@ -219,6 +219,12 @@ describe('LoginPage', () => {
   });
 
   describe('anonymous access', () => {
+    beforeEach(() => {
+      mockRouterParams.returnTo = undefined;
+      mockRouterGo.mockClear();
+      mockRouterUrl.mockClear();
+    });
+
     it('does not render anonymous access button when anonymous username is not configured', () => {
       setupStates(false, false, false, null);
 
@@ -261,6 +267,31 @@ describe('LoginPage', () => {
       render(<LoginPage logoConfig={mockLogoConfig} />);
 
       expect(screen.queryByTestId('continue-without-login-button')).not.toBeInTheDocument();
+    });
+
+    it('redirects to returnTo URL when returnTo is provided and continuing without login', () => {
+      setupStates(false, false, false, 'anonymous');
+      mockRouterParams.returnTo = '#browse/browse:maven-snapshots';
+
+      renderComponent({ logoConfig: mockLogoConfig });
+
+      const button = screen.getByTestId('continue-without-login-button');
+      button.click();
+
+      expect(mockRouterUrl).toHaveBeenCalledWith('#browse/browse:maven-snapshots');
+      expect(mockRouterGo).not.toHaveBeenCalled();
+    });
+
+    it('redirects to welcome page when no returnTo is provided and continuing without login', () => {
+      setupStates(false, false, false, 'anonymous');
+
+      renderComponent({ logoConfig: mockLogoConfig });
+
+      const button = screen.getByTestId('continue-without-login-button');
+      button.click();
+
+      expect(mockRouterGo).toHaveBeenCalledWith('browse.welcome');
+      expect(mockRouterUrl).not.toHaveBeenCalled();
     });
   });
 

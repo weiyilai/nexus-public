@@ -50,7 +50,8 @@ export default function LoginAndUserButton() {
   function onSignInClick() {
     const isReactLoginEnabled = ExtJS.state().getValue('nexus.login.react.enabled', false);
     if (isReactLoginEnabled) {
-      router.stateService.go(ROUTE_NAMES.LOGIN);
+      const returnTo = router.stateService.href(router.globals.current.name, router.globals.params);
+      router.stateService.go(ROUTE_NAMES.LOGIN, { returnTo });
     } else {
       ExtJS.askToAuthenticate();
     }

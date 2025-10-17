@@ -64,8 +64,12 @@ export default function LoginPage({ logoConfig }) {
   };
 
   const handleContinueWithoutLogin = () => {
-    // TODO: Add redirection logic after continuing without login
-    router.stateService.go('browse.welcome');
+    const returnTo = router.globals.params.returnTo;
+    if (returnTo) {
+      router.urlService.url(returnTo);
+    } else {
+      router.stateService.go('browse.welcome');
+    }
   };
 
   return (

@@ -14,9 +14,11 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ExtJS } from '@sonatype/nexus-ui-plugin';
+import { useRouter } from '@uirouter/react';
 import SsoLoginButton from './SsoLoginButton';
 
 jest.mock('@sonatype/nexus-ui-plugin');
+jest.mock('@uirouter/react');
 
 describe('SsoLoginButton', () => {
   const mockUseState = jest.fn();
@@ -27,6 +29,12 @@ describe('SsoLoginButton', () => {
     ExtJS.state = mockState;
     mockState.mockReturnValue({
       getValue: jest.fn()
+    });
+
+    useRouter.mockReturnValue({
+      globals: {
+        params: {}
+      }
     });
 
     Object.defineProperty(window, 'location', {
@@ -255,6 +263,251 @@ describe('SsoLoginButton', () => {
       const button = screen.getByRole('button');
 
       expect(button).toHaveAttribute('data-analytics-id', 'nxrm-login-sso');
+    });
+  });
+
+  describe('SAML redirect with returnTo parameter', () => {
+    it('redirects to /saml without hash when returnTo is not provided', async () => {
+      mockUseState
+          .mockReturnValueOnce(true)  // samlEnabled
+          .mockReturnValueOnce(false) // oauth2Enabled
+          .mockReturnValueOnce('');   // contextPath
+
+      useRouter.mockReturnValue({
+        globals: {
+          params: {} // No returnTo
+        }
+      });
+
+      render(<SsoLoginButton />);
+      const button = screen.getByRole('button');
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(window.location.assign).toHaveBeenCalledWith('/saml');
+      });
+    });
+
+    it('redirects to /saml with hash parameter when returnTo is provided', async () => {
+      mockUseState
+          .mockReturnValueOnce(true)  // samlEnabled
+          .mockReturnValueOnce(false) // oauth2Enabled
+          .mockReturnValueOnce('');   // contextPath
+
+      useRouter.mockReturnValue({
+        globals: {
+          params: {
+            returnTo: '%23admin%2Fsupport%2Fstatus'
+          }
+        }
+      });
+
+      render(<SsoLoginButton />);
+      const button = screen.getByRole('button');
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(window.location.assign).toHaveBeenCalledWith('/saml?hash=%2523admin%252Fsupport%252Fstatus');
+      });
+    });
+
+    it('redirects to /saml with hash parameter for different routes', async () => {
+      mockUseState
+          .mockReturnValueOnce(true)  // samlEnabled
+          .mockReturnValueOnce(false) // oauth2Enabled
+          .mockReturnValueOnce('');   // contextPath
+
+      useRouter.mockReturnValue({
+        globals: {
+          params: {
+            returnTo: '%23browse%2Fwelcome'
+          }
+        }
+      });
+
+      render(<SsoLoginButton />);
+      const button = screen.getByRole('button');
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(window.location.assign).toHaveBeenCalledWith('/saml?hash=%2523browse%252Fwelcome');
+      });
+    });
+
+    it('redirects with context path and hash parameter when returnTo is provided', async () => {
+      mockUseState
+          .mockReturnValueOnce(true)      // samlEnabled
+          .mockReturnValueOnce(false)     // oauth2Enabled
+          .mockReturnValueOnce('/nexus'); // contextPath
+
+      useRouter.mockReturnValue({
+        globals: {
+          params: {
+            returnTo: '%23admin%2Frepository%2Frepositories'
+          }
+        }
+      });
+
+      render(<SsoLoginButton />);
+      const button = screen.getByRole('button');
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(window.location.assign).toHaveBeenCalledWith('/nexus/saml?hash=%2523admin%252Frepository%252Frepositories');
+      });
+    });
+
+    it('handles empty returnTo parameter', async () => {
+      mockUseState
+          .mockReturnValueOnce(true)  // samlEnabled
+          .mockReturnValueOnce(false) // oauth2Enabled
+          .mockReturnValueOnce('');   // contextPath
+
+      useRouter.mockReturnValue({
+        globals: {
+          params: {
+            returnTo: ''
+          }
+        }
+      });
+
+      render(<SsoLoginButton />);
+      const button = screen.getByRole('button');
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(window.location.assign).toHaveBeenCalledWith('/saml');
+      });
+    });
+
+    it('handles returnTo with query parameters', async () => {
+      mockUseState
+          .mockReturnValueOnce(true)  // samlEnabled
+          .mockReturnValueOnce(false) // oauth2Enabled
+          .mockReturnValueOnce('');   // contextPath
+
+      useRouter.mockReturnValue({
+        globals: {
+          params: {
+            returnTo: '%23admin%2Fsupport%2Fstatus%3Ftab%3Dsystem'
+          }
+        }
+      });
+
+      render(<SsoLoginButton />);
+      const button = screen.getByRole('button');
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(window.location.assign).toHaveBeenCalledWith('/saml?hash=%2523admin%252Fsupport%252Fstatus%253Ftab%253Dsystem');
+      });
+    });
+
+    it('does not add hash parameter for OAuth2 even with returnTo', async () => {
+      mockUseState
+          .mockReturnValueOnce(false) // samlEnabled
+          .mockReturnValueOnce(true)  // oauth2Enabled
+          .mockReturnValueOnce('');   // contextPath
+
+      useRouter.mockReturnValue({
+        globals: {
+          params: {
+            returnTo: '%23admin%2Fsupport%2Fstatus'
+          }
+        }
+      });
+
+      render(<SsoLoginButton />);
+      const button = screen.getByRole('button');
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(window.location.assign).toHaveBeenCalledWith('/oidc/login');
+      });
+    });
+  });
+
+  describe('button behavior on click', () => {
+    it('calls window.location.assign when clicked', () => {
+      mockUseState
+        .mockReturnValueOnce(true)  // samlEnabled
+        .mockReturnValueOnce(false) // oauth2Enabled
+        .mockReturnValueOnce('');   // contextPath
+
+      render(<SsoLoginButton />);
+      const button = screen.getByRole('button');
+
+      fireEvent.click(button);
+
+      expect(window.location.assign).toHaveBeenCalledWith('/saml');
+      expect(window.location.assign).toHaveBeenCalledTimes(1);
+    });
+
+    it('prevents multiple redirects on rapid clicks', () => {
+      mockUseState
+        .mockReturnValueOnce(true)  // samlEnabled
+        .mockReturnValueOnce(false) // oauth2Enabled
+        .mockReturnValueOnce('');   // contextPath
+
+      render(<SsoLoginButton />);
+      const button = screen.getByRole('button');
+
+      // Simulate rapid clicks
+      fireEvent.click(button);
+      fireEvent.click(button);
+      fireEvent.click(button);
+
+      // Only the first click should trigger redirect (button gets disabled)
+      expect(window.location.assign).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('handles context path as single slash', async () => {
+      mockUseState
+          .mockReturnValueOnce(true)  // samlEnabled
+          .mockReturnValueOnce(false) // oauth2Enabled
+          .mockReturnValueOnce('/');  // contextPath
+
+      render(<SsoLoginButton />);
+      const button = screen.getByRole('button');
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(window.location.assign).toHaveBeenCalledWith('/saml');
+      });
+    });
+
+    it('handles returnTo with special characters', async () => {
+      mockUseState
+          .mockReturnValueOnce(true)  // samlEnabled
+          .mockReturnValueOnce(false) // oauth2Enabled
+          .mockReturnValueOnce('');   // contextPath
+
+      useRouter.mockReturnValue({
+        globals: {
+          params: {
+            returnTo: '%23browse%2Fsearch%3Fq%3Dtest%2520package'
+          }
+        }
+      });
+
+      render(<SsoLoginButton />);
+      const button = screen.getByRole('button');
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(window.location.assign).toHaveBeenCalledWith('/saml?hash=%2523browse%252Fsearch%253Fq%253Dtest%252520package');
+      });
     });
   });
 });

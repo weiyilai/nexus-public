@@ -11,10 +11,11 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { NxButton, NxLoadingSpinner } from '@sonatype/react-shared-components';
 import { ExtJS } from '@sonatype/nexus-ui-plugin';
 import UIStrings from '../../../constants/UIStrings';
+import { useRouter } from '@uirouter/react';
 
 const { SSO_BUTTON, SSO_BUTTON_LOADING } = UIStrings;
 
@@ -27,11 +28,11 @@ function buildRedirectUrl(contextPath, path) {
   if (!contextPath || contextPath === '/') {
     return path;
   }
-  
+
   // Remove trailing slashes from context path and leading slashes from path
   const cleanContextPath = contextPath.replace(/\/+$/, '');
   const cleanPath = path.replace(/^\/+/, '');
-  
+
   return `${cleanContextPath}/${cleanPath}`;
 }
 
@@ -41,28 +42,36 @@ function buildRedirectUrl(contextPath, path) {
  */
 export default function SsoLoginButton() {
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const router = useRouter();
 
   const samlEnabled = ExtJS.useState(() => ExtJS.state().getValue('samlEnabled', false));
   const oauth2Enabled = ExtJS.useState(() => ExtJS.state().getValue('oauth2Enabled', false));
   const contextPath = ExtJS.useState(() => ExtJS.state().getValue('nexus-context-path', ''));
 
-  const redirectUrl = useMemo(() => {
-    if (samlEnabled) {
-      return buildRedirectUrl(contextPath, '/saml');
-    }
-    if (oauth2Enabled) {
-      return buildRedirectUrl(contextPath, '/oidc/login');
-    }
-    return null;
-  }, [samlEnabled, oauth2Enabled, contextPath]);
+  const isSsoEnabled = samlEnabled || oauth2Enabled;
 
-  if (!redirectUrl) {
+  if (!isSsoEnabled) {
     return null;
   }
 
   const handleSsoLogin = () => {
     setIsRedirecting(true);
-    window.location.assign(redirectUrl);
+
+    let redirectUrl;
+    if (samlEnabled) {
+      const returnTo = router.globals.params.returnTo;
+      if (returnTo) {
+        redirectUrl = buildRedirectUrl(contextPath, '/saml?hash=' + encodeURIComponent(returnTo));
+      } else {
+        redirectUrl = buildRedirectUrl(contextPath, '/saml');
+      }
+    } else if (oauth2Enabled) {
+      redirectUrl = buildRedirectUrl(contextPath, '/oidc/login');
+    }
+
+    if (redirectUrl) {
+      window.location.assign(redirectUrl);
+    }
   };
 
   return (
