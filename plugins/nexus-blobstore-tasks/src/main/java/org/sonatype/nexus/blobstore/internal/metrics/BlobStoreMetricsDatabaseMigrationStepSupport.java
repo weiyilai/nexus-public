@@ -64,6 +64,8 @@ public abstract class BlobStoreMetricsDatabaseMigrationStepSupport
 
   @Override
   public void migrate(final Connection connection) throws Exception {
+    log.info("Starting blob store metrics migration for type: {}", blobStoreType);
+
     String names = getBlobStoreConfigurations()
         .filter(this::shouldSaveMetricsToDatabase)
         .collect(Collectors.joining(","));
