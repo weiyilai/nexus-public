@@ -111,7 +111,7 @@ public abstract class SqlSearchQueryContributionSupport
       }
       else if (c == '"') {
         if (quoted) {
-          tokens.add(token.toString().trim());
+          tokens.add("\"" + token.toString().trim() + "\"");
           token = new StringBuilder();
           quoted = false;
         }
@@ -162,7 +162,7 @@ public abstract class SqlSearchQueryContributionSupport
       }
       else if (c == '"') {
         if (quoted) {
-          doCreateMatchTerm(exact, token).ifPresent(tokens::add);
+          doCreateMatchTerm(true, token).ifPresent(tokens::add);
           token = new StringBuilder();
           quoted = false;
         }
