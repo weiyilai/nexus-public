@@ -315,7 +315,9 @@ public class BaseRepositoryManagerTest
     repositoryManager = new BaseRepositoryManager(eventManager, configurationStore, repositoryFactory,
         configurationFacetProvider, List.of(), securityContributor,
         defaultRepositoriesContributorList, freezeService, skipDefaultRepositories, blobStoreManager,
-        groupMemberMappingCache, List.of(), httpAuthenticationPasswordEncoder);
+        groupMemberMappingCache, List.of(), httpAuthenticationPasswordEncoder)
+    {
+    };
 
     repositoryManager.start();
     return repositoryManager;

@@ -77,7 +77,7 @@ import static org.sonatype.nexus.validation.ConstraintViolations.maybePropagate;
  *
  * @since 3.0
  */
-public class BaseRepositoryManager
+public abstract class BaseRepositoryManager
     extends StateGuardLifecycleSupport
     implements RepositoryManager, EventAware
 {
@@ -113,7 +113,7 @@ public class BaseRepositoryManager
 
   protected final HttpAuthenticationPasswordEncoder httpAuthenticationPasswordEncoder;
 
-  public BaseRepositoryManager(
+  protected BaseRepositoryManager(
       final EventManager eventManager,
       final ConfigurationStore store,
       final RepositoryFactory factory,
@@ -246,6 +246,8 @@ public class BaseRepositoryManager
     restoreRepositories(configurations);
 
     startRepositories();
+
+    log.info("Completed initialization");
   }
 
   private void provisionDefaultRepositories() {
@@ -258,7 +260,7 @@ public class BaseRepositoryManager
   }
 
   private void restoreRepositories(final List<Configuration> configurations) throws Exception {
-    log.debug("Restoring {} repositories", configurations.size());
+    log.info("Restoring {} repositories", configurations.size());
     for (Configuration configuration : configurations) {
       log.debug("Restoring repository: {}", configuration);
       Repository repository = newRepository(configuration);
@@ -269,7 +271,7 @@ public class BaseRepositoryManager
   }
 
   private void startRepositories() throws Exception {
-    log.debug("Starting {} repositories", repositories.size());
+    log.info("Starting {} repositories", repositories.size());
     for (Repository repository : repositories.values()) {
       log.debug("Starting repository: {}", repository);
       repository.start();

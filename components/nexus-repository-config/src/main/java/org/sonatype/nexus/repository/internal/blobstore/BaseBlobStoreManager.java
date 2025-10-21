@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
+
 import javax.annotation.Nullable;
-import jakarta.inject.Provider;
 
 import org.sonatype.nexus.blobstore.BlobStoreDescriptor;
 import org.sonatype.nexus.blobstore.api.Blob;
@@ -65,6 +65,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
+import jakarta.inject.Provider;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -80,7 +81,7 @@ import static org.sonatype.nexus.distributed.event.service.api.EventType.UPDATED
  *
  * @since 3.0
  */
-public class BaseBlobStoreManager
+public abstract class BaseBlobStoreManager
     extends StateGuardLifecycleSupport
     implements BlobStoreManager, BlobSessionSupplier, EventAware
 {
@@ -112,7 +113,7 @@ public class BaseBlobStoreManager
 
   private final SecretsService secretService;
 
-  public BaseBlobStoreManager(
+  protected BaseBlobStoreManager(
       final EventManager eventManager, // NOSONAR
       final BlobStoreConfigurationStore store,
       final List<BlobStoreDescriptor> blobStoreDescriptorsList,
@@ -162,7 +163,7 @@ public class BaseBlobStoreManager
       configurations = store.list();
     }
 
-    log.debug("Restoring {} BlobStores", configurations.size());
+    log.info("Restoring {} BlobStores", configurations.size());
     for (BlobStoreConfiguration configuration : configurations) {
       log.debug("Restoring BlobStore: {}", configuration);
       BlobStore blobStore = null;
@@ -183,7 +184,7 @@ public class BaseBlobStoreManager
       // TODO - event publishing
     }
 
-    log.debug("Starting {} BlobStores", stores.size());
+    log.info("Starting {} BlobStores", stores.size());
     for (Map.Entry<String, BlobStore> entry : stores.entrySet()) {
       String name = entry.getKey();
       BlobStore blobStore = entry.getValue();
@@ -199,6 +200,8 @@ public class BaseBlobStoreManager
 
       // TODO - event publishing
     }
+
+    log.info("Completed initialization");
   }
 
   @Override
@@ -362,7 +365,7 @@ public class BaseBlobStoreManager
     };
   }
 
-  private void executeIfNotReplicating(Runnable action) {
+  private void executeIfNotReplicating(final Runnable action) {
     if (!EventHelper.isReplicating()) {
       action.run();
     }
@@ -656,8 +659,8 @@ public class BaseBlobStoreManager
   }
 
   private List<Secret> encryptSensitiveAttributes(
-      BlobStoreConfiguration oldBlobStoreConfiguration,
-      BlobStoreConfiguration newblobStoreConfiguration)
+      final BlobStoreConfiguration oldBlobStoreConfiguration,
+      final BlobStoreConfiguration newblobStoreConfiguration)
   {
     String typeKey = newblobStoreConfiguration.getType();
     NestedAttributesMap newBlobStoreTypeData = newblobStoreConfiguration.attributes(typeKey.toLowerCase());
@@ -684,8 +687,8 @@ public class BaseBlobStoreManager
   }
 
   private void removeEncryptedAttributes(
-      BlobStoreConfiguration oldBlobStoreConfiguration,
-      BlobStoreConfiguration newblobStoreConfiguration)
+      final BlobStoreConfiguration oldBlobStoreConfiguration,
+      final BlobStoreConfiguration newblobStoreConfiguration)
   {
     String typeKey = oldBlobStoreConfiguration.getType();
     NestedAttributesMap newBlobStoreTypeData = newblobStoreConfiguration.attributes(typeKey.toLowerCase());

@@ -26,6 +26,7 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
@@ -185,6 +186,7 @@ public abstract class QuartzSchedulerSPI
   //
   @Override
   protected void doStart() throws Exception {
+    log.info("Initializing");
     // create new scheduler
     scheduler = schedulerProvider.get();
 
@@ -199,8 +201,10 @@ public abstract class QuartzSchedulerSPI
       throw e;
     }
 
+    log.info("Attaching listeners");
     // re-attach listeners right after scheduler is available
     reattachListeners();
+    log.info("Initialization complete");
   }
 
   private void reattachListeners() {
@@ -270,7 +274,7 @@ public abstract class QuartzSchedulerSPI
   }
 
   private static Boolean shouldRecoverJob(final Trigger trigger, final JobDetail jobDetail) {
-    return (jobDetail.requestsRecovery() && isInterruptedJob(jobDetail)) || isRunNow(trigger);
+    return jobDetail.requestsRecovery() && isInterruptedJob(jobDetail) || isRunNow(trigger);
   }
 
   /**

@@ -538,7 +538,9 @@ class BaseBlobStoreManagerTest
 
     BaseBlobStoreManager bbsm = new BaseBlobStoreManager(eventManager, store, List.of(), List.of(),
         freezeService, () -> repositoryManager, nodeAccess, provisionDefaults, blobStoreConfigProvider,
-        blobStoreTaskService, blobStoreOverrideProvider, replicationBlobStoreStatusManager, secretsService);
+        blobStoreTaskService, blobStoreOverrideProvider, replicationBlobStoreStatusManager, secretsService)
+    {
+    };
     bbsm.start();
 
     return bbsm;
