@@ -213,6 +213,54 @@ class NexusPropertiesVerifierTest
     assertThat(nexusProperties.getProperty("nexus.quartz.jobstore.jdbc"), is(TRUE));
   }
 
+  @Test
+  void testSelectAuthenticationFeature_WhenJwtEnabled_OAuth2RemainsEnabled() {
+    mockRequiredProperties();
+    nexusProperties.put(JWT_ENABLED, TRUE);
+
+    nexusPropertiesVerifier.verify(nexusProperties);
+
+    assertThat(nexusProperties.getProperty(NEXUS_SECURITY_OAUTH2_ENABLED), is(TRUE));
+    assertThat(nexusProperties.getProperty(JWT_ENABLED), is(TRUE));
+    assertThat(nexusProperties.getProperty(SESSION_ENABLED), is(FALSE));
+  }
+
+  @Test
+  void testSelectAuthenticationFeature_WhenDatastoreClusteredEnabled_OAuth2RemainsEnabled() {
+    mockRequiredProperties();
+    nexusProperties.put(DATASTORE_CLUSTERED_ENABLED, TRUE);
+
+    nexusPropertiesVerifier.verify(nexusProperties);
+
+    assertThat(nexusProperties.getProperty(JWT_ENABLED), is(TRUE));
+    assertThat(nexusProperties.getProperty(NEXUS_SECURITY_OAUTH2_ENABLED), is(TRUE));
+    assertThat(nexusProperties.getProperty(SESSION_ENABLED), is(FALSE));
+  }
+
+  @Test
+  void testSelectAuthenticationFeature_WhenJwtDisabled_OAuth2IsDisabled() {
+    mockRequiredProperties();
+    nexusProperties.put(JWT_ENABLED, FALSE);
+
+    nexusPropertiesVerifier.verify(nexusProperties);
+
+    assertThat(nexusProperties.getProperty(NEXUS_SECURITY_OAUTH2_ENABLED), is(FALSE));
+    assertThat(nexusProperties.getProperty(JWT_ENABLED), is(FALSE));
+    assertThat(nexusProperties.getProperty(SESSION_ENABLED), is(TRUE));
+  }
+
+  @Test
+  void testSelectAuthenticationFeature_WhenDatastoreClusteredDisabled_AndJwtDisabled_OAuth2IsDisabled() {
+    mockRequiredProperties();
+    environmentVariables.set(DATASTORE_CLUSTERED_ENABLED, FALSE);
+
+    nexusPropertiesVerifier.verify(nexusProperties);
+
+    assertThat(nexusProperties.getProperty(JWT_ENABLED), is(FALSE));
+    assertThat(nexusProperties.getProperty(NEXUS_SECURITY_OAUTH2_ENABLED), is(FALSE));
+    assertThat(nexusProperties.getProperty(SESSION_ENABLED), is(TRUE));
+  }
+
   public void mockRequiredProperties() {
     nexusProperties.put(BASEDIR_SYS_PROP, "/tmp/nexus");
     nexusProperties.put(NexusDirectoryConfiguration.DATADIR_SYS_PROP, "/tmp/nexus/data");

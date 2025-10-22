@@ -118,6 +118,7 @@ public class NexusPropertiesVerifier
   }
 
   private static void selectAuthenticationFeature(final NexusProperties nexusProperties) {
+    nexusProperties.put(NEXUS_SECURITY_OAUTH2_ENABLED, TRUE);
     if (parseBoolean(nexusProperties.getProperty(DATASTORE_CLUSTERED_ENABLED))) {
       // if datastore is clustered, JWT must be enabled
       nexusProperties.put(JWT_ENABLED, TRUE);
