@@ -37,42 +37,46 @@ export function createRouter({ initialRoute, menuRoutes, missingRoute }) {
 
   // validate permissions and configuration on each route request
   router.transitionService.onBefore({}, async (transition) => {
-    console.debug(`evaluating transition: ${transition.to().name}`);
-
     const redirectTo404 = () => {
       transition.abort();
       router.stateService.go(missingRoute.name);
     };
 
-    const state = transition.to();
+    const stateTo = transition.to();
+    const stateFrom = transition.from();
+    console.debug(`evaluating transition from ${stateFrom.name} to ${stateTo.name}`);
 
-    if (state.name === RouteNames.LOGIN && ExtJS.hasUser()) {
+    if (stateTo.name === RouteNames.LOGIN && ExtJS.hasUser()) {
       console.debug('User is already authenticated, redirecting away from login page');
       transition.abort();
       router.stateService.go(RouteNames.WELCOME);
       return;
     }
 
-    console.debug(`transition from ${transition.from().name} to ${transition.to().name}`);
-    if (!isVisible(state.data?.visibilityRequirements)) {
+    if (!isVisible(stateTo.data?.visibilityRequirements)) {
       if (!ExtJS.hasUser()) {
         const isReactLoginEnabled = ExtJS.state().getValue('nexus.login.react.enabled', false);
         if (isReactLoginEnabled) {
           transition.abort();
+          if (stateFrom.name === RouteNames.LOGIN) {
+            console.warn('state is not visible for navigation after login, redirecting to 404');
+            redirectTo404();
+            return;
+          }
 
           console.debug('Redirecting to login page with return URL');
-          let returnTo = router.stateService.href(state.name, transition.params());
+          let returnTo = router.stateService.href(stateTo.name, transition.params());
           router.stateService.go(RouteNames.LOGIN, { returnTo } );
         } else {
           // pop up ExtJS modal login
-          const result = await offerUserTheChanceToLoginAndRevalidate(transition, state.data?.visibilityRequirements);
+          const result = await offerUserTheChanceToLoginAndRevalidate(transition, stateTo.data?.visibilityRequirements);
           if (result !== success) {
             console.warn('state is not visible for navigation after authentication prompt, aborting transition');
             redirectTo404();
           }
         }
       } else {
-        console.warn('state is not visible for navigation, aborting transition', state.name);
+        console.warn('state is not visible for navigation, aborting transition', stateTo.name);
         redirectTo404();
       }
     }

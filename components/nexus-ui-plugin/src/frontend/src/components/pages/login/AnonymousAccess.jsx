@@ -16,8 +16,8 @@ import { NxButton, NxFontAwesomeIcon } from '@sonatype/react-shared-components';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from '@uirouter/react';
 import UIStrings from '../../../constants/UIStrings';
-
 import './AnonymousAccess.scss';
+import { RouteNames } from "../../../constants/RouteNames";
 
 const { CONTINUE_WITHOUT_LOGIN } = UIStrings;
 
@@ -28,12 +28,20 @@ export default function AnonymousAccess() {
   const router = useRouter();
 
   const handleContinueWithoutLogin = () => {
-    const returnTo = router.globals.params.returnTo;
-    if (returnTo) {
-      // `router.urlService.url` does set and navigate to the returnTo url
-      router.urlService.url(returnTo);
-    } else {
-      router.stateService.go('browse.welcome');
+    // Changes do not need to be saved when continuing without logging in
+    window.dirty = [];
+
+    try {
+      const returnTo = router.globals.params.returnTo;
+      if (returnTo) {
+        // `router.urlService.url` does set and navigate to the returnTo url
+        router.urlService.url(returnTo);
+      } else {
+        router.stateService.go('browse.welcome');
+      }
+    } catch (ex) {
+      console.warn('redirection unsuccessful: ', ex);
+      router.stateService.go(RouteNames.MISSING_ROUTE);
     }
   };
 
