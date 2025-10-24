@@ -14,13 +14,11 @@
 import React from 'react';
 import { NxTile } from '@sonatype/react-shared-components';
 import { ExtJS } from '@sonatype/nexus-ui-plugin';
-import { useRouter } from '@uirouter/react';
 import UIStrings from '../../../constants/UIStrings';
-import { RouteNames } from "../../../constants/RouteNames";
 import LoginLayout from '../../layout/LoginLayout';
-import LoginForm from './LoginForm';
-import SsoLoginButton from './SsoLoginButton';
-import AnonymousAccessButton from './AnonymousAccessButton';
+import LocalLogin from './LocalLogin';
+import SsoLogin from './SsoLogin';
+import AnonymousAccess from './AnonymousAccess';
 
 const { LOGIN_TITLE, LOGIN_SUBTITLE, SSO_DIVIDER_LABEL } = UIStrings;
 
@@ -32,7 +30,6 @@ import './LoginPage.scss';
  * @param {Object} logoConfig - Logo configuration passed to LoginLayout
  */
 export default function LoginPage({ logoConfig }) {
-  const router = useRouter();
   const samlEnabled = ExtJS.useState(() => ExtJS.state().getValue('samlEnabled', false));
   const oauth2Enabled = ExtJS.useState(() => ExtJS.state().getValue('oauth2Enabled', false));
   const isCloudEnvironment = ExtJS.useState(() => ExtJS.state().getValue('isCloud', false));
@@ -41,36 +38,6 @@ export default function LoginPage({ logoConfig }) {
   const isAnonymousAccessEnabled = !!anonymousUsername;
 
   const showLocalLogin = !isCloudEnvironment;
-
-  const handleLoginSuccess = async ({ username }) => {
-    console.log(`User ${username} authenticated successfully`);
-    try {
-      await ExtJS.waitForNextPermissionChange();
-      const returnTo = router.globals.params.returnTo;
-      if (returnTo) {
-        // `router.urlService.url` does set and navigate to the returnTo url
-        router.urlService.url(returnTo);
-      } else {
-        router.stateService.go('browse.welcome');
-      }
-    } catch (ex) {
-      console.warn('redirection unsuccessful: ', ex);
-      router.stateService.go(RouteNames.MISSING_ROUTE);
-    }
-  };
-
-  const handleLoginError = (error) => {
-    console.error('Login failed:', error);
-  };
-
-  const handleContinueWithoutLogin = () => {
-    const returnTo = router.globals.params.returnTo;
-    if (returnTo) {
-      router.urlService.url(returnTo);
-    } else {
-      router.stateService.go('browse.welcome');
-    }
-  };
 
   return (
     <LoginLayout logoConfig={logoConfig}>
@@ -84,7 +51,7 @@ export default function LoginPage({ logoConfig }) {
             <div className="login-content">
               {isSsoEnabled && (
                 <>
-                  <SsoLoginButton />
+                  <SsoLogin />
                   {showLocalLogin && (
                     <div className="login-divider" aria-hidden="true">
                       <span>{SSO_DIVIDER_LABEL}</span>
@@ -93,10 +60,10 @@ export default function LoginPage({ logoConfig }) {
                 </>
               )}
               {showLocalLogin && (
-                <LoginForm onSuccess={handleLoginSuccess} onError={handleLoginError} primaryButton={!isSsoEnabled} />
+                <LocalLogin primaryButton={!isSsoEnabled} />
               )}
               {isAnonymousAccessEnabled && (
-                <AnonymousAccessButton onClick={handleContinueWithoutLogin} />
+                <AnonymousAccess />
               )}
             </div>
           </NxTile.Content>

@@ -16,14 +16,44 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import LoginPageStrings from '../../../constants/LoginPageStrings';
-import ExtJS from '../../../interface/ExtJS';
-import LoginForm from './LoginForm';
+import LocalLogin from './LocalLogin';
+import { RouteNames } from '../../../constants/RouteNames';
 
-jest.mock('../../../interface/ExtJS');
+const mockRequestSession = jest.fn();
+const mockWaitForNextPermissionChange = jest.fn().mockResolvedValue();
+
+jest.mock('@sonatype/nexus-ui-plugin', () => ({
+  ExtJS: {
+    get waitForNextPermissionChange() {
+      return mockWaitForNextPermissionChange;
+    }
+  }
+}));
+
+jest.mock('../../../interface/ExtJS', () => ({
+  __esModule: true,
+  default: {
+    get requestSession() {
+      return mockRequestSession;
+    },
+    setDirtyStatus: jest.fn(),
+    fireEvent: jest.fn()
+  }
+}));
+
+const mockRouter = {
+  globals: { params: {} },
+  urlService: { url: jest.fn() },
+  stateService: { go: jest.fn() }
+};
+
+jest.mock('@uirouter/react', () => ({
+  useRouter: () => mockRouter
+}));
 
 jest.setTimeout(15000);
 
-describe('LoginForm', () => {
+describe('LocalLogin', () => {
   const selectors = {
     usernameInput: () => screen.getByPlaceholderText(LoginPageStrings.USERNAME_LABEL),
     passwordInput: () => screen.getByPlaceholderText(LoginPageStrings.PASSWORD_LABEL),
@@ -32,23 +62,20 @@ describe('LoginForm', () => {
     serverErrorMessage: () => document.querySelector('.server-error-message')
   };
 
-  let onSuccessSpy;
-  let onErrorSpy;
-
   beforeEach(() => {
-    onSuccessSpy = jest.fn();
-    onErrorSpy = jest.fn();
-    ExtJS.requestSession.mockReset();
+    mockRequestSession.mockReset();
+    mockWaitForNextPermissionChange.mockReset().mockResolvedValue();
+    mockRouter.globals.params = {};
+    mockRouter.urlService.url.mockReset();
+    mockRouter.stateService.go.mockReset();
   });
 
   function renderComponent(props = {}) {
     const defaultProps = {
-      primaryButton: true,
-      onSuccess: onSuccessSpy,
-      onError: onErrorSpy
+      primaryButton: true
     };
 
-    return render(<LoginForm {...defaultProps} {...props} />);
+    return render(<LocalLogin {...defaultProps} {...props} />);
   }
 
   async function fillCredentials(username, password) {
@@ -111,7 +138,7 @@ describe('LoginForm', () => {
       const pendingPromise = new Promise((resolve) => {
         resolvePromise = resolve;
       });
-      ExtJS.requestSession.mockImplementation(() => pendingPromise);
+      mockRequestSession.mockImplementation(() => pendingPromise);
 
       await act(async () => {
         await userEvent.click(selectors.loginButton());
@@ -175,22 +202,19 @@ describe('LoginForm', () => {
   });
 
   describe('form submission', () => {
-    it('invokes authenticate on submit and notifies success', async () => {
+    it('invokes authenticate on submit and redirects on success', async () => {
       renderComponent();
       await fillCredentials('admin', 'admin123');
 
-      ExtJS.requestSession.mockResolvedValue({ response: { status: 204 } });
+      mockRequestSession.mockResolvedValue({ response: { status: 204 } });
 
       await act(async () => {
         await userEvent.click(selectors.loginButton());
       });
 
       await waitFor(() => {
-        expect(ExtJS.requestSession).toHaveBeenCalledWith('admin', 'admin123');
-        expect(onSuccessSpy).toHaveBeenCalledWith({
-          username: 'admin',
-          response: { status: 204 }
-        });
+        expect(mockRequestSession).toHaveBeenCalledWith('admin', 'admin123');
+        expect(mockWaitForNextPermissionChange).toHaveBeenCalled();
       });
     });
 
@@ -200,7 +224,7 @@ describe('LoginForm', () => {
 
       const authError = new Error('Forbidden');
       authError.response = { status: 403, data: {} };
-      ExtJS.requestSession.mockRejectedValue(authError);
+      mockRequestSession.mockRejectedValue(authError);
 
       await act(async () => {
         await userEvent.click(selectors.loginButton());
@@ -210,7 +234,6 @@ describe('LoginForm', () => {
         expect(selectors.serverErrorMessage()).toHaveTextContent(LoginPageStrings.ERRORS.WRONG_CREDENTIALS);
         expect(selectors.passwordInput()).toHaveValue('');
       });
-      expect(onErrorSpy).toHaveBeenCalledWith(authError);
 
       expect(selectors.usernameInput()).toHaveValue('admin');
       
@@ -226,14 +249,13 @@ describe('LoginForm', () => {
 
       const failure = new Error('Server error');
       failure.response = { status: 500, data: { message: 'Authentication failed' } };
-      ExtJS.requestSession.mockRejectedValue(failure);
+      mockRequestSession.mockRejectedValue(failure);
 
       await act(async () => {
         await userEvent.click(selectors.loginButton());
       });
 
       await waitFor(() => expect(selectors.serverErrorMessage()).toHaveTextContent('Authentication failed'));
-      expect(onErrorSpy).toHaveBeenCalledWith(failure);
     });
 
     it('focuses username input after authentication error', async () => {
@@ -242,7 +264,7 @@ describe('LoginForm', () => {
 
       const authError = new Error('Forbidden');
       authError.response = { status: 403, data: {} };
-      ExtJS.requestSession.mockRejectedValue(authError);
+      mockRequestSession.mockRejectedValue(authError);
 
       await act(async () => {
         await userEvent.click(selectors.loginButton());
@@ -261,7 +283,7 @@ describe('LoginForm', () => {
 
       const authError = new Error('Forbidden');
       authError.response = { status: 403, data: {} };
-      ExtJS.requestSession.mockRejectedValue(authError);
+      mockRequestSession.mockRejectedValue(authError);
 
       await act(async () => {
         await userEvent.click(selectors.loginButton());
@@ -273,7 +295,7 @@ describe('LoginForm', () => {
         expect(selectors.serverErrorMessage()).toHaveTextContent(LoginPageStrings.ERRORS.WRONG_CREDENTIALS);
       });
 
-      ExtJS.requestSession.mockResolvedValue({ response: { status: 204 } });
+      mockRequestSession.mockResolvedValue({ response: { status: 204 } });
       await userEvent.type(selectors.passwordInput(), 'correctpass');
 
       await act(async () => {
@@ -281,7 +303,7 @@ describe('LoginForm', () => {
       });
 
       await waitFor(() => {
-        expect(onSuccessSpy).toHaveBeenCalled();
+        expect(mockWaitForNextPermissionChange).toHaveBeenCalled();
       });
     });
 
@@ -291,7 +313,7 @@ describe('LoginForm', () => {
 
       const authError = new Error('Forbidden');
       authError.response = { status: 403, data: {} };
-      ExtJS.requestSession.mockRejectedValue(authError);
+      mockRequestSession.mockRejectedValue(authError);
 
       await act(async () => {
         await userEvent.click(selectors.loginButton());
@@ -318,7 +340,7 @@ describe('LoginForm', () => {
 
       const authError = new Error('Forbidden');
       authError.response = { status: 403, data: {} };
-      ExtJS.requestSession.mockRejectedValue(authError);
+      mockRequestSession.mockRejectedValue(authError);
 
       await act(async () => {
         await userEvent.click(selectors.loginButton());
@@ -346,7 +368,7 @@ describe('LoginForm', () => {
 
       const authError = new Error('Forbidden');
       authError.response = { status: 403, data: {} };
-      ExtJS.requestSession.mockRejectedValue(authError);
+      mockRequestSession.mockRejectedValue(authError);
 
       await act(async () => {
         await userEvent.click(selectors.loginButton());
@@ -365,17 +387,14 @@ describe('LoginForm', () => {
 
       await userEvent.type(selectors.passwordInput(), 'correctpass');
 
-      ExtJS.requestSession.mockResolvedValue({ response: { status: 204 } });
+      mockRequestSession.mockResolvedValue({ response: { status: 204 } });
 
       await act(async () => {
         await userEvent.click(selectors.loginButton());
       });
 
       await waitFor(() => {
-        expect(onSuccessSpy).toHaveBeenCalledWith({
-          username: 'correctuser',
-          response: { status: 204 }
-        });
+        expect(mockWaitForNextPermissionChange).toHaveBeenCalled();
       });
     });
   });
@@ -388,6 +407,66 @@ describe('LoginForm', () => {
 
       expect(selectors.usernameInput()).toHaveValue('my-user');
       expect(selectors.passwordInput()).toHaveValue('my-pass');
+    });
+  });
+
+  describe('redirection after login', () => {
+    beforeEach(() => {
+      mockRouter.globals.params = {};
+      mockRouter.urlService.url.mockClear();
+      mockRouter.stateService.go.mockClear();
+    });
+
+    it('redirects to returnTo URL after successful login', async () => {
+      mockRouter.globals.params.returnTo = '#admin/repository/repositories';
+      renderComponent();
+      await fillCredentials('admin', 'admin123');
+
+      mockRequestSession.mockResolvedValue({ response: { status: 204 } });
+
+      await act(async () => {
+        await userEvent.click(selectors.loginButton());
+      });
+
+      await waitFor(() => {
+        expect(mockWaitForNextPermissionChange).toHaveBeenCalled();
+        expect(mockRouter.urlService.url).toHaveBeenCalledWith('#admin/repository/repositories');
+        expect(mockRouter.stateService.go).not.toHaveBeenCalled();
+      });
+    });
+
+    it('redirects to welcome page when no returnTo is provided', async () => {
+      renderComponent();
+      await fillCredentials('admin', 'admin123');
+
+      mockRequestSession.mockResolvedValue({ response: { status: 204 } });
+
+      await act(async () => {
+        await userEvent.click(selectors.loginButton());
+      });
+
+      await waitFor(() => {
+        expect(mockWaitForNextPermissionChange).toHaveBeenCalled();
+        expect(mockRouter.stateService.go).toHaveBeenCalledWith('browse.welcome');
+        expect(mockRouter.urlService.url).not.toHaveBeenCalled();
+      });
+    });
+
+    it('redirects to missing route page when redirection is unsuccessful', async () => {
+      renderComponent();
+      await fillCredentials('admin', 'admin123');
+
+      mockRequestSession.mockResolvedValue({ response: { status: 204 } });
+      mockWaitForNextPermissionChange.mockRejectedValueOnce(new Error('Permission check failed'));
+
+      await act(async () => {
+        await userEvent.click(selectors.loginButton());
+      });
+
+      await waitFor(() => {
+        expect(mockWaitForNextPermissionChange).toHaveBeenCalled();
+        expect(mockRouter.stateService.go).toHaveBeenCalledWith(RouteNames.MISSING_ROUTE);
+      });
     });
   });
 });

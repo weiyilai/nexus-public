@@ -13,32 +13,45 @@
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import AnonymousAccessButton from './AnonymousAccessButton';
+import AnonymousAccess from './AnonymousAccess';
 import UIStrings from '../../../constants/UIStrings';
 
-describe('AnonymousAccessButton', () => {
-  const mockOnClick = jest.fn();
+const mockRouter = {
+  globals: { params: {} },
+  urlService: { url: jest.fn() },
+  stateService: { go: jest.fn() }
+};
 
+jest.mock('@uirouter/react', () => ({
+  useRouter: () => mockRouter
+}));
+
+
+describe('AnonymousAccess', () => {
   beforeEach(() => {
+    mockRouter.globals.params = {};
+    mockRouter.urlService.url.mockReset();
+    mockRouter.stateService.go.mockReset();
+
     jest.clearAllMocks();
   });
 
   describe('rendering', () => {
     it('renders the button with correct text', () => {
-      render(<AnonymousAccessButton onClick={mockOnClick} />);
+      render(<AnonymousAccess />);
 
       expect(screen.getByText(UIStrings.CONTINUE_WITHOUT_LOGIN)).toBeInTheDocument();
     });
 
     it('renders a divider line', () => {
-      const { container } = render(<AnonymousAccessButton onClick={mockOnClick} />);
+      const { container } = render(<AnonymousAccess />);
 
       const divider = container.querySelector('hr.nx-divider');
       expect(divider).toBeInTheDocument();
     });
 
     it('renders an arrow icon', () => {
-      const { container } = render(<AnonymousAccessButton onClick={mockOnClick} />);
+      const { container } = render(<AnonymousAccess />);
 
       const icon = container.querySelector('svg');
       expect(icon).toBeInTheDocument();
@@ -47,7 +60,7 @@ describe('AnonymousAccessButton', () => {
 
   describe('button properties', () => {
     it('has correct attributes', () => {
-      render(<AnonymousAccessButton onClick={mockOnClick} />);
+      render(<AnonymousAccess />);
       const button = screen.getByTestId('continue-without-login-button');
 
       expect(button).toHaveAttribute('data-analytics-id', 'nxrm-login-anonymous');
@@ -55,7 +68,7 @@ describe('AnonymousAccessButton', () => {
     });
 
     it('has secondary variant', () => {
-      render(<AnonymousAccessButton onClick={mockOnClick} />);
+      render(<AnonymousAccess />);
       const button = screen.getByTestId('continue-without-login-button');
 
       // NxButton with variant="secondary" adds specific classes
@@ -64,25 +77,31 @@ describe('AnonymousAccessButton', () => {
   });
 
   describe('button interaction', () => {
-    it('calls onClick handler when clicked', () => {
-      render(<AnonymousAccessButton onClick={mockOnClick} />);
+    it('navigates to browse.welcome when clicked and no returnTo param', () => {
+      render(<AnonymousAccess />);
       const button = screen.getByTestId('continue-without-login-button');
 
       fireEvent.click(button);
 
-      expect(mockOnClick).toHaveBeenCalledTimes(1);
+      expect(mockRouter.stateService.go).toHaveBeenCalledWith('browse.welcome');
+      expect(mockRouter.urlService.url).not.toHaveBeenCalled();
     });
 
-    it('does not call onClick when button is not clicked', () => {
-      render(<AnonymousAccessButton onClick={mockOnClick} />);
+    it('navigates to returnTo url when clicked and returnTo param exists', () => {
+      mockRouter.globals.params.returnTo = '/some/path';
+      render(<AnonymousAccess />);
+      const button = screen.getByTestId('continue-without-login-button');
 
-      expect(mockOnClick).not.toHaveBeenCalled();
+      fireEvent.click(button);
+
+      expect(mockRouter.urlService.url).toHaveBeenCalledWith('/some/path');
+      expect(mockRouter.stateService.go).not.toHaveBeenCalled();
     });
   });
 
   describe('accessibility', () => {
     it('is keyboard accessible', () => {
-      render(<AnonymousAccessButton onClick={mockOnClick} />);
+      render(<AnonymousAccess />);
       const button = screen.getByTestId('continue-without-login-button');
 
       expect(button).not.toHaveAttribute('disabled');
@@ -90,7 +109,7 @@ describe('AnonymousAccessButton', () => {
     });
 
     it('can be focused with keyboard', () => {
-      render(<AnonymousAccessButton onClick={mockOnClick} />);
+      render(<AnonymousAccess />);
       const button = screen.getByTestId('continue-without-login-button');
 
       button.focus();
@@ -100,7 +119,7 @@ describe('AnonymousAccessButton', () => {
 
   describe('analytics', () => {
     it('has analytics tracking attribute', () => {
-      render(<AnonymousAccessButton onClick={mockOnClick} />);
+      render(<AnonymousAccess />);
       const button = screen.getByTestId('continue-without-login-button');
 
       expect(button).toHaveAttribute('data-analytics-id', 'nxrm-login-anonymous');
@@ -109,7 +128,7 @@ describe('AnonymousAccessButton', () => {
 
   describe('visual structure', () => {
     it('renders divider before button', () => {
-      const { container } = render(<AnonymousAccessButton onClick={mockOnClick} />);
+      const { container } = render(<AnonymousAccess />);
 
       const divider = container.querySelector('hr.nx-divider');
       const button = container.querySelector('button');
@@ -122,7 +141,7 @@ describe('AnonymousAccessButton', () => {
     });
 
     it('contains button text and icon', () => {
-      const { container } = render(<AnonymousAccessButton onClick={mockOnClick} />);
+      const { container } = render(<AnonymousAccess />);
 
       expect(screen.getByText(UIStrings.CONTINUE_WITHOUT_LOGIN)).toBeInTheDocument();
       expect(container.querySelector('svg')).toBeInTheDocument();

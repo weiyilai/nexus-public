@@ -22,11 +22,14 @@ import {
   NxTextInput
 } from '@sonatype/react-shared-components';
 import { useMachine } from '@xstate/react';
+import { useRouter } from '@uirouter/react';
 import PropTypes from 'prop-types';
 import React, { useEffect } from 'react';
+import { ExtJS } from '@sonatype/nexus-ui-plugin';
 import LoginPageStrings from '../../../constants/LoginPageStrings';
+import { RouteNames } from '../../../constants/RouteNames';
 import FormUtils from '../../../interface/FormUtils';
-import LoginFormMachine from './LoginFormMachine';
+import LoginFormMachine from './LocalLoginMachine';
 
 const { LOGIN_BUTTON_LOADING, USERNAME_LABEL, PASSWORD_LABEL, LOGIN_BUTTON } = LoginPageStrings;
 
@@ -35,18 +38,37 @@ const { LOGIN_BUTTON_LOADING, USERNAME_LABEL, PASSWORD_LABEL, LOGIN_BUTTON } = L
  *
  * @param {Object} props - Component props
  * @param {boolean} props.primaryButton - REQUIRED: If true, login button uses primary variant
- * @param {Function} props.onSuccess - Callback function called on successful authentication
- * @param {Function} props.onError - Callback function called on authentication error
  */
-export default function LoginForm({ primaryButton, onSuccess, onError }) {
+export default function LocalLogin({ primaryButton }) {
+  const router = useRouter();
+
+  const handleLoginSuccess = async ({ username }) => {
+    console.log(`User ${username} authenticated successfully`);
+    try {
+      await ExtJS.waitForNextPermissionChange();
+      const returnTo = router.globals.params.returnTo;
+      if (returnTo) {
+        // `router.urlService.url` does set and navigate to the returnTo url
+        router.urlService.url(returnTo);
+      } else {
+        router.stateService.go('browse.welcome');
+      }
+    } catch (ex) {
+      console.warn('redirection unsuccessful: ', ex);
+      router.stateService.go(RouteNames.MISSING_ROUTE);
+    }
+  };
+
   const [current, send] = useMachine(LoginFormMachine, {
     actions: {
-      onSaveSuccess: (context, event) =>
-        onSuccess?.({
+      onSaveSuccess: async (context, event) => {
+        const loginData = {
           username: event.data?.username ?? context.data.username,
           response: event.data?.response ?? event.data
-        }),
-      logSaveError: (_, event) => onError?.(event.data)
+        };
+        await handleLoginSuccess(loginData);
+      },
+      logSaveError: (_, event) => { console.error('Login failed:', event.data);}
     }
   });
 
@@ -143,8 +165,6 @@ export default function LoginForm({ primaryButton, onSuccess, onError }) {
   );
 }
 
-LoginForm.propTypes = {
-  primaryButton: PropTypes.bool.isRequired,
-  onSuccess: PropTypes.func,
-  onError: PropTypes.func
+LocalLogin.propTypes = {
+  primaryButton: PropTypes.bool.isRequired
 };

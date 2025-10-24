@@ -28,7 +28,7 @@ jest.mock('../../layout/LoginLayout', () => {
 const mockLoginFormOnSuccess = jest.fn();
 const mockLoginFormOnError = jest.fn();
 
-jest.mock('./LoginForm', () => {
+jest.mock('./LocalLogin', () => {
   return function LoginForm(props) {
     mockLoginFormOnSuccess.mockImplementation(props.onSuccess);
     mockLoginFormOnError.mockImplementation(props.onError);
@@ -36,15 +36,9 @@ jest.mock('./LoginForm', () => {
   };
 });
 
-jest.mock('./SsoLoginButton', () => {
+jest.mock('./SsoLogin', () => {
   return function SsoLoginButton() {
     return <button data-testid="sso-login-button">SSO Login</button>;
-  };
-});
-
-jest.mock('./AnonymousAccessButton', () => {
-  return function AnonymousAccessButton({ onClick }) {
-    return <button data-testid="continue-without-login-button" onClick={onClick}>Continue without login</button>;
   };
 });
 
@@ -90,6 +84,9 @@ describe('LoginPage', () => {
       getValue: jest.fn().mockImplementation((key, defaultValue) => defaultValue)
     });
     jest.clearAllMocks();
+    mockRouterGo.mockClear();
+    mockRouterUrl.mockClear();
+    mockRouterParams.returnTo = undefined;
   });
 
   function setupStates(samlEnabled = false, oauth2Enabled = false, isCloud = false, anonymousUsername = null) {
@@ -140,7 +137,7 @@ describe('LoginPage', () => {
       expect(screen.getByText(UIStrings.SSO_DIVIDER_LABEL)).toBeInTheDocument();
     });
 
-    it('sets LoginForm primaryButton to false when SSO is enabled', () => {
+    it('sets LocalLogin primaryButton to false when SSO is enabled', () => {
       setupStates(true, false, false);
       
       renderComponent({ logoConfig: mockLogoConfig });
@@ -149,7 +146,7 @@ describe('LoginPage', () => {
       expect(loginForm).toHaveAttribute('data-primary-button', 'false');
     });
 
-    it('sets LoginForm primaryButton to true when SSO is not enabled', () => {
+    it('sets LocalLogin primaryButton to true when SSO is not enabled', () => {
       setupStates(false, false, false);
       
       renderComponent({ logoConfig: mockLogoConfig });
@@ -311,49 +308,6 @@ describe('LoginPage', () => {
       renderComponent({});
 
       expect(screen.getByTestId('login-tile')).toBeInTheDocument();
-    });
-  });
-
-  describe('redirection after login', () => {
-    beforeEach(() => {
-      mockRouterParams.returnTo = undefined;
-      mockRouterGo.mockClear();
-      mockRouterUrl.mockClear();
-      mockLoginFormOnSuccess.mockClear();
-    });
-
-    it('redirects to returnTo URL after successful login', async () => {
-      setupStates(false, false, false, null);
-      mockRouterParams.returnTo = '#admin/repository/repositories';
-      
-      renderComponent({ logoConfig: mockLogoConfig });
-      
-      await mockLoginFormOnSuccess({ username: 'testuser' });
-      
-      expect(mockRouterUrl).toHaveBeenCalledWith('#admin/repository/repositories');
-      expect(mockRouterGo).not.toHaveBeenCalled();
-    });
-
-    it('redirects to welcome page when no returnTo is provided', async () => {
-      setupStates(false, false, false, null);
-      
-      renderComponent({ logoConfig: mockLogoConfig });
-      
-      await mockLoginFormOnSuccess({ username: 'testuser' });
-      
-      expect(mockRouterGo).toHaveBeenCalledWith('browse.welcome');
-      expect(mockRouterUrl).not.toHaveBeenCalled();
-    });
-
-    it('redirects to missing route page when redirection is unsuccessful', async () => {
-      setupStates(false, false, false, null);
-      ExtJS.waitForNextPermissionChange.mockRejectedValueOnce(new Error('Permission check failed'));
-      
-      renderComponent({ logoConfig: mockLogoConfig });
-      
-      await mockLoginFormOnSuccess({ username: 'testuser' });
-      
-      expect(mockRouterGo).toHaveBeenCalledWith('missing_route');
     });
   });
 });

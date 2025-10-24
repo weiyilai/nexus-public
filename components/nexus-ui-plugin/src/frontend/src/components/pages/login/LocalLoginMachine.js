@@ -22,7 +22,7 @@ import ExtJS from '../../../interface/ExtJS';
 
 const BLANK_FIELD_ERROR = ' ';
 
-const loginFormMachine = FormUtils.buildFormMachine({
+const localLoginMachine = FormUtils.buildFormMachine({
   id: 'LoginFormMachine',
   initial: 'loaded',
   stateAfterSave: 'loaded',
@@ -149,4 +149,4 @@ const loginFormMachine = FormUtils.buildFormMachine({
   }
 });
 
-export default loginFormMachine;
+export default localLoginMachine;

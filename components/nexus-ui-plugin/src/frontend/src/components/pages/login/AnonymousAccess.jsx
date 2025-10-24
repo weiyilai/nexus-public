@@ -12,27 +12,38 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import { NxButton, NxFontAwesomeIcon } from '@sonatype/react-shared-components';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { useRouter } from '@uirouter/react';
 import UIStrings from '../../../constants/UIStrings';
 
-import './AnonymousAccessButton.scss';
+import './AnonymousAccess.scss';
 
 const { CONTINUE_WITHOUT_LOGIN } = UIStrings;
 
 /**
  * Button component that allows users to continue without logging in when anonymous access is enabled.
- * @param {Function} onClick - Handler function called when button is clicked
  */
-export default function AnonymousAccessButton({ onClick }) {
+export default function AnonymousAccess() {
+  const router = useRouter();
+
+  const handleContinueWithoutLogin = () => {
+    const returnTo = router.globals.params.returnTo;
+    if (returnTo) {
+      // `router.urlService.url` does set and navigate to the returnTo url
+      router.urlService.url(returnTo);
+    } else {
+      router.stateService.go('browse.welcome');
+    }
+  };
+
   return (
     <>
       <hr className="nx-divider" />
       <NxButton
         variant="secondary"
         className="continue-without-login-button"
-        onClick={onClick}
+        onClick={handleContinueWithoutLogin}
         data-testid="continue-without-login-button"
         data-analytics-id="nxrm-login-anonymous"
       >
@@ -43,7 +54,4 @@ export default function AnonymousAccessButton({ onClick }) {
   );
 }
 
-AnonymousAccessButton.propTypes = {
-  onClick: PropTypes.func.isRequired
-};
 

@@ -16,61 +16,42 @@ import { NxButton, NxLoadingSpinner } from '@sonatype/react-shared-components';
 import { ExtJS } from '@sonatype/nexus-ui-plugin';
 import UIStrings from '../../../constants/UIStrings';
 import { useRouter } from '@uirouter/react';
+import {RouteNames} from "../../../constants/RouteNames";
 
 const { SSO_BUTTON, SSO_BUTTON_LOADING } = UIStrings;
-
-/**
- * @param {string} contextPath - The application context path (e.g., '/nexus')
- * @param {string} path - The target path (e.g., '/saml')
- */
-function buildRedirectUrl(contextPath, path) {
-  // Handle empty context path
-  if (!contextPath || contextPath === '/') {
-    return path;
-  }
-
-  // Remove trailing slashes from context path and leading slashes from path
-  const cleanContextPath = contextPath.replace(/\/+$/, '');
-  const cleanPath = path.replace(/^\/+/, '');
-
-  return `${cleanContextPath}/${cleanPath}`;
-}
 
 /**
  * SSO Login Button component that redirects to the appropriate authentication endpoint
  * based on the configured SSO method (SAML or OAuth2/OIDC)
  */
-export default function SsoLoginButton() {
+export default function SsoLogin() {
+  const samlEnabled = ExtJS.useState(() => ExtJS.state().getValue('samlEnabled', false));
+  const oauth2Enabled = ExtJS.useState(() => ExtJS.state().getValue('oauth2Enabled', false));
   const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 
-  const samlEnabled = ExtJS.useState(() => ExtJS.state().getValue('samlEnabled', false));
-  const oauth2Enabled = ExtJS.useState(() => ExtJS.state().getValue('oauth2Enabled', false));
-  const contextPath = ExtJS.useState(() => ExtJS.state().getValue('nexus-context-path', ''));
+  const buildUrlReturnTo = (returnToParam) => {
+    const returnTo = returnToParam ? `hash=${encodeURIComponent(returnToParam)}` : '';
 
-  const isSsoEnabled = samlEnabled || oauth2Enabled;
+    let basePath = '';
+    if (samlEnabled) {
+      basePath = '/saml';
+    } else if (oauth2Enabled) {
+      basePath = '/oidc/login';
+    } else {
+      throw new Error('No SSO method is enabled');
+    }
 
-  if (!isSsoEnabled) {
-    return null;
+    return `${basePath}?${returnTo}`;
   }
 
   const handleSsoLogin = () => {
     setIsRedirecting(true);
-
-    let redirectUrl;
-    if (samlEnabled) {
-      const returnTo = router.globals.params.returnTo;
-      if (returnTo) {
-        redirectUrl = buildRedirectUrl(contextPath, '/saml?hash=' + encodeURIComponent(returnTo));
-      } else {
-        redirectUrl = buildRedirectUrl(contextPath, '/saml');
-      }
-    } else if (oauth2Enabled) {
-      redirectUrl = buildRedirectUrl(contextPath, '/oidc/login');
-    }
-
-    if (redirectUrl) {
-      window.location.assign(redirectUrl);
+    try {
+      window.location.assign(buildUrlReturnTo(router.globals.params.returnTo));
+    } catch (ex) {
+      console.warn('redirection unsuccessful: ', ex);
+      router.stateService.go(RouteNames.MISSING_ROUTE);
     }
   };
 
