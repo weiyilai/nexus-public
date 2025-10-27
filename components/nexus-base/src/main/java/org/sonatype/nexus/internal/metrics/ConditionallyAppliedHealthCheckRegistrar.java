@@ -15,23 +15,19 @@ package org.sonatype.nexus.internal.metrics;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
 import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.systemchecks.ConditionallyAppliedHealthCheck;
 
 import com.codahale.metrics.health.HealthCheckRegistry;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
-import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.springframework.stereotype.Component;
 
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
+import static com.google.common.base.Preconditions.checkNotNull;
+import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
+
 @Component
 @Singleton
 @ManagedLifecycle(phase = SERVICES)

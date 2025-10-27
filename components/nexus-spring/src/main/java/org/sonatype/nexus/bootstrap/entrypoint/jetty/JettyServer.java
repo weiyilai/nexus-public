@@ -24,7 +24,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 import javax.servlet.ServletContextListener;
@@ -57,18 +56,14 @@ import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.xml.XmlConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 
 /**
  * Jetty server.
  */
 @Singleton
 @Component
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 public class JettyServer
 {
 

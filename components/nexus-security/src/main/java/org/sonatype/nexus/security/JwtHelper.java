@@ -16,13 +16,8 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
-import com.auth0.jwt.JWTCreator;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import javax.servlet.http.Cookie;
 
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.event.EventAware;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
@@ -32,19 +27,22 @@ import org.sonatype.nexus.security.jwt.JwtVerifier;
 import org.sonatype.nexus.security.jwt.SecretStore;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.eventbus.Subscribe;
+import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
 import static org.sonatype.nexus.common.app.FeatureFlags.NXSESSIONID_SECURE_COOKIE_NAMED_VALUE;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SECURITY;
-import org.springframework.stereotype.Component;
 
 /**
  * Helper to create, decode, verify and refresh JWT cookie
@@ -54,7 +52,6 @@ import org.springframework.stereotype.Component;
 @Component
 @ManagedLifecycle(phase = SECURITY)
 @Singleton
-@FeatureFlag(name = JWT_ENABLED)
 @ConditionalOnProperty(name = JWT_ENABLED, havingValue = "true")
 public class JwtHelper
     extends StateGuardLifecycleSupport

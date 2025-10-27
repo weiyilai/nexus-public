@@ -14,21 +14,17 @@ package org.sonatype.nexus.rapture.internal;
 
 import java.util.List;
 import java.util.Map;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionSelector;
 import org.sonatype.nexus.rapture.StateContributor;
 
 import com.google.common.collect.ImmutableMap;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.springframework.stereotype.Component;
 
 @Component
 @Singleton
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 public class BundleStateContributor
     implements StateContributor
 {

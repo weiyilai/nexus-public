@@ -44,8 +44,6 @@
     <module>logging</module>
     <module>maven</module>
     <module>metrics</module>
-    <!-- THIS MODULE SHOULD BE REMOVED WHEN SPRING MIGRATION COMPLETE -->
-    <module>nexus-feature-flags</module>
     <module>other</module>
     <module>rest</module>
     <module>security</module>

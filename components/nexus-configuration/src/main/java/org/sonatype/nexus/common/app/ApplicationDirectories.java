@@ -18,7 +18,7 @@ import java.io.File;
  * !!!! DEPRECATED in favor of {@link org.sonatype.nexus.bootstrap.entrypoint.configuration.ApplicationDirectories}
  * This class was moved to be loaded and usable in the first pass of injection. Left this deprecated class simply
  * because of the widespread usage. This class should be removed when the previous DI architecture is removed. Until
- * then changes should primarily be done on the newer "nexus.spring.only=true" impl, then only brought back to this
+ * then changes should primarily be done on the newer impl, then only brought back to this
  * class if necessary
  * -------------------------------------------------------
  * Old javadoc

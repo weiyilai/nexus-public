@@ -13,30 +13,22 @@
 package org.sonatype.nexus.bootstrap.core;
 
 import java.util.Map;
-import jakarta.inject.Singleton;
 
-import org.sonatype.nexus.bootstrap.core.ApplicationLicenseImpl.AnotherPropertyCondition;
-import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEdition;
 import org.sonatype.nexus.common.app.ApplicationLicense;
 
+import jakarta.inject.Singleton;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Condition;
-import org.springframework.context.annotation.ConditionContext;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 
 import static java.util.Collections.emptyMap;
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
-import org.springframework.stereotype.Component;
 
 /**
  * CORE {@link ApplicationLicense}.
  */
 @Component
 @Singleton
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
-@Conditional(AnotherPropertyCondition.class)
+@ConditionalOnProperty(value = "nexus.edition", havingValue = "CORE", matchIfMissing = true)
 public class ApplicationLicenseImpl
     implements ApplicationLicense
 {
@@ -97,15 +89,5 @@ public class ApplicationLicenseImpl
   @Override
   public boolean isEvaluation() {
     return false;
-  }
-
-  public static class AnotherPropertyCondition
-      implements Condition
-  {
-    @Override
-    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-      NexusEdition nexusEdition = context.getEnvironment().getProperty("nexus.edition", NexusEdition.class);
-      return nexusEdition == null || "CORE".equals(nexusEdition.getShortName());
-    }
   }
 }

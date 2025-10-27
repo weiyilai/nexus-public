@@ -13,22 +13,12 @@
 package org.sonatype.nexus.bootstrap.entrypoint.jvm;
 
 import jakarta.inject.Singleton;
-
-import org.sonatype.nexus.bootstrap.entrypoint.jvm.JavaShutdownDelegate.AnotherPropertyCondition;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Condition;
-import org.springframework.context.annotation.ConditionContext;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.core.type.AnnotatedTypeMetadata;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import org.springframework.stereotype.Component;
 
 @Component
 @Singleton
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
-@Conditional(AnotherPropertyCondition.class)
+@ConditionalOnProperty(value = "nexus.noop.shutdown.delegate", havingValue = "false", matchIfMissing = true)
 public class JavaShutdownDelegate
     implements ShutdownDelegate
 {
@@ -42,16 +32,5 @@ public class JavaShutdownDelegate
   public void halt(final int code) {
     // expected use of Runtime.halt()
     Runtime.getRuntime().halt(code);
-  }
-
-  public static class AnotherPropertyCondition
-      implements Condition
-  {
-    @Override
-    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-      String nexusNoopShutdownDelegate = context.getEnvironment().getProperty("nexus.noop.shutdown.delegate");
-
-      return nexusNoopShutdownDelegate == null || "false".equals(nexusNoopShutdownDelegate);
-    }
   }
 }

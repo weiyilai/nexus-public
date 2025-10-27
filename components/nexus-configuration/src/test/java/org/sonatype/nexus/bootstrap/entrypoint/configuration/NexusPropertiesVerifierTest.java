@@ -214,6 +214,30 @@ class NexusPropertiesVerifierTest
   }
 
   @Test
+  void testAnalyticsAlwaysEnabledForCommunityEdition() {
+    mockRequiredProperties();
+
+    nexusProperties.put(NexusEditionSelector.PROPERTY_KEY, "nexus-community-edition");
+    nexusProperties.put("nexus.analytics.enabled", "false");
+
+    nexusPropertiesVerifier.verify(nexusProperties);
+
+    assertThat(properties.get("nexus.analytics.enabled"), is("true"));
+  }
+
+  @Test
+  void testAnalyticsCanBeDisabledForProEdition() {
+    mockRequiredProperties();
+
+    nexusProperties.put(NexusEditionSelector.PROPERTY_KEY, "nexus-professional-edition");
+    nexusProperties.put("nexus.analytics.enabled", "false");
+
+    nexusPropertiesVerifier.verify(nexusProperties);
+
+    assertThat(properties.get("nexus.analytics.enabled"), is("false"));
+  }
+
+  @Test
   void testSelectAuthenticationFeature_WhenJwtEnabled_OAuth2RemainsEnabled() {
     mockRequiredProperties();
     nexusProperties.put(JWT_ENABLED, TRUE);

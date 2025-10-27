@@ -15,16 +15,12 @@ package org.sonatype.nexus.bootstrap.maven;
 import org.sonatype.nexus.content.maven.store.Maven2StoreProvider;
 
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 
 /**
  * Configures the content store bindings for a maven format.
  */
-@ConditionalOnProperty(name = FEATURE_SPRING_ONLY, havingValue = "true")
 @Configuration
 public class Maven2Configuration
 {

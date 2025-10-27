@@ -12,18 +12,17 @@
  */
 package org.sonatype.nexus.rapture.internal.security;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.common.app.WebFilterPriority;
 import org.sonatype.nexus.security.JwtHelper;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
@@ -44,7 +43,6 @@ import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
 @Order(WebFilterPriority.AUTHENTICATION)
 @Component
 @Singleton
-@FeatureFlag(name = JWT_ENABLED)
 @ConditionalOnProperty(name = JWT_ENABLED, havingValue = "true")
 public class JwtAuthenticationFilter
     extends SessionAuthenticationFilter

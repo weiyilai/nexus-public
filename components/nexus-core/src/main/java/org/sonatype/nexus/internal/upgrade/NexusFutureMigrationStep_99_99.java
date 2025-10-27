@@ -15,23 +15,19 @@ package org.sonatype.nexus.internal.upgrade;
 import java.sql.Connection;
 import java.util.Optional;
 
-import jakarta.inject.Inject;
-
 import org.sonatype.goodies.common.ComponentSupport;
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
+import jakarta.inject.Inject;
 import org.springframework.beans.factory.annotation.Value;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.ZERO_DOWNTIME_FUTURE_MIGRATION_ENABLED;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import static org.sonatype.nexus.common.app.FeatureFlags.ZERO_DOWNTIME_FUTURE_MIGRATION_ENABLED;
+
 @Component
-@FeatureFlag(name = ZERO_DOWNTIME_FUTURE_MIGRATION_ENABLED, enabledByDefault = false)
 @ConditionalOnProperty(name = ZERO_DOWNTIME_FUTURE_MIGRATION_ENABLED, havingValue = "true")
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class NexusFutureMigrationStep_99_99

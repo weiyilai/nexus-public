@@ -12,8 +12,6 @@
  */
 package org.sonatype.nexus.bootstrap.entrypoint.core;
 
-import java.util.Map;
-
 import org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirectoryConfiguration;
 import org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusProperties;
 
@@ -21,7 +19,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.springframework.boot.Banner.Mode.OFF;
 
 // Minimalist list of root packages to scan, to start bootstrapping
@@ -45,7 +42,6 @@ public class NexusRepositoryCoreApplication
     new SpringApplicationBuilder(NexusRepositoryCoreApplication.class)
         .bannerMode(OFF)
         .initializers(NexusRepositoryCoreApplication::initialize)
-        .properties(Map.of(FEATURE_SPRING_ONLY, "true"))
         .run(args);
   }
 

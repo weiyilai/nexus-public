@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Priority;
 
 import org.sonatype.goodies.lifecycle.Lifecycle;
@@ -33,14 +32,12 @@ import com.google.common.collect.Multimap;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.reverse;
 import static java.lang.Math.max;
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.sonatype.nexus.common.app.FeatureFlags.STARTUP_TASKS_DELAY_SECONDS_VALUE;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.KERNEL;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.OFF;
@@ -53,7 +50,6 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
  */
 @Singleton
 @Component
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 public class NexusLifecycleManager
     extends ManagedLifecycleManager
 {

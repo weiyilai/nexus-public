@@ -33,6 +33,7 @@ import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Iso8601Date;
+import org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusProperties;
 import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.common.app.ApplicationVersion;
@@ -61,7 +62,7 @@ public class SystemInformationGeneratorImpl
 
   private final ApplicationVersion applicationVersion;
 
-  private final Map<String, String> parameters;
+  private final NexusProperties nexusProperties;
 
   private final NodeAccess nodeAccess;
 
@@ -79,16 +80,16 @@ public class SystemInformationGeneratorImpl
 
   @Inject
   public SystemInformationGeneratorImpl(
-      ApplicationDirectories applicationDirectories,
-      ApplicationVersion applicationVersion,
-      Map<String, String> parameters,
-      NodeAccess nodeAccess,
-      DeploymentAccess deploymentAccess,
-      List<SystemInformationHelper> systemInformationHelpersList)
+      final ApplicationDirectories applicationDirectories,
+      final NexusProperties nexusProperties,
+      final ApplicationVersion applicationVersion,
+      final NodeAccess nodeAccess,
+      final DeploymentAccess deploymentAccess,
+      final List<SystemInformationHelper> systemInformationHelpersList)
   {
     this.applicationDirectories = checkNotNull(applicationDirectories);
     this.applicationVersion = checkNotNull(applicationVersion);
-    this.parameters = checkNotNull(parameters);
+    this.nexusProperties = checkNotNull(nexusProperties);
     this.nodeAccess = checkNotNull(nodeAccess);
     this.deploymentAccess = checkNotNull(deploymentAccess);
     this.systemInformationHelpers = QualifierUtil.buildQualifierBeanMap(checkNotNull(systemInformationHelpersList));
@@ -107,7 +108,7 @@ public class SystemInformationGeneratorImpl
     sections.put("system-filestores", reportFileStores());
     sections.put("nexus-status", reportNexusStatus());
     sections.put("nexus-node", reportNexusNode());
-    sections.put("nexus-properties", reportObfuscatedProperties(parameters));
+    sections.put("nexus-properties", reportObfuscatedProperties(nexusProperties.get()));
     sections.put("nexus-configuration", reportNexusConfiguration());
 
     // Merge additional system information helpers

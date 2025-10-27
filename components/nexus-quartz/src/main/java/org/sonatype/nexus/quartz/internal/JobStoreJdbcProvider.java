@@ -14,17 +14,15 @@ package org.sonatype.nexus.quartz.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-
 import javax.annotation.Priority;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.lifecycle.LifecycleSupport;
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.node.NodeAccess;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.quartz.impl.jdbcjobstore.HSQLDBDelegate;
 import org.quartz.impl.jdbcjobstore.JobStoreTX;
 import org.quartz.impl.jdbcjobstore.PostgreSQLDelegate;
@@ -38,9 +36,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
-import org.springframework.stereotype.Component;
 
 /**
  * {@link JobStore} implementation that uses JDBC.
@@ -48,7 +46,6 @@ import org.springframework.stereotype.Component;
  * @since 3.19
  */
 @Lazy
-@FeatureFlag(name = "nexus.quartz.jobstore.jdbc")
 @ConditionalOnProperty(name = "nexus.quartz.jobstore.jdbc", havingValue = "true")
 @ManagedLifecycle(phase = SCHEMAS)
 @Component

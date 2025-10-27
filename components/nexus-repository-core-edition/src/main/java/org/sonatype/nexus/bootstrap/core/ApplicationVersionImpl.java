@@ -12,22 +12,13 @@
  */
 package org.sonatype.nexus.bootstrap.core;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
-import org.sonatype.nexus.bootstrap.core.ApplicationVersionImpl.AnotherPropertyCondition;
-import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEdition;
 import org.sonatype.nexus.bootstrap.entrypoint.edition.core.CoreNexusEdition;
 import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.common.app.ApplicationVersionSupport;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Condition;
-import org.springframework.context.annotation.ConditionContext;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.core.type.AnnotatedTypeMetadata;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import org.springframework.stereotype.Component;
 
 /**
@@ -35,8 +26,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Singleton
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
-@Conditional(AnotherPropertyCondition.class)
+@ConditionalOnProperty(value = "nexus.edition", havingValue = "CORE", matchIfMissing = true)
 public class ApplicationVersionImpl
     extends ApplicationVersionSupport
 {
@@ -50,15 +40,5 @@ public class ApplicationVersionImpl
   @Override
   public String getEdition() {
     return coreNexusEdition.getShortName();
-  }
-
-  public static class AnotherPropertyCondition
-      implements Condition
-  {
-    @Override
-    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-      NexusEdition nexusEdition = context.getEnvironment().getProperty("nexus.edition", NexusEdition.class);
-      return nexusEdition == null || "CORE".equals(nexusEdition.getShortName());
-    }
   }
 }

@@ -12,17 +12,14 @@
  */
 package org.sonatype.nexus.elasticsearch.internal.repository;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 import org.sonatype.nexus.repository.content.search.SearchEventHandler;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.springframework.beans.factory.annotation.Value;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
@@ -30,7 +27,6 @@ import org.springframework.stereotype.Component;
 import static org.sonatype.nexus.common.app.FeatureFlags.ELASTIC_SEARCH_ENABLED;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 
-@FeatureFlag(name = ELASTIC_SEARCH_ENABLED, enabledByDefault = true)
 @ConditionalOnProperty(name = ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 @ManagedLifecycle(phase = SERVICES)
 @Component

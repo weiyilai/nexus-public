@@ -13,28 +13,25 @@
 package org.sonatype.nexus.upgrade.datastore.internal;
 
 import java.util.Optional;
-
 import javax.annotation.Nullable;
 import javax.annotation.Priority;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.upgrade.UpgradeService;
 import org.sonatype.nexus.upgrade.datastore.DeploymentValidator;
 import org.sonatype.nexus.upgrade.datastore.UpgradeManager;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.CLUSTERED_ZERO_DOWNTIME_ENABLED;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.UPGRADE;
-import org.springframework.stereotype.Component;
 
 /**
  * Default datastore {@link UpgradeService}.
@@ -42,7 +39,6 @@ import org.springframework.stereotype.Component;
  * @since 3.29
  */
 @Component
-@FeatureFlag(name = CLUSTERED_ZERO_DOWNTIME_ENABLED, inverse = true, enabledByDefault = true)
 @ConditionalOnProperty(name = CLUSTERED_ZERO_DOWNTIME_ENABLED, havingValue = "false", matchIfMissing = true)
 @Priority(Integer.MAX_VALUE)
 @Order(Ordered.HIGHEST_PRECEDENCE)

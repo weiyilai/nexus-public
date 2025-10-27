@@ -16,13 +16,9 @@ import org.sonatype.nexus.repository.apt.datastore.data.AptKeyValueStoreProvider
 import org.sonatype.nexus.repository.apt.datastore.internal.store.AptStoresProvider;
 
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
-
-@ConditionalOnProperty(name = FEATURE_SPRING_ONLY, havingValue = "true")
 @Configuration
 public class AptStoreConfiguration
 {

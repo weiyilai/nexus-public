@@ -15,16 +15,12 @@ package org.sonatype.nexus.bootstrap.raw;
 import org.sonatype.nexus.content.raw.internal.store.RawStoresProvider;
 
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 
 /**
  * Configures the content store bindings for the raw format.
  */
-@ConditionalOnProperty(name = FEATURE_SPRING_ONLY, havingValue = "true")
 @Configuration
 public class RawConfiguration
 {

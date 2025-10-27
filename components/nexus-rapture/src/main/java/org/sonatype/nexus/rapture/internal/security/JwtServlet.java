@@ -14,9 +14,6 @@ package org.sonatype.nexus.rapture.internal.security;
 
 import java.io.IOException;
 import java.util.Optional;
-
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.Cookie;
@@ -24,17 +21,19 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.security.authc.LoginEvent;
 import org.sonatype.nexus.security.authc.LogoutEvent;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.net.HttpHeaders.X_FRAME_OPTIONS;
@@ -44,7 +43,6 @@ import static org.sonatype.nexus.common.app.FeatureFlags.NXSESSIONID_SECURE_COOK
 import static org.sonatype.nexus.rapture.internal.security.SessionServlet.SESSION_MP;
 import static org.sonatype.nexus.security.JwtHelper.JWT_COOKIE_NAME;
 import static org.sonatype.nexus.servlet.XFrameOptions.DENY;
-import org.springframework.stereotype.Component;
 
 /**
  * JWT servlet, to expose end-point for configuration of Shiro authentication filter to
@@ -57,7 +55,6 @@ import org.springframework.stereotype.Component;
 @WebServlet(SESSION_MP)
 @Component
 @Singleton
-@FeatureFlag(name = JWT_ENABLED)
 @ConditionalOnProperty(name = JWT_ENABLED, havingValue = "true")
 public class JwtServlet
     extends HttpServlet

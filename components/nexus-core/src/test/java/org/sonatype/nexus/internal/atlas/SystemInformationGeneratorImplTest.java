@@ -12,6 +12,25 @@
  */
 package org.sonatype.nexus.internal.atlas;
 
+import java.io.IOException;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.nio.file.FileStore;
+import java.nio.file.FileSystems;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusProperties;
+import org.sonatype.nexus.common.app.ApplicationDirectories;
+import org.sonatype.nexus.common.app.ApplicationVersion;
+import org.sonatype.nexus.common.app.SystemInformationHelper;
+import org.sonatype.nexus.common.node.DeploymentAccess;
+import org.sonatype.nexus.common.node.NodeAccess;
+
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -20,29 +39,12 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.common.app.ApplicationDirectories;
-import org.sonatype.nexus.common.app.ApplicationVersion;
-import org.sonatype.nexus.common.app.SystemInformationHelper;
-import org.sonatype.nexus.common.node.DeploymentAccess;
-import org.sonatype.nexus.common.node.NodeAccess;
-import org.apache.commons.lang3.SystemUtils;
-
-import java.io.IOException;
-import java.nio.file.FileStore;
-import java.nio.file.FileSystems;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import static java.util.Collections.emptyMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.hamcrest.text.IsEmptyString.isEmptyString;
 import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.text.IsEmptyString.isEmptyString;
 import static org.mockito.Mockito.when;
 
 /**
@@ -72,6 +74,9 @@ public class SystemInformationGeneratorImplTest
   @Mock
   private List<SystemInformationHelper> systemInformationHelpers;
 
+  @Mock
+  private NexusProperties nexusProperties;
+
   @Before
   public void setup() throws IOException {
     when(applicationVersion.getVersion()).thenReturn("3.77.0-SNAPSHOT");
@@ -83,6 +88,7 @@ public class SystemInformationGeneratorImplTest
     when(applicationDirectories.getInstallDirectory()).thenReturn(tempFolder.newFile());
     when(applicationDirectories.getWorkDirectory()).thenReturn(tempFolder.newFile());
     when(applicationDirectories.getTemporaryDirectory()).thenReturn(tempFolder.newFile());
+    when(nexusProperties.get()).thenReturn(emptyMap());
   }
 
   /**
@@ -158,8 +164,8 @@ public class SystemInformationGeneratorImplTest
   private SystemInformationGeneratorImpl mockSystemInformationGenerator() {
     return new SystemInformationGeneratorImpl(
         applicationDirectories,
+        nexusProperties,
         applicationVersion,
-        Collections.emptyMap(),
         nodeAccess,
         deploymentAccess,
         systemInformationHelpers);
@@ -195,10 +201,13 @@ public class SystemInformationGeneratorImplTest
    */
   @Test
   public void jvmVariableSensitiveDataIsHidden() {
+    when(nexusProperties.get()).thenReturn(Map.of(
+        "sun.java.command",
+        "test.variable=1 -Dnexus.password=nxrm -Dnexus.token=123456"));
     SystemInformationGeneratorImpl generator = new SystemInformationGeneratorImpl(
         applicationDirectories,
+        nexusProperties,
         applicationVersion,
-        Collections.singletonMap("sun.java.command", "test.variable=1 -Dnexus.password=nxrm -Dnexus.token=123456"),
         nodeAccess,
         deploymentAccess,
         systemInformationHelpers);
@@ -215,11 +224,13 @@ public class SystemInformationGeneratorImplTest
    */
   @Test
   public void install4jAddVmParamsSensitiveDataIsHidden() {
+    when(nexusProperties.get()).thenReturn(Map.of(
+        "INSTALL4J_ADD_VM_PARAMS",
+        "test.variable=1 -Dnexus.password=nxrm -Dnexus.token=123456"));
     SystemInformationGeneratorImpl generator = new SystemInformationGeneratorImpl(
         applicationDirectories,
+        nexusProperties,
         applicationVersion,
-        Collections.singletonMap("INSTALL4J_ADD_VM_PARAMS",
-            "test.variable=1 -Dnexus.password=nxrm -Dnexus.token=123456"),
         nodeAccess,
         deploymentAccess,
         systemInformationHelpers);

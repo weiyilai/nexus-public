@@ -17,14 +17,10 @@ import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.Type;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
-
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class RepositoryFactoryImpl

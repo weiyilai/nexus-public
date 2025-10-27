@@ -16,22 +16,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.repository.blobstore.BlobStoreConfigurationStore;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.text.Strings2.isBlank;
-import org.springframework.stereotype.Component;
 
 /**
  * A {@code BlobStoreOverride} that allows blob store attributes to be overridden
@@ -44,7 +42,6 @@ import org.springframework.stereotype.Component;
  *
  * @since 3.31
  */
-@FeatureFlag(name = "nexus.blobstore.override.enabled", enabledByDefault = true)
 @ConditionalOnProperty(name = "nexus.blobstore.override.enabled", havingValue = "true", matchIfMissing = true)
 @Component
 @Singleton

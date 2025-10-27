@@ -20,7 +20,6 @@ import org.sonatype.nexus.bootstrap.application.JavaxProviderDefaultListableBean
 import jakarta.inject.Named;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -34,14 +33,12 @@ import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 
 /**
  * Application listener on {@link ContextRefreshedEvent} to perform a component scan of the Nexus packages. it performs
  * a scan and refreshes a children context including the scanned components.
  */
 @Component
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class SpringComponentScan
     extends ComponentSupport

@@ -20,11 +20,7 @@ import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
 import org.sonatype.goodies.common.ComponentSupport;
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.common.event.EventAware;
 import org.sonatype.nexus.repository.Format;
@@ -34,6 +30,8 @@ import org.sonatype.nexus.repository.manager.RepositoryDeletedEvent;
 
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -48,7 +46,6 @@ import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTOR
 @Lazy
 @Component
 @Singleton
-@FeatureFlag(name = REPOSITORY_SIZE_ENABLED, enabledByDefault = true)
 @ConditionalOnProperty(name = REPOSITORY_SIZE_ENABLED, havingValue = "true", matchIfMissing = true)
 public class RepositoryNameIdMappingCache
     extends ComponentSupport

@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.bootstrap.entrypoint.jetty.JettyServer;
+import org.sonatype.nexus.bootstrap.jetty.ManagedJetty;
 import org.sonatype.nexus.bootstrap.security.WebSecurityConfiguration;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.common.db.DatabaseCheck;
@@ -63,7 +65,7 @@ import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER
 @SpringBootTest
 @ContextConfiguration(classes = TestSecurityConfigurationMocks.class)
 @ComponentScan(basePackages = "org.sonatype.nexus",
-    excludeFilters = @Filter(type = FilterType.REGEX, pattern = ".*ManagedJetty"))
+    excludeFilters = {@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {ManagedJetty.class, JettyServer.class})})
 @Import({org.sonatype.nexus.bootstrap.security.SecurityConfiguration.class, WebSecurityConfiguration.class})
 public abstract class AbstractSecurityTest
     extends TestSupport

@@ -13,18 +13,16 @@
 package org.sonatype.nexus.bootstrap.entrypoint.configuration;
 
 import java.io.File;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
 import com.google.common.base.Throwables;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
-import org.springframework.stereotype.Component;
 
 /**
  * Default {@link ApplicationDirectories} implementation.
@@ -33,7 +31,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Singleton
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 public class ApplicationDirectoriesImpl
     implements ApplicationDirectories, org.sonatype.nexus.common.app.ApplicationDirectories
 {

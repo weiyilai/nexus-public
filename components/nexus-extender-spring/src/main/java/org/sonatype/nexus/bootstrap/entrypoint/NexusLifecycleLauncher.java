@@ -29,14 +29,12 @@ import com.google.common.base.Strings;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.KERNEL;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.OFF;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.TASKS;
@@ -46,7 +44,6 @@ import static org.sonatype.nexus.common.time.DateHelper.toDurationString;
  * Waits for Jetty to start and component scan to complete before launching the nexus lifecycle.
  */
 @Component
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class NexusLifecycleLauncher
     extends ComponentSupport

@@ -14,20 +14,18 @@ package org.sonatype.nexus.bootstrap.entrypoint;
 
 import java.util.Objects;
 import java.util.Set;
-import jakarta.inject.Singleton;
 
+import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.TypeFilter;
+import org.springframework.stereotype.Component;
 
 import static java.util.stream.Collectors.toSet;
 import static org.sonatype.nexus.bootstrap.entrypoint.ClassFilter.ClassType.CLASS;
 import static org.sonatype.nexus.bootstrap.entrypoint.ClassFilter.ClassType.INTERFACE;
-import static org.sonatype.nexus.common.app.FeatureFlags.FEATURE_SPRING_ONLY;
-import org.springframework.stereotype.Component;
 
 /**
  * Finds classes in the classpath based on a given Classfilter. This is NOT
@@ -37,7 +35,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Singleton
-@ConditionalOnProperty(value = FEATURE_SPRING_ONLY, havingValue = "true")
 public class ClassFinder
 {
   private static final Logger LOG = LoggerFactory.getLogger(ClassFinder.class);

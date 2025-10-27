@@ -13,9 +13,6 @@
 package org.sonatype.nexus.api.rest.selfhosted.security.jwt;
 
 import java.util.UUID;
-
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -23,29 +20,29 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 import org.sonatype.goodies.common.ComponentSupport;
-import org.sonatype.nexus.common.app.FeatureFlag;
 import org.sonatype.nexus.rest.Resource;
 import org.sonatype.nexus.security.jwt.SecretStore;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.OK;
+import static javax.ws.rs.core.Response.status;
+import static org.sonatype.nexus.api.rest.selfhosted.security.jwt.JwtSecretApiResourceV1.PATH;
 import static org.sonatype.nexus.common.app.FeatureFlags.JWT_ENABLED;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
-import static org.sonatype.nexus.api.rest.selfhosted.security.jwt.JwtSecretApiResourceV1.PATH;
-import org.springframework.stereotype.Component;
 
 /**
  * REST API to reset the stored JWT secret.
  *
  * @since 3.38
  */
-@FeatureFlag(name = JWT_ENABLED)
 @ConditionalOnProperty(name = JWT_ENABLED, havingValue = "true")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
