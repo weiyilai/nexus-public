@@ -12,7 +12,7 @@
  */
 import React from 'react';
 
-import {NxH2, NxCheckbox, NxFieldset} from '@sonatype/react-shared-components';
+import {NxH2, NxCheckbox, NxFieldset, NxInfoAlert} from '@sonatype/react-shared-components';
 import {FormUtils, ExtJS} from '@sonatype/nexus-ui-plugin';
 
 import UIStrings from '../../../../../constants/UIStrings';
@@ -76,6 +76,7 @@ export default function RepositoryConnectorsConfiguration({parentMachine}) {
         >
           {CONNECTORS.ALLOW_ANON_DOCKER_PULL.DESCR}
         </NxCheckbox>
+        <NxInfoAlert>{CONNECTORS.ALLOW_ANON_DOCKER_PULL.HELP}</NxInfoAlert>
       </NxFieldset>
     </>
   );

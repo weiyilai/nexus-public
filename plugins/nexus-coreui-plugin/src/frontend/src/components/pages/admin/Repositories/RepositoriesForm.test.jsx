@@ -509,6 +509,30 @@ describe('RepositoriesForm', () => {
       await waitFor(() => expect(Axios.post).toHaveBeenCalledWith(getSaveUrl(repo), repo));
     });
 
+    it('displays docker anonymous pull configuration with info alert and documentation link', async () => {
+      const repo = {
+        format: 'docker',
+        type: 'hosted',
+        name: 'docker-hosted-test'
+      };
+
+      await renderViewAndSetRequiredFields(repo);
+
+      // Verify the checkbox label is more descriptive
+      expect(screen.getByRole('group', {name: CONNECTORS.ALLOW_ANON_DOCKER_PULL.LABEL}))
+        .toBeInTheDocument();
+
+      // Verify the checkbox description is improved
+      expect(selectors.getDockerAnonimousPullCheckbox()).toBeInTheDocument();
+
+      // Verify the documentation link is present within the info alert
+      await waitFor(() => {
+        const link = screen.getByRole('link', {name: /Learn more in our Docker help documentation/});
+        expect(link).toBeInTheDocument();
+        expect(link).toHaveAttribute('href', 'https://links.sonatype.com/products/nxrm3/docs/docker-authentication');
+      });
+    });
+
     it('creates apt hosted repository', async () => {
       const repo = {
         format: 'apt',

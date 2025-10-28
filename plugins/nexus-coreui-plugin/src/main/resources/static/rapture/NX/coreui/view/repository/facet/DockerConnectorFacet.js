@@ -164,6 +164,17 @@ Ext.define('NX.coreui.view.repository.facet.DockerConnectorFacet', {
             helpText: NX.I18n.get('Repository_Facet_DockerProxyFacet_BasicAuth_BoxLabel'),
             value: false,
           },
+          {
+            xtype: 'panel',
+            bodypadding: '10px',
+            ui: 'nx-inset',
+            cls: 'nx-info-panel',
+            html: '<span class="x-fa fa-info-circle"></span> ' + NX.I18n.get('Repository_Facet_DockerProxyFacet_BasicAuth_HelpText'),
+            style: {
+              marginLeft: '23px',
+              marginTop: '5px'
+            }
+          },
         ],
       },
     ];

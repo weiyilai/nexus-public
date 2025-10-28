@@ -237,8 +237,14 @@ export default {
             VALIDATION_ERROR: <>Subdomain field must be a minimum of 1 and maximum of 63 characters (letters, numbers, and dashes) <br /> and must start with a letter and end with a letter or digit</>
           },
           ALLOW_ANON_DOCKER_PULL: {
-            LABEL: 'Allow anonymous docker pull',
-            DESCR: 'Allow anonymous docker pull (Docker Bearer Token Realm required)'
+            LABEL: 'Allow Anonymous Docker Pulls for This Repository',
+            DESCR: 'Allow anonymous Docker pulls for this repository (Global Anonymous Access and Docker Bearer Token Realm required)',
+            HELP: <>
+              Anonymous access to Docker repositories requires configuration in two places: globally on the Security → Anonymous Access page and within each Docker repository's configuration form.{' '}
+              <NxTextLink external href="https://links.sonatype.com/products/nxrm3/docs/docker-authentication">
+                Learn more in our Docker help documentation
+              </NxTextLink>.
+            </>
           },
           SAME_PORTS_ERROR: 'HTTP and HTTPS ports must be different',
           HELP: <>
