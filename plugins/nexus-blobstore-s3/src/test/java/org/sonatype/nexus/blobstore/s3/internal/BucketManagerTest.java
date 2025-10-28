@@ -14,27 +14,29 @@ package org.sonatype.nexus.blobstore.s3.internal;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.blobstore.MockBlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
+import org.sonatype.nexus.blobstore.api.BlobStoreException;
+import org.sonatype.nexus.blobstore.s3.internal.BucketValidationCacheService.BucketValidationResult;
 
 import com.google.common.collect.ImmutableMap;
-import junitparams.JUnitParamsRunner;
-import junitparams.NamedParameters;
-import junitparams.Parameters;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -43,39 +45,36 @@ import static org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper.BUC
 import static org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper.CONFIG_KEY;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.ACCESS_DENIED_CODE;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.BUCKET_OWNERSHIP_ERR_MSG;
-import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.ERROR_CODE_MESSAGES;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.INSUFFICIENT_PERM_CREATE_BUCKET_ERR_MSG;
-import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.INVALID_ACCESS_KEY_ID_CODE;
-import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.INVALID_IDENTITY_ERR_MSG;
-import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.SIGNATURE_DOES_NOT_MATCH_CODE;
 
 /**
  * {@link BucketManager} tests.
  */
-@RunWith(JUnitParamsRunner.class)
-public class BucketManagerTest
-    extends TestSupport
+class BucketManagerTest
+    extends Test5Support
 {
   @Mock
   private EncryptingS3Client s3;
 
   @Mock
-  private BucketOwnershipCheckFeatureFlag featureFlag;
+  private BucketOperations bucketOperations;
 
   @Mock
-  private BucketOperations bucketOperations;
+  private BucketValidationCacheService cacheService;
 
   private BucketManager underTest;
 
-  @Before
-  public void setup() {
-    when(featureFlag.isDisabled()).thenReturn(false);
-    underTest = new BucketManager(featureFlag, List.of(bucketOperations));
+  @BeforeEach
+  void setup() throws Exception {
+    lenient().when(cacheService.validate(anyString()))
+        .thenReturn(
+            new BucketValidationResult(true, true));
+    underTest = new BucketManager(cacheService, List.of(bucketOperations));
     underTest.setS3(s3);
   }
 
   @Test
-  public void deleteStorageLocationRemovesBucketIfEmpty() {
+  void deleteStorageLocationRemovesBucketIfEmpty() {
     ListObjectsV2Response listingMock = mock(ListObjectsV2Response.class);
     when(s3.listObjectsV2(anyString(), anyString())).thenReturn(listingMock);
 
@@ -90,7 +89,7 @@ public class BucketManagerTest
   }
 
   @Test
-  public void deleteStorageLocationDoesNotRemoveBucketIfNotEmpty() {
+  void deleteStorageLocationDoesNotRemoveBucketIfNotEmpty() {
     ListObjectsV2Response listingMock = mock(ListObjectsV2Response.class);
     when(listingMock.contents()).thenReturn(List.of(S3Object.builder().build(), S3Object.builder().build()));
     when(s3.listObjectsV2("mybucket", "")).thenReturn(listingMock);
@@ -106,25 +105,7 @@ public class BucketManagerTest
   }
 
   @Test
-  public void testOwnershipErrorIsNotThrownOnDisabledOwnershipCheck() {
-    String bucketName = "bucketName";
-    when(s3.doesBucketExist(anyString())).thenReturn(true);
-    when(s3.getBucketPolicy(anyString())).thenThrow(S3Exception.class);
-    when(featureFlag.isDisabled()).thenReturn(true);
-
-    Map<String, Map<String, Object>> cfgAttributes = ImmutableMap.of(CONFIG_KEY,
-        ImmutableMap.of(BUCKET_KEY, bucketName));
-    BlobStoreConfiguration cfg = new MockBlobStoreConfiguration();
-    cfg.setAttributes(cfgAttributes);
-    underTest.setS3(s3);
-
-    underTest.prepareStorageLocation(cfg);
-
-    verify(s3, times(0)).getBucketPolicy(anyString());
-  }
-
-  @Test
-  public void deleteCallsBucketOperationsImpl() {
+  void deleteCallsBucketOperationsImpl() {
     ListObjectsV2Response listingMock = mock(ListObjectsV2Response.class);
     when(listingMock.contents()).thenReturn(List.of(S3Object.builder().build(), S3Object.builder().build()));
     when(s3.listObjectsV2("mybucket", "")).thenReturn(listingMock);
@@ -143,18 +124,15 @@ public class BucketManagerTest
   }
 
   @Test
-  @Parameters(named = "errorCodeAndMessageParams")
-  public void errorThrownWhenBucketCannotBeCreated(
-      final String errorCode,
-      final String message)
-  {
+  void testBucketCreationAccessDeniedError() throws Exception {
     String bucketName = "bucketName";
-    when(s3.doesBucketExist(anyString())).thenReturn(false);
     S3Exception s3Exception = mock(S3Exception.class);
     when(s3Exception.awsErrorDetails()).thenReturn(
         AwsErrorDetails.builder()
-            .errorCode(errorCode)
+            .errorCode(ACCESS_DENIED_CODE)
             .build());
+    when(cacheService.validate(anyString())).thenReturn(
+        new BucketValidationResult(false, true));
     when(s3.createBucket(anyString())).thenThrow(s3Exception);
 
     Map<String, Map<String, Object>> cfgAttributes = ImmutableMap.of(CONFIG_KEY,
@@ -164,34 +142,20 @@ public class BucketManagerTest
     underTest.setS3(s3);
 
     Exception ex = assertThrows(S3BlobStoreException.class, () -> underTest.prepareStorageLocation(cfg));
-    assertEquals(message, ex.getMessage());
-  }
-
-  @NamedParameters("errorCodeAndMessageParams")
-  private Object[] errorCodeAndMessageParams() {
-    return new Object[]{
-        new Object[]{
-            ACCESS_DENIED_CODE, INSUFFICIENT_PERM_CREATE_BUCKET_ERR_MSG
-        },
-        new Object[]{
-            "Some_Unexpected_Code", "An unexpected error occurred creating bucket. Check the logs for more details."
-        }
-    };
+    assertEquals(INSUFFICIENT_PERM_CREATE_BUCKET_ERR_MSG, ex.getMessage());
   }
 
   @Test
-  @Parameters(named = "errorCodeAndMessageInvalidPermissionsParams")
-  public void errorCodeAndMessageInvalidPermissionsParams(
-      final String errorCode,
-      final String message)
-  {
+  void testBucketCreationUnexpectedError() throws Exception {
     String bucketName = "bucketName";
     S3Exception s3Exception = mock(S3Exception.class);
     when(s3Exception.awsErrorDetails()).thenReturn(
         AwsErrorDetails.builder()
-            .errorCode(errorCode)
+            .errorCode("Some_Unexpected_Code")
             .build());
-    when(s3.doesBucketExist(anyString())).thenThrow(s3Exception);
+    when(cacheService.validate(anyString())).thenReturn(
+        new BucketValidationResult(false, true));
+    when(s3.createBucket(anyString())).thenThrow(s3Exception);
 
     Map<String, Map<String, Object>> cfgAttributes = ImmutableMap.of(CONFIG_KEY,
         ImmutableMap.of(BUCKET_KEY, bucketName));
@@ -200,39 +164,16 @@ public class BucketManagerTest
     underTest.setS3(s3);
 
     Exception ex = assertThrows(S3BlobStoreException.class, () -> underTest.prepareStorageLocation(cfg));
-    assertEquals(message, ex.getMessage());
-  }
-
-  @NamedParameters("errorCodeAndMessageInvalidPermissionsParams")
-  private Object[] errorCodeAndMessageInvalidPermissionsParams() {
-    return new Object[]{
-        new Object[]{
-            "InvalidAccessKeyId", ERROR_CODE_MESSAGES.get(INVALID_ACCESS_KEY_ID_CODE)
-        },
-        new Object[]{
-            "SignatureDoesNotMatch", ERROR_CODE_MESSAGES.get(SIGNATURE_DOES_NOT_MATCH_CODE)
-        },
-        new Object[]{
-            "Some_Unexpected_Code",
-            "An unexpected error occurred checking credentials. Check the logs for more details."
-        }
-    };
+    assertEquals("An unexpected error occurred creating bucket. Check the logs for more details.", ex.getMessage());
   }
 
   @Test
-  @Parameters(named = "errorCodeAndMessageUserWithoutAccessParams")
-  public void errorThrownIfUserDoesNotHaveAccessToAnExistingBucket(
-      final String errorCode,
-      final String message)
-  {
+  void testExecutionExceptionWrapping() throws Exception {
     String bucketName = "bucketName";
-    when(s3.doesBucketExist(anyString())).thenReturn(true);
     S3Exception s3Exception = mock(S3Exception.class);
-    when(s3Exception.awsErrorDetails()).thenReturn(
-        AwsErrorDetails.builder()
-            .errorCode(errorCode)
-            .build());
-    when(s3.getBucketPolicy(anyString())).thenThrow(s3Exception);
+
+    ExecutionException executionException = new ExecutionException(s3Exception);
+    when(cacheService.validate(anyString())).thenThrow(executionException);
 
     Map<String, Map<String, Object>> cfgAttributes = ImmutableMap.of(CONFIG_KEY,
         ImmutableMap.of(BUCKET_KEY, bucketName));
@@ -240,23 +181,24 @@ public class BucketManagerTest
     cfg.setAttributes(cfgAttributes);
     underTest.setS3(s3);
 
-    Exception ex = assertThrows(S3BlobStoreException.class, () -> underTest.prepareStorageLocation(cfg));
-    assertEquals(message, ex.getMessage());
+    Exception ex = assertThrows(BlobStoreException.class,
+        () -> underTest.prepareStorageLocation(cfg));
+    assertThat(ex.getMessage(), startsWith("Failed to validate bucket: " + bucketName));
   }
 
-  @NamedParameters("errorCodeAndMessageUserWithoutAccessParams")
-  private Object[] errorCodeAndMessageUserWithoutAccessParams() {
-    return new Object[]{
-        new Object[]{
-            "AccessDenied", BUCKET_OWNERSHIP_ERR_MSG
-        },
-        new Object[]{
-            "Some_Unexpected_Code",
-            "An unexpected error occurred checking bucket ownership. Check the logs for more details."
-        },
-        new Object[]{
-            "MethodNotAllowed", INVALID_IDENTITY_ERR_MSG
-        }
-    };
+  @Test
+  void testOwnershipValidationFailure() throws Exception {
+    String bucketName = "bucketName";
+    Map<String, Map<String, Object>> cfgAttributes = ImmutableMap.of(CONFIG_KEY,
+        ImmutableMap.of(BUCKET_KEY, bucketName));
+    BlobStoreConfiguration cfg = new MockBlobStoreConfiguration();
+    cfg.setAttributes(cfgAttributes);
+    underTest.setS3(s3);
+
+    when(cacheService.validate(anyString())).thenReturn(
+        new BucketValidationResult(true, false));
+
+    Exception ex = assertThrows(S3BlobStoreException.class, () -> underTest.prepareStorageLocation(cfg));
+    assertEquals(BUCKET_OWNERSHIP_ERR_MSG, ex.getMessage());
   }
 }

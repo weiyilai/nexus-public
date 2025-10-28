@@ -13,10 +13,13 @@
 package org.sonatype.nexus.blobstore.s3.internal;
 
 import java.util.Collection;
+import java.util.concurrent.ExecutionException;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.blobstore.StorageLocationManager;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
+import org.sonatype.nexus.blobstore.api.BlobStoreException;
+import org.sonatype.nexus.blobstore.s3.internal.BucketValidationCacheService.BucketValidationResult;
 
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -28,14 +31,8 @@ import org.springframework.stereotype.Component;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper.getConfiguredBucket;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.ACCESS_DENIED_CODE;
-import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.INVALID_ACCESS_KEY_ID_CODE;
-import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.METHOD_NOT_ALLOWED_CODE;
-import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.NO_SUCH_BUCKET_POLICY_CODE;
-import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.SIGNATURE_DOES_NOT_MATCH_CODE;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.bucketOwnershipError;
-import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.buildException;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.insufficientCreatePermissionsError;
-import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.invalidIdentityError;
 import static org.sonatype.nexus.blobstore.s3.internal.S3BlobStoreException.unexpectedError;
 
 /**
@@ -49,45 +46,57 @@ public class BucketManager
     extends ComponentSupport
     implements StorageLocationManager
 {
-  static final String OLD_LIFECYCLE_EXPIRATION_RULE_ID = "Expire soft-deleted blobstore objects";
-
-  static final String LIFECYCLE_EXPIRATION_RULE_ID_PREFIX = "Expire soft-deleted objects in blobstore ";
-
   private EncryptingS3Client s3;
 
-  private final BucketOwnershipCheckFeatureFlag ownershipCheckFeatureFlag;
+  private final BucketValidationCacheService cacheService;
 
   private final Collection<BucketOperations> bucketOperations;
 
   @Autowired
   public BucketManager(
-      final BucketOwnershipCheckFeatureFlag featureFlag,
+      final BucketValidationCacheService cacheService,
       final Collection<BucketOperations> bucketOperations)
   {
-    this.ownershipCheckFeatureFlag = checkNotNull(featureFlag);
+    this.cacheService = checkNotNull(cacheService);
     this.bucketOperations = checkNotNull(bucketOperations);
   }
 
   public void setS3(final EncryptingS3Client s3) {
     this.s3 = s3;
+    this.cacheService.setS3Client(s3);
   }
 
   @Override
   public void prepareStorageLocation(final BlobStoreConfiguration blobStoreConfiguration) {
     String bucket = getConfiguredBucket(blobStoreConfiguration);
-    checkPermissions(getConfiguredBucket(blobStoreConfiguration));
-    if (!s3.doesBucketExist(bucket)) {
-      try {
-        s3.createBucket(bucket);
+
+    try {
+      BucketValidationResult result = cacheService.validate(bucket);
+
+      if (!result.exists()) {
+        createBucketAndInvalidateCache(bucket);
       }
-      catch (S3Exception e) {
-        if (ACCESS_DENIED_CODE.equals(e.awsErrorDetails().errorCode())) {
-          log.error("Error creating bucket {}", bucket, e);
-          throw insufficientCreatePermissionsError();
-        }
-        log.info("Error creating bucket {}", bucket, e);
-        throw unexpectedError("creating bucket");
+      else if (!result.ownershipValid()) {
+        throw bucketOwnershipError();
       }
+    }
+    catch (ExecutionException e) {
+      throw new BlobStoreException("Failed to validate bucket: " + bucket, e.getCause(), null);
+    }
+  }
+
+  private void createBucketAndInvalidateCache(final String bucket) {
+    try {
+      s3.createBucket(bucket);
+      cacheService.invalidate(bucket);
+    }
+    catch (S3Exception e) {
+      if (ACCESS_DENIED_CODE.equals(e.awsErrorDetails().errorCode())) {
+        log.error("Error creating bucket {}", bucket, e);
+        throw insufficientCreatePermissionsError();
+      }
+      log.info("Error creating bucket {}", bucket, e);
+      throw unexpectedError("creating bucket");
     }
   }
 
@@ -106,50 +115,4 @@ public class BucketManager
     }
   }
 
-  private void checkPermissions(final String bucket) {
-    checkCredentials(bucket);
-    if (!ownershipCheckFeatureFlag.isDisabled() && s3.doesBucketExist(bucket)) {
-      checkBucketOwner(bucket);
-    }
-  }
-
-  private void checkCredentials(final String bucket) {
-    try {
-      s3.doesBucketExist(bucket);
-    }
-    catch (S3Exception e) {
-      if (INVALID_ACCESS_KEY_ID_CODE.equals(e.awsErrorDetails().errorCode()) ||
-          SIGNATURE_DOES_NOT_MATCH_CODE.equals(e.awsErrorDetails().errorCode())) {
-        log.error("Exception thrown checking AWS credentials with error {}", e.getMessage(), e);
-        throw buildException(e);
-      }
-      log.info("Exception thrown checking AWS credentials.", e);
-      throw unexpectedError("checking credentials");
-    }
-  }
-
-  private void checkBucketOwner(final String bucket) {
-    try {
-      s3.getBucketPolicy(bucket);
-    }
-    catch (S3Exception e) {
-      String errorCode = e.awsErrorDetails().errorCode();
-      String logMessage = String.format("Exception thrown checking ownership of \"%s\" bucket.", bucket);
-      if (ACCESS_DENIED_CODE.equals(errorCode)) {
-        log.debug(logMessage, e);
-        throw bucketOwnershipError();
-      }
-      if (METHOD_NOT_ALLOWED_CODE.equals(errorCode)) {
-        log.debug(logMessage, e);
-        throw invalidIdentityError();
-      }
-      if (NO_SUCH_BUCKET_POLICY_CODE.equals(errorCode)) {
-        // AWS SDK 2.x: NoSuchBucketPolicy means bucket has default permissions - this is normal and valid
-        log.debug("Bucket \"{}\" has no bucket policy (using default permissions) - ownership check passed", bucket);
-        return;
-      }
-      log.info(logMessage, log.isDebugEnabled() ? e : e.getMessage());
-      throw unexpectedError("checking bucket ownership");
-    }
-  }
 }
