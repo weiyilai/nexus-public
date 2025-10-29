@@ -92,6 +92,11 @@
           .nx-password-input {
             width: 100%;
             box-sizing: border-box;
+            margin-bottom: 5px;
+
+            .nx-field-validation-message {
+              top: 35px;
+            }
           }
 
           .nx-text-input input,
