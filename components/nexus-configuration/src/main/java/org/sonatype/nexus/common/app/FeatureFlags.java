@@ -252,6 +252,14 @@ public class FeatureFlags
 
   public static final String REACT_LOGIN_ENABLED_NAMED_VALUE = "${nexus.login.react.enabled:false}";
 
+  /*
+   * PyPi metadata features (PEP 658 + 691). Enables metadata distribution and JSON API. Available values: true, false.
+   * Default value: false
+   */
+  public static final String PYPI_METADATA_ENABLED = "nexus.pypi.metadata.enabled";
+
+  public static final String PYPI_METADATA_ENABLED_NAMED_VALUE = "${nexus.pypi.metadata.enabled:false}";
+
   /* React Tasks Experience. Available values: true, false. Default value: false */
   public static final String REACT_TASKS_ENABLED = "nexus.react.tasks.enabled";
 
