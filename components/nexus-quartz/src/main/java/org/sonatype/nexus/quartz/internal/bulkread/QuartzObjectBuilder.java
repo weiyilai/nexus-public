@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.Map;
 import java.util.TimeZone;
 
 import org.quartz.Job;
@@ -26,6 +27,8 @@ import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.triggers.CronTriggerImpl;
 import org.quartz.impl.triggers.SimpleTriggerImpl;
 import org.quartz.spi.OperableTrigger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.quartz.JobKey.jobKey;
 import static org.quartz.TriggerKey.triggerKey;
@@ -36,6 +39,8 @@ import static org.quartz.TriggerKey.triggerKey;
  */
 class QuartzObjectBuilder
 {
+  private static final Logger log = LoggerFactory.getLogger(QuartzObjectBuilder.class);
+
   /**
    * Builds a JobDetail from JobDetailData.
    */
@@ -72,7 +77,17 @@ class QuartzObjectBuilder
   private static JobDataMap deserializeJobData(final byte[] data) throws IOException, ClassNotFoundException {
     try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
         ObjectInputStream ois = new ObjectInputStream(bis)) {
-      return (JobDataMap) ois.readObject();
+      Object jobData = ois.readObject();
+      if (jobData instanceof JobDataMap jobDataMap) {
+        return jobDataMap;
+      }
+      else if (jobData instanceof Map<?, ?> map) {
+        return new JobDataMap(map);
+      }
+      else {
+        log.error("Unexpected job data type: {}", jobData.getClass().getName());
+        throw new IOException("Unexpected job data type: " + jobData.getClass().getName());
+      }
     }
   }
 
