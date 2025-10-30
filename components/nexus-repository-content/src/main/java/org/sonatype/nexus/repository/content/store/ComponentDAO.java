@@ -135,6 +135,20 @@ public interface ComponentDAO
       @Nullable @Param("continuationToken") String continuationToken);
 
   /**
+   * Browse all components that have at least one associated asset in the given repository.
+   *
+   * @param repositoryId the repository to browse
+   * @param limit maximum number of components to return
+   * @param continuationToken optional token to continue from a previous request
+   * @return collection of components with assets and the next continuation token
+   * @see Continuation#nextContinuationToken()
+   */
+  Continuation<Component> browseComponentsWithAssets(
+      @Param("repositoryId") int repositoryId,
+      @Param("limit") int limit,
+      @Nullable @Param("continuationToken") String continuationToken);
+
+  /**
    * Browse all components in the given repository, namespace and name, in a paged fashion.
    *
    * @param repositoryId the repository to browse

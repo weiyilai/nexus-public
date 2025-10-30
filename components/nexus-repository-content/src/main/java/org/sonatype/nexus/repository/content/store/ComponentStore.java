@@ -294,6 +294,23 @@ public class ComponentStore<T extends ComponentDAO>
   }
 
   /**
+   * Browse all components that have associated assets in the given repository.
+   *
+   * @param repositoryId the repository to browse
+   * @param limit maximum number of components to return
+   * @param continuationToken optional token to continue from a previous request
+   * @return collection of components with assets
+   */
+  @Transactional
+  public Continuation<Component> browseComponentsWithAssets(
+      final int repositoryId,
+      final int limit,
+      @Nullable final String continuationToken)
+  {
+    return dao().browseComponentsWithAssets(repositoryId, limit, continuationToken);
+  }
+
+  /**
    * Browse the versions of a component with the given namespace and name in the given repository.
    * <p>
    * The result will include the empty string if there are any components that don't have a version.

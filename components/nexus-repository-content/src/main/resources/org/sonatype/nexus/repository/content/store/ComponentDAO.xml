@@ -121,6 +121,22 @@
     ORDER BY component_id LIMIT #{limit};
   </select>
 
+  <select id="browseComponentsWithAssets" resultType="ComponentData">
+    SELECT * FROM ${format}_component
+    WHERE repository_id = #{repositoryId}
+    AND EXISTS (
+      SELECT 1 FROM ${format}_asset a
+      WHERE a.component_id = ${format}_component.component_id
+    )
+    <if test="continuationToken != null">
+      AND component_id > #{continuationToken}
+    </if>
+    ORDER BY component_id
+    <if test="limit > 0">
+      LIMIT #{limit}
+    </if>
+  </select>
+
   <select id="browseUnnormalized" resultType="ComponentData">
     SELECT * FROM ${format}_component WHERE normalized_version IS NULL
     <if test="continuationToken != null"> AND component_id > #{continuationToken}</if>

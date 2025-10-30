@@ -132,6 +132,13 @@ public class FluentComponentsImpl
     return doBrowseEager(limit, continuationToken, null, null, null);
   }
 
+  @Override
+  public Continuation<FluentComponent> browseWithAssets(final int limit, @Nullable final String continuationToken) {
+    return new FluentContinuation<>(
+        componentStore.browseComponentsWithAssets(facet.contentRepositoryId(), limit, continuationToken),
+        this::with);
+  }
+
   Continuation<FluentComponent> doBrowseEager(
       final int limit,
       @Nullable final String continuationToken,

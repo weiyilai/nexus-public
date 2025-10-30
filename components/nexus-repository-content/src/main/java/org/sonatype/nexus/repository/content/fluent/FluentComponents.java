@@ -83,17 +83,22 @@ public interface FluentComponents
   /**
    * Select components using the provided query generator and parameters.
    *
-   * @param generator  generator for the select
-   * @param params     parameters for the select
-   */
-  Continuation<FluentComponent> selectComponents(final SqlGenerator<? extends SqlQueryParameters> generator, final SqlQueryParameters params);
-
-  /**
-   * Select components and related assets using the provided query generator and parameters.
    * @param generator generator for the select
    * @param params parameters for the select
    */
-  Continuation<FluentComponent> selectComponentsWithAssets(final SqlGenerator<? extends SqlQueryParameters> generator, final SqlQueryParameters params);
+  Continuation<FluentComponent> selectComponents(
+      final SqlGenerator<? extends SqlQueryParameters> generator,
+      final SqlQueryParameters params);
+
+  /**
+   * Select components and related assets using the provided query generator and parameters.
+   * 
+   * @param generator generator for the select
+   * @param params parameters for the select
+   */
+  Continuation<FluentComponent> selectComponentsWithAssets(
+      final SqlGenerator<? extends SqlQueryParameters> generator,
+      final SqlQueryParameters params);
 
   /**
    * List all namespaces of components in the repository.
@@ -119,4 +124,13 @@ public interface FluentComponents
    * Find if a component exists that has the given external id.
    */
   Optional<FluentComponent> find(EntityId externalId);
+
+  /**
+   * Browse components that have at least one associated asset.
+   *
+   * @param limit maximum number of components to return
+   * @param continuationToken optional token to continue from a previous request
+   * @return collection of components with assets
+   */
+  Continuation<FluentComponent> browseWithAssets(int limit, @Nullable String continuationToken);
 }
