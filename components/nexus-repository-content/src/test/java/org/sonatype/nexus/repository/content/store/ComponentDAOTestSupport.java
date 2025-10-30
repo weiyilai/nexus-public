@@ -780,6 +780,109 @@ public abstract class ComponentDAOTestSupport
     return dao.browseSets(repositoryId, limit, continuationToken);
   }
 
+  /**
+   * Test browseComponentsEager which uses inline subquery instead of CTE.
+   * This test ensures the query works correctly with H2 database.
+   */
+  protected void testBrowseComponentsEager() {
+    ContentRepositoryData contentRepository1 = generateContentRepository();
+    ContentRepositoryData contentRepository2 = generateContentRepository();
+
+    createContentRepository(contentRepository1);
+    createContentRepository(contentRepository2);
+
+    int repo1Id = contentRepository1.repositoryId;
+    int repo2Id = contentRepository2.repositoryId;
+
+    ComponentData component1 = generateComponent(repo1Id, "namespace1", "name1", "1.0.0");
+    ComponentData component2 = generateComponent(repo1Id, "namespace2", "name2", "2.0.0");
+    ComponentData component3 = generateComponent(repo2Id, "namespace3", "name3", "3.0.0");
+    ComponentData component4 = generateComponent(repo2Id, "namespace4", "name4", "4.0.0");
+
+    component1.setKind("kind1");
+    component2.setKind("kind2");
+    component3.setKind("kind1");
+    component4.setKind("kind2");
+
+    try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
+      ComponentDAO componentDao = session.access(TestComponentDAO.class);
+      TestAssetDAO assetDao = session.access(TestAssetDAO.class);
+
+      // Create components and associated assets
+      componentDao.createComponent(component1, entityVersionEnabled);
+      componentDao.createComponent(component2, entityVersionEnabled);
+      componentDao.createComponent(component3, entityVersionEnabled);
+      componentDao.createComponent(component4, entityVersionEnabled);
+
+      // Create some assets for each component to test eager loading
+      AssetData asset1 = generateAsset(repo1Id, "/path1");
+      asset1.componentId = component1.componentId;
+      assetDao.createAsset(asset1, entityVersionEnabled);
+
+      AssetData asset2 = generateAsset(repo1Id, "/path2");
+      asset2.componentId = component2.componentId;
+      assetDao.createAsset(asset2, entityVersionEnabled);
+
+      AssetData asset3 = generateAsset(repo2Id, "/path3");
+      asset3.componentId = component3.componentId;
+      assetDao.createAsset(asset3, entityVersionEnabled);
+
+      session.getTransaction().commit();
+
+      // Test: Browse components from both repositories
+      Continuation<ComponentData> result = componentDao.browseComponentsEager(
+          Set.of(repo1Id, repo2Id), 10, null, null, null, null);
+
+      assertThat(result, hasSize(4));
+      List<ComponentData> components = new ArrayList<>();
+      result.forEach(components::add);
+
+      // Verify all components are returned
+      assertThat(components, hasSize(4));
+
+      // Test: Browse with kind filter
+      result = componentDao.browseComponentsEager(
+          Set.of(repo1Id, repo2Id), 10, null, "kind1", null, null);
+
+      List<ComponentData> kind1Components = new ArrayList<>();
+      result.forEach(kind1Components::add);
+      assertThat(kind1Components, hasSize(2));
+
+      // Test: Browse with limit
+      result = componentDao.browseComponentsEager(
+          Set.of(repo1Id, repo2Id), 2, null, null, null, null);
+
+      List<ComponentData> limitedComponents = new ArrayList<>();
+      result.forEach(limitedComponents::add);
+      assertThat(limitedComponents, hasSize(2));
+
+      // Test: Browse with continuation token
+      String continuationToken = limitedComponents.get(1).componentId.toString();
+      result = componentDao.browseComponentsEager(
+          Set.of(repo1Id, repo2Id), 10, continuationToken, null, null, null);
+
+      List<ComponentData> continuedComponents = new ArrayList<>();
+      result.forEach(continuedComponents::add);
+      assertThat(continuedComponents, hasSize(2));
+
+      // Test: Browse single repository
+      result = componentDao.browseComponentsEager(
+          Set.of(repo1Id), 10, null, null, null, null);
+
+      List<ComponentData> repo1Components = new ArrayList<>();
+      result.forEach(repo1Components::add);
+      assertThat(repo1Components, hasSize(2));
+
+      // Verify assets are eagerly loaded
+      repo1Components.forEach(component -> {
+        if (component instanceof ComponentData) {
+          ComponentData compData = (ComponentData) component;
+          assertThat(compData.getAssets(), is(org.hamcrest.Matchers.notNullValue()));
+        }
+      });
+    }
+  }
+
   private static void assertEntityVersion(
       final ComponentDAO dao,
       final ComponentData component,

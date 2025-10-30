@@ -212,9 +212,11 @@
     <result property="orderedToken" column="orderedToken" />
   </resultMap>
 
+  <!-- PostgreSQL version using CTE for better performance -->
   <select id="browseComponentsEager"
           resultType="org.sonatype.nexus.repository.content.store.ComponentData"
-          resultMap="ComponentAssetsDataMap">
+          resultMap="ComponentAssetsDataMap"
+          databaseId="PostgreSQL">
     WITH componentIds AS (
         SELECT component_id FROM ${format}_component
         WHERE repository_id IN
@@ -233,6 +235,29 @@
     FROM ${format}_component AS component
     LEFT JOIN ${format}_asset AS asset ON component.component_id = asset.component_id
     WHERE component.component_id IN (select component_id from componentIds)
+    ORDER BY component.component_id
+  </select>
+
+  <!-- H2 version using inline subquery to avoid CTE issues -->
+  <select id="browseComponentsEager"
+          resultType="org.sonatype.nexus.repository.content.store.ComponentData"
+          resultMap="ComponentAssetsDataMap"
+          databaseId="H2">
+    SELECT component.*, asset.*
+    FROM (
+        SELECT * FROM ${format}_component
+        WHERE repository_id IN
+        <foreach item="repositoryId" index="index" collection="repositoryIds"
+                 open="(" separator="," close=")">
+          #{repositoryId}
+        </foreach>
+        <if test="continuationToken != null"> AND component_id > #{continuationToken}</if>
+        <if test="kind != null"> AND kind = #{kind}</if>
+        <if test="filter != null"> AND (${filter})</if>
+        ORDER BY component_id
+        LIMIT #{limit}
+    ) AS component
+    LEFT JOIN ${format}_asset AS asset ON component.component_id = asset.component_id
     ORDER BY component.component_id
   </select>
 

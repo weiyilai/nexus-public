@@ -85,4 +85,10 @@ class VersionedComponentDAOTest
   protected void testNormalizationMethods() {
     super.testNormalizationMethods();
   }
+
+  @Override
+  @Test
+  protected void testBrowseComponentsEager() {
+    super.testBrowseComponentsEager();
+  }
 }
