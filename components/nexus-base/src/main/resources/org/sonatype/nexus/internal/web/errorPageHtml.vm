@@ -48,12 +48,12 @@
 <div class="nexus-body">
   <div class="content-header">
     <img src="$relativePath/static/rapture/resources/404-error-image.svg?$urlSuffix" alt="404 Error illustration" aria-role="presentation"/>
-    <span class="title">Error $errorCode</span>
-    <span class="description">$errorName</span>
+    <span class="title">Error $esc.html($errorCode)</span>
+    <span class="description">$esc.html($errorName)</span>
   </div>
   <div class="content-body">
     <div class="content-section">
-      $errorDescription
+      $esc.html($errorDescription)
     </div>
     #if($errorCause)
       <div class="content-section">

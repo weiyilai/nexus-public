@@ -71,7 +71,8 @@ public class ErrorPageServletTest
     XFrameOptions xFrameOptions = new XFrameOptions(true);
 
     ServletContextHandler context = new ServletContextHandler();
-    context.addServlet(new ServletHolder(new ErrorPageServlet(templateHelper, xFrameOptions)), "/error.html");
+    ErrorPageService errorPageService = new ErrorPageService(templateHelper, xFrameOptions);
+    context.addServlet(new ServletHolder(new ErrorPageServlet(errorPageService)), "/error.html");
     WebResourceServiceImpl webResources =
         new WebResourceServiceImpl(new DevModeResources(), new DefaultMimeSupport(), List.of(), List.of());
     context.addServlet(

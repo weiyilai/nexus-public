@@ -13,30 +13,18 @@
 package org.sonatype.nexus.internal.web;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.URL;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
-import javax.ws.rs.core.Response.Status;
 
 import org.sonatype.nexus.common.app.WebFilterPriority;
-import org.sonatype.nexus.common.template.TemplateHelper;
-import org.sonatype.nexus.common.template.TemplateParameters;
-import org.sonatype.nexus.common.template.TemplateThrowableAdapter;
-import org.sonatype.nexus.servlet.ServletHelper;
-import org.sonatype.nexus.servlet.XFrameOptions;
+import org.sonatype.nexus.internal.web.ErrorPageService.ErrorInfo;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.shiro.web.servlet.ShiroHttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -44,8 +32,6 @@ import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Throwables.getRootCause;
-import static com.google.common.net.HttpHeaders.X_FRAME_OPTIONS;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 /**
  * An {@code error.html} servlet to handle generic servlet error-page dispatched requests.
@@ -63,8 +49,6 @@ public class ErrorPageServlet
     extends HttpServlet
 {
   private static final Logger log = LoggerFactory.getLogger(ErrorPageServlet.class);
-
-  private static final String TEMPLATE_RESOURCE = "errorPageHtml.vm";
 
   /**
    * @since 3.0
@@ -96,18 +80,11 @@ public class ErrorPageServlet
    */
   private static final String ERROR_EXCEPTION = "javax.servlet.error.exception";
 
-  private final TemplateHelper templateHelper;
-
-  private final XFrameOptions xFrameOptions;
-
-  private final URL template;
+  private final ErrorPageService errorPageService;
 
   @Inject
-  public ErrorPageServlet(final TemplateHelper templateHelper, final XFrameOptions xFrameOptions) {
-    this.templateHelper = checkNotNull(templateHelper);
-    this.xFrameOptions = checkNotNull(xFrameOptions);
-    template = getClass().getResource(TEMPLATE_RESOURCE);
-    checkNotNull(template);
+  public ErrorPageServlet(final ErrorPageService errorPageService) {
+    this.errorPageService = checkNotNull(errorPageService);
   }
 
   @SuppressWarnings("unused")
@@ -116,8 +93,6 @@ public class ErrorPageServlet
       final HttpServletRequest request,
       final HttpServletResponse response) throws ServletException, IOException
   {
-    ServletHelper.addNoCacheResponseHeaders(response);
-
     String servletName = (String) request.getAttribute(ERROR_SERVLET_NAME);
     String requestUri = (String) request.getAttribute(ERROR_REQUEST_URI);
     Integer errorCode = (Integer) request.getAttribute(ERROR_STATUS_CODE);
@@ -125,51 +100,10 @@ public class ErrorPageServlet
     Class<?> causeType = (Class<?>) request.getAttribute(ERROR_EXCEPTION_TYPE);
     Throwable cause = (Throwable) request.getAttribute(ERROR_EXCEPTION);
 
-    // this happens if someone browses directly to the error page
-    if (errorCode == null) {
-      errorCode = SC_NOT_FOUND;
-      errorMessage = "Not found";
-    }
+    log.trace("Handling errorCode {} for {} uri {} message '{}'", errorCode, servletName, requestUri, errorMessage,
+        cause);
 
-    // maintain custom status message when (re)setting the status code,
-    // we can't use sendError because it doesn't allow custom html body
-    if (errorMessage == null) {
-      response.setStatus(errorCode);
-    }
-    else {
-      response.setStatus(errorCode, errorMessage);
-      ServletResponse resp = response;
-      if (response instanceof ShiroHttpServletResponse) {
-        resp = ((ShiroHttpServletResponse) response).getResponse();
-        while (resp instanceof HttpServletResponseWrapper) {
-          resp = ((HttpServletResponseWrapper) resp).getResponse();
-        }
-      }
-      if (resp instanceof org.eclipse.jetty.ee8.nested.Response) {
-        ((org.eclipse.jetty.ee8.nested.Response) resp).setStatusWithReason(errorCode, errorMessage);
-      }
-    }
-
-    response.setHeader(X_FRAME_OPTIONS, xFrameOptions.getValueForPath(request.getPathInfo()));
-    response.setContentType("text/html");
-
-    // ensure sanity of passed in strings which are used to render html content
-    String errorDescription = errorMessage != null ? StringEscapeUtils.escapeHtml4(errorMessage) : "Unknown error";
-
-    TemplateParameters params = templateHelper.parameters();
-    params.set("errorCode", errorCode);
-    params.set("errorName", Status.fromStatusCode(errorCode).getReasonPhrase());
-    params.set("errorDescription", errorDescription);
-
-    // add cause if ?debug enabled and there is an exception
-    if (cause != null && ServletHelper.isDebug(request)) {
-      params.set("errorCause", new TemplateThrowableAdapter(cause));
-    }
-
-    String html = templateHelper.render(template, params);
-    try (PrintWriter out = new PrintWriter(new OutputStreamWriter(response.getOutputStream()))) {
-      out.println(html);
-    }
+    errorPageService.writeErrorResponse(new ErrorInfo(errorCode, errorMessage, cause), request, response);
   }
 
   /**
