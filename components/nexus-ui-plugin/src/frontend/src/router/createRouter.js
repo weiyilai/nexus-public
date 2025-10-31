@@ -14,11 +14,11 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import { UIRouterReact, hashLocationPlugin, servicesPlugin } from '@uirouter/react';
+import {UIRouterReact, hashLocationPlugin, servicesPlugin} from '@uirouter/react';
 import ExtJS from '../interface/ExtJS';
 import isVisible from '../router/isVisible';
-import { showUnsavedChangesModal } from './unsavedChangesDialog';
-import { RouteNames } from "../constants/RouteNames";
+import {showUnsavedChangesModal} from './unsavedChangesDialog';
+import {RouteNames} from "../constants/RouteNames";
 
 const success = 'success';
 const failure = 'failure';
@@ -29,11 +29,11 @@ const failure = 'failure';
 
   See also private/developer-documentation/frontend/client-side-routing.md
  */
-export function createRouter({ initialRoute, menuRoutes, missingRoute }) {
+export function createRouter({initialRoute, menuRoutes, missingRoute}) {
   const router = new UIRouterReact();
   router.plugin(servicesPlugin);
   router.plugin(hashLocationPlugin);
-  router.urlService.rules.initial({ state: initialRoute });
+  router.urlService.rules.initial({state: initialRoute});
 
   // validate permissions and configuration on each route request
   router.transitionService.onBefore({}, async (transition) => {
@@ -66,8 +66,9 @@ export function createRouter({ initialRoute, menuRoutes, missingRoute }) {
 
           console.debug('Redirecting to login page with return URL');
           let returnTo = router.stateService.href(stateTo.name, transition.params());
-          router.stateService.go(RouteNames.LOGIN, { returnTo } );
-        } else {
+          router.stateService.go(RouteNames.LOGIN, {returnTo});
+        }
+        else {
           // pop up ExtJS modal login
           const result = await offerUserTheChanceToLoginAndRevalidate(transition, stateTo.data?.visibilityRequirements);
           if (result !== success) {
@@ -75,7 +76,8 @@ export function createRouter({ initialRoute, menuRoutes, missingRoute }) {
             redirectTo404();
           }
         }
-      } else {
+      }
+      else {
         console.warn('state is not visible for navigation, aborting transition', stateTo.name);
         redirectTo404();
       }
@@ -84,26 +86,26 @@ export function createRouter({ initialRoute, menuRoutes, missingRoute }) {
 
   // show the unsaved changes dialog when navigating away from a page with unsaved changes
   router.transitionService.onBefore(
-    {},
-    async () => {
-      const hasUnsavedChanges = window.dirty && window.dirty.length > 0;
-      if (hasUnsavedChanges) {
-        const confirm = await showUnsavedChangesModal();
-        if (!confirm) {
-          return false;
+      {},
+      async () => {
+        const hasUnsavedChanges = window.dirty && window.dirty.length > 0;
+        if (hasUnsavedChanges) {
+          const confirm = await showUnsavedChangesModal();
+          if (!confirm) {
+            return false;
+          }
+          window.dirty = [];
         }
-        window.dirty = [];
-      }
 
-      return true;
-    },
-    { priority: 1000 }
+        return true;
+      },
+      {priority: 1000}
   ); // this hook given a high priority to ensure it runs first
 
   // validate permissions and configuration on each route request
   router.transitionService.onSuccess({}, async (transition) => {
     const customTitle = ExtJS.state().getValue('uiSettings')?.title || 'Nexus Repository Manager';
-    const { title: currentPageTitle } = transition.to().data;
+    const {title: currentPageTitle} = transition.to().data;
     const title = currentPageTitle ? `${currentPageTitle} - ${customTitle}` : customTitle;
     document.title = title;
   });
@@ -115,10 +117,8 @@ export function createRouter({ initialRoute, menuRoutes, missingRoute }) {
   // send any unrecognized routes to the 404 page
   router.urlService.rules.otherwise((matchValue, urlParts, router) => {
     console.warn('url not recognized', matchValue, urlParts);
-    router.stateService.go(missingRoute.name, {}, { location: false });
+    router.stateService.go(missingRoute.name, {}, {location: false});
   });
-
-  console.info('States added to router:', router.stateRegistry.get());
 
   return router;
 }
@@ -141,7 +141,8 @@ async function offerUserTheChanceToLoginAndRevalidate(_transition, visibilityReq
       console.debug('user still does not have permissions after logging in');
       return failure;
     }
-  } catch (ex) {
+  }
+  catch (ex) {
     console.warn('login unsuccessful: ', ex);
     return failure;
   }

@@ -410,6 +410,11 @@
       <groupId>org.sonatype.nexus.api.rest</groupId>
       <artifactId>nexus-api-rest-selfhosted</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.sonatype.nexus</groupId>
+      <artifactId>nexus-test-common</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
