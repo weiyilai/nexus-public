@@ -148,4 +148,47 @@ public class CRoleDAOTest
 
     assertThat(dao.update(role), is(true));
   }
+
+  @Test
+  public void testReadByIds() {
+    CRoleData role1 = new CRoleData();
+    role1.setId("role1");
+    role1.setName("Role1");
+    role1.setDescription("Role 1");
+    role1.setPrivileges(emptySet());
+    role1.setRoles(emptySet());
+    role1.setReadOnly(false);
+
+    CRoleData role2 = new CRoleData();
+    role2.setId("role2");
+    role2.setName("Role2");
+    role2.setDescription("Role 2");
+    role2.setPrivileges(emptySet());
+    role2.setRoles(emptySet());
+    role2.setReadOnly(false);
+
+    CRoleData role3 = new CRoleData();
+    role3.setId("role3");
+    role3.setName("Role3");
+    role3.setDescription("Role 3");
+    role3.setPrivileges(emptySet());
+    role3.setRoles(emptySet());
+    role3.setReadOnly(false);
+
+    dao.create(role1);
+    dao.create(role2);
+    dao.create(role3);
+
+    Iterable<CRoleData> result = dao.readByIds(Stream.of("role1", "role3").collect(Collectors.toList()));
+    assertThat(Iterables.size(result), is(2));
+
+    result = dao.readByIds(Stream.of("role1", "role2", "role3").collect(Collectors.toList()));
+    assertThat(Iterables.size(result), is(3));
+
+    result = dao.readByIds(Stream.of("nonexistent").collect(Collectors.toList()));
+    assertThat(Iterables.size(result), is(0));
+
+    result = dao.readByIds(Stream.of("role2", "nonexistent").collect(Collectors.toList()));
+    assertThat(Iterables.size(result), is(1));
+  }
 }

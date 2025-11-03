@@ -308,6 +308,34 @@ public class SecurityConfigurationManagerImpl
   }
 
   @Override
+  public List<CRole> readRoles(final java.util.Collection<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    Map<String, CRole> roleMap = new HashMap<>();
+
+    // First check merged configuration (batch)
+    List<CRole> mergedRoles = getMergedConfiguration().getRoles(ids);
+    for (CRole role : mergedRoles) {
+      roleMap.put(role.getId(), role);
+    }
+
+    // Then check default configuration for any remaining IDs (batch)
+    Set<String> remainingIds = new HashSet<>(ids);
+    remainingIds.removeAll(roleMap.keySet());
+
+    if (!remainingIds.isEmpty()) {
+      List<CRole> defaultRoles = getDefaultConfiguration().getRoles(remainingIds);
+      for (CRole role : defaultRoles) {
+        roleMap.put(role.getId(), role);
+      }
+    }
+
+    return new ArrayList<>(roleMap.values());
+  }
+
+  @Override
   public CUser readUser(final String id) throws UserNotFoundException {
     CUser user = getDefaultConfiguration().getUser(id);
 

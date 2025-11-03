@@ -117,6 +117,15 @@ public interface SecurityConfigurationManager
   CRole readRole(String id);
 
   /**
+   * Retrieve multiple roles by their IDs in a single batch operation.
+   * This is more efficient than calling readRole multiple times.
+   *
+   * @param ids collection of role IDs to fetch
+   * @return list of roles found (may be fewer than requested if some IDs don't exist)
+   */
+  List<CRole> readRoles(java.util.Collection<String> ids);
+
+  /**
    * Update an existing role
    */
   void updateRole(CRole role);
@@ -154,8 +163,9 @@ public interface SecurityConfigurationManager
 
   /**
    * Retrieve a privilege by its name
+   * 
    * @param name the name of the privilege
-   * @return a  {@link CPrivilege} object if found by name
+   * @return a {@link CPrivilege} object if found by name
    */
   CPrivilege readPrivilegeByName(String name);
 
@@ -171,6 +181,7 @@ public interface SecurityConfigurationManager
 
   /**
    * Updates an existing privilege by its name
+   * 
    * @param privilege the privilege object to be updated
    */
   void updatePrivilegeByName(CPrivilege privilege);
@@ -182,6 +193,7 @@ public interface SecurityConfigurationManager
 
   /**
    * Delete an existing privilege by its name
+   * 
    * @param name the name of the privilege to be deleted
    */
   void deletePrivilegeByName(String name);

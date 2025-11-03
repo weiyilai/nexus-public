@@ -51,6 +51,14 @@ class CRoleStore
   }
 
   @Transactional
+  Iterable<CRoleData> readByIds(final java.util.Collection<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return java.util.Collections.emptyList();
+    }
+    return dao().readByIds(ids);
+  }
+
+  @Transactional
   boolean update(final CRoleData roleData) {
     return dao().update(roleData);
   }

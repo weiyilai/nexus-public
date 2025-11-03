@@ -301,6 +301,20 @@ public class MemorySecurityConfiguration
   }
 
   @Override
+  public List<CRole> getRoles(final java.util.Collection<String> ids) {
+    checkNotNull(ids);
+
+    if (ids.isEmpty()) {
+      return ImmutableList.of();
+    }
+
+    return ids.stream()
+        .map(roles::get)
+        .filter(java.util.Objects::nonNull)
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  @Override
   public void addRole(final CRole role) {
     checkNotNull(role);
     checkNotNull(role.getId());

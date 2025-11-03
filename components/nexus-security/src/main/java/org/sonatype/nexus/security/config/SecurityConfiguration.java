@@ -53,7 +53,8 @@ public interface SecurityConfiguration
   void addUser(CUser user, Set<String> roles);
 
   /**
-   * Adds role mapping for a user idetified by the id given, and for the given source.
+   * Adds role mapping for a user identified by the id given, and for the given source.
+   * 
    * @since 3.22
    */
   void addRoleMapping(String userId, Set<String> roles, String source);
@@ -140,6 +141,7 @@ public interface SecurityConfiguration
 
   /**
    * Get an existing {@link CPrivilege} by its id.
+   * 
    * @param name the name of the privilege to be retrieved
    * @return a {@link CPrivilege} object if found
    */
@@ -178,6 +180,7 @@ public interface SecurityConfiguration
 
   /**
    * Update an existing {@link CPrivilege} by its name in the configuration.
+   * 
    * @param privilege an existing privilege to be updated
    */
   void updatePrivilegeByName(CPrivilege privilege);
@@ -191,6 +194,7 @@ public interface SecurityConfiguration
 
   /**
    * Remove an existing privilege by its name
+   * 
    * @param name the name of the privilege to be deleted
    * @return a {@link Boolean} flag indicating if the delete was successful
    */
@@ -206,6 +210,15 @@ public interface SecurityConfiguration
    */
   @Nullable
   CRole getRole(String id);
+
+  /**
+   * Get multiple roles by their IDs in a single batch operation.
+   * This is more efficient than calling getRole multiple times.
+   *
+   * @param ids collection of role IDs to fetch
+   * @return list of roles found (may be fewer than requested if some IDs don't exist)
+   */
+  List<CRole> getRoles(java.util.Collection<String> ids);
 
   /**
    * Obtain an instance of {@link CRole} suitable for use with the underlying storage.

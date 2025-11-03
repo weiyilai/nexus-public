@@ -191,6 +191,17 @@ public class SecurityConfigurationImpl
   }
 
   @Override
+  public List<CRole> getRoles(final java.util.Collection<String> ids) {
+    checkNotNull(ids);
+
+    if (ids.isEmpty()) {
+      return ImmutableList.of();
+    }
+
+    return ImmutableList.copyOf(roleStore.readByIds(ids));
+  }
+
+  @Override
   public CRole newRole() {
     return new CRoleData();
   }

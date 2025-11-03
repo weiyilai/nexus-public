@@ -12,9 +12,12 @@
  */
 package org.sonatype.nexus.security.internal;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -26,7 +29,6 @@ import org.sonatype.nexus.security.config.CRole;
 import org.sonatype.nexus.security.config.CUser;
 import org.sonatype.nexus.security.config.CUserRoleMapping;
 import org.sonatype.nexus.security.config.SecurityConfigurationManager;
-import org.sonatype.nexus.security.role.NoSuchRoleException;
 import org.sonatype.nexus.security.role.RoleIdentifier;
 import org.sonatype.nexus.security.user.AbstractUserManager;
 import org.sonatype.nexus.security.user.NoSuchRoleMappingException;
@@ -137,21 +139,6 @@ public class UserManagerImpl
     return user;
   }
 
-  protected RoleIdentifier toRole(final String roleId, final String source) {
-    if (roleId == null) {
-      return null;
-    }
-
-    try {
-      CRole role = configuration.readRole(roleId);
-
-      return new RoleIdentifier(source, role.getId());
-    }
-    catch (NoSuchRoleException e) {
-      return null;
-    }
-  }
-
   @Override
   public Set<User> listUsers() {
     Set<User> users = new HashSet<User>();
@@ -252,12 +239,25 @@ public class UserManagerImpl
   }
 
   private Set<RoleIdentifier> getUsersRoles(final Set<String> roleIds) {
+    if (roleIds == null || roleIds.isEmpty()) {
+      return Collections.emptySet();
+    }
+
+    // Filter out any null values defensively
+    Set<String> filteredRoleIds = roleIds.stream()
+        .filter(Objects::nonNull)
+        .collect(Collectors.toSet());
+
+    if (filteredRoleIds.isEmpty()) {
+      return Collections.emptySet();
+    }
+
+    // Batch load all roles at once instead of one-by-one
+    List<CRole> cRoles = configuration.readRoles(filteredRoleIds);
+
     final Set<RoleIdentifier> roles = new HashSet<>();
-    for (String roleId : roleIds) {
-      RoleIdentifier role = toRole(roleId, DEFAULT_SOURCE);
-      if (role != null) {
-        roles.add(role);
-      }
+    for (CRole cRole : cRoles) {
+      roles.add(new RoleIdentifier(DEFAULT_SOURCE, cRole.getId()));
     }
     return roles;
   }
