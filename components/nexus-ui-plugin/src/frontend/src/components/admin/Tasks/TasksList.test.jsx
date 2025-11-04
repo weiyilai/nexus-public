@@ -12,30 +12,33 @@
  */
 import React from 'react';
 import Axios from 'axios';
-import {when} from 'jest-when';
 import {render, screen, waitFor, waitForElementToBeRemoved} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {sort, prop, descend, ascend, compose, toLower} from 'ramda';
 
-import {ExtJS, APIConstants} from '@sonatype/nexus-ui-plugin';
-import TestUtils from '@sonatype/nexus-ui-plugin/src/frontend/src/interface/TestUtils';
+import ExtJS from '../../../interface/ExtJS';
+import APIConstants from '../../../constants/APIConstants';
+import TestUtils from '../../../interface/TestUtils';
+import UIStrings from '../../../constants/UIStrings';
 
-import UIStrings from '../../../../constants/UIStrings';
+import TasksStrings from '../../../constants/admin/TasksStrings';
 import TasksList from './TasksList';
 import {TASKS} from './Tasks.testdata';
 
-const XSS_STRING = TestUtils.XSS_STRING;
-const {TASKS: {LIST: LABELS}} = UIStrings;
-const {EXT: {URL, TASK: {ACTION, METHODS}}, SORT_DIRECTIONS: {DESC, ASC}} = APIConstants;
+jest.mock('axios', () => ({
+  get: jest.fn()
+}));
 
-jest.mock('@sonatype/nexus-ui-plugin', () => {
-  return {
-    ...jest.requireActual('@sonatype/nexus-ui-plugin'),
-    ExtJS: {
-      checkPermission: jest.fn().mockReturnValue(true),
-    }
+jest.mock('../../../interface/ExtJS', () => ({
+  __esModule: true,
+  default: {
+    checkPermission: jest.fn().mockReturnValue(true),
   }
-});
+}));
+
+const XSS_STRING = TestUtils.XSS_STRING;
+const {TASKS: {LIST: LABELS}} = TasksStrings;
+const {REST: {PUBLIC: {TASKS: TASKS_URL}}, SORT_DIRECTIONS: {DESC, ASC}} = APIConstants;
 
 const selectors = {
   ...TestUtils.selectors,
@@ -43,11 +46,23 @@ const selectors = {
   emptyMessage: () => screen.getByText(LABELS.EMPTY_LIST),
   filter: () => screen.queryByPlaceholderText(UIStrings.FILTER),
   createButton: () => screen.getByText(LABELS.CREATE_BUTTON),
+  sectionTitle: () => screen.getByText(LABELS.SECTION_TITLE),
 };
 
-const REQUEST = expect.objectContaining({
-  action: ACTION,
-  method: METHODS.READ,
+const mockTasksApiResponse = (tasks) => ({
+  data: {
+    items: tasks.map(task => ({
+      id: task.id,
+      name: task.name,
+      type: task.typeId,
+      message: task.typeName,
+      currentState: task.statusDescription?.toUpperCase() || '',
+      schedule: task.schedule?.toLowerCase() || '',
+      nextRun: task.nextRun || '',
+      lastRun: task.lastRun || '',
+      lastRunResult: task.lastRunResult || '',
+    }))
+  }
 });
 
 const FIELDS = {
@@ -70,15 +85,11 @@ describe('TasksList', function() {
   }
 
   beforeEach(() => {
-    when(Axios.post).calledWith(URL, REQUEST).mockResolvedValue({
-      data: TestUtils.makeExtResult(TASKS)
-    });
+    Axios.get.mockResolvedValue(mockTasksApiResponse(TASKS));
   });
 
   it('renders the resolved empty data', async function() {
-    when(Axios.post).calledWith(URL, REQUEST).mockResolvedValue({
-      data: TestUtils.makeExtResult([])
-    });
+    Axios.get.mockResolvedValue(mockTasksApiResponse([]));
     const {createButton, emptyMessage} = selectors;
 
     await renderAndWaitForLoad();
@@ -90,17 +101,20 @@ describe('TasksList', function() {
   it('renders the resolved data', async function() {
     await renderAndWaitForLoad();
 
-    await waitFor(() => expect(Axios.post).toHaveBeenCalledWith(URL, REQUEST));
+    await waitFor(() => expect(Axios.get).toHaveBeenCalledWith(`/${TASKS_URL}`));
 
-    const tasks = sortTasks(FIELDS.NAME);
+    const tasks = sortTasks(FIELDS.TYPE, DESC);
+
+    expect(selectors.sectionTitle()).toBeInTheDocument();
 
     TestUtils.expectTableHeaders(Object.values(LABELS.COLUMNS));
     TestUtils.expectTableRows(tasks, Object.values(FIELDS));
   });
 
   it('renders the resolved data with XSS', async function() {
-    const XSS_ROWS = [{
-      ...TASKS[0],
+    const XSS_INPUT = [{
+      id: TASKS[0].id,
+      typeId: XSS_STRING,
       name: XSS_STRING,
       typeName: XSS_STRING,
       statusDescription: XSS_STRING,
@@ -110,20 +124,31 @@ describe('TasksList', function() {
       lastRunResult: XSS_STRING,
     }];
 
-    when(Axios.post).calledWith(URL, REQUEST).mockResolvedValue({
-      data: TestUtils.makeExtResult(XSS_ROWS)
-    });
+    const transformedStatus = 'Xss!<img src="/static/rapture/resources/icons/x16/user.png" onload="alert(0)">';
+    const transformedSchedule = 'Xss!<img src="/static/rapture/resources/icons/x16/user.png" onload="alert(0)">';
+    
+    const XSS_EXPECTED = [{
+      name: XSS_STRING,
+      typeName: XSS_STRING,
+      statusDescription: transformedStatus,
+      schedule: transformedSchedule,
+      nextRun: XSS_STRING,
+      lastRun: XSS_STRING,
+      lastRunResult: XSS_STRING,
+    }];
+
+    Axios.get.mockResolvedValue(mockTasksApiResponse(XSS_INPUT));
 
     await renderAndWaitForLoad();
 
     TestUtils.expectTableHeaders(Object.values(LABELS.COLUMNS));
-    TestUtils.expectTableRows(XSS_ROWS, Object.values(FIELDS));
+    TestUtils.expectTableRows(XSS_EXPECTED, Object.values(FIELDS));
   });
 
   it('renders an error message', async function() {
     const message = 'Error Message!';
     const {tableAlert} = selectors;
-    when(Axios.post).calledWith(URL, REQUEST).mockRejectedValue({message});
+    Axios.get.mockRejectedValue({message});
 
     await renderAndWaitForLoad();
 
@@ -134,15 +159,15 @@ describe('TasksList', function() {
     const {headerCell} = selectors;
     await renderAndWaitForLoad();
 
-    let tasks = sortTasks(FIELDS.NAME);
-    TestUtils.expectProperRowsOrder(tasks);
-
-    userEvent.click(headerCell(LABELS.COLUMNS.NAME));
-    tasks = sortTasks(FIELDS.NAME, DESC);
+    let tasks = sortTasks(FIELDS.TYPE, DESC);
     TestUtils.expectProperRowsOrder(tasks);
 
     userEvent.click(headerCell(LABELS.COLUMNS.TYPE));
     tasks = sortTasks(FIELDS.TYPE);
+    TestUtils.expectProperRowsOrder(tasks);
+
+    userEvent.click(headerCell(LABELS.COLUMNS.NAME));
+    tasks = sortTasks(FIELDS.NAME);
     TestUtils.expectProperRowsOrder(tasks);
 
     userEvent.click(headerCell(LABELS.COLUMNS.STATUS));
@@ -176,5 +201,25 @@ describe('TasksList', function() {
     await renderAndWaitForLoad();
 
     expect(createButton()).toHaveClass('disabled');
+  });
+
+  it('transforms cron schedule to Advanced', async function() {
+    const cronTask = [{
+      id: 'test-cron-task',
+      name: 'Test Cron Task',
+      typeId: 'test.task',
+      typeName: 'Test Task Type',
+      statusDescription: 'Waiting',
+      schedule: 'Advanced',
+      nextRun: '2023-03-18T01:00:00.000+01:00',
+      lastRun: '2023-03-17T01:00:00.000+01:00',
+      lastRunResult: 'Ok',
+    }];
+
+    Axios.get.mockResolvedValue(mockTasksApiResponse(cronTask));
+
+    await renderAndWaitForLoad();
+
+    expect(screen.getByText('Advanced')).toBeInTheDocument();
   });
 });

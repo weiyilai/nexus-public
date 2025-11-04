@@ -86,3 +86,8 @@ export { default as CleanupPoliciesDryRunMachine } from './components/admin/Clea
 export { default as CleanupPoliciesPreviewFormMachine } from './components/admin/CleanupPolicies/CleanupPoliciesPreviewFormMachine';
 export { default as CleanupPoliciesPreviewListMachine } from './components/admin/CleanupPolicies/CleanupPoliciesPreviewListMachine';
 export * as CleanupPoliciesHelper from './components/admin/CleanupPolicies/CleanupPoliciesHelper';
+
+export { default as TasksList } from './components/admin/Tasks/TasksList';
+export { default as TasksListMachine } from './components/admin/Tasks/TasksListMachine';
+export * as TasksHelper from './components/admin/Tasks/TasksHelper';
+export { default as TasksStrings } from './constants/admin/TasksStrings';

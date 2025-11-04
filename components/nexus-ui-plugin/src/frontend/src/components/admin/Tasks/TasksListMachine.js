@@ -15,15 +15,19 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import {assign} from 'xstate';
+import Axios from 'axios';
 
-import {ListMachineUtils, ExtAPIUtils, APIConstants} from '@sonatype/nexus-ui-plugin';
+import ListMachineUtils from '../../../interface/ListMachineUtils';
+import APIConstants from '../../../constants/APIConstants';
+import {formatTaskForDisplay} from './TasksHelper';
 
-const {EXT: {TASK: {ACTION, METHODS}}} = APIConstants;
+const {REST: {PUBLIC: {TASKS}}} = APIConstants;
 
 export default ListMachineUtils.buildListMachine({
   id: 'TasksListMachine',
   sortableFields: ['name', 'typeName', 'statusDescription', 'schedule', 'nextRun', 'lastRun', 'lastRunResult'],
-  sortField: 'name',
+  sortField: 'typeName',
+  sortDirection: ListMachineUtils.DESC,
 }).withConfig({
   actions: {
     setData: assign({
@@ -46,9 +50,9 @@ export default ListMachineUtils.buildListMachine({
   },
   services: {
     fetchData: async () => {
-      const response = await ExtAPIUtils.extAPIRequest(ACTION, METHODS.READ);
-      ExtAPIUtils.checkForError(response);
-      return ExtAPIUtils.extractResult(response);
+      const response = await Axios.get(`/${TASKS}`);
+      const tasks = response.data?.items || [];
+      return tasks.map(formatTaskForDisplay);
     },
   },
 });

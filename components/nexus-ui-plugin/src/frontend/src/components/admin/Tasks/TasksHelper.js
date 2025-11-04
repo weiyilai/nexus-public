@@ -14,11 +14,13 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import {ExtJS, Permissions, APIConstants} from '@sonatype/nexus-ui-plugin';
-import UIStrings from '../../../../constants/UIStrings';
+import ExtJS from '../../../interface/ExtJS';
+import Permissions from '../../../constants/Permissions';
+import APIConstants from '../../../constants/APIConstants';
+import TasksStrings from '../../../constants/admin/TasksStrings';
 
 const {REST: {PUBLIC: {TASKS: tasksUrl}}} = APIConstants;
-const {TASKS: {FORM: LABELS }} = UIStrings;
+const {TASKS: {FORM: LABELS}} = TasksStrings;
 
 export const canCreateTask = () => ExtJS.checkPermission(Permissions.TASKS.CREATE);
 export const canDeleteTask = () => ExtJS.checkPermission(Permissions.TASKS.DELETE);
@@ -52,3 +54,31 @@ export const INITIAL_DATA = {
   // TODO Remove when NEXUS-37051 is done.
   schedule: 'manual',
 };
+
+const capitalizeFirst = (str) => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
+const capitalizeFirstOnly = (str) => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+const formatSchedule = (schedule) => {
+  if (!schedule) return '';
+  if (schedule.toLowerCase() === 'cron') return 'Advanced';
+  return capitalizeFirstOnly(schedule);
+};
+
+export const formatTaskForDisplay = (task) => ({
+  id: task.id,
+  name: task.name,
+  typeId: task.type,
+  typeName: task.message || task.type,
+  statusDescription: capitalizeFirst(task.currentState || ''),
+  schedule: formatSchedule(task.schedule),
+  nextRun: task.nextRun,
+  lastRun: task.lastRun,
+  lastRunResult: task.lastRunResult || '',
+});

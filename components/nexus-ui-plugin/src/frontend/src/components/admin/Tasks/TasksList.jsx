@@ -13,10 +13,10 @@
 import React from 'react';
 import {useMachine} from '@xstate/react';
 
-import {ListMachineUtils} from '@sonatype/nexus-ui-plugin';
 import {
   NxButton,
   NxFilterInput,
+  NxH2,
   NxTable,
   NxTableBody,
   NxTableCell,
@@ -26,26 +26,21 @@ import {
   NxTile,
 } from '@sonatype/react-shared-components';
 
-import {faClock} from '@fortawesome/free-solid-svg-icons';
-
-import {
-  ContentBody,
-  PageActions,
-  PageHeader,
-  PageTitle
-} from '@sonatype/nexus-ui-plugin';
-import {HelpTile} from '@sonatype/nexus-ui-plugin';
+import ListMachineUtils from '../../../interface/ListMachineUtils';
+import {ContentBody, PageActions, PageHeader, PageTitle} from '../../layout';
+import HelpTile from '../../widgets/HelpTile/HelpTile';
 
 import Machine from './TasksListMachine';
 import {canCreateTask} from './TasksHelper';
 
-import UIStrings from '../../../../constants/UIStrings';
+import UIStrings from '../../../constants/UIStrings';
+import TasksStrings from '../../../constants/admin/TasksStrings';
 
-const {TASKS: {LIST: LABELS}} = UIStrings;
+const {LIST: LABELS} = TasksStrings.TASKS;
 const {COLUMNS} = LABELS;
 
 export default function TasksList({onCreate, onEdit}) {
-  const [state, send] = useMachine(Machine, {devTools: true});
+  const [state, send] = useMachine(Machine);
   const isLoading = state.matches('loading');
   const {data, error, filter: filterText} = state.context;
 
@@ -77,9 +72,9 @@ export default function TasksList({onCreate, onEdit}) {
   return <div className="nxrm-tasks">
     <PageHeader>
       <PageTitle
-          icon={UIStrings.TASKS.MENU.icon}
-          text={UIStrings.TASKS.MENU.text}
-          description={UIStrings.TASKS.MENU.description}
+          icon={TasksStrings.TASKS.MENU.icon}
+          text={TasksStrings.TASKS.MENU.text}
+          description={TasksStrings.TASKS.MENU.description}
       />
       <PageActions>
         <NxTooltip
@@ -100,6 +95,9 @@ export default function TasksList({onCreate, onEdit}) {
     <ContentBody className="nxrm-tasks-list">
       <NxTile>
         <NxTile.Header>
+          <NxTile.Content>
+            <NxH2>{LABELS.SECTION_TITLE}</NxH2>
+          </NxTile.Content>
           <NxTile.HeaderActions>
             <NxFilterInput
                 id="filter"
