@@ -10,20 +10,27 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-
 import React from 'react';
-import { NxTile } from '@sonatype/react-shared-components';
-import { ExtJS } from '@sonatype/nexus-ui-plugin';
-import UIStrings from '../../../constants/UIStrings';
-import LoginLayout from '../../layout/LoginLayout';
-import LocalLogin from './LocalLogin';
-import SsoLogin from './SsoLogin';
-import AnonymousAccess from './AnonymousAccess';
-import InitialPasswordInfo from './InitialPasswordInfo';
+import { ExtJS } from "@sonatype/nexus-ui-plugin";
+import { NxTile } from "@sonatype/react-shared-components";
+import UIStrings from "../../../constants/UIStrings";
+import LoginLayout from "../../layout/LoginLayout";
+import AnonymousAccess from "./AnonymousAccess";
+import InitialPasswordInfo from "./InitialPasswordInfo";
+import LocalLogin from "./LocalLogin";
+import SsoLogin from "./SsoLogin";
 
 const { LOGIN_TITLE, LOGIN_SUBTITLE, SSO_DIVIDER_LABEL } = UIStrings;
 
-import './LoginPage.scss';
+import "./LoginPage.scss";
+
+const localAuthenticationRealms = [
+  "ldapRealmEnabled",
+  "userTokenRealmEnabled",
+  "localAuthRealmEnabled",
+  "crowdRealmEnabled",
+];
+const ssoAuthenticationRealms = ["samlEnabled", "oauth2Enabled"];
 
 /**
  * Login page component that renders within LoginLayout.
@@ -31,16 +38,23 @@ import './LoginPage.scss';
  * @param {Object} logoConfig - Logo configuration passed to LoginLayout
  */
 export default function LoginPage({ logoConfig }) {
-  const samlEnabled = ExtJS.useState(() => ExtJS.state().getValue('samlEnabled', false));
-  const oauth2Enabled = ExtJS.useState(() => ExtJS.state().getValue('oauth2Enabled', false));
-  const isCloudEnvironment = ExtJS.useState(() => ExtJS.state().getValue('isCloud', false));
-  const anonymousUsername = ExtJS.useState(() => ExtJS.state().getValue('anonymousUsername'));
-  const adminPasswordFilePath = ExtJS.useState(() => ExtJS.state().getValue('admin.password.file'));
-  const isSsoEnabled = samlEnabled || oauth2Enabled;
-  const isAnonymousAccessEnabled = !!anonymousUsername;
+  const isCloudEnvironment = ExtJS.state().getValue("isCloud", false);
+  const showContinueWithoutLogin =
+    !!ExtJS.state().getValue("anonymousUsername");
 
-  const showLocalLogin = !isCloudEnvironment;
-  const showInitialPasswordPathInfo = !!adminPasswordFilePath && !isCloudEnvironment;
+  const showSSOLogin = ssoAuthenticationRealms.some((realm) =>
+    ExtJS.state().getValue(realm, false)
+  );
+
+  const showLocalLogin =
+    !isCloudEnvironment &&
+    localAuthenticationRealms.some((realm) =>
+      ExtJS.state().getValue(realm, false)
+    );
+  const adminPasswordFilePath = ExtJS.state().getValue("admin.password.file");
+
+  const showInitialPasswordPathInfo =
+    !!adminPasswordFilePath && !isCloudEnvironment;
 
   return (
     <LoginLayout logoConfig={logoConfig}>
@@ -52,8 +66,10 @@ export default function LoginPage({ logoConfig }) {
           </NxTile.Header>
           <NxTile.Content>
             <div className="login-content">
-              {showInitialPasswordPathInfo && <InitialPasswordInfo passwordFilePath={adminPasswordFilePath} />}
-              {isSsoEnabled && (
+              {showInitialPasswordPathInfo && (
+                <InitialPasswordInfo passwordFilePath={adminPasswordFilePath} />
+              )}
+              {showSSOLogin && (
                 <>
                   <SsoLogin />
                   {showLocalLogin && (
@@ -63,12 +79,8 @@ export default function LoginPage({ logoConfig }) {
                   )}
                 </>
               )}
-              {showLocalLogin && (
-                <LocalLogin primaryButton={!isSsoEnabled} />
-              )}
-              {isAnonymousAccessEnabled && (
-                <AnonymousAccess />
-              )}
+              {showLocalLogin && <LocalLogin primaryButton={!showSSOLogin} />}
+              {showContinueWithoutLogin && <AnonymousAccess />}
             </div>
           </NxTile.Content>
         </NxTile>

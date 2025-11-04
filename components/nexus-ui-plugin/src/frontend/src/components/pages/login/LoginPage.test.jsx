@@ -80,11 +80,9 @@ jest.mock('@sonatype/nexus-ui-plugin', () => ({
 
 describe('LoginPage', () => {
   const mockLogoConfig = { url: 'test-logo.png' };
-  const mockUseState = jest.fn();
   const mockState = jest.fn();
 
   beforeEach(() => {
-    ExtJS.useState = mockUseState;
     ExtJS.state = mockState;
     mockState.mockReturnValue({
       getValue: jest.fn().mockImplementation((key, defaultValue) => defaultValue)
@@ -95,13 +93,33 @@ describe('LoginPage', () => {
     mockRouterParams.returnTo = undefined;
   });
 
-  function setupStates(samlEnabled = false, oauth2Enabled = false, isCloud = false, anonymousUsername = null, adminPasswordFile = null) {
-    mockUseState
-      .mockReturnValueOnce(samlEnabled)        // samlEnabled
-      .mockReturnValueOnce(oauth2Enabled)      // oauth2Enabled
-      .mockReturnValueOnce(isCloud)            // isCloudEnvironment
-      .mockReturnValueOnce(anonymousUsername)  // anonymousUsername
-      .mockReturnValueOnce(adminPasswordFile); // adminPasswordFilePath
+  function setupStates(
+    samlEnabled = false,
+    oauth2Enabled = false,
+    isCloud = false,
+    anonymousUsername = null,
+    adminPasswordFile = null,
+    ldapRealmEnabled = true,
+    userTokenRealmEnabled = true,
+    localAuthRealmEnabled = true,
+    crowdRealmEnabled = false
+  ) {
+    mockState.mockReturnValue({
+      getValue: jest.fn().mockImplementation((key, defaultValue) => {
+        const values = {
+          'samlEnabled': samlEnabled,
+          'oauth2Enabled': oauth2Enabled,
+          'isCloud': isCloud,
+          'anonymousUsername': anonymousUsername,
+          'admin.password.file': adminPasswordFile,
+          'ldapRealmEnabled': ldapRealmEnabled,
+          'userTokenRealmEnabled': userTokenRealmEnabled,
+          'localAuthRealmEnabled': localAuthRealmEnabled,
+          'crowdRealmEnabled': crowdRealmEnabled
+        };
+        return values[key] !== undefined ? values[key] : defaultValue;
+      })
+    });
   }
 
   function renderComponent(props) {
@@ -358,12 +376,14 @@ describe('LoginPage', () => {
 
   describe('edge cases', () => {
     it('handles undefined ExtJS state gracefully', () => {
-      mockUseState.mockReturnValue(undefined);
+      mockState.mockReturnValue({
+        getValue: jest.fn().mockReturnValue(undefined)
+      });
 
       renderComponent({ logoConfig: mockLogoConfig });
 
-      // Should default to self-hosted behavior
-      expect(screen.getByTestId('login-form')).toBeInTheDocument();
+      // When all states are undefined (all false by default), no realms are enabled, so no login form
+      expect(screen.queryByTestId('login-form')).not.toBeInTheDocument();
     });
 
     it('handles missing logoConfig gracefully', () => {
@@ -372,6 +392,126 @@ describe('LoginPage', () => {
       renderComponent({});
 
       expect(screen.getByTestId('login-tile')).toBeInTheDocument();
+    });
+  });
+
+  describe('realm-based login visibility', () => {
+    describe('self-hosted environment', () => {
+      it('shows local login when at least one realm is enabled', () => {
+        setupStates(false, false, false, null, true, false, false); // only LDAP enabled
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.getByTestId('login-form')).toBeInTheDocument();
+      });
+
+      it('shows local login when userToken realm is enabled', () => {
+        setupStates(false, false, false, null, false, true, false); // only UserToken enabled
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.getByTestId('login-form')).toBeInTheDocument();
+      });
+
+      it('shows local login when localAuth realm is enabled', () => {
+        setupStates(false, false, false, null, false, false, true); // only LocalAuth enabled
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.getByTestId('login-form')).toBeInTheDocument();
+      });
+
+      it('shows local login when multiple realms are enabled', () => {
+        setupStates(false, false, false, null, true, true, false); // LDAP and UserToken enabled
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.getByTestId('login-form')).toBeInTheDocument();
+      });
+
+      it('shows local login when all realms are enabled', () => {
+        setupStates(false, false, false, null, true, true, true); // all realms enabled
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.getByTestId('login-form')).toBeInTheDocument();
+      });
+
+      it('hides local login when no realms are enabled', () => {
+        setupStates(false, false, false, null, null, false, false, false); // no realms enabled
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.queryByTestId('login-form')).not.toBeInTheDocument();
+      });
+
+      it('shows SSO but hides local login when SSO is enabled but no realms are enabled', () => {
+        setupStates(true, false, false, null, null, false, false, false); // SAML enabled, no realms
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.getByTestId('sso-login-button')).toBeInTheDocument();
+        expect(screen.queryByTestId('login-form')).not.toBeInTheDocument();
+        expect(screen.queryByText(UIStrings.SSO_DIVIDER_LABEL)).not.toBeInTheDocument();
+      });
+
+      it('shows both SSO and local login with divider when SSO and at least one realm are enabled', () => {
+        setupStates(true, false, false, null, true, false, false); // SAML and LDAP realm enabled
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.getByTestId('sso-login-button')).toBeInTheDocument();
+        expect(screen.getByTestId('login-form')).toBeInTheDocument();
+        expect(screen.getByText(UIStrings.SSO_DIVIDER_LABEL)).toBeInTheDocument();
+      });
+    });
+
+    describe('cloud environment', () => {
+      it('hides local login in cloud even when all realms are enabled', () => {
+        setupStates(false, false, true, null, true, true, true); // cloud, all realms enabled
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.queryByTestId('login-form')).not.toBeInTheDocument();
+      });
+
+      it('hides local login in cloud when no realms are enabled', () => {
+        setupStates(false, false, true, null, false, false, false); // cloud, no realms
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.queryByTestId('login-form')).not.toBeInTheDocument();
+      });
+
+      it('shows only SSO in cloud when SSO is enabled regardless of realm status', () => {
+        setupStates(false, true, true, null, true, true, true); // cloud, OAuth2, all realms enabled
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.getByTestId('sso-login-button')).toBeInTheDocument();
+        expect(screen.queryByTestId('login-form')).not.toBeInTheDocument();
+        expect(screen.queryByText(UIStrings.SSO_DIVIDER_LABEL)).not.toBeInTheDocument();
+      });
+    });
+
+    describe('anonymous access with realm restrictions', () => {
+      it('shows anonymous access button even when no realms are enabled', () => {
+        setupStates(false, false, false, 'anonymous', null, false, false, false); // anonymous, no realms
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.queryByTestId('login-form')).not.toBeInTheDocument();
+        expect(screen.getByTestId('continue-without-login-button')).toBeInTheDocument();
+      });
+
+      it('shows both local login and anonymous access when realms are enabled', () => {
+        setupStates(false, false, false, 'anonymous', null, true, false, false); // anonymous, LDAP realm
+
+        renderComponent({ logoConfig: mockLogoConfig });
+
+        expect(screen.getByTestId('login-form')).toBeInTheDocument();
+        expect(screen.getByTestId('continue-without-login-button')).toBeInTheDocument();
+      });
     });
   });
 });
