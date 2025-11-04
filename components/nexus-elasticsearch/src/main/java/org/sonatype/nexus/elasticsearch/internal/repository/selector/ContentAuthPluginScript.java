@@ -38,6 +38,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.repository.search.index.SearchConstants.FORMAT;
 import static org.sonatype.nexus.repository.search.index.SearchConstants.REPOSITORY_NAME;
 import static org.sonatype.nexus.security.BreadActions.BROWSE;
+import static org.sonatype.nexus.security.BreadActions.READ;
 
 /**
  * Native script to work with content selectors from within ES queries.
@@ -94,7 +95,7 @@ public class ContentAuthPluginScript
         Set<String> repoNames = new HashSet<>();
         repoNames.add(repositoryName);
         repoNames.addAll(repositoryManager.findContainingGroups(repositoryName));
-        return contentPermissionChecker.isPermitted(repoNames, format, BROWSE, variableSource);
+        return contentPermissionChecker.isPermittedAnyOf(repoNames, format, variableSource, BROWSE, READ);
       }
       return false;
     }
