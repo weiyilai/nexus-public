@@ -15,10 +15,18 @@ import UIStrings from '../../../../constants/UIStrings';
 import ChangeIcon from './ChangeIcon';
 import HumanReadableUtils from '../../../../interface/HumanReadableUtils';
 
-const formatPercentage = (value) => {
-  if (value === 'N/A' || value === null) return "N/A";
-  return `${Math.abs(Number(value))}%`;
-};
+function formatBytes(value) {
+  return value === 'N/A' || value === null || value === undefined || value === 0
+    ? 'N/A'
+    : HumanReadableUtils.bytesToString(value);
+}
+
+function PercentageChangeCell({value}) {
+  return <>
+    <ChangeIcon value={value} />
+    {(value === 'N/A' || value === null || value === undefined) ? "N/A" : `${Math.abs(Number(value))}%`}
+  </>;
+}
 
 export const historicalUsageColumns = {
   metricDateMonth: {
@@ -44,14 +52,7 @@ export const historicalUsageColumns = {
   percentageChangeComponent: {
     key: 'percentageChangeComponent',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.COMPONENTS_CHANGE}</>,
-    Cell: (item) => (
-      <>
-        <ChangeIcon value={item.percentageChangeComponent} />
-        {item.percentageChangeComponent === 'N/A'
-          ? 'N/A'
-          : formatPercentage(item.percentageChangeComponent)}
-      </>
-    ),
+    Cell: (item) => <PercentageChangeCell value={item.percentageChangeComponent} />,
     tooltip: UIStrings.HISTORICAL_USAGE.COMPONENTS_CHANGE_TOOLTIP
   },
   totalRequests: {
@@ -65,57 +66,30 @@ export const historicalUsageColumns = {
   percentageChangeRequests: {
     key: 'percentageChangeRequests',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.REQUESTS_CHANGE}</>,
-    Cell: (item) => (
-      <>
-        <ChangeIcon value={item.percentageChangeRequest} />
-        {item.percentageChangeRequest === 'N/A'
-          ? 'N/A'
-          : formatPercentage(item.percentageChangeRequest)}
-      </>
-    ),
+    Cell: (item) => <PercentageChangeCell value={item.percentageChangeRequest} />,
     tooltip: UIStrings.HISTORICAL_USAGE.REQUESTS_CHANGE_TOOLTIP
   },
   totalEgress: {
     key: 'responseSize',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.TOTAL_EGRESS}</>,
-    Cell: (item) =>
-      item.responseSize === 'N/A' || item.responseSize === null || item.responseSize === undefined || item.responseSize === 0
-        ? 'N/A'
-        : HumanReadableUtils.bytesToString(item.responseSize),
+    Cell: (item) => formatBytes(item.responseSize ?? item.egress),
     tooltip: UIStrings.HISTORICAL_USAGE.TOTAL_EGRESS_TOOLTIP
   },
   percentageChangeEgress: {
     key: 'percentageChangeEgress',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.EGRESS_CHANGE}</>,
-    Cell: (item) => (
-      <>
-        <ChangeIcon value={item.percentageChangeEgress} />
-        {item.percentageChangeEgress === 'N/A' || item.percentageChangeEgress === null || item.percentageChangeEgress === undefined
-          ? 'N/A'
-          : formatPercentage(item.percentageChangeEgress)}
-      </>
-    ),
+    Cell: (item) => <PercentageChangeCell value={item.percentageChangeEgress} />,
     tooltip: UIStrings.HISTORICAL_USAGE.EGRESS_CHANGE_TOOLTIP
   },
   peakStorage: {
     key: 'peakStorage',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.PEAK_STORAGE}</>,
-    Cell: (item) =>
-      item.peakStorage === 'N/A' || item.peakStorage === null || item.peakStorage === undefined || item.peakStorage === 0
-        ? 'N/A'
-        : HumanReadableUtils.bytesToString(item.peakStorage)
+    Cell: (item) => formatBytes(item.peakStorage ?? item.storage)
   },
   percentageChangeStorage: {
     key: 'percentageChangeStorage',
     Header: () => <>{UIStrings.HISTORICAL_USAGE.STORAGE_CHANGE}</>,
-    Cell: (item) => (
-      <>
-        <ChangeIcon value={item.percentageChangeStorage} />
-        {item.percentageChangeStorage === 'N/A' || item.percentageChangeStorage === null || item.percentageChangeStorage === undefined
-          ? 'N/A'
-          : formatPercentage(item.percentageChangeStorage)}
-      </>
-    ),
+    Cell: (item) => <PercentageChangeCell value={item.percentageChangeStorage} />,
     tooltip: UIStrings.HISTORICAL_USAGE.STORAGE_CHANGE_TOOLTIP
   }
 };

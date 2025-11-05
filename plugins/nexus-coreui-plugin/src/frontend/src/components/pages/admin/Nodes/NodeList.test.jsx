@@ -138,7 +138,9 @@ describe('NodeList', () => {
   };
 
   const waitForTogglingMaskToBeRemoved = async () => {
-    await waitFor(() => expect(selectors.togglingReadOnlyMask()).not.toBeInTheDocument());
+    await waitFor(() => expect(selectors.togglingReadOnlyMask()).not.toBeInTheDocument(), {
+      timeout: 2000  // 800ms state machine delay + buffer for React rendering
+    });
   };
 
   beforeEach(() => {
