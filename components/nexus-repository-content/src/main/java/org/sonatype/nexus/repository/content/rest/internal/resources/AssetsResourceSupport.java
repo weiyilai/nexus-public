@@ -87,15 +87,16 @@ public abstract class AssetsResourceSupport
     OffsetDateTime newerThanTimestamp = parseTimestamp(newerThan);
 
     List<FluentAsset> permittedAssets = new ArrayList<>();
-    String internalToken = toInternalToken(continuationToken);
+    // browseEager uses composite continuation tokens (blob_created + asset_id), so pass through directly
     Continuation<FluentAsset> assetContinuation =
-        getAssetsEager(repository, internalToken, PAGE_SIZE_LIMIT, newerThanTimestamp, olderThanTimestamp);
+        getAssetsEager(repository, continuationToken, PAGE_SIZE_LIMIT, newerThanTimestamp, olderThanTimestamp);
 
     while (permittedAssets.size() < PAGE_SIZE_LIMIT && !assetContinuation.isEmpty()) {
       permittedAssets.addAll(removeAssetsNotPermitted(repository, assetContinuation));
       assetContinuation = getAssetsEager(repository, assetContinuation.nextContinuationToken(), PAGE_SIZE_LIMIT,
           newerThanTimestamp, olderThanTimestamp);
     }
+
     return trim(permittedAssets, PAGE_SIZE_LIMIT);
   }
 

@@ -97,7 +97,9 @@ public class AssetData
   }
 
   @Override
-  public long assetBlobSize() { return assetBlobSize; }
+  public long assetBlobSize() {
+    return assetBlobSize;
+  }
 
   // MyBatis setters + validation
 
@@ -177,7 +179,9 @@ public class AssetData
     this.lastDownloaded = lastDownloaded;
   }
 
-  public void setAssetBlobSize(final long assetBlobSize) { this.assetBlobSize = assetBlobSize; }
+  public void setAssetBlobSize(final long assetBlobSize) {
+    this.assetBlobSize = assetBlobSize;
+  }
 
   // Getters to support lazy-loading (MyBatis will intercept them)
 
@@ -195,6 +199,14 @@ public class AssetData
 
   @Override
   public String nextContinuationToken() {
+    // For browseEagerAssetsInRepository, use composite token with blob_created for proper ordering
+    // For other queries, fall back to simple asset_id token
+    // Only use composite token if assetBlob is already loaded (not lazy-loaded)
+    // We check this by seeing if the assetBlob field reference is not null
+    if (assetBlob != null && assetBlob.blobCreated() != null) {
+      long blobCreatedMillis = assetBlob.blobCreated().toInstant().toEpochMilli();
+      return new AssetBlobCreatedContinuationToken(blobCreatedMillis, assetId).encode();
+    }
     return Integer.toString(assetId);
   }
 

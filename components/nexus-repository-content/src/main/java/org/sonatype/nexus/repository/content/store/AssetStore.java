@@ -137,20 +137,28 @@ public class AssetStore<T extends AssetDAO>
       @Nullable final String continuationToken,
       final int limit)
   {
-    return dao().browseEagerAssetsInRepository(repositoryId, continuationToken, limit, null, null);
+    AssetBlobCreatedContinuationToken token = AssetBlobCreatedContinuationToken.decode(continuationToken);
+    return dao().browseEagerAssetsInRepository(repositoryId, token, limit, null, null);
   }
 
   /**
    * Browse all assets with corresponding components and blobs in the given repository in a paged fashion,
-   * with optional timestamp filtering. The returned assets will be sorted by asset id in ascending order.
+   * with optional timestamp filtering. The returned assets will be sorted by blob_created descending,
+   * asset_id ascending for stable pagination.
+   *
+   * <p>
+   * <strong>NOTE:</strong> This method is currently only utilized by migration asset queries and polling operations
+   * that require assets ordered by blob creation timestamp in descending order (newest first). It uses a composite
+   * continuation token containing both blob_created timestamp and asset_id for stable pagination across pages.
    *
    * @param repositoryId the repository to browse
-   * @param continuationToken optional token to continue from a previous request
+   * @param continuationToken optional composite token (blob_created + asset_id) to continue from a previous request
    * @param limit maximum number of assets to return
-   * @param olderThan optional timestamp to filter assets updated before this time
-   * @param newerThan optional timestamp to filter assets updated after this time
+   * @param newerThan optional timestamp to filter assets with blob_created after this time
+   * @param olderThan optional timestamp to filter assets with blob_created before this time
    * @return collection of assets and the next continuation token
    * @see Continuation#nextContinuationToken()
+   * @see AssetBlobCreatedContinuationToken
    */
   @Transactional
   public Continuation<Asset> browseEagerAssets(
@@ -160,7 +168,8 @@ public class AssetStore<T extends AssetDAO>
       @Nullable final OffsetDateTime newerThan,
       @Nullable final OffsetDateTime olderThan)
   {
-    return dao().browseEagerAssetsInRepository(repositoryId, continuationToken, limit, newerThan, olderThan);
+    AssetBlobCreatedContinuationToken token = AssetBlobCreatedContinuationToken.decode(continuationToken);
+    return dao().browseEagerAssetsInRepository(repositoryId, token, limit, newerThan, olderThan);
   }
 
   /**

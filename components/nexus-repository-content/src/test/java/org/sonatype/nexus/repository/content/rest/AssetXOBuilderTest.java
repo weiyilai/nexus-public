@@ -50,7 +50,6 @@ public class AssetXOBuilderTest
 
   private static final int AN_ASSET_ID = 1;
 
-
   @Before
   public void setup() {
     when(assetOneEntityMetadata.getId()).thenReturn(assetOneEntityId);
@@ -71,6 +70,69 @@ public class AssetXOBuilderTest
     assertNotNull(assetXO.getBlobCreated());
   }
 
+  @Test
+  public void fromAsset_useAssetCreatedForBlobCreated() {
+    // For backward compatibility, fromAsset should use asset.created() for blobCreated
+    OffsetDateTime assetCreated = OffsetDateTime.now().minusHours(2);
+    OffsetDateTime blobCreated = OffsetDateTime.now().minusHours(1);
+
+    Asset asset = anAssetWithTimestamps(assetCreated, blobCreated);
+    AssetXO assetXO = AssetXOBuilder.fromAsset(asset, repository, null);
+
+    // Should use asset.created() timestamp
+    assertThat(assetXO.getBlobCreated().toInstant().toEpochMilli(),
+        is(assetCreated.toInstant().toEpochMilli()));
+  }
+
+  @Test
+  public void fromEagerAsset_useActualBlobCreatedTimestamp() {
+    // fromEagerAsset should use the actual blob_created timestamp from AssetBlob
+    OffsetDateTime assetCreated = OffsetDateTime.now().minusHours(2);
+    OffsetDateTime blobCreated = OffsetDateTime.now().minusHours(1);
+
+    Asset asset = anAssetWithTimestamps(assetCreated, blobCreated);
+    AssetXO assetXO = AssetXOBuilder.fromEagerAsset(asset, repository, null);
+
+    // Should use blob.blobCreated() timestamp, not asset.created()
+    assertThat(assetXO.getBlobCreated().toInstant().toEpochMilli(),
+        is(blobCreated.toInstant().toEpochMilli()));
+  }
+
+  @Test
+  public void fromEagerAsset_fallbackToAssetCreatedWhenBlobMissing() {
+    // If blob is not present, should fall back to asset.created()
+    OffsetDateTime assetCreated = OffsetDateTime.now().minusHours(2);
+
+    AssetData asset = new AssetData();
+    asset.setAssetId(AN_ASSET_ID);
+    asset.setPath(ASSET_PATH);
+    asset.setCreated(assetCreated);
+    // No blob set
+
+    AssetXO assetXO = AssetXOBuilder.fromEagerAsset(asset, repository, null);
+
+    // Should fall back to asset.created() when blob is missing
+    assertThat(assetXO.getBlobCreated().toInstant().toEpochMilli(),
+        is(assetCreated.toInstant().toEpochMilli()));
+  }
+
+  @Test
+  public void fromEagerAsset_allFieldsPopulated() {
+    // Verify fromEagerAsset populates all standard fields correctly
+    OffsetDateTime assetCreated = OffsetDateTime.now().minusHours(2);
+    OffsetDateTime blobCreated = OffsetDateTime.now().minusHours(1);
+
+    Asset asset = anAssetWithTimestamps(assetCreated, blobCreated);
+    AssetXO assetXO = AssetXOBuilder.fromEagerAsset(asset, repository, null);
+
+    assertThat(assetXO.getId(), notNullValue());
+    assertThat(assetXO.getPath(), is(ASSET_PATH));
+    assertThat(assetXO.getDownloadUrl(), is("http://localhost:8081/repository/maven-releases" + ASSET_PATH));
+    assertThat(assetXO.getRepository(), is("maven-releases"));
+    assertThat(assetXO.getFormat(), is("maven2"));
+    assertNotNull(assetXO.getBlobCreated());
+  }
+
   private Asset anAsset() {
     AssetData asset = new AssetData();
     asset.setAssetId(AN_ASSET_ID);
@@ -79,6 +141,20 @@ public class AssetXOBuilderTest
     AssetBlobData assetBlob = new AssetBlobData();
     assetBlob.setAssetBlobId(1);
     asset.setAssetBlob(assetBlob);
+    return asset;
+  }
+
+  private Asset anAssetWithTimestamps(OffsetDateTime assetCreated, OffsetDateTime blobCreated) {
+    AssetData asset = new AssetData();
+    asset.setAssetId(AN_ASSET_ID);
+    asset.setPath(ASSET_PATH);
+    asset.setCreated(assetCreated);
+
+    AssetBlobData assetBlob = new AssetBlobData();
+    assetBlob.setAssetBlobId(1);
+    assetBlob.setBlobCreated(blobCreated);
+    asset.setAssetBlob(assetBlob);
+
     return asset;
   }
 }

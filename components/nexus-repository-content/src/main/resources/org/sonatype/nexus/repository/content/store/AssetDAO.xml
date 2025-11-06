@@ -173,21 +173,20 @@
   </select>
 
   <select id="browseEagerAssetsInRepository" resultMap="assetResultMap">
-    WITH assetIds as (
-      SELECT asset.asset_id
-      FROM ${format}_asset asset
-      INNER JOIN ${format}_asset_blob blob ON blob.asset_blob_id = asset.asset_blob_id
-      WHERE asset.repository_id = #{repositoryId}
-      <if test="newerThan != null">AND blob.blob_created > #{newerThan}</if>
-      <if test="olderThan != null">AND blob.blob_created &lt; #{olderThan}</if>
-      <if test="continuationToken != null">AND asset.asset_id &lt; #{continuationToken}</if>
-      ORDER BY blob.blob_created desc
-      LIMIT #{limit})
     SELECT A.*, C.*, B.* FROM ${format}_asset as A
-                         LEFT JOIN ${format}_component C ON C.component_id = A.component_id
-                         INNER JOIN ${format}_asset_blob B ON B.asset_blob_id = A.asset_blob_id
-                         INNER JOIN assetIds ON assetIds.asset_id = A.asset_id
-    ORDER BY B.blob_created desc;
+      LEFT JOIN ${format}_component C ON C.component_id = A.component_id
+      INNER JOIN ${format}_asset_blob B ON B.asset_blob_id = A.asset_blob_id
+    WHERE A.repository_id = #{repositoryId}
+      <if test="newerThan != null">AND B.blob_created > #{newerThan}</if>
+      <if test="olderThan != null">AND B.blob_created &lt; #{olderThan}</if>
+      <if test="continuationToken != null">
+        AND (
+          B.blob_created &lt; #{continuationToken.blobCreated}
+          OR (B.blob_created = #{continuationToken.blobCreated} AND A.asset_id > #{continuationToken.assetId})
+        )
+      </if>
+    ORDER BY B.blob_created DESC, A.asset_id ASC
+    LIMIT #{limit};
   </select>
 
   <select id="browseAssetsInRepositories" resultMap="assetResult">

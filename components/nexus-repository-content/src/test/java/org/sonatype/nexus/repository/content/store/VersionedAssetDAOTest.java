@@ -110,6 +110,24 @@ class VersionedAssetDAOTest
 
   @Override
   @Test
+  protected void testBrowseEagerAssetsInRepositoryOrderingByBlobCreated() throws InterruptedException {
+    super.testBrowseEagerAssetsInRepositoryOrderingByBlobCreated();
+  }
+
+  @Override
+  @Test
+  protected void testBrowseEagerAssetsInRepositoryPaginationWithBlobCreated() throws InterruptedException {
+    super.testBrowseEagerAssetsInRepositoryPaginationWithBlobCreated();
+  }
+
+  @Override
+  @Test
+  protected void testBrowseEagerAssetsInRepositorySameTimestampDifferentAssetId() throws InterruptedException {
+    super.testBrowseEagerAssetsInRepositorySameTimestampDifferentAssetId();
+  }
+
+  @Override
+  @Test
   protected void testSetLastDownloaded() {
     super.testSetLastDownloaded();
   }

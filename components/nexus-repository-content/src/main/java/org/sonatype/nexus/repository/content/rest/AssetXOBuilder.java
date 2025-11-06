@@ -39,7 +39,43 @@ import static org.sonatype.nexus.repository.content.store.InternalIds.toExternal
  */
 public class AssetXOBuilder
 {
+  /**
+   * Build AssetXO from an eagerly-loaded asset with blob information.
+   * Uses the actual blob_created timestamp for the blobCreated field.
+   *
+   * @since 3.73
+   */
+  public static AssetXO fromEagerAsset(
+      final Asset asset,
+      final Repository repository,
+      final Map<String, AssetXODescriptor> assetDescriptors)
+  {
+    // For eager-loaded assets, use the actual blob_created timestamp
+    Date blobCreated = asset.blob()
+        .map(AssetBlob::blobCreated)
+        .map(OffsetDateTime::toInstant)
+        .map(Date::from)
+        .orElseGet(() -> Date.from(asset.created().toInstant()));
+
+    return doFromAsset(asset, repository, assetDescriptors)
+        .blobCreated(blobCreated)
+        .build();
+  }
+
   public static AssetXO fromAsset(
+      final Asset asset,
+      final Repository repository,
+      final Map<String, AssetXODescriptor> assetDescriptors)
+  {
+    // For backward compatibility, use asset.created() for blobCreated
+    Date blobCreated = Date.from(asset.created().toInstant());
+
+    return doFromAsset(asset, repository, assetDescriptors)
+        .blobCreated(blobCreated)
+        .build();
+  }
+
+  private static AssetXO.AssetXOBuilder doFromAsset(
       final Asset asset,
       final Repository repository,
       final Map<String, AssetXODescriptor> assetDescriptors)
@@ -63,8 +99,6 @@ public class AssetXOBuilder
         .map(Date::from)
         .orElseGet(() -> Date.from(asset.created().toInstant()));
 
-    Date blobCreated = Date.from(asset.created().toInstant());
-
     return AssetXO.builder()
         .path(asset.path())
         .downloadUrl(repository.getUrl() + asset.path())
@@ -78,9 +112,7 @@ public class AssetXOBuilder
         .attributes(getExpandedAttributes(asset, format, assetDescriptors))
         .uploader(uploader)
         .uploaderIp(uploaderIp)
-        .fileSize(fileSize)
-        .blobCreated(blobCreated)
-        .build();
+        .fileSize(fileSize);
   }
 
   @Nullable
@@ -98,10 +130,12 @@ public class AssetXOBuilder
         .map(AssetXODescriptor::listExposedAttributeKeys)
         .orElseGet(Collections::emptySet);
 
-    Map<String, Object> exposedAttributes = asset.attributes(format).backing().entrySet()
-      .stream()
-      .filter(entry -> exposedAttributeKeys.contains(entry.getKey()))
-      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    Map<String, Object> exposedAttributes = asset.attributes(format)
+        .backing()
+        .entrySet()
+        .stream()
+        .filter(entry -> exposedAttributeKeys.contains(entry.getKey()))
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
     return Collections.singletonMap(format, exposedAttributes);
   }

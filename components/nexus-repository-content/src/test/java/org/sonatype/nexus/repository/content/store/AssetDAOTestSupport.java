@@ -903,6 +903,203 @@ public abstract class AssetDAOTestSupport
     }
   }
 
+  protected void testBrowseEagerAssetsInRepositoryOrderingByBlobCreated() throws InterruptedException {
+    generateConfiguration();
+    EntityId entityId = generatedConfigurations().get(0).getRepositoryId();
+    generateSingleRepository(UUID.fromString(entityId.getValue()));
+    repositoryId = generatedRepositories().get(0).repositoryId;
+
+    OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+
+    // Create assets with specific blob_created timestamps in non-sequential order
+    OffsetDateTime oldest = now.minusDays(10); // Apr 16 2021 equivalent
+    OffsetDateTime middle1 = now.minusDays(5); // Apr 30 2021 15:07 equivalent
+    OffsetDateTime middle2 = now.minusDays(4); // Apr 30 2021 17:01 equivalent
+    OffsetDateTime newest = now.minusDays(1); // Apr 25 2023 equivalent
+
+    try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
+      AssetDAO assetDao = session.access(TestAssetDAO.class);
+      AssetBlobDAO blobDao = session.access(TestAssetBlobDAO.class);
+      ComponentDAO componentDao = session.access(TestComponentDAO.class);
+
+      // Create component
+      ComponentData component = generateComponent(repositoryId, "test", "component1", "1.0");
+      createComponents(componentDao, entityVersionEnabled, component);
+
+      // Create assets with blobs in non-sequential order of blob_created
+      // This tests that ordering is by blob_created DESC, not by asset_id
+      AssetData asset1 = createAssetWithBlobCreated(assetDao, blobDao, component, "/path1", middle1);
+      AssetData asset2 = createAssetWithBlobCreated(assetDao, blobDao, component, "/path2", newest);
+      AssetData asset3 = createAssetWithBlobCreated(assetDao, blobDao, component, "/path3", middle2);
+      AssetData asset4 = createAssetWithBlobCreated(assetDao, blobDao, component, "/path4", oldest);
+
+      session.getTransaction().commit();
+
+      // Browse and verify ordering: should be newest first (DESC order)
+      Continuation<Asset> page1 = assetDao.browseEagerAssetsInRepository(repositoryId, null, 10, null, null);
+
+      assertThat(page1.size(), is(4));
+
+      Asset[] assets = page1.toArray(new Asset[0]);
+
+      // Verify ordering: newest to oldest by blob_created
+      assertThat(assets[0].path(), is("/path2")); // newest
+      assertThat(assets[1].path(), is("/path3")); // middle2
+      assertThat(assets[2].path(), is("/path1")); // middle1
+      assertThat(assets[3].path(), is("/path4")); // oldest
+
+      // Verify blob_created timestamps are in descending order
+      // Truncate to millis since H2 database may have different precision
+      assertThat(assets[0].blob().get().blobCreated().truncatedTo(ChronoUnit.MILLIS),
+          is(newest.truncatedTo(ChronoUnit.MILLIS)));
+      assertThat(assets[1].blob().get().blobCreated().truncatedTo(ChronoUnit.MILLIS),
+          is(middle2.truncatedTo(ChronoUnit.MILLIS)));
+      assertThat(assets[2].blob().get().blobCreated().truncatedTo(ChronoUnit.MILLIS),
+          is(middle1.truncatedTo(ChronoUnit.MILLIS)));
+      assertThat(assets[3].blob().get().blobCreated().truncatedTo(ChronoUnit.MILLIS),
+          is(oldest.truncatedTo(ChronoUnit.MILLIS)));
+    }
+  }
+
+  protected void testBrowseEagerAssetsInRepositoryPaginationWithBlobCreated() throws InterruptedException {
+    generateConfiguration();
+    EntityId entityId = generatedConfigurations().get(0).getRepositoryId();
+    generateSingleRepository(UUID.fromString(entityId.getValue()));
+    repositoryId = generatedRepositories().get(0).repositoryId;
+
+    OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+
+    try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
+      AssetDAO assetDao = session.access(TestAssetDAO.class);
+      AssetBlobDAO blobDao = session.access(TestAssetBlobDAO.class);
+      ComponentDAO componentDao = session.access(TestComponentDAO.class);
+
+      ComponentData component = generateComponent(repositoryId, "test", "component1", "1.0");
+      createComponents(componentDao, entityVersionEnabled, component);
+
+      // Create 5 assets with different blob_created timestamps
+      for (int i = 0; i < 5; i++) {
+        OffsetDateTime blobCreated = now.minusDays(i);
+        createAssetWithBlobCreated(assetDao, blobDao, component, "/path" + i, blobCreated);
+      }
+
+      session.getTransaction().commit();
+
+      // Test pagination: get first 2 assets
+      Continuation<Asset> page1 = assetDao.browseEagerAssetsInRepository(repositoryId, null, 2, null, null);
+      assertThat(page1.size(), is(2));
+
+      String continuationToken = page1.nextContinuationToken();
+      assertThat(continuationToken, notNullValue());
+
+      // Get next 2 assets using continuation token
+      Continuation<Asset> page2 = assetDao.browseEagerAssetsInRepository(
+          repositoryId,
+          AssetBlobCreatedContinuationToken.decode(continuationToken),
+          2,
+          null,
+          null);
+      assertThat(page2.size(), is(2));
+
+      // Verify no overlap between pages
+      Asset[] page1Assets = page1.toArray(new Asset[0]);
+      Asset[] page2Assets = page2.toArray(new Asset[0]);
+
+      assertThat(page1Assets[0].path(), is("/path0")); // Most recent
+      assertThat(page1Assets[1].path(), is("/path1"));
+      assertThat(page2Assets[0].path(), is("/path2"));
+      assertThat(page2Assets[1].path(), is("/path3"));
+
+      // Verify blob_created ordering across pages
+      assertThat(page1Assets[0].blob().get().blobCreated().isAfter(page1Assets[1].blob().get().blobCreated()),
+          is(true));
+      assertThat(page1Assets[1].blob().get().blobCreated().isAfter(page2Assets[0].blob().get().blobCreated()),
+          is(true));
+      assertThat(page2Assets[0].blob().get().blobCreated().isAfter(page2Assets[1].blob().get().blobCreated()),
+          is(true));
+
+      // Get final page
+      String continuationToken2 = page2.nextContinuationToken();
+      Continuation<Asset> page3 = assetDao.browseEagerAssetsInRepository(
+          repositoryId,
+          AssetBlobCreatedContinuationToken.decode(continuationToken2),
+          2,
+          null,
+          null);
+      assertThat(page3.size(), is(1)); // Only 1 left
+      assertThat(page3.toArray(new Asset[0])[0].path(), is("/path4")); // Oldest
+    }
+  }
+
+  protected void testBrowseEagerAssetsInRepositorySameTimestampDifferentAssetId() throws InterruptedException {
+    generateConfiguration();
+    EntityId entityId = generatedConfigurations().get(0).getRepositoryId();
+    generateSingleRepository(UUID.fromString(entityId.getValue()));
+    repositoryId = generatedRepositories().get(0).repositoryId;
+
+    OffsetDateTime sameTime = OffsetDateTime.now(ZoneOffset.UTC);
+
+    try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
+      AssetDAO assetDao = session.access(TestAssetDAO.class);
+      AssetBlobDAO blobDao = session.access(TestAssetBlobDAO.class);
+      ComponentDAO componentDao = session.access(TestComponentDAO.class);
+
+      ComponentData component = generateComponent(repositoryId, "test", "component1", "1.0");
+      createComponents(componentDao, entityVersionEnabled, component);
+
+      // Create 3 assets with the same blob_created timestamp
+      // These should be ordered by asset_id ASC as secondary sort
+      AssetData asset1 = createAssetWithBlobCreated(assetDao, blobDao, component, "/path1", sameTime);
+      AssetData asset2 = createAssetWithBlobCreated(assetDao, blobDao, component, "/path2", sameTime);
+      AssetData asset3 = createAssetWithBlobCreated(assetDao, blobDao, component, "/path3", sameTime);
+
+      session.getTransaction().commit();
+
+      // Browse and verify secondary ordering by asset_id ASC when blob_created is the same
+      Continuation<Asset> assets = assetDao.browseEagerAssetsInRepository(repositoryId, null, 10, null, null);
+
+      assertThat(assets.size(), is(3));
+      Asset[] assetArray = assets.toArray(new Asset[0]);
+
+      // All should have same blob_created (truncate to millis for H2 database precision)
+      assertThat(assetArray[0].blob().get().blobCreated().truncatedTo(ChronoUnit.MILLIS),
+          is(sameTime.truncatedTo(ChronoUnit.MILLIS)));
+      assertThat(assetArray[1].blob().get().blobCreated().truncatedTo(ChronoUnit.MILLIS),
+          is(sameTime.truncatedTo(ChronoUnit.MILLIS)));
+      assertThat(assetArray[2].blob().get().blobCreated().truncatedTo(ChronoUnit.MILLIS),
+          is(sameTime.truncatedTo(ChronoUnit.MILLIS)));
+
+      // Verify secondary ordering by asset_id ascending
+      int id1 = ((AssetData) assetArray[0]).assetId;
+      int id2 = ((AssetData) assetArray[1]).assetId;
+      int id3 = ((AssetData) assetArray[2]).assetId;
+
+      assertThat(id1 < id2, is(true));
+      assertThat(id2 < id3, is(true));
+    }
+  }
+
+  private AssetData createAssetWithBlobCreated(
+      final AssetDAO assetDao,
+      final AssetBlobDAO blobDao,
+      final ComponentData component,
+      final String path,
+      final OffsetDateTime blobCreated) throws InterruptedException
+  {
+    // Small delay to ensure different asset_ids
+    Thread.sleep(1);
+
+    AssetBlobData blob = generateAssetBlob(blobCreated);
+    blobDao.createAssetBlob(blob);
+
+    AssetData asset = generateAsset(repositoryId, path);
+    asset.setComponent(component);
+    asset.setAssetBlob(blob);
+    assetDao.createAsset(asset, entityVersionEnabled);
+
+    return asset;
+  }
+
   protected void testSetLastDownloaded() {
     AssetData asset1 = generateAsset(repositoryId, "/asset1/asset1.jar");
     ComponentData componentData = generateComponent(repositoryId, "namespace1", "name1", "1.0.0");

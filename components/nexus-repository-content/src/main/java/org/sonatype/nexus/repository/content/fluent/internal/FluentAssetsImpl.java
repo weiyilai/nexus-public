@@ -95,12 +95,33 @@ public class FluentAssetsImpl
     return doBrowse(limit, continuationToken, null, null, null, constraints);
   }
 
+  /**
+   * Browse assets with eagerly-loaded blobs and components, sorted by blob_created descending.
+   *
+   * <p>
+   * <strong>NOTE:</strong> This method is currently only utilized by migration asset queries and polling operations
+   * that require assets ordered by blob creation timestamp in descending order (newest first). It uses a composite
+   * continuation token containing both blob_created timestamp and asset_id for stable pagination across pages.
+   *
+   * @see AssetBlobCreatedContinuationToken
+   */
   @Override
   public Continuation<FluentAsset> browseEager(final int limit, @Nullable final String continuationToken) {
     return new FluentContinuation<>(assetStore.browseEagerAssets(facet.contentRepositoryId(), continuationToken, limit),
         this::with);
   }
 
+  /**
+   * Browse assets with eagerly-loaded blobs and components, sorted by blob_created descending,
+   * with optional timestamp filtering.
+   *
+   * <p>
+   * <strong>NOTE:</strong> This method is currently only utilized by migration asset queries and polling operations
+   * that require assets ordered by blob creation timestamp in descending order (newest first). It uses a composite
+   * continuation token containing both blob_created timestamp and asset_id for stable pagination across pages.
+   *
+   * @see AssetBlobCreatedContinuationToken
+   */
   public Continuation<FluentAsset> browseEager(
       final int limit,
       @Nullable final String continuationToken,
