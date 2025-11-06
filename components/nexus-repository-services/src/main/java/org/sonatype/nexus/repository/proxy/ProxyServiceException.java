@@ -31,11 +31,6 @@ public class ProxyServiceException
     this.httpResponse = httpResponse;
   }
 
-  public ProxyServiceException(final String message) {
-    super(message);
-    this.httpResponse = null;
-  }
-
   /**
    * Returns the {@link HttpResponse} but with a <b>consumed entity</b>, to be able to inspect response status and
    * headers, if needed.

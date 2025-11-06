@@ -620,5 +620,4 @@ public class ProxyFacetSupportTest
     Content actual = underTest.get(cachedContext);
     verify(eventManager, never()).post(any(ProxyThrottledRequestEvent.class));
   }
-
 }

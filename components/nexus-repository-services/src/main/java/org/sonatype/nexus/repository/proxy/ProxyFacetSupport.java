@@ -177,7 +177,7 @@ public abstract class ProxyFacetSupport
 
   private static final String CTX_REQ_STOPWATCH = "request.stopwatch";
 
-  protected static final String HTTP_RESPONSE = "request.http_response";
+  private static final String HTTP_RESPONSE = "request.http_response";
 
   static final String HTTPCLIENT_OUTBOUND_REQ_LOGGER_NAME = "outboundRequests";
 
