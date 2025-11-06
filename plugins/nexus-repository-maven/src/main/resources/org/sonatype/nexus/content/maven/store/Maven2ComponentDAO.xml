@@ -16,11 +16,17 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="${namespace}">
 
-  <insert id="extendSchema">
-    ALTER TABLE maven2_component ADD COLUMN IF NOT EXISTS
-        base_version VARCHAR NULL;
-
+  <insert id="extendSchema" databaseId="H2">
+    <!-- base_version column added to maven2_component table -->
+    <!-- H2 IF NOT EXISTS is safe and needed for test environments -->
+    ALTER TABLE maven2_component ADD COLUMN IF NOT EXISTS base_version VARCHAR NULL;
     CREATE INDEX IF NOT EXISTS idx_maven2_component_base_version ON maven2_component (base_version);
+  </insert>
+
+  <insert id="extendSchema" databaseId="PostgreSQL">
+    <!-- base_version column and index added via Maven2ComponentBaseVersionMigrationStep_2_29 -->
+    <!-- PostgreSQL: No ALTER TABLE here to avoid lock contention (NEXUS-49154) -->
+    <!-- Migration handles adding column to production databases -->
   </insert>
 
   <update id="updateBaseVersion" parameterType="Maven2ComponentData">

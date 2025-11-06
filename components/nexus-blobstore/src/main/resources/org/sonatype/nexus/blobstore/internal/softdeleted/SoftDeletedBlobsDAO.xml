@@ -23,10 +23,12 @@
       blob_id VARCHAR(256) NOT NULL,
       source_blob_store_name VARCHAR(256) NOT NULL,
       deleted_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      date_path_ref TIMESTAMP WITH TIME ZONE,
       CONSTRAINT pk_soft_deleted_blobs_record_id PRIMARY KEY (record_id)
     );
 
-    ALTER TABLE soft_deleted_blobs ADD COLUMN IF NOT EXISTS date_path_ref TIMESTAMP WITH TIME ZONE;
+    <!-- date_path_ref column is now in CREATE TABLE (line 26) -->
+    <!-- SoftDeletedBlobsDatePathRefMigrationStep_2_23 handles adding it to existing databases -->
 
     CREATE INDEX IF NOT EXISTS idx_soft_deleted_blobs_source_blob_store_name
         ON soft_deleted_blobs (source_blob_store_name, blob_id);

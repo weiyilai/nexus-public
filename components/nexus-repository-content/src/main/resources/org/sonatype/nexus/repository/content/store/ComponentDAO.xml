@@ -31,6 +31,7 @@
       attributes    ${JSON_TYPE} NOT NULL,
       created       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
       last_updated  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      entity_version INT,
 
       CONSTRAINT pk_${format}_component_id PRIMARY KEY (component_id),
       CONSTRAINT uk_${format}_component_coordinate UNIQUE (repository_id, namespace, name, version),
@@ -44,13 +45,15 @@
 
     CREATE INDEX IF NOT EXISTS idx_${format}_component_kind ON ${format}_component (kind);
 
-    --Note: adding create clause for clarity , the alter clause will be executed when
-    -- the table already exists whilst the definiton on the create table will be executed when creating the table
-    ALTER TABLE ${format}_component ADD COLUMN IF NOT EXISTS normalized_version VARCHAR;
+    <!-- normalized_version column is already in CREATE TABLE (line 30) -->
+    <!-- ComponentNormalizedVersionMigrationStep (Repeatable) handles:
+         - Adding column if missing (for formats added after initial install)
+         - Adding index
+         - Scheduling task to populate values
+    -->
     CREATE INDEX IF NOT EXISTS idx_${format}_normalized_version ON  ${format}_component (normalized_version);
     <if test="_databaseId == 'PostgreSQL'">
-      --Note: added conditional alter clause to add a not null constraint in case
-      --the table has its normalized_version populated
+      <!-- Add NOT NULL constraint only if all rows have normalized_version populated -->
       <![CDATA[
       DO $$
         BEGIN
@@ -61,9 +64,8 @@
       ]]>
     </if>
 
-    --Note: index intentionally not added because this column is intended to be used
-    -- with the component_id which is indexed
-    ALTER TABLE ${format}_component ADD COLUMN IF NOT EXISTS entity_version INT;
+    <!-- entity_version column is now in CREATE TABLE (line 34) -->
+    <!-- ComponentEntityVersionMigrationStep_2_20 handles adding it to existing databases -->
   </insert>
 
   <sql id="componentNamespaceMatch">

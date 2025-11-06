@@ -32,7 +32,8 @@
       CONSTRAINT uk_api_key_domain_token UNIQUE (domain, token)
     );
 
-    ALTER TABLE api_key ADD COLUMN IF NOT EXISTS created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
+    <!-- created column is already in CREATE TABLE (line 25) -->
+    <!-- ApiKeyCreatedMigrationStep_2_22 handles adding it to existing databases -->
   </insert>
 
   <select id="browsePrincipals" resultType="org.apache.shiro.subject.PrincipalCollection">
