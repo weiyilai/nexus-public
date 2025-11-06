@@ -14,6 +14,9 @@ package org.sonatype.nexus.capability;
 
 import javax.annotation.Nullable;
 
+import org.sonatype.nexus.crypto.secrets.SecretsService;
+import org.sonatype.nexus.crypto.secrets.SecretsStore;
+
 /**
  * A capability is a stateful representation of configuration and lifecycle exposed for generalized management.
  */
@@ -23,8 +26,11 @@ public interface Capability
    * Initializes the capability after it has been created by factory.
    *
    * @param context capability context
+   * @param secretsService secrets service for encryption/removal
+   * @param secretsStore secrets store for on-demand decryption
+   * @since 3.87
    */
-  void init(CapabilityContext context);
+  void init(CapabilityContext context, SecretsService secretsService, SecretsStore secretsStore);
 
   /**
    * Returns description of capability.
@@ -45,7 +51,7 @@ public interface Capability
   /**
    * Callback when a new capability is created.
    * <p/>
-   * If an exception occurs, during invocation of this method,  the exception will be ignored and capability will be
+   * If an exception occurs, during invocation of this method, the exception will be ignored and capability will be
    * in an invalid state.
    * Any further interaction with this capability will result in an {@link IllegalStateException}.
    *
@@ -56,7 +62,7 @@ public interface Capability
   /**
    * Callback when a capability configuration is loaded from persisted store (configuration file).
    * <p/>
-   * If an exception occurs, during invocation of this method,  the exception will be ignored and capability will be
+   * If an exception occurs, during invocation of this method, the exception will be ignored and capability will be
    * in an invalid state.
    * Any further interaction with this capability will result in an {@link IllegalStateException}.
    *
