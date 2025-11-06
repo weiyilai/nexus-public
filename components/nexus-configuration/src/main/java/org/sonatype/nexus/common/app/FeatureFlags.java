@@ -268,4 +268,6 @@ public class FeatureFlags
 
   public static final String REACT_TASKS_ENABLED_NAMED_VALUE = "${nexus.react.tasks.enabled:false}";
 
+  public static final String NEXUS_USER_CONFIGURATION_SOURCE_ENABLED = "nexus.user.configuration.source.enabled";
+
 }
