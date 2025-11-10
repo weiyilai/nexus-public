@@ -16,37 +16,44 @@ import java.sql.Connection;
 import java.util.Optional;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.repository.content.tasks.CreateAssetBlobIndexTaskDescriptor;
+import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_SINGLETON;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 /**
- * This migration step is now a no-op. Index creation has been moved to a scheduled task
- * (CreateAssetBlobIndexTask) which is scheduled by AssetBlobMigrationStep_2_18_2.
- *
- * Note that the 2_18_1 version is because this step is needed in a 3.86.1 patch release and there are already
- * like 20 new db migrations on main for the 3.87 release, so want to make sure we don't cause migration issues for
- * customers that go to the 3.86.1 release and then 3.87 or any other future release
+ * Schedules the CreateAssetBlobIndexTask to create composite indexes on {format}_asset_blob tables
+ * for blob_created DESC and asset_blob_id ASC. This replaces the direct index creation from
+ * AssetBlobMigrationStep_2_18_1 which is now a no-op.
  */
 @Component
 @Scope(SCOPE_SINGLETON)
-public class AssetBlobMigrationStep_2_18_1
+public class AssetBlobMigrationStep_2_18_2
     extends ComponentSupport
     implements DatabaseMigrationStep
 {
+  private final UpgradeTaskScheduler upgradeTaskScheduler;
+
+  @Autowired
+  public AssetBlobMigrationStep_2_18_2(final UpgradeTaskScheduler upgradeTaskScheduler) {
+    this.upgradeTaskScheduler = checkNotNull(upgradeTaskScheduler);
+  }
 
   @Override
   public Optional<String> version() {
-    return Optional.of("2.18.1");
+    return Optional.of("2.18.2");
   }
 
   @Override
   public void migrate(final Connection connection) throws Exception {
-    // This migration step is now a no-op. Index creation is handled by the scheduled task
-    // in AssetBlobMigrationStep_2_18_2 which schedules CreateAssetBlobIndexTask.
-    log.info("AssetBlobMigrationStep_2_18_1 is now a no-op. Index creation is handled by scheduled task.");
+    log.info("Scheduling asset blob index creation task");
+    upgradeTaskScheduler.schedule(
+        upgradeTaskScheduler.createTaskConfigurationInstance(CreateAssetBlobIndexTaskDescriptor.TYPE_ID));
   }
 }

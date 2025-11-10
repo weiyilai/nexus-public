@@ -14,7 +14,6 @@ package org.sonatype.nexus.repository.content.upgrades;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collections;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.repository.Format;
@@ -51,11 +50,11 @@ public class AssetBlobMigrationStep_2_18_1Test
   @Before
   public void setup() {
     when(testFormat.getValue()).thenReturn(TEST_FORMAT);
-    underTest = new AssetBlobMigrationStep_2_18_1(Collections.singletonList(testFormat));
+    underTest = new AssetBlobMigrationStep_2_18_1();
   }
 
   @Test
-  public void testMigration_createsIndexWithBothColumns() throws Exception {
+  public void testMigration_isNoOp() throws Exception {
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       // Create asset_blob table first
       createAssetBlobTable(conn);
@@ -67,11 +66,11 @@ public class AssetBlobMigrationStep_2_18_1Test
       assertFalse("index should not exist before migration",
           underTest.indexExists(conn, ASSET_BLOB_TABLE, INDEX_NAME));
 
-      // Run migration
+      // Run migration (should be a no-op)
       underTest.migrate(conn);
 
-      // Verify index was created
-      assertTrue("index should exist after migration",
+      // Verify index was NOT created (since this is now a no-op)
+      assertFalse("index should NOT exist after no-op migration",
           underTest.indexExists(conn, ASSET_BLOB_TABLE, INDEX_NAME));
     }
   }
@@ -82,12 +81,12 @@ public class AssetBlobMigrationStep_2_18_1Test
       // Create asset_blob table first
       createAssetBlobTable(conn);
 
-      // Run migration twice
+      // Run migration twice (should be a no-op both times)
       underTest.migrate(conn);
       underTest.migrate(conn);
 
-      // Verify index exists and no error occurred
-      assertTrue("index should exist after double migration",
+      // Verify no error occurred
+      assertFalse("index should NOT exist after double no-op migration",
           underTest.indexExists(conn, ASSET_BLOB_TABLE, INDEX_NAME));
     }
   }
@@ -97,21 +96,20 @@ public class AssetBlobMigrationStep_2_18_1Test
     Format format2 = org.mockito.Mockito.mock(Format.class);
     when(format2.getValue()).thenReturn("maven");
 
-    AssetBlobMigrationStep_2_18_1 multiFormatMigration = new AssetBlobMigrationStep_2_18_1(
-        java.util.Arrays.asList(testFormat, format2));
+    AssetBlobMigrationStep_2_18_1 multiFormatMigration = new AssetBlobMigrationStep_2_18_1();
 
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       // Create both tables
       createAssetBlobTable(conn);
       createMavenAssetBlobTable(conn);
 
-      // Run migration
+      // Run migration (should be a no-op)
       multiFormatMigration.migrate(conn);
 
-      // Verify both indexes were created
-      assertTrue("test index should exist",
+      // Verify no indexes were created (since this is now a no-op)
+      assertFalse("test index should NOT exist after no-op migration",
           multiFormatMigration.indexExists(conn, ASSET_BLOB_TABLE, INDEX_NAME));
-      assertTrue("maven index should exist",
+      assertFalse("maven index should NOT exist after no-op migration",
           multiFormatMigration.indexExists(conn, "maven_asset_blob", "idx_maven_asset_blob_blob_created_asset_id"));
     }
   }
@@ -122,19 +120,13 @@ public class AssetBlobMigrationStep_2_18_1Test
       // Verify table doesn't exist
       assertFalse("table should not exist", underTest.tableExists(conn, ASSET_BLOB_TABLE));
 
-      // Run migration - should not throw exception
+      // Run migration (should be a no-op) - should not throw exception
       underTest.migrate(conn);
 
-      // Verify index was NOT created (since table doesn't exist)
-      assertFalse("index should not exist when table doesn't exist",
+      // Verify index was NOT created (since this is a no-op)
+      assertFalse("index should not exist after no-op migration",
           underTest.indexExists(conn, ASSET_BLOB_TABLE, INDEX_NAME));
     }
-  }
-
-  @Test
-  public void testCanExecuteInTransaction() {
-    // PostgreSQL does not support concurrent index creation in a transaction
-    assertFalse("migration should not execute in transaction", underTest.canExecuteInTransaction());
   }
 
   @Test
@@ -152,11 +144,11 @@ public class AssetBlobMigrationStep_2_18_1Test
       // H2 is the default for tests, so this tests the H2 path
       assertTrue("should be H2 database", underTest.isH2(conn));
 
-      // Run migration
+      // Run migration (should be a no-op)
       underTest.migrate(conn);
 
-      // Verify index was created using H2 syntax (CREATE INDEX IF NOT EXISTS)
-      assertTrue("index should exist after H2 migration",
+      // Verify index was NOT created (since this is now a no-op)
+      assertFalse("index should NOT exist after no-op H2 migration",
           underTest.indexExists(conn, ASSET_BLOB_TABLE, INDEX_NAME));
     }
   }
