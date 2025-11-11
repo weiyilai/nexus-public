@@ -12,7 +12,7 @@
  */
 import React, { useState } from 'react';
 import { ExtJS } from "@sonatype/nexus-ui-plugin";
-import { NxTile, NxErrorAlert } from "@sonatype/react-shared-components";
+import { NxTile, NxErrorAlert, NxH2 } from "@sonatype/react-shared-components";
 import UIStrings from "../../../constants/UIStrings";
 import LoginLayout from "../../layout/LoginLayout";
 import AnonymousAccess from "./AnonymousAccess";
@@ -68,7 +68,11 @@ export default function LoginPage({ logoConfig }) {
       <div className="login-page">
         <NxTile className="login-tile" data-testid="login-tile">
           <NxTile.Header>
-            <NxTile.HeaderTitle>{LOGIN_TITLE}</NxTile.HeaderTitle>
+            <NxTile.HeaderTitle>
+              <NxH2>
+                {LOGIN_TITLE}
+              </NxH2>
+            </NxTile.HeaderTitle>
             <NxTile.HeaderSubtitle>{LOGIN_SUBTITLE}</NxTile.HeaderSubtitle>
           </NxTile.Header>
           <NxTile.Content>

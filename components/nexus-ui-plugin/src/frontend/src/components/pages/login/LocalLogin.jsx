@@ -50,8 +50,9 @@ export default function LocalLogin({ primaryButton, onError }) {
       await ExtJS.waitForNextPermissionChange();
       const returnTo = router.globals.params.returnTo;
       if (returnTo) {
+        const originalReturnTo = atob(returnTo);
         // `router.urlService.url` does set and navigate to the returnTo url
-        router.urlService.url(returnTo);
+        router.urlService.url(originalReturnTo);
       } else {
         router.stateService.go('browse.welcome');
       }
@@ -122,6 +123,7 @@ export default function LocalLogin({ primaryButton, onError }) {
     submitBtnText: LOGIN_BUTTON,
     submitBtnClasses: [formProps.submitBtnClasses, 'login-form__hidden-submit'].filter(Boolean).join(' '),
     submitError: null,
+    submitMaskState: null,
     onSubmit: handleSubmit
   };
 

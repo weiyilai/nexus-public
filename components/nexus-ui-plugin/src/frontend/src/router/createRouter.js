@@ -66,7 +66,9 @@ export function createRouter({initialRoute, menuRoutes, missingRoute}) {
           }
 
           console.debug('Redirecting to login page with return URL');
-          let returnTo = router.stateService.href(stateTo.name, transition.params());
+          // Keep original requested URL and then encode to Base64
+          const url = router.urlService.url();
+          const returnTo = btoa(`#${url}`);
           router.stateService.go(RouteNames.LOGIN, {returnTo});
         }
         else {

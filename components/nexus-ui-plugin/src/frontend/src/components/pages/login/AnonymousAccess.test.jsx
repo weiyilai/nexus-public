@@ -88,13 +88,14 @@ describe('AnonymousAccess', () => {
     });
 
     it('navigates to returnTo url when clicked and returnTo param exists', () => {
-      mockRouter.globals.params.returnTo = '/some/path';
+      const returnToUrl = '/some/path';
+      mockRouter.globals.params.returnTo = btoa(returnToUrl);
       render(<AnonymousAccess />);
       const button = screen.getByTestId('continue-without-login-button');
 
       fireEvent.click(button);
 
-      expect(mockRouter.urlService.url).toHaveBeenCalledWith('/some/path');
+      expect(mockRouter.urlService.url).toHaveBeenCalledWith(returnToUrl);
       expect(mockRouter.stateService.go).not.toHaveBeenCalled();
     });
   });

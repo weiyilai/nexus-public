@@ -360,14 +360,15 @@ describe('LoginPage', () => {
 
     it('redirects to returnTo URL when returnTo is provided and continuing without login', () => {
       setupStates(false, false, false, 'anonymous');
-      mockRouterParams.returnTo = '#browse/browse:maven-snapshots';
+      const returnToUrl = '#browse/browse:maven-snapshots';
+      mockRouterParams.returnTo = btoa(returnToUrl);
 
       renderComponent({ logoConfig: mockLogoConfig });
 
       const button = screen.getByTestId('continue-without-login-button');
       button.click();
 
-      expect(mockRouterUrl).toHaveBeenCalledWith('#browse/browse:maven-snapshots');
+      expect(mockRouterUrl).toHaveBeenCalledWith(returnToUrl);
       expect(mockRouterGo).not.toHaveBeenCalled();
     });
 

@@ -129,31 +129,6 @@ describe('LocalLogin', () => {
       expect(submitButton).toBe(selectors.loginButton());
     });
 
-    it('shows loading state while authentication is pending', async () => {
-      renderComponent();
-      await fillCredentials('testuser', 'testpass');
-
-      // Create a promise that we can control
-      let resolvePromise;
-      const pendingPromise = new Promise((resolve) => {
-        resolvePromise = resolve;
-      });
-      mockRequestSession.mockImplementation(() => pendingPromise);
-
-      await act(async () => {
-        await userEvent.click(selectors.loginButton());
-      });
-
-      await waitFor(() => {
-        expect(selectors.loadingButton()).toBeInTheDocument();
-      }, { timeout: 3000 });
-
-      expect(selectors.usernameInput()).toBeDisabled();
-      expect(selectors.passwordInput()).toBeDisabled();
-
-      // Clean up by resolving the promise
-      resolvePromise({ status: 204 });
-    }, 20000); // Increase test timeout
   });
 
   describe('validation', () => {
@@ -236,7 +211,7 @@ describe('LocalLogin', () => {
       });
 
       expect(selectors.usernameInput()).toHaveValue('admin');
-      
+
       expect(selectors.usernameInput()).toHaveAttribute('aria-invalid', 'true');
       expect(selectors.passwordInput()).toHaveAttribute('aria-invalid', 'true');
       expect(screen.queryByText(LoginPageStrings.ERRORS.USERNAME_REQUIRED)).not.toBeInTheDocument();
@@ -422,7 +397,8 @@ describe('LocalLogin', () => {
     });
 
     it('redirects to returnTo URL after successful login', async () => {
-      mockRouter.globals.params.returnTo = '#admin/repository/repositories';
+      const returnToUrl = '#admin/repository/repositories';
+      mockRouter.globals.params.returnTo = btoa(returnToUrl);
       renderComponent();
       await fillCredentials('admin', 'admin123');
 
@@ -434,7 +410,7 @@ describe('LocalLogin', () => {
 
       await waitFor(() => {
         expect(mockWaitForNextPermissionChange).toHaveBeenCalled();
-        expect(mockRouter.urlService.url).toHaveBeenCalledWith('#admin/repository/repositories');
+        expect(mockRouter.urlService.url).toHaveBeenCalledWith(returnToUrl);
         expect(mockRouter.stateService.go).not.toHaveBeenCalled();
       });
     });

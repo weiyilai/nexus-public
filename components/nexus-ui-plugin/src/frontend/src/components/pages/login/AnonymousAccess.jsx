@@ -31,8 +31,9 @@ export default function AnonymousAccess() {
     try {
       const returnTo = router.globals.params.returnTo;
       if (returnTo) {
+       const originalReturnTo = atob(returnTo);
         // `router.urlService.url` does set and navigate to the returnTo url
-        router.urlService.url(returnTo);
+        router.urlService.url(originalReturnTo);
       } else {
         router.stateService.go('browse.welcome');
       }
