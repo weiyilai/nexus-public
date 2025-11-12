@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.HttpMethod;
@@ -26,6 +24,8 @@ import javax.ws.rs.core.MediaType;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.text.Strings2;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
@@ -95,23 +95,30 @@ public class AntiCsrfHelper
     throw new UnauthorizedException(ERROR_MESSAGE_TOKEN_MISMATCH);
   }
 
-  private boolean isSafeHttpMethod(final HttpServletRequest request) {
+  private static boolean isSafeHttpMethod(final HttpServletRequest request) {
     String method = request.getMethod();
     return HttpMethod.GET.equals(method) || HttpMethod.HEAD.equals(method);
   }
 
   private boolean isMultiPartFormDataPost(final HttpServletRequest request) {
-    return HttpMethod.POST.equals(request.getMethod()) && !Strings2.isBlank(request.getContentType())
-        && MediaType.MULTIPART_FORM_DATA_TYPE.isCompatible(MediaType.valueOf(request.getContentType()));
+    String contentType = request.getContentType();
+    try {
+      return HttpMethod.POST.equals(request.getMethod()) && !Strings2.isBlank(contentType)
+          && MediaType.MULTIPART_FORM_DATA_TYPE.isCompatible(MediaType.valueOf(contentType));
+    }
+    catch (IllegalArgumentException e) {
+      log.debug("Failed to parse mediatype {}", contentType, e);
+      return false;
+    }
   }
 
-  private boolean isSessionAuthentication() {
+  private static boolean isSessionAuthentication() {
     Subject subject = SecurityUtils.getSubject();
 
     return subject != null && subject.getSession(false) != null;
   }
 
-  private Optional<String> getCookie(final HttpServletRequest request, final String cookieName) {
+  private static Optional<String> getCookie(final HttpServletRequest request, final String cookieName) {
     Cookie[] cookies = request.getCookies();
     if (cookies != null) {
       for (Cookie cookie : cookies) {
@@ -123,11 +130,11 @@ public class AntiCsrfHelper
     return Optional.empty();
   }
 
-  private Optional<String> getAntiCsrfTokenCookie(final HttpServletRequest request) {
+  private static Optional<String> getAntiCsrfTokenCookie(final HttpServletRequest request) {
     return getCookie(request, ANTI_CSRF_TOKEN_NAME);
   }
 
-  private boolean isAntiCsrfTokenValid(final HttpServletRequest request, final Optional<String> token) {
+  private static boolean isAntiCsrfTokenValid(final HttpServletRequest request, final Optional<String> token) {
     Optional<String> cookie = getAntiCsrfTokenCookie(request);
 
     return token.isPresent() && token.equals(cookie);
