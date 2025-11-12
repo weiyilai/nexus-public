@@ -24,9 +24,12 @@ const UNDER_LIMITS = 'Under limits';
 function getMetricData(usage, metricName) {
   const data = usage?.find(m => m.metricName === metricName) ?? {};
   const { aggregates = [], thresholds = [], metricValue = 0 } = data;
-  const thresholdValue = pathOr(0, ['HARD_THRESHOLD', 'thresholdValue'], indexBy(prop('thresholdName'), thresholds));
-  const highestRecordedCount = pathOr(0, ['peak_recorded_count_30d', 'value'], indexBy(prop('period'), aggregates));
-  return { metricValue, thresholdValue, highestRecordedCount, aggregates };
+  // Handle null values from API after session timeout by providing empty arrays
+  const safeThresholds = thresholds ?? [];
+  const safeAggregates = aggregates ?? [];
+  const thresholdValue = pathOr(0, ['HARD_THRESHOLD', 'thresholdValue'], indexBy(prop('thresholdName'), safeThresholds));
+  const highestRecordedCount = pathOr(0, ['peak_recorded_count_30d', 'value'], indexBy(prop('period'), safeAggregates));
+  return { metricValue, thresholdValue, highestRecordedCount, aggregates: safeAggregates };
 }
 
 function addProductParams() {
