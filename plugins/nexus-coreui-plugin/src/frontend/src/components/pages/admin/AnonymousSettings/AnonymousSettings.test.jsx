@@ -154,7 +154,7 @@ describe('AnonymousSettings', () => {
 
     fireEvent.change(userIdField(), {target: {value: ''}})
     await waitFor(() => expect(userIdField()).toHaveValue(''));
-    expect(userIdField()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(userIdField()).toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
     expect(discardButton()).toBeEnabled();
 
     userEvent.click(discardButton());

@@ -88,3 +88,15 @@ global.NX = {
     requestSession: jest.fn(() => Promise.resolve({status: 204, responseText: ''}))
   }
 };
+
+// Mock @xstate/react to force devTools: false in tests to reduce console noise
+jest.mock('@xstate/react', () => {
+  const actual = jest.requireActual('@xstate/react');
+  return {
+    ...actual,
+    useMachine: jest.fn((machine, options = {}) => {
+      // Force devTools to false in tests to prevent XState from logging every state transition
+      return actual.useMachine(machine, { ...options, devTools: false });
+    })
+  };
+});

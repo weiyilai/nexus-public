@@ -177,18 +177,18 @@ describe('BlobStoresForm', function () {
 
     userEvent.selectOptions(selectors.queryTypeSelect(), 'file');
     expect(selectors.queryName()).toBeInTheDocument();
-    expect(selectors.queryName()).not.toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(selectors.queryName()).not.toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
 
     userEvent.click(selectors.querySubmitButton());
-    expect(selectors.queryName()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(selectors.queryName()).toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
     expect(selectors.queryFormError(TestUtils.NO_CHANGES_MESSAGE)).toBeInTheDocument();
 
     userEvent.type(selectors.queryName(), '/test');
-    expect(selectors.queryName()).toHaveErrorMessage(TestUtils.NAME_VALIDATION_MESSAGE);
+    expect(selectors.queryName()).toHaveAccessibleErrorMessage(TestUtils.NAME_VALIDATION_MESSAGE);
 
     userEvent.clear(selectors.queryName());
     userEvent.type(selectors.queryName(), 'test');
-    expect(selectors.queryName()).not.toHaveErrorMessage(TestUtils.NAME_VALIDATION_MESSAGE);
+    expect(selectors.queryName()).not.toHaveAccessibleErrorMessage(TestUtils.NAME_VALIDATION_MESSAGE);
   });
 
   it('renders the name field and dynamic path field when the File type is selected', async function () {
@@ -427,15 +427,15 @@ describe('BlobStoresForm', function () {
     expect(modalTitle()).toHaveTextContent('Convert to Group Blob Store');
     expect(warning()).toBeInTheDocument();
     expect(newName()).toHaveValue('a-file/ee:#$%@-original');
-    expect(newName()).not.toHaveErrorMessage();
+    expect(newName()).not.toHaveAccessibleErrorMessage();
 
     userEvent.click(convertButton());
-    expect(newName()).toHaveErrorMessage(TestUtils.NAME_VALIDATION_MESSAGE);
+    expect(newName()).toHaveAccessibleErrorMessage(TestUtils.NAME_VALIDATION_MESSAGE);
     expect(selectors.queryFormError(TestUtils.VALIDATION_ERRORS_MESSAGE)).toBeInTheDocument();
 
     userEvent.clear(newName());
     userEvent.type(newName(), 'test_1');
-    expect(newName()).not.toHaveErrorMessage();
+    expect(newName()).not.toHaveAccessibleErrorMessage();
 
     userEvent.click(convertButton());
     await waitFor(() => expect(axios.post).toHaveBeenCalledWith(convertUrl));

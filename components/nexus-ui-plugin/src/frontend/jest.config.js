@@ -28,7 +28,7 @@ module.exports = {
   // browser: false,
 
   // The directory where Jest should store its cached dependency information
-  // cacheDirectory: "/private/var/folders/25/sfynkwcd0sg0rbc6f9wp4dg40000gn/T/jest_dx",
+  cacheDirectory: '<rootDir>/../../target/.jest-cache',
 
   // Automatically clear mock calls and instances between every test
   clearMocks: true,
@@ -138,7 +138,8 @@ module.exports = {
   // setupFiles: [],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  setupFilesAfterEnv: ['<rootDir>/__jest__/setup.js'],
+  // consoleSetup.js MUST run first to filter console output before other imports
+  setupFilesAfterEnv: ['<rootDir>/__jest__/consoleSetup.js', '<rootDir>/__jest__/setup.js'],
 
   // A list of paths to snapshot serializer modules Jest should use for snapshot testing
   snapshotSerializers: [],

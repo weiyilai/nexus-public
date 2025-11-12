@@ -168,7 +168,7 @@ describe('TasksDetails', function() {
 
     userEvent.click(querySubmitButton());
     expect(queryFormError(TestUtils.NO_CHANGES_MESSAGE)).toBeInTheDocument();
-    expect(type()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(type()).toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
 
     userEvent.selectOptions(type(), TASK.typeId);
 
@@ -176,20 +176,20 @@ describe('TasksDetails', function() {
     expect(notificationCondition()).toHaveValue('FAILURE');
 
     expect(name()).toBeInTheDocument();
-    expect(type()).not.toHaveErrorMessage();
+    expect(type()).not.toHaveAccessibleErrorMessage();
 
     userEvent.type(name(), 'test');
     userEvent.clear(name());
-    expect(name()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(name()).toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
 
     userEvent.type(name(), 'test');
-    expect(name()).not.toHaveErrorMessage();
+    expect(name()).not.toHaveAccessibleErrorMessage();
 
     userEvent.type(alertEmail(), 'test');
-    expect(alertEmail()).toHaveErrorMessage();
+    expect(alertEmail()).toHaveAccessibleErrorMessage();
 
     userEvent.type(alertEmail(), 'test@test.com');
-    expect(alertEmail()).not.toHaveErrorMessage();
+    expect(alertEmail()).not.toHaveAccessibleErrorMessage();
   });
 
   it('creates task', async function() {

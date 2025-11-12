@@ -212,17 +212,17 @@ describe('PrivilegesDetails', function() {
 
     await TestUtils.changeField(name, testName);
     userEvent.clear(name());
-    expect(name()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(name()).toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
     await TestUtils.changeField(name, testName);
-    expect(name()).not.toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(name()).not.toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
 
     await TestUtils.changeField(description, testDescription);
 
     await TestUtils.changeField(scriptName, testScriptName);
     userEvent.clear(scriptName());
-    expect(scriptName()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(scriptName()).toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
     await TestUtils.changeField(scriptName, testScriptName);
-    expect(scriptName()).not.toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(scriptName()).not.toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
 
     const browseCheckbox = getActionCheckbox(getActionsGroup(), 'Browse');
     userEvent.click(browseCheckbox);
@@ -274,17 +274,17 @@ describe('PrivilegesDetails', function() {
       expect(Axios.post).not.toHaveBeenCalledWith(EXT_URL, expect.objectContaining({method: 'readReferencesAddingEntryForAll'}));
     });
 
-    expect(name()).not.toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
-    expect(description()).not.toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
-    expect(contentSelector()).not.toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
-    expect(repository()).not.toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(name()).not.toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(description()).not.toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(contentSelector()).not.toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(repository()).not.toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
     expect(getActionsGroup()).not.toHaveAccessibleDescription(NO_ACTION_ERROR);
 
     userEvent.click(querySubmitButton());
     expect(queryFormError(TestUtils.VALIDATION_ERRORS_MESSAGE)).toBeInTheDocument();
-    expect(name()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
-    expect(contentSelector()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
-    expect(repository()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(name()).toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(contentSelector()).toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(repository()).toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
     expect(getActionsGroup()).toHaveAccessibleDescription(NO_ACTION_ERROR);
   });
 

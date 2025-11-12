@@ -348,31 +348,31 @@ describe('EmailServer', () => {
     expect(queryFormError(TestUtils.NO_CHANGES_MESSAGE)).toBeInTheDocument();
 
     userEvent.type(host(), 'host+');
-    expect(host()).toHaveErrorMessage(ERROR.HOSTNAME);
+    expect(host()).toHaveAccessibleErrorMessage(ERROR.HOSTNAME);
     userEvent.clear(host());
-    expect(host()).toHaveErrorMessage(ERROR.FIELD_REQUIRED);
+    expect(host()).toHaveAccessibleErrorMessage(ERROR.FIELD_REQUIRED);
     userEvent.type(host(), DATA.host);
-    expect(host()).not.toHaveErrorMessage();
+    expect(host()).not.toHaveAccessibleErrorMessage();
 
     userEvent.type(port(), '99999');
-    expect(port()).toHaveErrorMessage(ERROR.MAX(65535));
+    expect(port()).toHaveAccessibleErrorMessage(ERROR.MAX(65535));
     userEvent.clear(port());
-    expect(port()).toHaveErrorMessage(ERROR.FIELD_REQUIRED);
+    expect(port()).toHaveAccessibleErrorMessage(ERROR.FIELD_REQUIRED);
     userEvent.type(port(), '0');
-    expect(port()).toHaveErrorMessage(ERROR.MIN(1));
+    expect(port()).toHaveAccessibleErrorMessage(ERROR.MIN(1));
     userEvent.clear(port());
     userEvent.type(port(), 'test');
-    expect(port()).toHaveErrorMessage(ERROR.NAN);
+    expect(port()).toHaveAccessibleErrorMessage(ERROR.NAN);
     userEvent.clear(port());
     userEvent.type(port(), DATA.port.toString());
-    expect(port()).not.toHaveErrorMessage();
+    expect(port()).not.toHaveAccessibleErrorMessage();
 
     userEvent.type(fromAddress(), 'test');
-    expect(fromAddress()).toHaveErrorMessage(ERROR.INVALID_EMAIL);
+    expect(fromAddress()).toHaveAccessibleErrorMessage(ERROR.INVALID_EMAIL);
     userEvent.clear(fromAddress());
-    expect(fromAddress()).toHaveErrorMessage(ERROR.FIELD_REQUIRED);
+    expect(fromAddress()).toHaveAccessibleErrorMessage(ERROR.FIELD_REQUIRED);
     userEvent.type(fromAddress(), DATA.fromAddress);
-    expect(fromAddress()).not.toHaveErrorMessage();
+    expect(fromAddress()).not.toHaveAccessibleErrorMessage();
 
     expect(queryFormError()).not.toBeInTheDocument();
   });

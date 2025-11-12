@@ -144,10 +144,10 @@ describe('LoggingConfigurationForm', function() {
     expect(level()).toHaveValue('INFO');
 
     userEvent.click(saveButton())
-    expect(name()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(name()).toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
 
     await changeFieldAndAssertValue(name, 'name');
-    expect(name()).not.toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(name()).not.toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
   });
 
   it('requests confirmation when the logger is overridden and saves when requested', async function() {

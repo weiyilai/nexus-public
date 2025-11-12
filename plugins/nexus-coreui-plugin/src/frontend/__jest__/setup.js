@@ -14,8 +14,8 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import '@testing-library/jest-dom';
-import { ExtJS } from '@sonatype/nexus-ui-plugin';
+require('@testing-library/jest-dom');
+const { ExtJS } = require('@sonatype/nexus-ui-plugin');
 
 jest.mock('axios', () => ({
   ...jest.requireActual('axios'), // Use most functions from actual axios

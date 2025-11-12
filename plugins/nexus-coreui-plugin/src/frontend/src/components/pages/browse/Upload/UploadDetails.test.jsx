@@ -681,11 +681,11 @@ describe('UploadDetails', function() {
 
       expect(field6).toHaveValue('numbers');
       expect(field6).toBeValid();
-      expect(field6).not.toHaveErrorMessage();
+      expect(field6).not.toHaveAccessibleErrorMessage();
 
       expect(field7).toHaveValue('');
       expect(field7).toBeInvalid();
-      expect(field7).toHaveErrorMessage('This field is required');
+      expect(field7).toHaveAccessibleErrorMessage('This field is required');
     });
 
     it('does not change the field values, trigger validation, or show an error if the regex does not match',
@@ -702,11 +702,11 @@ describe('UploadDetails', function() {
 
           expect(field6).toHaveValue('');
           expect(field6).toBeValid();
-          expect(field6).not.toHaveErrorMessage();
+          expect(field6).not.toHaveAccessibleErrorMessage();
 
           expect(field7).toHaveValue('');
           expect(field7).toBeValid();
-          expect(field7).not.toHaveErrorMessage();
+          expect(field7).not.toHaveAccessibleErrorMessage();
 
           // NOTE: can't test presence of form-level validation alert because it is in the DOM but hidden
           // via CSS (which isn't loaded in unit tests)
@@ -735,12 +735,12 @@ describe('UploadDetails', function() {
 
       // file was selected and field 6 was autofilled; no longer invalid
       expect(field6).toBeValid();
-      expect(field6).not.toHaveErrorMessage();
+      expect(field6).not.toHaveAccessibleErrorMessage();
 
       // field7 however was autofilled with an empty capture; still invalid
       expect(field7).toHaveValue('');
       expect(field7).toBeInvalid();
-      expect(field7).toHaveErrorMessage('This field is required');
+      expect(field7).toHaveAccessibleErrorMessage('This field is required');
     });
   });
 
@@ -1040,14 +1040,14 @@ describe('UploadDetails', function() {
               field7_2 = selectors.fieldByNumAndGroup(7, assetGroup2);
 
           expect(screen.queryByText('This field is required')).not.toBeInTheDocument();
-          expect(field1).not.toHaveErrorMessage();
-          expect(field2).not.toHaveErrorMessage();
-          expect(field3).not.toHaveErrorMessage();
-          expect(field4).not.toHaveErrorMessage();
-          expect(field6).not.toHaveErrorMessage();
-          expect(field7).not.toHaveErrorMessage();
-          expect(field6_2).not.toHaveErrorMessage();
-          expect(field7_2).not.toHaveErrorMessage();
+          expect(field1).not.toHaveAccessibleErrorMessage();
+          expect(field2).not.toHaveAccessibleErrorMessage();
+          expect(field3).not.toHaveAccessibleErrorMessage();
+          expect(field4).not.toHaveAccessibleErrorMessage();
+          expect(field6).not.toHaveAccessibleErrorMessage();
+          expect(field7).not.toHaveAccessibleErrorMessage();
+          expect(field6_2).not.toHaveAccessibleErrorMessage();
+          expect(field7_2).not.toHaveAccessibleErrorMessage();
           expect(field1).toBeValid();
           expect(field2).toBeValid();
           expect(field3).toBeValid();
@@ -1067,14 +1067,14 @@ describe('UploadDetails', function() {
           await userEvent.type(field7_2, '0987');
 
           expect(screen.queryByText('This field is required')).not.toBeInTheDocument();
-          expect(field1).not.toHaveErrorMessage();
-          expect(field2).not.toHaveErrorMessage();
-          expect(field3).not.toHaveErrorMessage();
-          expect(field4).not.toHaveErrorMessage();
-          expect(field6).not.toHaveErrorMessage();
-          expect(field7).not.toHaveErrorMessage();
-          expect(field6_2).not.toHaveErrorMessage();
-          expect(field7_2).not.toHaveErrorMessage();
+          expect(field1).not.toHaveAccessibleErrorMessage();
+          expect(field2).not.toHaveAccessibleErrorMessage();
+          expect(field3).not.toHaveAccessibleErrorMessage();
+          expect(field4).not.toHaveAccessibleErrorMessage();
+          expect(field6).not.toHaveAccessibleErrorMessage();
+          expect(field7).not.toHaveAccessibleErrorMessage();
+          expect(field6_2).not.toHaveAccessibleErrorMessage();
+          expect(field7_2).not.toHaveAccessibleErrorMessage();
           expect(field1).toBeValid();
           expect(field2).toBeValid();
           expect(field3).toBeValid();
@@ -1094,14 +1094,14 @@ describe('UploadDetails', function() {
           await userEvent.clear(field7_2);
 
           expect(screen.getAllByText('This field is required')).toHaveLength(4);
-          expect(field1).not.toHaveErrorMessage();
-          expect(field2).toHaveErrorMessage('This field is required');
-          expect(field3).not.toHaveErrorMessage();
-          expect(field4).toHaveErrorMessage('This field is required');
-          expect(field6).toHaveErrorMessage('This field is required');
-          expect(field7).not.toHaveErrorMessage();
-          expect(field6_2).toHaveErrorMessage('This field is required');
-          expect(field7_2).not.toHaveErrorMessage();
+          expect(field1).not.toHaveAccessibleErrorMessage();
+          expect(field2).toHaveAccessibleErrorMessage('This field is required');
+          expect(field3).not.toHaveAccessibleErrorMessage();
+          expect(field4).toHaveAccessibleErrorMessage('This field is required');
+          expect(field6).toHaveAccessibleErrorMessage('This field is required');
+          expect(field7).not.toHaveAccessibleErrorMessage();
+          expect(field6_2).toHaveAccessibleErrorMessage('This field is required');
+          expect(field7_2).not.toHaveAccessibleErrorMessage();
           expect(field1).toBeValid();
           expect(field2).toBeInvalid();
           expect(field3).toBeValid();
@@ -1126,36 +1126,36 @@ describe('UploadDetails', function() {
               fileUpload2 = selectors.fileUploadByGroup(assetGroup2);
 
           expect(screen.queryByText('This field is required!')).not.toBeInTheDocument();
-          expect(fileUpload).not.toHaveErrorMessage();
+          expect(fileUpload).not.toHaveAccessibleErrorMessage();
           expect(fileUpload).toBeValid();
-          expect(fileUpload2).not.toHaveErrorMessage();
+          expect(fileUpload2).not.toHaveAccessibleErrorMessage();
           expect(fileUpload2).toBeValid();
 
           setFileUploadValue(fileUpload, new File(['test'], 'test.txt', { type: 'text-plain' }));
           setFileUploadValue(fileUpload2, new File(['tset'], 'tset.txt', { type: 'text-plain' }));
 
           expect(screen.queryByText('This field is required!')).not.toBeInTheDocument();
-          expect(fileUpload).not.toHaveErrorMessage();
+          expect(fileUpload).not.toHaveAccessibleErrorMessage();
           expect(fileUpload).toBeValid();
-          expect(fileUpload2).not.toHaveErrorMessage();
+          expect(fileUpload2).not.toHaveAccessibleErrorMessage();
           expect(fileUpload2).toBeValid();
 
           setFileUploadValue(fileUpload);
 
           expect(within(assetGroup1).getByText('This field is required!')).toBeInTheDocument();
-          expect(fileUpload).toHaveErrorMessage('This field is required!');
+          expect(fileUpload).toHaveAccessibleErrorMessage('This field is required!');
           expect(fileUpload).toBeInvalid();
           expect(within(assetGroup2).queryByText('This field is required!')).not.toBeInTheDocument();
-          expect(fileUpload2).not.toHaveErrorMessage();
+          expect(fileUpload2).not.toHaveAccessibleErrorMessage();
           expect(fileUpload2).toBeValid();
 
           setFileUploadValue(fileUpload2);
 
           expect(within(assetGroup1).getByText('This field is required!')).toBeInTheDocument();
-          expect(fileUpload).toHaveErrorMessage('This field is required!');
+          expect(fileUpload).toHaveAccessibleErrorMessage('This field is required!');
           expect(fileUpload).toBeInvalid();
           expect(within(assetGroup2).getByText('This field is required!')).toBeInTheDocument();
-          expect(fileUpload2).toHaveErrorMessage('This field is required!');
+          expect(fileUpload2).toHaveAccessibleErrorMessage('This field is required!');
           expect(fileUpload2).toBeInvalid();
         }
     );
@@ -1179,8 +1179,8 @@ describe('UploadDetails', function() {
       await userEvent.click(selectors.addAssetBtn());
 
       expect(screen.queryByText('This field is required')).not.toBeInTheDocument();
-      expect(field6_2).not.toHaveErrorMessage();
-      expect(field7_2).not.toHaveErrorMessage();
+      expect(field6_2).not.toHaveAccessibleErrorMessage();
+      expect(field7_2).not.toHaveAccessibleErrorMessage();
       expect(field6_2).toBeValid();
       expect(field7_2).toBeValid();
     });
@@ -1218,24 +1218,24 @@ describe('UploadDetails', function() {
           await userEvent.type(field7_4, 'b');
 
           expect(field6).toBeInvalid();
-          expect(field6).toHaveErrorMessage('Asset not unique');
+          expect(field6).toHaveAccessibleErrorMessage('Asset not unique');
           expect(field7).toBeInvalid();
-          expect(field7).toHaveErrorMessage('Asset not unique');
+          expect(field7).toHaveAccessibleErrorMessage('Asset not unique');
 
           expect(field6_2).toBeInvalid();
-          expect(field6_2).toHaveErrorMessage('Asset not unique');
+          expect(field6_2).toHaveAccessibleErrorMessage('Asset not unique');
           expect(field7_2).toBeInvalid();
-          expect(field7_2).toHaveErrorMessage('Asset not unique');
+          expect(field7_2).toHaveAccessibleErrorMessage('Asset not unique');
 
           expect(field6_3).toBeValid();
-          expect(field6_3).not.toHaveErrorMessage();
+          expect(field6_3).not.toHaveAccessibleErrorMessage();
           expect(field7_3).toBeValid();
-          expect(field7_3).not.toHaveErrorMessage();
+          expect(field7_3).not.toHaveAccessibleErrorMessage();
 
           expect(field6_4).toBeInvalid();
-          expect(field6_4).toHaveErrorMessage('Asset not unique');
+          expect(field6_4).toHaveAccessibleErrorMessage('Asset not unique');
           expect(field7_4).toBeInvalid();
-          expect(field7_4).toHaveErrorMessage('Asset not unique');
+          expect(field7_4).toHaveAccessibleErrorMessage('Asset not unique');
         }
     );
 
@@ -1263,14 +1263,14 @@ describe('UploadDetails', function() {
       await userEvent.clear(field7_2);
 
       expect(field6).toBeInvalid();
-      expect(field6).toHaveErrorMessage('This field is required');
+      expect(field6).toHaveAccessibleErrorMessage('This field is required');
       expect(field7).toBeValid();
-      expect(field7).not.toHaveErrorMessage();
+      expect(field7).not.toHaveAccessibleErrorMessage();
 
       expect(field6_2).toBeInvalid();
-      expect(field6_2).toHaveErrorMessage('This field is required');
+      expect(field6_2).toHaveAccessibleErrorMessage('This field is required');
       expect(field7_2).toBeValid();
-      expect(field7_2).not.toHaveErrorMessage();
+      expect(field7_2).not.toHaveAccessibleErrorMessage();
     });
   });
 
@@ -1634,34 +1634,34 @@ describe('UploadDetails', function() {
       expect(formValidationAlert).toBeInTheDocument();
       expect(selectors.errorRetryBtn('query')).not.toBeInTheDocument();
 
-      expect(fileUpload).toHaveErrorMessage('This field is required!');
+      expect(fileUpload).toHaveAccessibleErrorMessage('This field is required!');
       expect(fileUpload).toBeInvalid();
 
-      expect(field1).not.toHaveErrorMessage();
+      expect(field1).not.toHaveAccessibleErrorMessage();
       expect(field1).toBeValid();
 
-      expect(field2).toHaveErrorMessage('This field is required');
+      expect(field2).toHaveAccessibleErrorMessage('This field is required');
       expect(field2).toBeInvalid();
 
-      expect(field3).not.toHaveErrorMessage();
+      expect(field3).not.toHaveAccessibleErrorMessage();
       expect(field3).toBeValid();
 
-      expect(field4).toHaveErrorMessage('This field is required');
+      expect(field4).toHaveAccessibleErrorMessage('This field is required');
       expect(field4).toBeInvalid();
 
-      expect(field5).not.toHaveErrorMessage();
+      expect(field5).not.toHaveAccessibleErrorMessage();
       expect(field5).toBeValid();
 
-      expect(field6).toHaveErrorMessage('This field is required');
+      expect(field6).toHaveAccessibleErrorMessage('This field is required');
       expect(field6).toBeInvalid();
 
-      expect(field7).not.toHaveErrorMessage();
+      expect(field7).not.toHaveAccessibleErrorMessage();
       expect(field7).toBeValid();
 
-      expect(field6_2).toHaveErrorMessage('This field is required');
+      expect(field6_2).toHaveAccessibleErrorMessage('This field is required');
       expect(field6_2).toBeInvalid();
 
-      expect(field7_2).not.toHaveErrorMessage();
+      expect(field7_2).not.toHaveAccessibleErrorMessage();
       expect(field7_2).toBeValid();
     });
 
@@ -1688,7 +1688,7 @@ describe('UploadDetails', function() {
       expect(formValidationAlert).toBeInTheDocument();
       expect(selectors.errorRetryBtn('query')).not.toBeInTheDocument();
 
-      expect(fileUpload).toHaveErrorMessage('This field is required!');
+      expect(fileUpload).toHaveAccessibleErrorMessage('This field is required!');
       expect(fileUpload).toBeInvalid();
     });
 
@@ -1726,16 +1726,16 @@ describe('UploadDetails', function() {
       expect(formValidationAlert).toBeInTheDocument();
       expect(selectors.errorRetryBtn('query')).not.toBeInTheDocument();
 
-      expect(field6).toHaveErrorMessage('Asset not unique');
+      expect(field6).toHaveAccessibleErrorMessage('Asset not unique');
       expect(field6).toBeInvalid();
 
-      expect(field7).toHaveErrorMessage('Asset not unique');
+      expect(field7).toHaveAccessibleErrorMessage('Asset not unique');
       expect(field7).toBeInvalid();
 
-      expect(field6_2).toHaveErrorMessage('Asset not unique');
+      expect(field6_2).toHaveAccessibleErrorMessage('Asset not unique');
       expect(field6_2).toBeInvalid();
 
-      expect(field7_2).toHaveErrorMessage('Asset not unique');
+      expect(field7_2).toHaveAccessibleErrorMessage('Asset not unique');
       expect(field7_2).toBeInvalid();
     });
 
@@ -1771,53 +1771,53 @@ describe('UploadDetails', function() {
       expect(formValidationAlert).toBeInTheDocument();
       expect(selectors.errorRetryBtn('query')).not.toBeInTheDocument();
 
-      expect(fileUpload).toHaveErrorMessage('This field is required!');
+      expect(fileUpload).toHaveAccessibleErrorMessage('This field is required!');
       expect(fileUpload).toBeInvalid();
-      expect(fileUpload2).toHaveErrorMessage('This field is required!');
+      expect(fileUpload2).toHaveAccessibleErrorMessage('This field is required!');
       expect(fileUpload2).toBeInvalid();
-      expect(field2).toHaveErrorMessage('This field is required');
+      expect(field2).toHaveAccessibleErrorMessage('This field is required');
       expect(field2).toBeInvalid();
-      expect(field4).toHaveErrorMessage('This field is required');
+      expect(field4).toHaveAccessibleErrorMessage('This field is required');
       expect(field4).toBeInvalid();
-      expect(field6).toHaveErrorMessage('This field is required');
+      expect(field6).toHaveAccessibleErrorMessage('This field is required');
       expect(field6).toBeInvalid();
-      expect(field6_2).toHaveErrorMessage('This field is required');
+      expect(field6_2).toHaveAccessibleErrorMessage('This field is required');
       expect(field6_2).toBeInvalid();
 
       setFileUploadValue(fileUpload, file);
-      expect(fileUpload).not.toHaveErrorMessage();
+      expect(fileUpload).not.toHaveAccessibleErrorMessage();
       expect(fileUpload).toBeValid();
 
       setFileUploadValue(fileUpload2, file2);
-      expect(fileUpload2).not.toHaveErrorMessage();
+      expect(fileUpload2).not.toHaveAccessibleErrorMessage();
       expect(fileUpload2).toBeValid();
 
       await userEvent.type(field2, 'bar');
-      expect(field2).not.toHaveErrorMessage();
+      expect(field2).not.toHaveAccessibleErrorMessage();
       expect(field2).toBeValid();
 
       await userEvent.type(field4, 'qwerty');
-      expect(field4).not.toHaveErrorMessage();
+      expect(field4).not.toHaveAccessibleErrorMessage();
       expect(field4).toBeValid();
 
       await userEvent.type(field6, 'qwerty');
-      expect(field6).not.toHaveErrorMessage();
+      expect(field6).not.toHaveAccessibleErrorMessage();
       expect(field6).toBeValid();
 
       await userEvent.type(field6_2, 'qwerty');
-      expect(field6).toHaveErrorMessage('Asset not unique');
+      expect(field6).toHaveAccessibleErrorMessage('Asset not unique');
       expect(field6).toBeInvalid();
-      expect(field6_2).toHaveErrorMessage('Asset not unique');
+      expect(field6_2).toHaveAccessibleErrorMessage('Asset not unique');
       expect(field6_2).toBeInvalid();
 
       await userEvent.type(field6_2, '2');
-      expect(field6).not.toHaveErrorMessage();
+      expect(field6).not.toHaveAccessibleErrorMessage();
       expect(field6).toBeValid();
-      expect(field7).not.toHaveErrorMessage();
+      expect(field7).not.toHaveAccessibleErrorMessage();
       expect(field7).toBeValid();
-      expect(field6_2).not.toHaveErrorMessage();
+      expect(field6_2).not.toHaveAccessibleErrorMessage();
       expect(field6_2).toBeValid();
-      expect(field7_2).not.toHaveErrorMessage();
+      expect(field7_2).not.toHaveAccessibleErrorMessage();
       expect(field7_2).toBeValid();
       expect(formValidationAlert).not.toBeInTheDocument();
 
@@ -2031,9 +2031,9 @@ describe('UploadDetails', function() {
       await userEvent.clear(extension);
       await userEvent.click(submit);
 
-      expect(group).toHaveErrorMessage('This field is required');
-      expect(artifact).toHaveErrorMessage('This field is required');
-      expect(version).toHaveErrorMessage('This field is required');
+      expect(group).toHaveAccessibleErrorMessage('This field is required');
+      expect(artifact).toHaveAccessibleErrorMessage('This field is required');
+      expect(version).toHaveAccessibleErrorMessage('This field is required');
 
       await userEvent.type(extension, 'pom');
 

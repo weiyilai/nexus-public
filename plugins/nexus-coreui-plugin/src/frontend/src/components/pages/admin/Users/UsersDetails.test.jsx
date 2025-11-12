@@ -681,7 +681,7 @@ describe('UsersDetails', function() {
         expect(next()).toBeInTheDocument();
         expect(cancel()).toBeInTheDocument();
         expect(querySave()).not.toBeInTheDocument();
-        expect(inputAdminPassword()).toHaveErrorMessage('Authentication failed');
+        expect(inputAdminPassword()).toHaveAccessibleErrorMessage('Authentication failed');
       });
     });
 
@@ -952,7 +952,7 @@ describe('UsersDetails', function() {
       await userEvent.click(authenticate());
 
       await waitFor(() => {
-        expect(inputAdminPassword()).toHaveErrorMessage('Authentication failed');
+        expect(inputAdminPassword()).toHaveAccessibleErrorMessage('Authentication failed');
       });
     });
 

@@ -210,22 +210,22 @@ describe('user tokens', () => {
 
     await renderView();
 
-    expect(userTokenExpiry()).not.toHaveErrorMessage();
+    expect(userTokenExpiry()).not.toHaveAccessibleErrorMessage();
 
     await TestUtils.changeField(userTokenExpiry, '');
-    expect(userTokenExpiry()).toHaveErrorMessage(TestUtils.REQUIRED_MESSAGE);
+    expect(userTokenExpiry()).toHaveAccessibleErrorMessage(TestUtils.REQUIRED_MESSAGE);
 
     await TestUtils.changeField(userTokenExpiry, '-1');
-    expect(userTokenExpiry()).toHaveErrorMessage('The minimum value for this field is 1');
+    expect(userTokenExpiry()).toHaveAccessibleErrorMessage('The minimum value for this field is 1');
 
     await TestUtils.changeField(userTokenExpiry, '1000');
-    expect(userTokenExpiry()).toHaveErrorMessage('The maximum value for this field is 999');
+    expect(userTokenExpiry()).toHaveAccessibleErrorMessage('The maximum value for this field is 999');
 
     await TestUtils.changeField(userTokenExpiry, '3.5');
-    expect(userTokenExpiry()).toHaveErrorMessage('This field must not contain decimal values');
+    expect(userTokenExpiry()).toHaveAccessibleErrorMessage('This field must not contain decimal values');
 
     await TestUtils.changeField(userTokenExpiry, '2*');
-    expect(userTokenExpiry()).toHaveErrorMessage('This field must contain a numeric value');
+    expect(userTokenExpiry()).toHaveAccessibleErrorMessage('This field must contain a numeric value');
   });
 
   it('sends correct data to API: disable', async () => {
