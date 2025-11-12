@@ -113,7 +113,7 @@
     <association property="assetBlob" column="asset_blob_id" select="fetchAssetBlob" fetchType="lazy"/>
   </resultMap>
 
-  <resultMap id="assetResultMap" type="AssetData">
+  <resultMap id="eagerAssetResult" type="AssetData">
     <id property="assetId" column="asset_id"/>
     <result property="path" column="path"/>
     <result property="kind" column="kind" />
@@ -123,6 +123,7 @@
     <result property="attributes" column="attributes"/>
     <result property="created" column="created"/>
     <result property="lastUpdated" column="last_updated"/>
+    <result property="fromEagerQuery" column="from_eager_query"/>
     <association property="component" resultMap="ComponentDataResult" notNullColumn="component_id"/>
     <association property="assetBlob" resultMap="AssetBlobResult"/>
   </resultMap>
@@ -172,8 +173,15 @@
     ORDER BY asset_id LIMIT #{limit};
   </select>
 
-  <select id="browseEagerAssetsInRepository" resultMap="assetResultMap">
-    SELECT A.*, C.*, B.* FROM ${format}_asset as A
+  <!--
+    Sets from_eager_query flag directly in SQL rather than programmatically to ensure each AssetData instance
+    is correctly marked for continuation token generation. The flag must be present on the AssetData object
+    when nextContinuationToken() is called to determine whether to generate a composite continuation token
+    (for eager queries with blob data) or a simple asset_id token (for non-eager queries). Setting this in SQL
+    ensures the flag is atomically bound to each result row from this specific eager query.
+  -->
+  <select id="browseEagerAssetsInRepository" resultMap="eagerAssetResult">
+    SELECT A.*, C.*, B.*, true AS from_eager_query FROM ${format}_asset as A
       LEFT JOIN ${format}_component C ON C.component_id = A.component_id
       INNER JOIN ${format}_asset_blob B ON B.asset_blob_id = A.asset_blob_id
     WHERE A.repository_id = #{repositoryId}

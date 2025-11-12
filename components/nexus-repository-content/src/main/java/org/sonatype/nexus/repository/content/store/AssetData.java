@@ -64,6 +64,12 @@ public class AssetData
   @Nullable
   private long assetBlobSize;
 
+  /**
+   * Flag to track whether this asset was retrieved from an eager query (browseEager).
+   * Used to determine the appropriate continuation token format.
+   */
+  private boolean fromEagerQuery = false;
+
   // Asset API
 
   @Override
@@ -183,6 +189,14 @@ public class AssetData
     this.assetBlobSize = assetBlobSize;
   }
 
+  /**
+   * Sets whether this asset was retrieved from an eager query.
+   * This is set by MyBatis for assets from browseEagerAssetsInRepository queries.
+   */
+  public void setFromEagerQuery(final boolean fromEagerQuery) {
+    this.fromEagerQuery = fromEagerQuery;
+  }
+
   // Getters to support lazy-loading (MyBatis will intercept them)
 
   @Nullable
@@ -199,12 +213,14 @@ public class AssetData
 
   @Override
   public String nextContinuationToken() {
-    // For browseEagerAssetsInRepository, use composite token with blob_created for proper ordering
-    // For other queries, fall back to simple asset_id token
-    // Only use composite token if assetBlob is already loaded (not lazy-loaded)
-    // We check this by seeing if the assetBlob field reference is not null
-    if (assetBlob != null && assetBlob.blobCreated() != null) {
-      long blobCreatedMillis = assetBlob.blobCreated().toInstant().toEpochMilli();
+    // Use explicit flag to determine token format
+    // For browseEagerAssetsInRepository queries, ALWAYS use composite token for consistency
+    // For other queries, use simple asset_id token
+    if (fromEagerQuery) {
+      long blobCreatedMillis = 0L;
+      if (assetBlob != null && assetBlob.blobCreated() != null) {
+        blobCreatedMillis = assetBlob.blobCreated().toInstant().toEpochMilli();
+      }
       return new AssetBlobCreatedContinuationToken(blobCreatedMillis, assetId).encode();
     }
     return Integer.toString(assetId);
