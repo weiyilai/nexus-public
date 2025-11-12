@@ -45,7 +45,6 @@ import org.apache.shiro.authz.permission.RolePermissionResolver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -84,7 +83,7 @@ public class RolePermissionResolverImpl
   @Inject
   public RolePermissionResolverImpl(
       final SecurityConfigurationManager configuration,
-      final @Lazy List<PrivilegeDescriptor> privilegeDescriptors,
+      final List<PrivilegeDescriptor> privilegeDescriptors,
       final EventManager eventManager,
       @Value("${security.roleNotFoundCacheSize:100000}") final int roleNotFoundCacheSize)
   {

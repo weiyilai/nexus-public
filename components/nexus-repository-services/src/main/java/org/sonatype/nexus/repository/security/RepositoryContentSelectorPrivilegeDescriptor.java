@@ -13,9 +13,6 @@
 package org.sonatype.nexus.repository.security;
 
 import java.util.List;
-
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
@@ -40,14 +37,17 @@ import org.sonatype.nexus.selector.SelectorManager;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.shiro.authz.Permission;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.sonatype.nexus.common.app.FeatureFlags.REACT_PRIVILEGES_NAMED_VALUE;
-import org.springframework.stereotype.Component;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Repository selector {@link PrivilegeDescriptor}.
@@ -112,8 +112,8 @@ public class RepositoryContentSelectorPrivilegeDescriptor
 
   @Inject
   public RepositoryContentSelectorPrivilegeDescriptor(
-      final RepositoryManager repositoryManager,
-      final SelectorManager selectorManager,
+      @Lazy final RepositoryManager repositoryManager,
+      @Lazy final SelectorManager selectorManager,
       final List<Format> formats,
       @Value(REACT_PRIVILEGES_NAMED_VALUE) final boolean isReactPrivileges)
   {

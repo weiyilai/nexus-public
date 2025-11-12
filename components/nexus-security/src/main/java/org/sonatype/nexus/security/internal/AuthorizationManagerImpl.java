@@ -50,7 +50,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -84,7 +83,7 @@ public class AuthorizationManagerImpl
   public AuthorizationManagerImpl(
       final SecurityConfigurationManager configuration,
       final EventManager eventManager,
-      @Lazy final List<PrivilegeDescriptor> privilegeDescriptors)
+      final List<PrivilegeDescriptor> privilegeDescriptors)
   {
     this.configuration = configuration;
     this.eventManager = eventManager;
