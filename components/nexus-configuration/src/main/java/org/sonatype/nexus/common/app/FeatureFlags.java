@@ -55,6 +55,20 @@ public class FeatureFlags
 
   public static final String CLUSTERED_ZERO_DOWNTIME_ENABLED_ENV = "NEXUS_ZERO_DOWNTIME_ENABLED";
 
+  /**
+   * Heartbeat interval in seconds for cluster node health monitoring.
+   * <p>
+   * Default: 600 seconds (10 minutes). This interval determines:
+   * <ul>
+   * <li>How frequently nodes write heartbeat data to the database</li>
+   * <li>The maximum time before a failed node's stale heartbeat is considered inactive</li>
+   * <li>The timeout for Zero Downtime Upgrade coordination (all nodes must reach consensus within this window)</li>
+   * </ul>
+   */
+  public static final String HEARTBEAT_INTERVAL_SECONDS = "nexus.heartbeat.interval";
+
+  public static final int HEARTBEAT_INTERVAL_SECONDS_DEFAULT = 600;
+
   /* Feature flag to indicate if current db is postgresql */
   public static final String DATASTORE_IS_POSTGRESQL = "datastore.isPostgresql";
 
