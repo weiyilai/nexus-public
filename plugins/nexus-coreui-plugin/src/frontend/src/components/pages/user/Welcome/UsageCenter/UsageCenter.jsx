@@ -100,13 +100,14 @@ function CardWithThreshold({card, usage, tooltip, edition, date}) {
     'recorded-count-with-error-icon': showError,
     'recorded-count-with-warning-icon': showWarning
   });
+  const tooltipText = typeof tooltip === 'function' ? tooltip(thresholdValue) : replace('{}', thresholdValue.toLocaleString(), tooltip || '');
 
   return (
     <NxCard aria-label={TITLE}>
       <NxCard.Header>
         <NxH3>
           {TITLE}
-          <NxTooltip title={replace('{}', thresholdValue.toLocaleString(), tooltip || '')}>
+          <NxTooltip title={tooltipText}>
             <NxFontAwesomeIcon icon={faInfoCircle}/>
           </NxTooltip>
         </NxH3>

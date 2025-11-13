@@ -125,7 +125,7 @@ describe('SystemNotices -- CEHardLimitAlert', () => {
     assertHasLinkWithText(
         alert,
         'purchase a license to remove limits.',
-        'http://links.sonatype.com/products/nxrm3/ce/purchase-license?nodeId=node-example-id&componentCountLimit=100000&componentCountMax=12500&componentCount=85000&requestsPer24HoursLimit=200000&requestsPer24HoursMax=75000&requestsPer24HoursCount=3300&malwareCount=3'
+        'http://links.sonatype.com/products/nxrm3/ce/purchase-license?nodeId=node-example-id&componentCountLimit=40000&componentCountMax=12500&componentCount=85000&requestsPer24HoursLimit=100000&requestsPer24HoursMax=75000&requestsPer24HoursCount=3300&malwareCount=3'
     );
     assertHasReviewUsageLink(alert);
   }

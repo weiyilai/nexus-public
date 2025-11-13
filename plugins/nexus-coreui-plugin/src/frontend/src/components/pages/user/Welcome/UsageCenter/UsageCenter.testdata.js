@@ -21,7 +21,7 @@ export const USAGE_CENTER_CONTENT_CE = [
     "thresholds": [
       {
         "thresholdName": "HARD_THRESHOLD",
-        "thresholdValue": 200000
+        "thresholdValue": 100000
       }
     ],
     "utilization": "FREE_TIER",
@@ -39,7 +39,7 @@ export const USAGE_CENTER_CONTENT_CE = [
     "thresholds": [
       {
         "thresholdName": "HARD_THRESHOLD",
-        "thresholdValue": 100000
+        "thresholdValue": 40000
       }
     ],
     "utilization": "FREE_TIER",

@@ -103,7 +103,7 @@ describe('Usage Center', () => {
 
     let infoIcon = selectors.getCardInfoIcon(totalComponentsCard);
     await TestUtils.expectToSeeTooltipOnHover(infoIcon,
-        'Community Edition tracks the total components stored in this instance. If usage exceeds the 100,000 component limit, the date will be displayed, and write restrictions will apply until usage is reduced.');
+        'Community Edition tracks the total components stored in this instance. If usage exceeds the 40,000 component limit, the date will be displayed, and write restrictions will apply until usage is reduced.');
 
     infoIcon = selectors.getCardInfoIcon(monthlyMetricsCard);
     await TestUtils.expectToSeeTooltipOnHover(infoIcon,
@@ -111,7 +111,7 @@ describe('Usage Center', () => {
 
     infoIcon = selectors.getCardInfoIcon(reqsPerDayCard);
     await TestUtils.expectToSeeTooltipOnHover(infoIcon,
-        'Community Edition tracks the total daily requests to this instance. If usage exceeds the 200,000 request limit, the date will be displayed, and write restrictions will apply until usage is reduced.');
+        'Community Edition tracks the total daily requests to this instance. If usage exceeds the 100,000 request limit, the date will be displayed, and write restrictions will apply until usage is reduced.');
   });
 
   describe('Pro edition', () => {
@@ -214,7 +214,7 @@ describe('Usage Center', () => {
           card1ThresholdTitle = selectors.getCardContent(card1,'Usage Limit'),
           card1Meter = selectors.getCardMeter(card1),
           totalComponents = selectors.getCardContent(card1, '85,000'),
-          componentsThreshold = selectors.getCardContent(card1, '100,000'),
+          componentsThreshold = selectors.getCardContent(card1, '40,000'),
           card1HighestRecordedCountTitle = selectors.getCardContent(card1, 'Highest Recorded Count (30 days)'),
           componentsHighestRecordedCount = selectors.getCardContent(card1, '12,500'),
           card1LastExceededDateLabel = selectors.getCardContent(card1, 'Last time over the usage limit'),
@@ -256,7 +256,7 @@ describe('Usage Center', () => {
           card3ThresholdTitle = selectors.getCardContent(card3,'Usage Limit'),
           card3Meter = selectors.getCardMeter(card3),
           reqsPerDay = selectors.getCardContent(card3, '3,300'),
-          reqsThreshold = selectors.getCardContent(card3, '200,000'),
+          reqsThreshold = selectors.getCardContent(card3, '100,000'),
           card3HighestRecordedCountTitle = selectors.getCardContent(card3, 'Highest Recorded Count (30 days)'),
           reqsHighestRecordedCount = selectors.getCardContent(card3, '75,000'),
           card3LastExceededDateLabel = selectors.getCardContent(card3, 'Last time over the usage limit'),

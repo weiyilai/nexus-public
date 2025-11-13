@@ -113,7 +113,7 @@ export default {
           METRIC_NAME_PRO_POSTGRESQL: 'component_total_count',
           AGGREGATE_PERIOD_30_D: 'peak_recorded_count_30d',
           TOOLTIP_PRO: 'Sonatype Nexus Repository Pro using an embedded database performs best when your total component counts remain under the threshold. If you are exceeding the threshold, we strongly recommend migrating to a PostgreSQL database.',
-          TOOLTIP_CE: 'Community Edition tracks the total components stored in this instance. If usage exceeds the 100,000 component limit, the date will be displayed, and write restrictions will apply until usage is reduced.'
+          TOOLTIP_CE: (limit) => `Community Edition tracks the total components stored in this instance. If usage exceeds the ${limit.toLocaleString()} component limit, the date will be displayed, and write restrictions will apply until usage is reduced.`
         },
         REQUESTS_PER_MINUTE: {
           TITLE: 'Requests Per Minute',
@@ -137,7 +137,7 @@ export default {
           METRIC_NAME_PRO_POSTGRESQL: 'peak_requests_per_day_30d',
           AGGREGATE_PERIOD_30_D: 'peak_recorded_count_30d',
           TOOLTIP_PRO: 'Sonatype Nexus Repository Pro using an embedded database performs best when your requests per day remain under the threshold. If you are exceeding the threshold, we strongly recommend migrating to a PostgreSQL database.',
-          TOOLTIP_CE: 'Community Edition tracks the total daily requests to this instance. If usage exceeds the 200,000 request limit, the date will be displayed, and write restrictions will apply until usage is reduced.'
+          TOOLTIP_CE: (limit) => `Community Edition tracks the total daily requests to this instance. If usage exceeds the ${limit.toLocaleString()} request limit, the date will be displayed, and write restrictions will apply until usage is reduced.`
         },
         MONTHLY_REQUESTS: {
           TITLE: 'Requests Per Month',

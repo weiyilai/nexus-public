@@ -84,7 +84,7 @@ describe('CEHardLimitAlerts', () => {
     const learnMoreButton = screen.getByRole('link', {name: 'Learn More'});
     const uploadLicense = screen.getByRole('link', {name: 'upload it here'});
 
-    expect(learnMoreButton).toHaveAttribute('href', 'http://links.sonatype.com/products/nxrm3/ce/learn-more?nodeId=node-example-id&componentCountLimit=100000&componentCountMax=12500&componentCount=85000&requestsPer24HoursLimit=200000&requestsPer24HoursMax=75000&requestsPer24HoursCount=3300&malwareCount=3');
+    expect(learnMoreButton).toHaveAttribute('href', 'http://links.sonatype.com/products/nxrm3/ce/learn-more?nodeId=node-example-id&componentCountLimit=40000&componentCountMax=12500&componentCount=85000&requestsPer24HoursLimit=100000&requestsPer24HoursMax=75000&requestsPer24HoursCount=3300&malwareCount=3');
     expect(uploadLicense).toHaveAttribute('href', '#admin/system/licensing');
   });
 
@@ -101,8 +101,8 @@ describe('CEHardLimitAlerts', () => {
     const getLearnMoreLimitsEnforcedButton = screen.getByRole('link', {name: 'Learn More'});
 
     expect(container.querySelector('.nx-alert')).toHaveTextContent('Usage Limits In EffectUsage limits came into effect on October 15, 2024. As usage levels are currently higher than the Nexus Repository Community Edition maximum, new components can no longer be added to this instance. Purchase a license to remove limits, or if you have already purchased a license upload it here.Learn MorePurchase Now');
-    expect(getPurchaseNowButton).toHaveAttribute('href', 'http://links.sonatype.com/products/nxrm3/ce/purchase-license?nodeId=node-example-id&componentCountLimit=100000&componentCountMax=12500&componentCount=85000&requestsPer24HoursLimit=200000&requestsPer24HoursMax=75000&requestsPer24HoursCount=3300&malwareCount=3');
-    expect(getLearnMoreLimitsEnforcedButton).toHaveAttribute('href', 'http://links.sonatype.com/products/nxrm3/ce/learn-more-limits-enforced?nodeId=node-example-id&componentCountLimit=100000&componentCountMax=12500&componentCount=85000&requestsPer24HoursLimit=200000&requestsPer24HoursMax=75000&requestsPer24HoursCount=3300&malwareCount=3');
+    expect(getPurchaseNowButton).toHaveAttribute('href', 'http://links.sonatype.com/products/nxrm3/ce/purchase-license?nodeId=node-example-id&componentCountLimit=40000&componentCountMax=12500&componentCount=85000&requestsPer24HoursLimit=100000&requestsPer24HoursMax=75000&requestsPer24HoursCount=3300&malwareCount=3');
+    expect(getLearnMoreLimitsEnforcedButton).toHaveAttribute('href', 'http://links.sonatype.com/products/nxrm3/ce/learn-more-limits-enforced?nodeId=node-example-id&componentCountLimit=40000&componentCountMax=12500&componentCount=85000&requestsPer24HoursLimit=100000&requestsPer24HoursMax=75000&requestsPer24HoursCount=3300&malwareCount=3');
   });
 
   it('should render the over limits banner inside grace period', async () => {

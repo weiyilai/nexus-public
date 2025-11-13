@@ -33,6 +33,20 @@ Ext.define('NX.controller.dev.Developer', {
   _NEAR_LIMITS: '75% usage',
   _UNDER_LIMITS: 'Under limits',
 
+  // Metric data constants
+  _DEFAULT: 0,
+  _COMPONENTS_NEAR_LIMITS: 75000,
+  _REQUESTS_NEAR_LIMITS: 150000,
+  _COMPONENTS_OVER_LIMITS: 40000,
+  _REQUESTS_OVER_LIMITS: 100000,
+  _REQUESTS_HARD_THRESHOLD: 100000,
+  _REQUESTS_SOFT_THRESHOLD: 20000,
+  _COMPONENTS_HARD_THRESHOLD: 40000,
+  _COMPONENTS_SOFT_THRESHOLD: 100000,
+  _UNIQUE_USER_SOFT_THRESHOLD: 100,
+  _GRACE_PERIOD_DAYS_IN: 7,
+  _GRACE_PERIOD_DAYS_POST: -7,
+
   /**
    * Attempts to call a object's method that doesn't exist to produce a low-level javascript error.
    *
@@ -122,7 +136,7 @@ Ext.define('NX.controller.dev.Developer', {
 
   showNearLimitsPreGracePeriod: function() {
     NX.State.setValues({
-      contentUsageEvaluationResult: this.mockMetricData(75000, 150000),
+      contentUsageEvaluationResult: this.mockMetricData(this._COMPONENTS_NEAR_LIMITS, this._REQUESTS_NEAR_LIMITS),
       'nexus.community.gracePeriodEnds': '',
       'nexus.community.throttlingStatus': this._NEAR_LIMITS
     });
@@ -131,23 +145,23 @@ Ext.define('NX.controller.dev.Developer', {
   showUnderLimitsInGracePeriod: function() {
     NX.State.setValues({
       contentUsageEvaluationResult: this.mockMetricData(),
-      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(7),
+      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(this._GRACE_PERIOD_DAYS_IN),
       'nexus.community.throttlingStatus': this._UNDER_LIMITS
     });
   },
 
   showNearLimitsInGracePeriod: function() {
     NX.State.setValues({
-      contentUsageEvaluationResult: this.mockMetricData(75000, 150000),
-      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(7),
+      contentUsageEvaluationResult: this.mockMetricData(this._COMPONENTS_NEAR_LIMITS, this._REQUESTS_NEAR_LIMITS),
+      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(this._GRACE_PERIOD_DAYS_IN),
       'nexus.community.throttlingStatus': this._NEAR_LIMITS
     });
   },
 
   showOverLimitsInGracePeriod: function() {
     NX.State.setValues({
-      contentUsageEvaluationResult: this.mockMetricData(100000, 200000),
-      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(7),
+      contentUsageEvaluationResult: this.mockMetricData(this._COMPONENTS_OVER_LIMITS, this._REQUESTS_OVER_LIMITS),
+      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(this._GRACE_PERIOD_DAYS_IN),
       'nexus.community.throttlingStatus': this._OVER_LIMITS
     });
   },
@@ -155,23 +169,23 @@ Ext.define('NX.controller.dev.Developer', {
   showUnderLimitsPostGracePeriod: function() {
     NX.State.setValues({
       contentUsageEvaluationResult: this.mockMetricData(),
-      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(-7),
+      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(this._GRACE_PERIOD_DAYS_POST),
       'nexus.community.throttlingStatus': this._UNDER_LIMITS
     });
   },
 
   showNearLimitsPostGracePeriod: function() {
     NX.State.setValues({
-      contentUsageEvaluationResult: this.mockMetricData(75000, 150000),
-      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(-7),
+      contentUsageEvaluationResult: this.mockMetricData(this._COMPONENTS_NEAR_LIMITS, this._REQUESTS_NEAR_LIMITS),
+      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(this._GRACE_PERIOD_DAYS_POST),
       'nexus.community.throttlingStatus': this._NEAR_LIMITS
     });
   },
 
   showOverLimitsPostGracePeriod: function() {
     NX.State.setValues({
-      contentUsageEvaluationResult: this.mockMetricData(100000, 200000),
-      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(-7),
+      contentUsageEvaluationResult: this.mockMetricData(this._COMPONENTS_OVER_LIMITS, this._REQUESTS_OVER_LIMITS),
+      'nexus.community.gracePeriodEnds': this.relativeGracePeriodDate(this._GRACE_PERIOD_DAYS_POST),
       'nexus.community.throttlingStatus': this._OVER_LIMITS
     });
   },
@@ -181,28 +195,28 @@ Ext.define('NX.controller.dev.Developer', {
     return [
       {
         "metricName": "peak_requests_per_day",
-        "metricValue": requests || 0,
+        "metricValue": requests || this._DEFAULT,
         "thresholds": [
-          {"thresholdName": "HARD_THRESHOLD", "thresholdValue": 200000},
-          {"thresholdName": "SOFT_THRESHOLD", "thresholdValue": 20000}
+          {"thresholdName": "HARD_THRESHOLD", "thresholdValue": this._REQUESTS_HARD_THRESHOLD},
+          {"thresholdName": "SOFT_THRESHOLD", "thresholdValue": this._REQUESTS_SOFT_THRESHOLD}
         ],
         "utilization": "FREE_TIER",
-        "aggregates": [{"name": "content_request_count", "value": requests || 0, "period": "peak_recorded_count_30d"}]
+        "aggregates": [{"name": "content_request_count", "value": requests || this._DEFAULT, "period": "peak_recorded_count_30d"}]
       }, {
         "metricName": "component_total_count",
-        "metricValue": components || 0,
+        "metricValue": components || this._DEFAULT,
         "thresholds": [
-          {"thresholdName": "HARD_THRESHOLD", "thresholdValue": 100000},
-          {"thresholdName": "SOFT_THRESHOLD", "thresholdValue": 100000}
+          {"thresholdName": "HARD_THRESHOLD", "thresholdValue": this._COMPONENTS_HARD_THRESHOLD},
+          {"thresholdName": "SOFT_THRESHOLD", "thresholdValue": this._COMPONENTS_SOFT_THRESHOLD}
         ],
         "utilization": "FREE_TIER",
-        "aggregates": [{"name": "component_total_count", "value": components || 0, "period": "peak_recorded_count_30d"}]
+        "aggregates": [{"name": "component_total_count", "value": components || this._DEFAULT, "period": "peak_recorded_count_30d"}]
       }, {
         "metricName": "successful_last_24h",
-        "metricValue": 0,
-        "thresholds": [{"thresholdName": "SOFT_THRESHOLD", "thresholdValue": 100}],
+        "metricValue": this._DEFAULT,
+        "thresholds": [{"thresholdName": "SOFT_THRESHOLD", "thresholdValue": this._UNIQUE_USER_SOFT_THRESHOLD}],
         "utilization": "FREE_TIER",
-        "aggregates": [{"name": "unique_user_count", "value": 0, "period": "peak_recorded_count_30d"}]
+        "aggregates": [{"name": "unique_user_count", "value": this._DEFAULT, "period": "peak_recorded_count_30d"}]
       }
     ];
   },
