@@ -68,6 +68,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -249,7 +250,7 @@ public class BaseRepositoryManagerTest
 
     when(groupType.getValue()).thenReturn("group");
     setupGroupRepository(groupRepository, groupConfiguration, mavenCentralRepository, apacheSnapshotsRepository);
-    setupGroupRepository(parentGroupRepository, parentGroupConfiguration, groupRepository);
+    setupGroupRepository(parentGroupRepository, parentGroupConfiguration, groupRepository, apacheSnapshotsRepository);
     setupGroupRepository(cycleGroupA, cycleGroupAConfiguration, cycleGroupB, apacheSnapshotsRepository);
     setupGroupRepository(cycleGroupB, cycleGroupBConfiguration, cycleGroupA, apacheSnapshotsRepository);
 
@@ -603,6 +604,89 @@ public class BaseRepositoryManagerTest
         .get(CLEANUP_ATTRIBUTES_KEY)
         .get(CLEANUP_NAME_KEY),
         hasItems(cleanupPolicy));
+  }
+
+  @Test
+  public void testDelete_continuesWhenOneGroupUpdateFails() throws Exception {
+    // Setup: Create a scenario where updating one group fails
+    repositoryManager = buildRepositoryManagerImpl(true);
+
+    // Mock the parent group to throw an exception when updated
+    doThrow(new RuntimeException("Test exception")).when(configurationStore).update(parentGroupConfiguration);
+
+    // Delete apache-snapshots which is a member of both 'group' and 'parentGroup'
+    repositoryManager.delete(APACHE_SNAPSHOTS_NAME);
+
+    // Verify: The regular group was still updated successfully
+    verify(configurationStore).update(groupConfiguration);
+
+    // Verify: Repository was still deleted despite parent group update failure
+    verify(apacheSnapshotsRepository).stopSafe();
+    verify(apacheSnapshotsRepository).delete();
+    verify(apacheSnapshotsRepository).destroy();
+    verify(configurationStore).delete(apacheSnapshotsConfiguration);
+  }
+
+  @Test
+  public void testDelete_handlesMultipleGroupUpdateFailures() throws Exception {
+    // Setup: Both groups fail to update
+    repositoryManager = buildRepositoryManagerImpl(true);
+
+    doThrow(new RuntimeException("First group failure")).when(configurationStore).update(groupConfiguration);
+    doThrow(new RuntimeException("Second group failure")).when(configurationStore).update(parentGroupConfiguration);
+
+    // Delete apache-snapshots which is a member of multiple groups
+    repositoryManager.delete(APACHE_SNAPSHOTS_NAME);
+
+    // Verify: Repository deletion still completes despite all group update failures
+    verify(apacheSnapshotsRepository).stopSafe();
+    verify(apacheSnapshotsRepository).delete();
+    verify(apacheSnapshotsRepository).destroy();
+    verify(configurationStore).delete(apacheSnapshotsConfiguration);
+
+    // Verify: Both group updates were attempted
+    verify(configurationStore).update(groupConfiguration);
+    verify(configurationStore).update(parentGroupConfiguration);
+  }
+
+  @Test
+  public void testDelete_successfullyRemovesFromAllGroups() throws Exception {
+    // Setup: Normal scenario where all group updates succeed
+    repositoryManager = buildRepositoryManagerImpl(true);
+
+    // Delete apache-snapshots which is a member of multiple groups
+    repositoryManager.delete(APACHE_SNAPSHOTS_NAME);
+
+    // Verify: All groups were updated
+    verify(configurationStore).update(groupConfiguration);
+    verify(configurationStore).update(parentGroupConfiguration);
+    verify(configurationStore).update(cycleGroupAConfiguration);
+    verify(configurationStore).update(cycleGroupBConfiguration);
+
+    // Verify: Repository was deleted
+    verify(apacheSnapshotsRepository).stopSafe();
+    verify(apacheSnapshotsRepository).delete();
+    verify(apacheSnapshotsRepository).destroy();
+    verify(configurationStore).delete(apacheSnapshotsConfiguration);
+  }
+
+  @Test
+  public void testDelete_repositoryNotInAnyGroup() throws Exception {
+    // Setup: Delete a repository that is not a member of any group
+    repositoryManager = buildRepositoryManagerImpl(true);
+
+    // Delete ungrouped repository
+    repositoryManager.delete(UNGROUPED_REPO_NAME);
+
+    // Verify: No group updates were attempted
+    verify(configurationStore, never()).update(groupConfiguration);
+    verify(configurationStore, never()).update(parentGroupConfiguration);
+
+    // Verify: Repository was still deleted successfully
+    verify(ungroupedRepository).stopSafe();
+    verify(ungroupedRepository).delete();
+    verify(ungroupedRepository).destroy();
+    verify(configurationStore).delete(ungroupedRepoConfiguration);
   }
 
 }

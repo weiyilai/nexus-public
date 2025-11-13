@@ -516,11 +516,17 @@ public abstract class BaseRepositoryManager
     return groupMemberMappingCache.getGroups(repositoryName);
   }
 
-  private void removeRepositoryFromAllGroups(final Repository repositoryToRemove) throws Exception {
+  private void removeRepositoryFromAllGroups(final Repository repositoryToRemove) {
     for (Repository group : repositories.values()) {
       Optional<GroupFacet> groupFacet = group.optionalFacet(GroupFacet.class);
       if (groupFacet.isPresent() && groupFacet.get().member(repositoryToRemove)) {
-        removeRepositoryFromGroup(repositoryToRemove, group);
+        try {
+          removeRepositoryFromGroup(repositoryToRemove, group);
+        }
+        catch (Exception e) {
+          log.warn("Failed to remove repository '{}' from group '{}'", repositoryToRemove.getName(), group.getName(),
+              e);
+        }
       }
     }
   }
