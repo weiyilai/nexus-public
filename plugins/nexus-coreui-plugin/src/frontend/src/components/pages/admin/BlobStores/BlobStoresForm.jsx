@@ -193,17 +193,13 @@ export default function BlobStoresForm() {
           }
           <CustomBlobStoreSettings type={type} service={service}/>
           {type?.fields?.map(field =>
-              <NxFormGroup key={field.id}
-                           label={field.label}
-                           sublabel={field.helpText}
-                           isRequired={field.required}>
-                <DynamicFormField
-                    id={field.id}
-                    current={current}
-                    initialValue={field.initialValue}
-                    onChange={updateDynamicField}
-                    dynamicProps={field}/>
-              </NxFormGroup>
+              <DynamicFormField
+                  key={field.id}
+                  id={field.id}
+                  current={current}
+                  initialValue={field.initialValue}
+                  onChange={updateDynamicField}
+                  dynamicProps={field} />
           )}
           <div className="nxrm-soft-quota">
             <NxFieldset label={FORM.SOFT_QUOTA.ENABLED.label} sublabel={FORM.SOFT_QUOTA.ENABLED.sublabel}>

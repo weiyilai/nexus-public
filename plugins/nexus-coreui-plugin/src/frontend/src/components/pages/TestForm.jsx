@@ -109,7 +109,7 @@ const testData = {
     required: false,
     disabled: false,
     readOnly: false,
-    initialValue: null,
+    initialValue: 'something.com',
     attributes: {},
   },
 
@@ -122,7 +122,7 @@ const testData = {
     required: true,
     disabled: false,
     readOnly: false,
-    initialValue: null,
+    initialValue: 'my pass',
     attributes: {},
   },
 
@@ -135,7 +135,7 @@ const testData = {
     required: true,
     disabled: false,
     readOnly: false,
-    initialValue: null,
+    initialValue: 'Lorem ipsum dolor sit, amet consectetur adipisicing elit. Id aperiam fuga nulla, beatae reiciendis dolore aspernatur. Animi dolorum ab eius beatae, nostrum, ex similique accusamus reiciendis hic impedit incidunt pariatur?',
     attributes: {},
   },
 
@@ -148,7 +148,7 @@ const testData = {
     required: true,
     disabled: false,
     readOnly: false,
-    initialValue: null,
+    initialValue: ['maven-central', 'npmjs'],
     attributes: {
       options: {
         'maven-central': 'Maven Central',
@@ -169,7 +169,7 @@ const testData = {
     required: true,
     disabled: false,
     readOnly: false,
-    initialValue: [],
+    initialValue: ['repository.created', 'component.created'],
     attributes: {
       toTitle: 'Selected',
       fromTitle: 'Available',
@@ -445,15 +445,17 @@ export default function TestForm() {
   // Create context with current form data and automatic validation
   const current = createMockContext(formData, {}, fieldDefinitions, showValidationErrors);
 
+  const readOnly = true;
+
   useEffect(() => {
     if (isEmpty(current?.context.validationErrors)) {
       setValidationErrors(undefined);
     }
   }, [current?.context.validationErrors]);
   return (
-    <Page className='nxrm-malware-risk'>
+    <Page className="nxrm-malware-risk">
       <PageHeader>
-        <PageTitle text='DynamicFormField Test Form' />
+        <PageTitle text="DynamicFormField Test Form" />
       </PageHeader>
       <ContentBody>
         <NxTile>
@@ -469,260 +471,185 @@ export default function TestForm() {
               showValidationErrors={showValidationErrors}
               validationErrors={validationErrors}
               submitMaskState={submitMaskState}
-              submitBtnText='Submit Form'
-              submitMaskMessage='Submitting form...'
-              submitMaskSuccessMessage='Form submitted successfully!'
+              submitBtnText="Submit Form"
+              submitMaskMessage="Submitting form..."
+              submitMaskSuccessMessage="Form submitted successfully!"
             >
               {/* String Field - Basic */}
-              <NxFormGroup
-                label={testData.stringField.label}
-                sublabel={testData.stringField.helpText}
-                isRequired={testData.stringField.required}
-              >
-                <DynamicFormField
-                  id={testData.stringField.id}
-                  current={current}
-                  initialValue={testData.stringField.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.stringField}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.stringField.id}
+                current={current}
+                initialValue={testData.stringField.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.stringField}
+                readOnly={readOnly}
+              />
 
               {/* String Field - Long */}
-              <NxFormGroup
-                label={testData.stringLongField.label}
-                sublabel={testData.stringLongField.helpText}
-                isRequired={testData.stringLongField.required}
-              >
-                <DynamicFormField
-                  id={testData.stringLongField.id}
-                  current={current}
-                  initialValue={testData.stringLongField.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.stringLongField}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.stringLongField.id}
+                current={current}
+                initialValue={testData.stringLongField.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.stringLongField}
+                readOnly={readOnly}
+              />
 
               {/* String Field - Read Only */}
-              <NxFormGroup
-                label={testData.stringDisabledField.label}
-                sublabel={testData.stringDisabledField.helpText}
-                isRequired={testData.stringDisabledField.required}
-              >
-                <DynamicFormField
-                  id={testData.stringDisabledField.id}
-                  current={current}
-                  initialValue={testData.stringDisabledField.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.stringDisabledField}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.stringDisabledField.id}
+                current={current}
+                initialValue={testData.stringDisabledField.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.stringDisabledField}
+                readOnly={readOnly}
+              />
 
               {/* Number Field */}
-              <NxFormGroup
-                label={testData.numberField.label}
-                sublabel={testData.numberField.helpText}
-                isRequired={testData.numberField.required}
-              >
-                <DynamicFormField
-                  id={testData.numberField.id}
-                  current={current}
-                  initialValue={testData.numberField.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.numberField}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.numberField.id}
+                current={current}
+                initialValue={testData.numberField.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.numberField}
+                readOnly={readOnly}
+              />
 
               {/* Checkbox Field */}
-              <NxFormGroup
-                label={testData.checkboxField.label}
-                sublabel={testData.checkboxField.helpText}
-                isRequired={testData.checkboxField.required}
-              >
-                <DynamicFormField
-                  id={testData.checkboxField.id}
-                  current={current}
-                  initialValue={testData.checkboxField.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.checkboxField}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.checkboxField.id}
+                current={current}
+                initialValue={testData.checkboxField.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.checkboxField}
+                readOnly={readOnly}
+              />
 
               {/* URL Field - Required */}
-              <NxFormGroup
-                label={testData.urlField.label}
-                sublabel={testData.urlField.helpText}
-                isRequired={testData.urlField.required}
-              >
-                <DynamicFormField
-                  id={testData.urlField.id}
-                  current={current}
-                  initialValue={testData.urlField.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.urlField}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.urlField.id}
+                current={current}
+                initialValue={testData.urlField.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.urlField}
+                readOnly={readOnly}
+              />
 
               {/* URL Field - Optional */}
-              <NxFormGroup
-                label={testData.urlOptionalField.label}
-                sublabel={testData.urlOptionalField.helpText}
-                isRequired={testData.urlOptionalField.required}
-              >
-                <DynamicFormField
-                  id={testData.urlOptionalField.id}
-                  current={current}
-                  initialValue={testData.urlOptionalField.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.urlOptionalField}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.urlOptionalField.id}
+                current={current}
+                initialValue={testData.urlOptionalField.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.urlOptionalField}
+                readOnly={readOnly}
+              />
 
               {/* Password Field */}
-              <NxFormGroup
-                label={testData.passwordField.label}
-                sublabel={testData.passwordField.helpText}
-                isRequired={testData.passwordField.required}
-              >
-                <DynamicFormField
-                  id={testData.passwordField.id}
-                  current={current}
-                  initialValue={testData.passwordField.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.passwordField}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.passwordField.id}
+                current={current}
+                initialValue={testData.passwordField.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.passwordField}
+                readOnly={readOnly}
+              />
 
               {/* Text-area Field */}
-              <NxFormGroup
-                label={testData.textareaField.label}
-                sublabel={testData.textareaField.helpText}
-                isRequired={testData.textareaField.required}
-              >
-                <DynamicFormField
-                  id={testData.textareaField.id}
-                  current={current}
-                  initialValue={testData.textareaField.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.textareaField}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.textareaField.id}
+                current={current}
+                initialValue={testData.textareaField.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.textareaField}
+                readOnly={readOnly}
+              />
 
               {/* Combobox Field */}
-              <NxFormGroup
-                label={testData.comboboxField.label}
-                sublabel={testData.comboboxField.helpText}
-                isRequired={testData.comboboxField.required}
-              >
-                <DynamicFormField
-                  id={testData.comboboxField.id}
-                  current={current}
-                  initialValue={testData.comboboxField.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.comboboxField}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.comboboxField.id}
+                current={current}
+                initialValue={testData.comboboxField.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.comboboxField}
+                readOnly={readOnly}
+              />
 
               {/* Item Select Field */}
-              <NxFormGroup
-                label={testData.itemselectField.label}
-                sublabel={testData.itemselectField.helpText}
-                isRequired={testData.itemselectField.required}
-              >
-                <DynamicFormField
-                  id={testData.itemselectField.id}
-                  current={current}
-                  initialValue={testData.itemselectField.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.itemselectField}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.itemselectField.id}
+                current={current}
+                initialValue={testData.itemselectField.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.itemselectField}
+                readOnly={readOnly}
+              />
 
               {/* Combobox with storeApi */}
-              <NxFormGroup
-                label={testData.comboboxWithStoreApi.label}
-                sublabel={testData.comboboxWithStoreApi.helpText}
-                isRequired={testData.comboboxWithStoreApi.required}
-              >
-                <DynamicFormField
-                  id={testData.comboboxWithStoreApi.id}
-                  current={current}
-                  initialValue={testData.comboboxWithStoreApi.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.comboboxWithStoreApi}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.comboboxWithStoreApi.id}
+                current={current}
+                initialValue={testData.comboboxWithStoreApi.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.comboboxWithStoreApi}
+                readOnly={readOnly}
+              />
 
               {/* Combobox with storeApi + filters */}
-              <NxFormGroup
-                label={testData.comboboxWithStoreApiFilters.label}
-                sublabel={testData.comboboxWithStoreApiFilters.helpText}
-                isRequired={testData.comboboxWithStoreApiFilters.required}
-              >
-                <DynamicFormField
-                  id={testData.comboboxWithStoreApiFilters.id}
-                  current={current}
-                  initialValue={testData.comboboxWithStoreApiFilters.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.comboboxWithStoreApiFilters}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.comboboxWithStoreApiFilters.id}
+                current={current}
+                initialValue={testData.comboboxWithStoreApiFilters.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.comboboxWithStoreApiFilters}
+                readOnly={readOnly}
+              />
 
               {/* Combobox with storeApi - simple */}
-              <NxFormGroup
-                label={testData.comboboxWithStoreApiSimple.label}
-                sublabel={testData.comboboxWithStoreApiSimple.helpText}
-                isRequired={testData.comboboxWithStoreApiSimple.required}
-              >
-                <DynamicFormField
-                  id={testData.comboboxWithStoreApiSimple.id}
-                  current={current}
-                  initialValue={testData.comboboxWithStoreApiSimple.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.comboboxWithStoreApiSimple}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.comboboxWithStoreApiSimple.id}
+                current={current}
+                initialValue={testData.comboboxWithStoreApiSimple.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.comboboxWithStoreApiSimple}
+                readOnly={readOnly}
+              />
 
               {/* Itemselect with storeApi - Repository */}
-              <NxFormGroup
-                label={testData.itemselectWithStoreApi.label}
-                sublabel={testData.itemselectWithStoreApi.helpText}
-                isRequired={testData.itemselectWithStoreApi.required}
-              >
-                <DynamicFormField
-                  id={testData.itemselectWithStoreApi.id}
-                  current={current}
-                  initialValue={testData.itemselectWithStoreApi.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.itemselectWithStoreApi}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.itemselectWithStoreApi.id}
+                current={current}
+                initialValue={testData.itemselectWithStoreApi.initialValue}
+                onChange={updateField}
+                dynamicProps={testData.itemselectWithStoreApi}
+                readOnly={readOnly}
+              />
 
               {/* Itemselect with storeApi - Global */}
-              <NxFormGroup
-                label={testData.itemselectWithStoreApiGlobal.label}
-                sublabel={testData.itemselectWithStoreApiGlobal.helpText}
-                isRequired={testData.itemselectWithStoreApiGlobal.required}
-              >
-                <DynamicFormField
-                  id={testData.itemselectWithStoreApiGlobal.id}
-                  current={current}
-                  initialValue={testData.itemselectWithStoreApiGlobal.initialValue}
-                  onChange={updateField}
-                  dynamicProps={testData.itemselectWithStoreApiGlobal}
-                />
-              </NxFormGroup>
+              <DynamicFormField
+                id={testData.itemselectWithStoreApiGlobal.id}
+                current={current}
+                initialValue={
+                  testData.itemselectWithStoreApiGlobal.initialValue
+                }
+                onChange={updateField}
+                dynamicProps={testData.itemselectWithStoreApiGlobal}
+                readOnly={readOnly}
+              />
 
               {/* Display current form data */}
-              <NxFormGroup label='Current Form Data' sublabel='Real-time form state'>
+              <NxFormGroup
+                label="Current Form Data"
+                sublabel="Real-time form state"
+              >
                 <pre
                   style={{
-                    background: '#f5f5f5',
-                    padding: '10px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    overflow: 'auto',
-                    maxHeight: '200px',
+                    background: "#f5f5f5",
+                    padding: "10px",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    overflow: "auto",
+                    maxHeight: "200px",
                   }}
                 >
                   {JSON.stringify(formData, null, 2)}

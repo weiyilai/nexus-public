@@ -14,7 +14,7 @@ import React from 'react';
 import { equals, mapObjIndexed, values } from 'ramda';
 import { assign, createMachine } from 'xstate';
 import { useMachine } from '@xstate/react';
-import { NxFormSelect, NxTextInput, NxCheckbox } from '@sonatype/react-shared-components';
+import { NxFormSelect, NxTextInput, NxCheckbox, NxReadOnly, NxFormGroup } from '@sonatype/react-shared-components';
 import { NxStatefulTransferList } from '@sonatype/react-shared-components';
 
 import FormUtils from '../../../interface/FormUtils';
@@ -23,16 +23,77 @@ import UIStrings from '../../../constants/UIStrings';
 import ExtAPIUtils from '../../../interface/ExtAPIUtils';
 import { NxLoadWrapper } from '@sonatype/react-shared-components';
 
-export default function DynamicFormField({ current, dynamicProps, id, initialValue, onChange }) {
+export default function DynamicFormField({ current, dynamicProps, id, initialValue, readOnly, onChange }) {
   // Note: storeApi, storeFilters, idMapping, nameMapping are legacy ExtJS fields
   // These will be removed once all ExtJS descriptors are migrated to React
 
   // Handle read-only fields - just display the value as text
-  if (dynamicProps.readOnly) {
-    const value = current.context.data[id] || initialValue || '';
-    return <span>{value}</span>;
+  if (dynamicProps.readOnly || readOnly) {
+    return readOnlyComponent(current, dynamicProps, id, initialValue);
+  } else {
+    if (dynamicProps.type === 'checkbox') {
+      return editComponent(current, dynamicProps, id, initialValue, onChange)
+    } else {
+      return (
+        <NxFormGroup
+          label={dynamicProps.label}
+          isRequired={dynamicProps.required}
+          sublabel={dynamicProps.helpText}
+        >
+          {editComponent(current, dynamicProps, id, initialValue, onChange)}
+        </NxFormGroup>
+      );
+    }
   }
+}
 
+function readOnlyComponent(current, dynamicProps, id, initialValue) {
+  switch (dynamicProps.type) {
+    case "string":
+    case "number":
+    case "url":
+    case "text-area":
+      return simpleReadOnlyComponent(
+        id,
+        dynamicProps.label || id,
+        current.context.data[id] || initialValue || "",
+        dynamicProps
+      )
+    case "checkbox":
+      return simpleReadOnlyComponent(
+        id,
+        dynamicProps.label || id,
+        current.context.data[id] || initialValue || false,
+        dynamicProps
+      )
+    case "password":
+      return simpleReadOnlyComponent(
+        id,
+        dynamicProps.label || id,
+        "********",
+        dynamicProps
+      );
+    case "itemselect":
+    case "combobox":
+      return listReadOnlyComponent(
+        id,
+        dynamicProps.label || id,
+        (Array.isArray(current.context.data[id]) &&
+        current.context.data[id].length > 0
+          ? current.context.data[id]
+          : null) ||
+          initialValue ||
+          [],
+        dynamicProps
+      );
+    default: {
+      console.warn(`form field type=${dynamicProps.type} is unknown`);
+      return <div />;
+    }
+  }
+}
+
+function editComponent(current, dynamicProps, id, initialValue, onChange) {
   switch (dynamicProps.type) {
     case 'string': {
       const { fieldProps, className } = getFieldPropsAndClassName(id, current, initialValue, dynamicProps);
@@ -129,6 +190,31 @@ export default function DynamicFormField({ current, dynamicProps, id, initialVal
       return <div />;
     }
   }
+}
+
+function simpleReadOnlyComponent(id, label, value, dynamicProps = {}) {
+  label = dynamicProps?.label || label;
+  value = (typeof value === 'boolean' ? (value ? 'Enabled' : 'Disabled') : value) || 'NA';
+
+  return (
+    <NxReadOnly>
+      <NxReadOnly.Label id={id}>{label}</NxReadOnly.Label>
+      <NxReadOnly.Data aria-labeledby={id}>{value}</NxReadOnly.Data>
+    </NxReadOnly>
+  );
+}
+
+function listReadOnlyComponent(id, label, values, dynamicProps = {}) {
+  label = dynamicProps?.label || label;
+
+  return (
+    <NxReadOnly>
+      <NxReadOnly.Label id={id}>{label}</NxReadOnly.Label>
+      {Array.isArray(values) && values.length > 0 && values.map((val, index) => (
+        <NxReadOnly.Data key={index} aria-labeledby={id}>{val}</NxReadOnly.Data>
+      )) || <NxReadOnly.Data>NA</NxReadOnly.Data>}
+    </NxReadOnly>
+  );
 }
 
 // Helper function to get common field props and className

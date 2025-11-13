@@ -104,20 +104,22 @@ describe('DynamicFormField', () => {
       expect(textInput).toBeDisabled();
     });
 
-    it('shows read-only value as text instead of input', () => {
+    it('renders read-only string as text', () => {
       render(
         <DynamicFormField
-          {...createMockContext('testField', 'read-only value')}
-          dynamicProps={{
-            type: 'string',
-            attributes: {},
-            readOnly: true,
-          }}
+          {...defaultProps}
+          dynamicProps={{ type: "string", label: "My Text", attributes: {} }}
+          initialValue='something'
+          readOnly={true}
         />
       );
 
-      expect(screen.getByText('read-only value')).toBeVisible();
-      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+      const textLabel = screen.getByRole('term');
+      const textValue = screen.getByRole('definition');
+      expect(textLabel).toBeVisible();
+      expect(textValue).toBeVisible();
+      expect(textLabel).toHaveTextContent('My Text');
+      expect(textValue).toHaveTextContent('something');
     });
   });
 
@@ -161,6 +163,24 @@ describe('DynamicFormField', () => {
       const textInput = screen.getByRole('textbox');
       expect(textInput).toBeVisible();
       expect(textInput).toHaveValue('0');
+    });
+
+    it('renders read-only number input as text', () => {
+      render(
+        <DynamicFormField
+          {...defaultProps}
+          dynamicProps={{ type: "number", label: "My Number", attributes: {} }}
+          initialValue={123}
+          readOnly={true}
+        />
+      );
+
+      const numberLabel = screen.getByRole('term');
+      const numberValue = screen.getByRole('definition');
+      expect(numberLabel).toBeVisible();
+      expect(numberValue).toBeVisible();
+      expect(numberLabel).toHaveTextContent('My Number');
+      expect(numberValue).toHaveTextContent('123');
     });
   });
 
@@ -245,6 +265,28 @@ describe('DynamicFormField', () => {
       const checkbox = screen.getByRole('checkbox');
       expect(checkbox).toBeChecked();
     });
+
+    it('renders read-only checkbox as text', () => {
+      render(
+        <DynamicFormField
+          {...defaultProps}
+          dynamicProps={{
+            type: 'checkbox',
+            attributes: {},
+            label: 'Test checkbox',
+          }}
+          initialValue={true}
+          readOnly={true}
+        />
+      );
+
+      const checkboxLabel = screen.getByRole('term');
+      const checkboxValue = screen.getByRole('definition');
+      expect(checkboxLabel).toBeVisible();
+      expect(checkboxValue).toBeVisible();
+      expect(checkboxLabel).toHaveTextContent('Test checkbox');
+      expect(checkboxValue).toHaveTextContent('Enabled');
+    });
   });
 
   describe('url field type', () => {
@@ -273,6 +315,24 @@ describe('DynamicFormField', () => {
       expect(textInput).toBeVisible();
       expect(textInput).toHaveValue('invalid-url');
     });
+
+    it('renders read-only URL as text', () => {
+      render(
+        <DynamicFormField
+          {...defaultProps}
+          dynamicProps={{ type: "url", label: "My Url", attributes: {} }}
+          initialValue="something.com"
+          readOnly={true}
+        />
+      );
+
+      const urlLabel = screen.getByRole('term');
+      const urlValue = screen.getByRole('definition');
+      expect(urlLabel).toBeVisible();
+      expect(urlValue).toBeVisible();
+      expect(urlLabel).toHaveTextContent('My Url');
+      expect(urlValue).toHaveTextContent('something.com');
+    });
   });
 
   describe('password field type', () => {
@@ -300,6 +360,24 @@ describe('DynamicFormField', () => {
       expect(passwordInput).not.toBeDisabled();
       expect(passwordInput).toHaveValue('secret123');
     });
+
+    it('renders read-only password as masked text', () => {
+      render(
+        <DynamicFormField
+          {...defaultProps}
+          dynamicProps={{ type: "password", label: "My Password", attributes: {} }}
+          initialValue='password123'
+          readOnly={true}
+        />
+      );
+
+      const passLabel = screen.getByRole('term');
+      const passValue = screen.getByRole('definition');
+      expect(passLabel).toBeVisible();
+      expect(passValue).toBeVisible();
+      expect(passLabel).toHaveTextContent('My Password');
+      expect(passValue).toHaveTextContent('********');
+    });
   });
 
   describe('text-area field type', () => {
@@ -326,6 +404,24 @@ describe('DynamicFormField', () => {
       expect(textarea).toBeVisible();
       expect(textarea).not.toBeDisabled();
       expect(textarea).toHaveValue('Line 1\nLine 2');
+    });
+
+    it('renders read-only text-area as text', () => {
+      render(
+        <DynamicFormField
+          {...defaultProps}
+          dynamicProps={{ type: "text-area", label: "My Text Area", attributes: {} }}
+          initialValue='Lorem, ipsum dolor sit amet consectetur adipisicing elit.'
+          readOnly={true}
+        />
+      );
+
+      const textAreaLabel = screen.getByRole('term');
+      const textAreaValue = screen.getByRole('definition');
+      expect(textAreaLabel).toBeVisible();
+      expect(textAreaValue).toBeVisible();
+      expect(textAreaLabel).toHaveTextContent('My Text Area');
+      expect(textAreaValue).toHaveTextContent('Lorem, ipsum dolor sit amet consectetur adipisicing elit.');
     });
   });
 
@@ -835,6 +931,27 @@ describe('DynamicFormField', () => {
       expect(await screen.findByText('Maven Repository')).toBeVisible();
       expect(await screen.findByText('npm Repository')).toBeVisible();
     });
+
+    it('renders read-only combobox as text list', () => {
+      render(
+        <DynamicFormField
+          {...defaultProps}
+          dynamicProps={{ type: "combobox", label: "My Combobox", attributes: {} }}
+          initialValue={['hello', 'world']}
+          readOnly={true}
+        />
+      );
+
+      const comboboxLabel = screen.getByRole('term');
+      const comboboxValues = screen.getAllByRole('definition');
+      expect(comboboxLabel).toBeVisible();
+      expect(comboboxValues.length).toBe(2);
+      expect(comboboxValues[0]).toBeVisible();
+      expect(comboboxValues[1]).toBeVisible();
+      expect(comboboxLabel).toHaveTextContent('My Combobox');
+      expect(comboboxValues[0]).toHaveTextContent('hello');
+      expect(comboboxValues[1]).toHaveTextContent('world');
+    });
   });
 
   describe('itemselect field type', () => {
@@ -1171,6 +1288,27 @@ describe('DynamicFormField', () => {
       expect(await screen.findByText('Event 2')).toBeVisible();
       expect(await screen.findByText('Event 3')).toBeVisible();
     });
+
+    it('renders read-only itemselect as text list', () => {
+      render(
+        <DynamicFormField
+          {...defaultProps}
+          dynamicProps={{ type: "itemselect", label: "My Itemselect", attributes: {} }}
+          initialValue={['hello', 'world']}
+          readOnly={true}
+        />
+      );
+
+      const itemselectLabel = screen.getByRole('term');
+      const itemselectValues = screen.getAllByRole('definition');
+      expect(itemselectLabel).toBeVisible();
+      expect(itemselectValues.length).toBe(2);
+      expect(itemselectValues[0]).toBeVisible();
+      expect(itemselectValues[1]).toBeVisible();
+      expect(itemselectLabel).toHaveTextContent('My Itemselect');
+      expect(itemselectValues[0]).toHaveTextContent('hello');
+      expect(itemselectValues[1]).toHaveTextContent('world');
+    });
   });
 
   describe('unknown field type', () => {
@@ -1182,6 +1320,13 @@ describe('DynamicFormField', () => {
       );
 
       expect(consoleSpy).toHaveBeenCalledWith('form field type=unknown is unknown');
+
+      render(
+        <DynamicFormField {...createMockContext('unknownField')} dynamicProps={{ type: 'unknown', attributes: {} }} readOnly={true} />
+      );
+
+      expect(consoleSpy).toHaveBeenCalledWith('form field type=unknown is unknown');
+
       consoleSpy.mockRestore();
     });
   });
