@@ -25,6 +25,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 import jakarta.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.sonatype.nexus.common.collect.AttributesMap;
 import org.sonatype.nexus.common.entity.DetachedEntityId;
 import org.sonatype.nexus.common.event.EventAware;
@@ -39,6 +40,7 @@ import org.sonatype.nexus.repository.content.event.asset.AssetDeletedEvent;
 import org.sonatype.nexus.repository.content.event.asset.AssetEvent;
 import org.sonatype.nexus.repository.content.event.asset.AssetPurgedEvent;
 import org.sonatype.nexus.repository.content.event.asset.AssetUploadedEvent;
+import org.sonatype.nexus.repository.content.event.component.ComponentDeletedEvent;
 import org.sonatype.nexus.repository.content.facet.ContentFacet;
 import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.group.GroupFacetImpl;
@@ -47,11 +49,13 @@ import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.maven.MavenPath;
 import org.sonatype.nexus.repository.maven.MavenPath.HashType;
 import org.sonatype.nexus.repository.maven.internal.Constants;
+import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.repository.maven.internal.MavenMimeRulesSource;
 import org.sonatype.nexus.repository.maven.internal.group.ArchetypeCatalogMerger;
 import org.sonatype.nexus.repository.maven.internal.group.MavenGroupFacet;
 import org.sonatype.nexus.repository.maven.internal.group.RepositoryMetadataMerger;
 import org.sonatype.nexus.repository.types.GroupType;
+import org.sonatype.nexus.repository.types.ProxyType;
 import org.sonatype.nexus.repository.view.Content;
 import org.sonatype.nexus.repository.view.ContentTypes;
 import org.sonatype.nexus.repository.view.Response;
@@ -73,6 +77,7 @@ import static java.lang.String.valueOf;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
+import static org.sonatype.nexus.repository.maven.internal.Attributes.P_BASE_VERSION;
 import static org.sonatype.nexus.repository.view.ContentTypes.TEXT_PLAIN;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -347,6 +352,79 @@ public class MavenContentGroupFacetImpl
 
   private void handleAssetEvent(final AssetEvent event, final boolean delete) {
     event.getRepository().ifPresent(repository -> maybeEvict(repository, event.getAsset(), delete));
+  }
+
+  /**
+   * Asset delete events may not have the Component, so we watch for deletions via components.
+   * When a component is deleted from a member repository, we need to invalidate the cached
+   * metadata in this group repository.
+   *
+   */
+  @Subscribe
+  @AllowConcurrentEvents
+  public void onComponentDeletedEvent(final ComponentDeletedEvent event) {
+    org.sonatype.nexus.repository.content.Component component = event.getComponent();
+    event.getRepository().ifPresent(repository -> {
+      if (member(repository) && !ProxyType.NAME.equals(repository.getType().getValue())) {
+        log.debug("Component deleted from member repository {}: {}", repository.getName(),
+            component.toStringExternal());
+        invalidateMetadataForComponent(component);
+      }
+    });
+  }
+
+  /**
+   * Invalidates group metadata cache for the given component's Maven coordinates.
+   * Extracts groupId, artifactId, and baseVersion from the component and marks
+   * corresponding metadata paths as stale in the group repository.
+   *
+   * @param component the deleted component from a member repository
+   */
+  private void invalidateMetadataForComponent(final org.sonatype.nexus.repository.content.Component component) {
+    try {
+      // Extract Maven coordinates from component
+      String groupId = component.namespace(); // namespace = groupId for Maven
+      String artifactId = component.name(); // name = artifactId for Maven
+      String baseVersion = component.attributes(Maven2Format.NAME).get(P_BASE_VERSION, String.class);
+
+      if (StringUtils.isBlank(groupId) || StringUtils.isBlank(artifactId) || StringUtils.isBlank(baseVersion)) {
+        log.debug("Unable to extract complete GAV from component: {}", component.toStringExternal());
+        return;
+      }
+
+      log.debug("Invalidating group metadata for {}:{}:{}", groupId, artifactId, baseVersion);
+
+      // Build metadata paths that need to be invalidated
+      String groupPath = groupId.replace('.', '/');
+      String artifactPath = groupPath + "/" + artifactId;
+
+      ContentFacet contentFacet = getRepository().facet(ContentFacet.class);
+
+      // Invalidate artifact-level metadata: groupId/artifactId/maven-metadata.xml
+      // This metadata file lists all available versions for the artifact
+      invalidateMetadataPath(contentFacet, artifactPath + "/maven-metadata.xml");
+
+    }
+    catch (Exception e) {
+      log.warn("Failed to invalidate group metadata for component: {}", component.toStringExternal(), e);
+    }
+  }
+
+  /**
+   * Marks a specific metadata path as stale in the group repository cache.
+   *
+   * @param contentFacet the content facet for accessing assets
+   * @param metadataPath the path to the metadata file (without leading slash)
+   */
+  private void invalidateMetadataPath(final ContentFacet contentFacet, final String metadataPath) {
+    String pathWithSlash = prependIfMissing(metadataPath, PATH_PREFIX);
+    contentFacet.assets()
+        .path(pathWithSlash)
+        .find()
+        .ifPresent(asset -> {
+          log.trace("Marking as stale: {}", pathWithSlash);
+          asset.markAsStale();
+        });
   }
 
   @Subscribe
