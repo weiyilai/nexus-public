@@ -358,22 +358,13 @@ Ext.define('NX.app.Application', {
     });
 
     becomeReady = function () {
-      const requireAuth = NX.State.getValue('oauth2Enabled', false)
-        && NX.State.getValue('oauth2ForceAuthentication', false);
+      // hide the loading mask after we have loaded
+      Ext.get('loading').remove();
+      Ext.fly('loading-mask').animate({opacity: 0, remove: true});
 
-      if(requireAuth) {
-        NX.Security.askToAuthenticate();
-      }
-
-      if(!requireAuth || NX.Security.hasUser()) {
-        // hide the loading mask after we have loaded
-        Ext.get('loading').remove();
-        Ext.fly('loading-mask').animate({opacity: 0, remove: true});
-
-        // mark app as ready
-        me.logInfo('Ready');
-        me.ready = true;
-      }
+      // mark app as ready
+      me.logInfo('Ready');
+      me.ready = true;
     };
 
     waitForExtJS(becomeReady);

@@ -48,15 +48,10 @@ export default function LoginAndUserButton() {
   }
 
   function onSignInClick() {
-    const isReactLoginEnabled = ExtJS.state().getValue('nexus.login.react.enabled', false);
-    if (isReactLoginEnabled) {
-      // Keep original requested URL and then encode to Base64
-      const url = router.urlService.url();
-      const returnTo = btoa(`#${url}`);
-      router.stateService.go(ROUTE_NAMES.LOGIN, { returnTo });
-    } else {
-      ExtJS.askToAuthenticate();
-    }
+    // Keep original requested URL and then encode to Base64
+    const url = router.urlService.url();
+    const returnTo = btoa(`#${url}`);
+    router.stateService.go(ROUTE_NAMES.LOGIN, { returnTo });
   }
 }
 

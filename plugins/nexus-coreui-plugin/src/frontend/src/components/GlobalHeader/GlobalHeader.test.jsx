@@ -13,7 +13,7 @@
 
 import React from 'react';
 import GlobalHeader from './GlobalHeader';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 
 import { ExtJS } from '@sonatype/nexus-ui-plugin';
 import { UIRouter, UIView, useCurrentStateAndParams } from '@uirouter/react';
@@ -403,6 +403,10 @@ describe('GlobalHeader', () => {
     it('clicking Log Out invokes log out functionality', async () => {
       givenAllRequirementsMetForUserTokenPageAccess();
       const { router } = renderComponent();
+      // Wait for initial transition to complete
+      await waitFor(() => {
+        expect(router.globals.transition).toBeNull();
+      });
 
       // navigate away from welcome so we can test redirect on logout
       router.stateService.go('user.user-token');

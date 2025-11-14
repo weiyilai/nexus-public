@@ -34,6 +34,9 @@ jest.mock('@sonatype/nexus-ui-plugin', () => {
     ...jest.requireActual('@sonatype/nexus-ui-plugin'),
     ExtJS: {
       checkPermission: jest.fn().mockReturnValue(true),
+      state: jest.fn().mockReturnValue({
+        getValue: jest.fn()
+      })
     }
   }
 });

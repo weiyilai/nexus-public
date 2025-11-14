@@ -38,7 +38,6 @@ Ext.define('NX.controller.User', {
     'header.SignIn',
     'header.SignOut',
     'Authenticate',
-    'SignIn',
     'ExpireSession'
   ],
 
@@ -54,10 +53,6 @@ Ext.define('NX.controller.User', {
     {
       ref: 'userMode',
       selector: 'nx-header-mode[name=user]'
-    },
-    {
-      ref: 'signIn',
-      selector: 'nx-signin'
     },
     {
       ref: 'authenticate',
@@ -88,17 +83,8 @@ Ext.define('NX.controller.User', {
         'nx-header-panel': {
           afterrender: me.manageButtons
         },
-        'nx-header-signin': {
-          click: me.askToAuthenticate
-        },
-        'nx-expire-session button[action=signin]': {
-          click: me.askToAuthenticate
-        },
         'nx-header-signout': {
           click: me.onClickSignOut
-        },
-        'nx-signin button[action=signin]': {
-          click: me.signIn
         },
         'nx-authenticate button[action=authenticate]': {
           click: me.doAuthenticateAction
@@ -143,65 +129,6 @@ Ext.define('NX.controller.User', {
    */
   hasUser: function () {
     return Ext.isDefined(NX.State.getUser());
-  },
-
-  /**
-   * Requests authentication of the user with the {@code authRequest} event. If no listeners are registered or none
-   * perform authentication {@code showSignInWindow} will be called.
-   *
-   * The {@code authRequest} event is sent with an array argument; listeners are expected to push a
-   * {@code Ext.Deferred} that is resolved when the listener has completed its attempt at authentication; the deferred
-   * objects are expected to resolve with the authenticated user object if they handled authentication, or null
-   * otherwise. If any handlers fails via {@code Ext.Deferred.reject} the default path of showing the sign-in window
-   * will occur.
-   *
-   * If no user is found after all listeners deferred operations are complete the sign in window will be shown.
-   *
-   * @param message
-   * @param options
-   */
-  askToAuthenticate: function (message, options) {
-    var me = this,
-        authedUser = null,
-        currentUser = NX.State.getUser(),
-        handlers = [];
-
-    me.fireEvent('authRequest', handlers);
-
-    Ext.Deferred.all(handlers).then(function(authedUsers) {
-      if (Ext.isArray(authedUsers)) {
-        // take the first authenticated user
-        authedUser = Ext.Array.findBy(authedUsers, function(item) {
-          return Ext.isObject(item);
-        });
-      }
-    }, function() {
-      // one of the handlers finished via reject; assume new sign-in
-      currentUser = null;
-      authedUser = null;
-    }).always(function() {
-      function showSignInWindow() {
-        me.showSignInWindow(options);
-      }
-
-      if (authedUser) {
-        NX.State.setUser(authedUser);
-      }
-      else if (currentUser) {
-        if (me.fireEvent('beforereauthenticate') !== false) {
-          me.showAuthenticateWindow(
-              message,
-              Ext.apply(options || {}, {authenticateAction: me.authenticate}),
-              currentUser
-          );
-        }
-      }
-      else {
-        if (me.fireEvent('beforeauthenticate', showSignInWindow) !== false) {
-          showSignInWindow();
-        }
-      }
-    });
   },
 
   /**
@@ -257,16 +184,14 @@ Ext.define('NX.controller.User', {
   },
 
   /**
-   * Shows sign-in window.
-   *
    * @private
-   * @param {Object} [options] TODO
    */
-  showSignInWindow: function (options) {
-    var me = this;
+  doAuthenticateAction: function (button) {
+    var win = button.up('window');
 
-    if (!me.getSignIn()) {
-      me.getSignInView().create({options: options});
+    // invoke optional authenticateAction callback registered on window
+    if (win.options && Ext.isFunction(win.options.authenticateAction)) {
+      win.options.authenticateAction.call(this, button);
     }
   },
 
@@ -294,98 +219,6 @@ Ext.define('NX.controller.User', {
         options.failure.call(options.failure, options);
       }
     }
-  },
-
-  /**
-   * @private
-   */
-  signIn: function (button) {
-    var me = this,
-        win = button.up('window'),
-        form = button.up('form'),
-        values = form.getValues(),
-        b64username = NX.util.Base64.encode(values.username),
-        b64password = NX.util.Base64.encode(values.password);
-
-    win.getEl().mask(NX.I18n.get('User_SignIn_Mask'));
-
-    //<if debug>
-    me.logDebug('Sign-in user: "', values.username, '" ...');
-    //</if>
-
-    me.doSignIn(b64username, b64password, values, button);
-  },
-
-  /**
-   * @private
-   */
-  doAuthenticateAction: function (button) {
-    var win = button.up('window');
-
-    // invoke optional authenticateAction callback registered on window
-    if (win.options && Ext.isFunction(win.options.authenticateAction)) {
-      win.options.authenticateAction.call(this, button);
-    }
-  },
-
-  // TODO: anything that may change the authentication/session should probably not be
-  // TODO: done via extjs as it can batch, and the batch operation could impact the
-  // TODO: sanity of the requests if authentication changes mid execution of batch operations
-
-  doSignIn: function(b64username, b64password, values, button) {
-    var me = this,
-        win = button.up('window');
-
-    Ext.Ajax.request({
-      url: NX.util.Url.urlOf('service/rapture/session'),
-      method: 'POST',
-      params: {
-        username: b64username,
-        password: b64password
-      },
-      scope: me,
-      suppressStatus: true,
-      success: function () {
-        win.getEl().unmask();
-        NX.State.setUser({id: values.username});
-        win.authenticatedSuccess = true
-        win.close();
-
-        // invoke optional success callback registered on window
-        if (win.options && Ext.isFunction(win.options.success)) {
-          win.options.success.call(win.options.scope, win.options);
-        }
-      },
-      failure: function (response) {
-        var message = NX.I18n.get('User_Credentials_Message');
-        if (response.status === 0) {
-          message = NX.I18n.get('User_ConnectFailure_Message');
-        }
-        win.getEl().unmask();
-        NX.Messages.warning(message);
-      }
-    });
-  },
-
-  /**
-   * @private
-   */
-  authenticate: function (button) {
-    var me = this,
-        win = button.up('window'),
-        form = button.up('form'),
-        user = NX.State.getUser(),
-        values = Ext.applyIf(form.getValues(), {username: user ? user.id : undefined}),
-        b64username = NX.util.Base64.encode(values.username),
-        b64password = NX.util.Base64.encode(values.password);
-
-    win.getEl().mask(NX.I18n.get('User_Controller_Authenticate_Mask'));
-
-    //<if debug>
-    this.logDebug('Authenticating user "', values.username, '" ...');
-    //</if>
-
-    me.doSignIn(b64username, b64password, values, button);
   },
 
   /**

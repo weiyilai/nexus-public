@@ -63,11 +63,7 @@ Ext.define('NX.controller.ExtDirect', {
     if (Ext.isDefined(result)) {
       if (Ext.isDefined(result.success) && result.success === false) {
 
-        if (Ext.isDefined(result.authenticationRequired) && result.authenticationRequired === true) {
-          message = result.message;
-          NX.Security.askToAuthenticate();
-        }
-        else if (Ext.isDefined(result.message)) {
+        if (Ext.isDefined(result.message)) {
           message = result.message;
         }
         else if (Ext.isDefined(result.messages)) {

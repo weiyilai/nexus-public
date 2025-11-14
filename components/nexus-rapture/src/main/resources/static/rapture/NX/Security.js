@@ -46,16 +46,6 @@ Ext.define('NX.Security', {
   },
 
   /**
-   * @see NX.controller.User#askToAuthenticate
-   */
-  askToAuthenticate: function (message, options) {
-    var me = this;
-    if (me.controller()) {
-      me.controller().askToAuthenticate(message, options);
-    }
-  },
-
-  /**
    * @see NX.controller.User#doWithAuthenticationToken
    */
   doWithAuthenticationToken: function (message, options) {

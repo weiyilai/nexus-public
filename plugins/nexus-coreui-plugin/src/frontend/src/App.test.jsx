@@ -20,313 +20,295 @@ import { ExtJS } from '@sonatype/nexus-ui-plugin';
 import { helperFunctions } from './components/widgets/SystemStatusAlerts/CELimits/UsageHelper';
 import { ROUTE_NAMES } from './routerConfig/routeNames/routeNames';
 
-const { ADMIN, BROWSE } = ROUTE_NAMES;
+const { BROWSE } = ROUTE_NAMES;
 
 // mocking out the Welcome page to avoid having to mock all the various ExtJs functions/state required to render it
 jest.mock('./components/pages/user/Welcome/Welcome', () => {
   return () => (<main><h1>Welcome Test Mock</h1></main>);
 });
 
-jest.mock('./components/pages/admin/Api/Api', () => {
-  return () => (<main><h1>API Mock</h1></main>);
-});
-
-jest.mock('./components/pages/admin/Users/UsersExt', () => {
-  return () => (<main><h1>UserExt Mock</h1></main>)
+jest.mock('./components/login/CoreUILoginPageWrapper', () => {
+  return () => (<main><h1>Login Test Mock</h1></main>);
 });
 
 describe('App', () => {
-  let historySpy;
-
-  beforeEach(() => {
-    givenExtJSState();
-    givenUser();
-    historySpy = jest.spyOn(History.prototype, 'pushState');
-
-    window.location.hash = '';
-    window.dirty = [];
-  });
-
-  it('should render', async () => {
-    renderComponent();
-    await assertBasicPageLayoutRenders();
-  });
-
-  describe('UI Branding', () => {
-    it('should not render branding header nor footer when not branding is set', async () => {
-      renderComponent();
-      const brandingHeader = screen.queryByTestId('nxrm-branding-header');
-      const brandingFooter = screen.queryByTestId('nxrm-branding-footer');
-      expect(brandingHeader).not.toBeInTheDocument();
-      expect(brandingFooter).not.toBeInTheDocument();
-    });
-
-    it('should not render branding header and footer when both are disabled', async () => {
-      givenExtJSState({
-        ...getDefaultState(),
-        branding: {
-          headerEnabled: false,
-          headerHtml: '<div>Branding Header</div>',
-          footerEnabled: false,
-          footerHtml: '<div>Branding Footer</div>',
-        },
-      });
-      renderComponent();
-      const brandingHeader = screen.queryByTestId('nxrm-branding-header');
-      const brandingFooter = screen.queryByTestId('nxrm-branding-footer');
-      expect(brandingHeader).not.toBeInTheDocument();
-      expect(brandingFooter).not.toBeInTheDocument();
-    });
-
-    it('should render branding header and footer when enabled', async () => {
-      givenExtJSState({
-        ...getDefaultState(),
-        branding: {
-          headerEnabled: true,
-          headerHtml: '<div>Branding Header</div>',
-          footerEnabled: true,
-          footerHtml: '<div>Branding Footer</div>',
-        },
-      });
-      renderComponent();
-      const brandingHeader = screen.getByTestId('nxrm-branding-header');
-      const brandingFooter = screen.getByTestId('nxrm-branding-footer');
-      expect(brandingHeader).toBeVisible();
-      expect(within(brandingHeader).getByText('Branding Header')).toBeVisible();
-      expect(brandingFooter).toBeVisible();
-      expect(within(brandingFooter).getByText('Branding Footer')).toBeVisible();
-    });
-
-    it('should render branding header but not footer', async () => {
-      givenExtJSState({
-        ...getDefaultState(),
-        branding: {
-          headerEnabled: true,
-          headerHtml: '<div>Branding Header</div>',
-          footerEnabled: false,
-          footerHtml: '<div>Branding Footer</div>',
-        },
-      });
-      renderComponent();
-      const brandingHeader = screen.getByTestId('nxrm-branding-header');
-      const brandingFooter = screen.queryByTestId('nxrm-branding-footer');
-      expect(brandingHeader).toBeVisible();
-      expect(within(brandingHeader).getByText('Branding Header')).toBeVisible();
-      expect(brandingFooter).not.toBeInTheDocument();
-    });
-
-    it('should render branding footer but not header', async () => {
-      givenExtJSState({
-        ...getDefaultState(),
-        branding: {
-          headerEnabled: false,
-          headerHtml: '<div>Branding Header</div>',
-          footerEnabled: true,
-          footerHtml: '<div>Branding Footer</div>',
-        },
-      });
-      renderComponent();
-      const brandingHeader = screen.queryByTestId('nxrm-branding-header');
-      const brandingFooter = screen.getByTestId('nxrm-branding-footer');
-      expect(brandingHeader).not.toBeInTheDocument();
-      expect(brandingFooter).toBeVisible();
-      expect(within(brandingFooter).getByText('Branding Footer')).toBeVisible();
-    });
-  });
-
-  describe('Community Edition Hard Limit Banner', () => {
-    // We will just a simple test here to make sure the banner is rendered in the context of the page
-    // Full testing the CEHardLimitAlert logic has its own test suite
-    it('should render given a community edition is over the limit and an admin user is logged in', async () => {
-      const givenGracePeriodEndDate = givenDateNDaysInTheFuture(20);
-
-      givenUseState({
-        [helperFunctions.useThrottlingStatusValue]: 'Over limits',
-        [helperFunctions.useGracePeriodEndsDate]: givenGracePeriodEndDate,
-        [helperFunctions.useDaysUntilGracePeriodEnds]: 12
-      });
-
-      await renderComponent();
-
-      await assertBasicPageLayoutRenders();
-      await assertCommunityEditionLimitMessageShowing(
-          '20 Days Remaining',
-          'This instance of Nexus Repository Community Edition has exceeded its usage limit.');
-    });
-  });
-
-  describe('Login Prompting', () => {
+  describe('login layout', () => {
     beforeEach(() => {
-      global.NX.Security.askToAuthenticate.mockImplementation((msg, { success }) => success());
+      givenExtJSState();
     });
 
-    it('shows login given user does not have permissions to view a route and is not authenticated', async () => {
-      global.NX.Security.hasUser.mockReturnValue(false);
-
-      global.Ext.getApplication = jest.fn().mockReturnValue({
-        getStore: jest.fn().mockReturnValue({
-          on: jest.fn(),
-          un: jest.fn()
-        }),
-        getController: jest.fn().mockImplementation((key) => {
-          if (key === 'Permissions') {
-            return {
-              on: jest.fn().mockImplementation((handler) => {
-                if (handler.changed) {
-                  changed();
-                }
-              }),
-              un: jest.fn()
-            }
-          } else {
-            return {
-              on: jest.fn(),
-              un: jest.fn()
-            }
-          }
-        })
-      });
-
+    it('should render login layout', async () => {
       const { router } = await renderComponent();
 
-      await assertBasicPageLayoutRenders();
-
-      // the transaction should still fail because even though we resolved the login prompt successfully upon
-      // re-checking visiblity we'll find the user still does not have permissions
-      let errorOnTransition = null;
-      try {
-        await router.stateService.go('admin.security.users')
-      } catch (ex) {
-        errorOnTransition = ex.message
-      }
-
-      expect(errorOnTransition).toEqual('The transition has been aborted')
-
+      // Wait for initial automatic redirect from login to complete
       await waitFor(() => {
-        expect(global.NX.Security.askToAuthenticate).toHaveBeenCalledWith(null, expect.objectContaining({
-          success: expect.any(Function),
-          cancel: expect.any(Function),
-          failure: expect.any(Function)
-        }));
+        expect(router.globals.transition).toBeNull();
+      });
+
+      await assertLoginLayoutRenders();
+    });
+  });
+
+  describe('standard layout', () => {
+    let historySpy;
+
+    beforeEach(() => {
+      givenExtJSState();
+      givenUser();
+      historySpy = jest.spyOn(History.prototype, 'pushState');
+
+      window.location.hash = '';
+      window.dirty = [];
+    });
+
+    it('should render standard layout', async () => {
+      // logged in user (mocked by givenUser()) if try to go to login page will be redirected to welcome page,
+      // which is into the standard layout
+      renderComponent();
+      await assertStandardLayoutRenders();
+    });
+
+    describe('UI Branding', () => {
+      it('should not render branding header nor footer when not branding is set', async () => {
+        renderComponent();
+        const brandingHeader = screen.queryByTestId('nxrm-branding-header');
+        const brandingFooter = screen.queryByTestId('nxrm-branding-footer');
+        expect(brandingHeader).not.toBeInTheDocument();
+        expect(brandingFooter).not.toBeInTheDocument();
+      });
+
+      it('should not render branding header and footer when both are disabled', async () => {
+        givenExtJSState({
+          ...getDefaultState(),
+          branding: {
+            headerEnabled: false,
+            headerHtml: '<div>Branding Header</div>',
+            footerEnabled: false,
+            footerHtml: '<div>Branding Footer</div>',
+          },
+        });
+        renderComponent();
+        const brandingHeader = screen.queryByTestId('nxrm-branding-header');
+        const brandingFooter = screen.queryByTestId('nxrm-branding-footer');
+        expect(brandingHeader).not.toBeInTheDocument();
+        expect(brandingFooter).not.toBeInTheDocument();
+      });
+
+      it('should render branding header and footer when enabled', async () => {
+        givenExtJSState({
+          ...getDefaultState(),
+          branding: {
+            headerEnabled: true,
+            headerHtml: '<div>Branding Header</div>',
+            footerEnabled: true,
+            footerHtml: '<div>Branding Footer</div>',
+          },
+        });
+        renderComponent();
+        const brandingHeader = screen.getByTestId('nxrm-branding-header');
+        const brandingFooter = screen.getByTestId('nxrm-branding-footer');
+        expect(brandingHeader).toBeVisible();
+        expect(within(brandingHeader).getByText('Branding Header')).toBeVisible();
+        expect(brandingFooter).toBeVisible();
+        expect(within(brandingFooter).getByText('Branding Footer')).toBeVisible();
+      });
+
+      it('should render branding header but not footer', async () => {
+        givenExtJSState({
+          ...getDefaultState(),
+          branding: {
+            headerEnabled: true,
+            headerHtml: '<div>Branding Header</div>',
+            footerEnabled: false,
+            footerHtml: '<div>Branding Footer</div>',
+          },
+        });
+        renderComponent();
+        const brandingHeader = screen.getByTestId('nxrm-branding-header');
+        const brandingFooter = screen.queryByTestId('nxrm-branding-footer');
+        expect(brandingHeader).toBeVisible();
+        expect(within(brandingHeader).getByText('Branding Header')).toBeVisible();
+        expect(brandingFooter).not.toBeInTheDocument();
+      });
+
+      it('should render branding footer but not header', async () => {
+        givenExtJSState({
+          ...getDefaultState(),
+          branding: {
+            headerEnabled: false,
+            headerHtml: '<div>Branding Header</div>',
+            footerEnabled: true,
+            footerHtml: '<div>Branding Footer</div>',
+          },
+        });
+        renderComponent();
+        const brandingHeader = screen.queryByTestId('nxrm-branding-header');
+        const brandingFooter = screen.getByTestId('nxrm-branding-footer');
+        expect(brandingHeader).not.toBeInTheDocument();
+        expect(brandingFooter).toBeVisible();
+        expect(within(brandingFooter).getByText('Branding Footer')).toBeVisible();
       });
     });
 
-    it('does not show for login given user does not have permissions but is already authenticated', async () => {
-      global.NX.Security.hasUser.mockReturnValue(true);
+    describe('Community Edition Hard Limit Banner', () => {
+      // We will just a simple test here to make sure the banner is rendered in the context of the page
+      // Full testing the CEHardLimitAlert logic has its own test suite
+      it('should render given a community edition is over the limit and an admin user is logged in', async () => {
+        const givenGracePeriodEndDate = givenDateNDaysInTheFuture(20);
 
+        givenUseState({
+          [helperFunctions.useThrottlingStatusValue]: 'Over limits',
+          [helperFunctions.useGracePeriodEndsDate]: givenGracePeriodEndDate,
+          [helperFunctions.useDaysUntilGracePeriodEnds]: 12
+        });
+
+        await renderComponent();
+
+        await assertStandardLayoutRenders();
+        await assertCommunityEditionLimitMessageShowing(
+            '20 Days Remaining',
+            'This instance of Nexus Repository Community Edition has exceeded its usage limit.');
+      });
+    });
+
+    describe('Login Prompting', () => {
+      it('shows login given user does not have permissions to view a route and is not authenticated', async () => {
+        global.NX.Security.hasUser = jest.fn().mockReturnValue(false);
+
+        const { router } = await renderComponent();
+
+        // Wait for initial automatic redirect from login to complete
+        await waitFor(() => {
+          expect(router.globals.transition).toBeNull();
+        });
+
+        await assertLoginLayoutRenders();
+
+        // the transaction should still fail because even though we resolved the login prompt successfully upon
+        // re-checking visiblity we'll find the user still does not have permissions
+        let errorOnTransition = null;
+        try {
+          await router.stateService.go('admin.security.users')
+        } catch (ex) {
+          errorOnTransition = ex.message
+        }
+
+        expect(errorOnTransition).toEqual('The transition has been aborted')
+      });
+
+      it('does not show for login given user does not have permissions but is already authenticated', async () => {
+        global.NX.Security.hasUser.mockReturnValue(true);
+
+        const { router } = await renderComponent();
+
+        // the transaction should still fail because even though we resolved the login prompt successfully upon
+        // re-checking visiblity we'll find the user still does not have permissions
+        let errorOnTransition = null;
+        try {
+          await router.stateService.go('admin.security.users')
+        } catch (ex) {
+          errorOnTransition = ex.message
+        }
+
+        expect(errorOnTransition).toEqual('The transition has been aborted')
+
+        await assertMissingRoutePageRendered();
+      });
+    });
+
+    it('should direct to 404 when page not found', async () => {
       const { router } = await renderComponent();
+      await assertStandardLayoutRenders();
 
-      // the transaction should still fail because even though we resolved the login prompt successfully upon
-      // re-checking visiblity we'll find the user still does not have permissions
-      let errorOnTransition = null;
-      try {
-        await router.stateService.go('admin.security.users')
-      } catch (ex) {
-        errorOnTransition = ex.message
-      }
-
-      expect(errorOnTransition).toEqual('The transition has been aborted')
+      router.urlService.url('some-page-that-does-not-exist', false);
 
       await assertMissingRoutePageRendered();
-
-      await waitFor(() => {
-        expect(global.NX.Security.askToAuthenticate).not.toHaveBeenCalled();
-      });
-    });
-  });
-
-  it('should direct to 404 when page not found', async () => {
-    const { router } = await renderComponent();
-    await assertBasicPageLayoutRenders();
-
-    router.urlService.url('some-page-that-does-not-exist', false);
-
-    await assertMissingRoutePageRendered();
-  });
-
-  it("history hash pushState is intercepted and ignored", async () => {
-    await renderComponent();
-
-    history.pushState({}, '', '#');
-    expect(historySpy).not.toHaveBeenCalled();
-
-    history.pushState({}, '', '');
-    expect(historySpy).toHaveBeenCalledWith({}, '', '');
-  });
-
-  describe('Unsaved Changes Dialog', () => {
-    const selectors = {
-      cancelButton: () => screen.queryByRole('button', { name: 'Cancel' }),
-      continueButton: () => screen.queryByRole('button', { name: 'Continue' }),
-      modalTitle: () => screen.queryByRole('heading', { name: 'Unsaved Changes' }),
-      modalContent: () => screen.queryByText('The page may contain unsaved changes; continuing will discard them.')
-    }
-
-    it('should render the unsaved changes modal when navigating away from a page with unsaved changes', async () => {
-      const { router } = await renderComponent();
-      await assertBasicPageLayoutRenders();
-
-      act(() => {
-        window.dirty = ['some unsaved changes'];
-        router.stateService.go(BROWSE.BROWSE.ROOT);
-      });
-
-      expect(selectors.modalTitle()).toBeVisible();
     });
 
-    it('should not render the unsaved changes modal when navigating away from a page without unsaved changes', async () => {
-      const { router } = await renderComponent();
-      await assertBasicPageLayoutRenders();
+    it("history hash pushState is intercepted and ignored", async () => {
+      await renderComponent();
 
-      act(() => {
-        router.stateService.go(BROWSE.BROWSE.ROOT);
-      });
+      history.pushState({}, '', '#');
+      expect(historySpy).not.toHaveBeenCalled();
 
-      expect(selectors.modalTitle()).not.toBeInTheDocument();
+      history.pushState({}, '', '');
+      expect(historySpy).toHaveBeenCalledWith({}, '', '');
     });
 
-    it('should hide the unsaved changes modal when the cancel button is clicked', async () => {
-      const { router } = await renderComponent();
-      await assertBasicPageLayoutRenders();
+    describe('Unsaved Changes Dialog', () => {
+      const selectors = {
+        cancelButton: () => screen.queryByRole('button', { name: 'Cancel' }),
+        continueButton: () => screen.queryByRole('button', { name: 'Continue' }),
+        modalTitle: () => screen.queryByRole('heading', { name: 'Unsaved Changes' }),
+        modalContent: () => screen.queryByText('The page may contain unsaved changes; continuing will discard them.')
+      }
 
-      act(() => {
-        window.dirty = ['some unsaved changes'];
-        router.stateService.go(BROWSE.BROWSE.ROOT);
+      it('should render the unsaved changes modal when navigating away from a page with unsaved changes', async () => {
+        const { router } = await renderComponent();
+        await assertStandardLayoutRenders();
+
+        act(() => {
+          window.dirty = ['some unsaved changes'];
+          router.stateService.go(BROWSE.BROWSE.ROOT);
+        });
+
+        expect(selectors.modalTitle()).toBeVisible();
       });
 
-      expect(selectors.modalTitle()).toBeVisible();
-      expect(selectors.modalContent()).toBeVisible();
-      expect(selectors.cancelButton()).toBeVisible();
+      it('should not render the unsaved changes modal when navigating away from a page without unsaved changes', async () => {
+        const { router } = await renderComponent();
+        await assertStandardLayoutRenders();
 
-      act(() => {
-        selectors.cancelButton().click();
+        act(() => {
+          router.stateService.go(BROWSE.BROWSE.ROOT);
+        });
+
+        expect(selectors.modalTitle()).not.toBeInTheDocument();
       });
 
-      expect(selectors.modalTitle()).not.toBeInTheDocument();
-      expect(selectors.modalContent()).not.toBeInTheDocument();
-      expect(selectors.cancelButton()).not.toBeInTheDocument();
-    });
+      it('should hide the unsaved changes modal when the cancel button is clicked', async () => {
+        const { router } = await renderComponent();
+        await assertStandardLayoutRenders();
 
-    it('should hide the unsaved changes modal when the continue button is clicked', async () => {
-      const { router } = await renderComponent();
-      await assertBasicPageLayoutRenders();
+        act(() => {
+          window.dirty = ['some unsaved changes'];
+          router.stateService.go(BROWSE.BROWSE.ROOT);
+        });
 
-      act(() => {
-        window.dirty = ['some unsaved changes'];
-        router.stateService.go(BROWSE.BROWSE.ROOT);
+        expect(selectors.modalTitle()).toBeVisible();
+        expect(selectors.modalContent()).toBeVisible();
+        expect(selectors.cancelButton()).toBeVisible();
+
+        act(() => {
+          selectors.cancelButton().click();
+        });
+
+        expect(selectors.modalTitle()).not.toBeInTheDocument();
+        expect(selectors.modalContent()).not.toBeInTheDocument();
+        expect(selectors.cancelButton()).not.toBeInTheDocument();
       });
 
-      expect(selectors.modalTitle()).toBeVisible();
-      expect(selectors.modalContent()).toBeVisible();
-      expect(selectors.continueButton()).toBeVisible();
+      it('should hide the unsaved changes modal when the continue button is clicked', async () => {
+        const { router } = await renderComponent();
+        await assertStandardLayoutRenders();
 
-      act(() => {
-        selectors.continueButton().click();
+        act(() => {
+          window.dirty = ['some unsaved changes'];
+          router.stateService.go(BROWSE.BROWSE.ROOT);
+        });
+
+        expect(selectors.modalTitle()).toBeVisible();
+        expect(selectors.modalContent()).toBeVisible();
+        expect(selectors.continueButton()).toBeVisible();
+
+        act(() => {
+          selectors.continueButton().click();
+        });
+
+        expect(selectors.modalTitle()).not.toBeInTheDocument();
+        expect(selectors.modalContent()).not.toBeInTheDocument();
+        expect(selectors.continueButton()).not.toBeInTheDocument();
       });
-
-      expect(selectors.modalTitle()).not.toBeInTheDocument();
-      expect(selectors.modalContent()).not.toBeInTheDocument();
-      expect(selectors.continueButton()).not.toBeInTheDocument();
     });
   });
 
@@ -337,15 +319,21 @@ describe('App', () => {
         <UIRouter router={router}>
           <App />
         </UIRouter>
-      );
+    );
 
     return { renderResult, router }
   }
 
-  async function assertBasicPageLayoutRenders() {
+  async function assertStandardLayoutRenders() {
     await assertRendersPageContents();
     await assertRendersGlobalHeader();
     await assertRendersLeftNav();
+  }
+
+  async function assertRendersPageContents() {
+    const main = await screen.findByRole('main');
+    expect(main).toBeVisible();
+    expect(within(main).getByRole('heading', 'Welcome Test Mock')).toBeVisible();
   }
 
   async function assertRendersGlobalHeader() {
@@ -358,10 +346,10 @@ describe('App', () => {
     expect(sideNav).toBeVisible();
   }
 
-  async function assertRendersPageContents() {
-    const main = await screen.findByRole('main');
-    expect(main).toBeVisible();
-    expect(within(main).getByRole('heading', 'Welcome Test Mock')).toBeVisible();
+  async function assertLoginLayoutRenders() {
+    expect(await screen.findByRole('heading', { name: 'Login Test Mock' })).toBeVisible();
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'global sidebar' })).not.toBeInTheDocument();
   }
 
   function assertCommunityEditionLimitMessageShowing(title, message) {
@@ -400,6 +388,7 @@ describe('App', () => {
 
   function givenUser(user = { name: 'admin', administrator: true }) {
     jest.spyOn(ExtJS, 'useUser').mockReturnValue(user);
+    global.NX.Security.hasUser = jest.fn().mockReturnValue(true);
   }
 
   function givenDateNDaysInTheFuture(days) {

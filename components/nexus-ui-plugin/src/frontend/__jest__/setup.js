@@ -84,7 +84,6 @@ global.NX = {
   },
   Security: {
     hasUser: jest.fn(),
-    askToAuthenticate: jest.fn(),
     requestSession: jest.fn(() => Promise.resolve({status: 204, responseText: ''}))
   }
 };

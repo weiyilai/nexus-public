@@ -82,7 +82,6 @@ export default class ExtJS {
   static useSearchFilterModel = jest.fn(() => ({}));
   static usePermission = jest.fn((getValue) => getValue());
 
-  static askToAuthenticate = jest.fn();
   static hasUser = jest.fn(() => true);
   static signOut = jest.fn();
   static showAbout = jest.fn();

@@ -31,7 +31,7 @@ export function App() {
   usePreventPushStateOnHash();
 
   const router = useRouter();
-  const currentStateName = router.stateService.current.name;
+  const currentStateName = router.globals.$current.name;
   const isLoginRoute = currentStateName === ROUTE_NAMES.LOGIN;
 
   const branding = ExtJS.state().getValue('branding');

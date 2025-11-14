@@ -20,9 +20,6 @@ import isVisible from '../router/isVisible';
 import {showUnsavedChangesModal} from './unsavedChangesDialog';
 import {RouteNames} from "../constants/RouteNames";
 
-const success = 'success';
-const failure = 'failure';
-
 /*
   This is where we register all of the client side routes. Routing is handled using
   UIRouter. For more info see https://github.com/ui-router/react.
@@ -55,32 +52,20 @@ export function createRouter({initialRoute, menuRoutes, missingRoute}) {
 
     if (!isVisible(stateTo.data?.visibilityRequirements)) {
       if (!ExtJS.hasUser()) {
-        const isReactLoginEnabled = ExtJS.state().getValue('nexus.login.react.enabled', false);
-        if (isReactLoginEnabled) {
-          transition.abort();
-          const isAnonymousAccessEnabled = !!ExtJS.state().getValue('anonymousUsername');
-          if (isAnonymousAccessEnabled && stateFrom.name === RouteNames.LOGIN) {
-            console.warn('state is not visible for navigation after login, redirecting to 404');
-            redirectTo404();
-            return;
-          }
+        transition.abort();
+        const isAnonymousAccessEnabled = !!ExtJS.state().getValue('anonymousUsername');
+        if (isAnonymousAccessEnabled && stateFrom.name === RouteNames.LOGIN) {
+          console.warn('state is not visible for navigation after login, redirecting to 404');
+          redirectTo404();
+          return;
+        }
 
-          console.debug('Redirecting to login page with return URL');
-          // Keep original requested URL and then encode to Base64
-          const url = router.urlService.url();
-          const returnTo = btoa(`#${url}`);
-          router.stateService.go(RouteNames.LOGIN, {returnTo});
-        }
-        else {
-          // pop up ExtJS modal login
-          const result = await offerUserTheChanceToLoginAndRevalidate(transition, stateTo.data?.visibilityRequirements);
-          if (result !== success) {
-            console.warn('state is not visible for navigation after authentication prompt, aborting transition');
-            redirectTo404();
-          }
-        }
-      }
-      else {
+        console.debug('Redirecting to login page with return URL');
+        // Keep original requested URL and then encode to Base64
+        const url = router.urlService.url();
+        const returnTo = btoa(`#${url}`);
+        router.stateService.go(RouteNames.LOGIN, {returnTo});
+      } else {
         console.warn('state is not visible for navigation, aborting transition', stateTo.name);
         redirectTo404();
       }
@@ -124,47 +109,4 @@ export function createRouter({initialRoute, menuRoutes, missingRoute}) {
   });
 
   return router;
-}
-
-async function offerUserTheChanceToLoginAndRevalidate(_transition, visibilityRequirements) {
-  try {
-    const loginResult = await promptUserToLogin();
-
-    // abort if the user cancelled out of the login dialog
-    if (loginResult === 'canceled') {
-      console.debug('user canceled authentication');
-      return failure;
-    }
-
-    // wait for extjs to update permissions
-    await ExtJS.waitForNextPermissionChange();
-
-    console.debug('rechecking visiblity requirements after authentication');
-    if (!isVisible(visibilityRequirements)) {
-      console.debug('user still does not have permissions after logging in');
-      return failure;
-    }
-  }
-  catch (ex) {
-    console.warn('login unsuccessful: ', ex);
-    return failure;
-  }
-
-  return success;
-}
-
-function promptUserToLogin() {
-  return new Promise((resolve, reject) => {
-    ExtJS.askToAuthenticate({
-      success: () => {
-        resolve('success');
-      },
-      cancel: () => {
-        resolve('canceled');
-      },
-      failure: (err) => {
-        reject(err);
-      }
-    });
-  });
 }

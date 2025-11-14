@@ -30,7 +30,7 @@ export function getRouter() {
     ...browseRoutes,
     ...adminRoutes,
     ...userRoutes,
-    ...getLoginRoutes(),
+    ...loginRoutes,
   ];
 
   const missingRoute = {
@@ -46,40 +46,15 @@ export function getRouter() {
 }
 
 /**
- * Determines the initial route based on feature flags and configuration.
+ * Determines the initial route based on anonymous access settings.
  */
 function getInitialRoute() {
   let initialRoute = ROUTE_NAMES.BROWSE.WELCOME.ROOT;
 
-  // Check if ExtJS is available (not available in test environment)
-  if (!ExtJS?.state) {
-    return initialRoute;
+  const isAnonymousAccessEnabled = !!ExtJS.state().getValue('anonymousUsername');
+  if (!isAnonymousAccessEnabled) {
+    initialRoute = ROUTE_NAMES.LOGIN;
   }
 
-  const isReactLoginEnabled = ExtJS.state().getValue('nexus.login.react.enabled', false);
-  if (isReactLoginEnabled) {
-    const isAnonymousAccessEnabled = !!ExtJS.state().getValue('anonymousUsername');
-    if (!isAnonymousAccessEnabled) {
-      initialRoute = ROUTE_NAMES.LOGIN;
-    }
-  }
   return initialRoute;
-}
-
-/**
- * Login routes configuration.
- * Routes are only registered if the React login feature flag is enabled.
- */
-function getLoginRoutes() {
-  // Check if ExtJS is available (not available in test environment)
-  if (!ExtJS?.state) {
-    return [];
-  }
-
-  const isReactLoginEnabled = ExtJS.state().getValue('nexus.login.react.enabled', false);
-  if (isReactLoginEnabled) {
-    return loginRoutes
-  }
-
-  return [];
 }

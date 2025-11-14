@@ -380,13 +380,6 @@ export default class ExtJS {
       return value;
     }
 
-  /**
-   * Show the sign in dialog
-   */
-  static askToAuthenticate(options) {
-    NX.Security.askToAuthenticate(null, options);
-  }
-
   static hasUser() {
     return NX.Security.hasUser();
   }

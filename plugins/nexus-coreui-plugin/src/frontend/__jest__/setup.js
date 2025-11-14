@@ -87,8 +87,7 @@ global.NX = {
     getEdition: jest.fn()
   },
   Security: {
-    hasUser: jest.fn(),
-    askToAuthenticate: jest.fn()
+    hasUser: jest.fn()
   }
 };
 

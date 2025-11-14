@@ -31,12 +31,15 @@ describe("BrowseExt", () => {
     const date = new Date('2024-12-02');
     jest.useFakeTimers().setSystemTime(date);
   })
+  const Permissions = global.NX.Permissions;
 
   it("shows malicious components CTA when enabled", async () => {
     givenExtJSState({
       ...getDefaultExtJSStateValues(),
       'nexus.malware.count': { totalCount: 24 }
     });
+    givenPermissions({ 'nexus:repository-view:*:*:*': true });
+    global.NX.Security.hasUser = jest.fn().mockReturnValue(true);
 
     await renderComponentRoute('browse.browse');
 
@@ -80,5 +83,13 @@ describe("BrowseExt", () => {
     return {
       'nexus-coreui-plugin': true
     }
+  }
+
+   function givenPermissions(permissionLookup) {
+    Permissions.check.mockImplementation(key => {
+      return permissionLookup[key] ?? false;
+    });
+    // Set up the permissions object for permissionPrefix checks
+    Permissions.permissions = permissionLookup;
   }
 });

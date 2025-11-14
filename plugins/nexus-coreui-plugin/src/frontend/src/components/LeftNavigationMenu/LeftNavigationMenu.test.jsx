@@ -67,18 +67,20 @@ describe('LeftNavigationMenu', () => {
     // router state can get persisted between tests on the location has, clear it out each time
     // so that the tests don't influence each other when they use navigation
     window.location.hash = '';
-    
+
     // Reset all mocks
     jest.restoreAllMocks();
   });
 
   it('renders with the welcome link', async () => {
+    givenUserLoggedIn();
     renderComponent();
 
     await assertOnlyWelcomeLinkVisibleAndWelcomePageShown();
   });
 
   it('can trigger navigation', async () => {
+    givenUserLoggedIn();
     givenStateValues({
       ...getDefaultStateValues(),
       browseableformats: [{ id: 'maven2' }, { id: 'nuget' }],
@@ -86,70 +88,86 @@ describe('LeftNavigationMenu', () => {
     renderComponent();
 
     const allLinks = screen.getAllByRole('link');
-    expect(allLinks.length).toEqual(2);
+    expect(allLinks.length).toEqual(1);
     const welcomeLink = assertLinkVisible('Dashboard', '/welcome');
-    const browseLink = assertLinkVisible('Browse', '/browse');
 
     // initially showing Welcome Page
     await assertRenderingWelcomePage(welcomeLink);
 
-    // Clicking shows Browse Page
-    await userEvent.click(browseLink);
-    await assertRenderingBrowsePage(browseLink);
   });
   describe('collapsible behavior', () => {
     it('should preserve Search collapsed if user manually collapsed it before collapsing sidebar', async () => {
       givenBrowsableFormats();
       givenUserLoggedIn();
       givenPermissions({ 'nexus:search:read': true });
-      
+
       const { container } = renderComponent();
       const chevron = container.querySelector('.nxrm-navigation-expandable-link__chevron');
-      
+
       await userEvent.click(chevron);
       const yumLink = await screen.findByRole('link', { name: 'Yum' });
       expect(yumLink).toBeVisible();
-      
+
       await userEvent.click(chevron);
-      
+
       await waitFor(() => {
         const expandableList = container.querySelector('[data-analytics-id="nxrm-global-navbar-search"] ul');
         expect(expandableList).toBeNull();
       });
-      
+
       const sidebarToggle = container.querySelector('.nx-global-sidebar-2__toggle');
       await userEvent.click(sidebarToggle);
       await userEvent.click(sidebarToggle);
-      
+
       const searchList = container.querySelector('[data-analytics-id="nxrm-global-navbar-search"] ul');
-      
+
       expect(searchList).toBeNull();
     });
     it('should reopen Search if it was open before collapsing sidebar', async () => {
       givenBrowsableFormats();
       givenUserLoggedIn();
       givenPermissions({ 'nexus:search:read': true });
-    
+
       const { container } = renderComponent();
-    
+
       const chevron = container.querySelector('.nxrm-navigation-expandable-link__chevron');
-      await userEvent.click(chevron); 
-    
+      await userEvent.click(chevron);
+
       const sidebarToggle = container.querySelector('.nx-global-sidebar-2__toggle');
-      await userEvent.click(sidebarToggle); 
-      await userEvent.click(sidebarToggle); 
-    
+      await userEvent.click(sidebarToggle);
+      await userEvent.click(sidebarToggle);
+
       expect(screen.getByRole('link', { name: 'Yum' })).toBeVisible();
     });
   });
 
   describe('Browse links', () => {
     describe('browse link', () => {
-      it('renders given browsable formats present', async () => {
+      it('renders given browsable formats present no permissions', async () => {
+        givenUserLoggedIn();
         givenStateValues({
           ...getDefaultStateValues(),
           browseableformats: [{ id: 'maven2' }, { id: 'nuget' }],
         });
+        renderComponent();
+
+        const allLinks = screen.getAllByRole('link');
+        expect(allLinks.length).toEqual(1);
+
+        const welcomeLink = assertLinkVisible('Dashboard', '/welcome');
+        // extjs path used because nexus.react.browse is not enabled
+        assertLinkNotVisible('Browse', '/browse');
+
+        await assertRenderingWelcomePage(welcomeLink);
+      });
+      
+      it('renders given browsable formats present with repository-view permissions', async () => {
+        givenUserLoggedIn();
+        givenStateValues({
+          ...getDefaultStateValues(),
+          browseableformats: [{ id: 'maven2' }, { id: 'nuget' }],
+        });
+        givenPermissions({ 'nexus:repository-view:*:*:*': true });
         renderComponent();
 
         const allLinks = screen.getAllByRole('link');
@@ -458,7 +476,7 @@ describe('LeftNavigationMenu', () => {
       });
     });
   });
-  
+
   describe('IQ Dashboard link', () => {
     describe('IQ Dashboard link behaviour', () => {
       it('should not render if user is not logged in', async () => {
@@ -475,7 +493,7 @@ describe('LeftNavigationMenu', () => {
           showDashboard: true,
           url: 'http://mock-iq-server.com'
         });
-        
+
         renderComponent();
         assertLinkVisible('IQ Server Dashboard', 'http://mock-iq-server.com');
       });
@@ -608,6 +626,8 @@ describe('LeftNavigationMenu', () => {
     Permissions.check.mockImplementation(key => {
       return permissionLookup[key] ?? false;
     });
+    // Set up the permissions object for permissionPrefix checks
+    Permissions.permissions = permissionLookup;
   }
 
   function givenNoUserLoggedIn() {

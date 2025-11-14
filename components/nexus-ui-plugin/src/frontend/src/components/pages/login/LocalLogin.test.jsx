@@ -448,5 +448,22 @@ describe('LocalLogin', () => {
         expect(mockRouter.stateService.go).toHaveBeenCalledWith(RouteNames.MISSING_ROUTE);
       });
     });
+
+    it('redirects to missing route page when redirection URL is not a valid base64', async () => {
+      mockRouter.globals.params.returnTo = 'invalid@base64==';
+      renderComponent();
+      await fillCredentials('admin', 'admin123');
+
+      mockRequestSession.mockResolvedValue({ response: { status: 204 } });
+
+      await act(async () => {
+        await userEvent.click(selectors.loginButton());
+      });
+
+      await waitFor(() => {
+        expect(mockWaitForNextPermissionChange).toHaveBeenCalled();
+        expect(mockRouter.stateService.go).toHaveBeenCalledWith(RouteNames.MISSING_ROUTE);
+      });
+    });
   });
 });

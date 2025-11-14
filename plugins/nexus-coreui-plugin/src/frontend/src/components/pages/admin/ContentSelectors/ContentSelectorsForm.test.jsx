@@ -41,6 +41,9 @@ jest.mock('@sonatype/nexus-ui-plugin', () => ({
     requestConfirmation: jest.fn(),
     showErrorMessage: jest.fn(),
     checkPermission: jest.fn(),
+    state: jest.fn().mockReturnValue({
+      getValue: jest.fn()
+    })
   },
   Utils: {
     buildFormMachine: function(args) {

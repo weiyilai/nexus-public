@@ -71,7 +71,6 @@ export default {
   // welcome page
   ...WelcomeStrings,
 
-
   // browse
   ...Log4jVisualizerStrings,
   ...TagsStrings,

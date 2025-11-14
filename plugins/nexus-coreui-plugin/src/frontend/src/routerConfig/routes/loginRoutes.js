@@ -30,7 +30,8 @@ export const loginRoutes = [
       }
     },
     data: {
-      visibilityRequirements: {}
+      visibilityRequirements: {},
+      title: 'Login',
     }
   }
 ];

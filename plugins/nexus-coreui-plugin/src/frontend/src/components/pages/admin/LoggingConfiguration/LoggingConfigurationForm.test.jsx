@@ -35,7 +35,10 @@ jest.mock('axios', () => ({
 jest.mock('@sonatype/nexus-ui-plugin', () => ({
   ...jest.requireActual('@sonatype/nexus-ui-plugin'),
   ExtJS: {
-    requestConfirmation: jest.fn()
+    requestConfirmation: jest.fn(),
+    state: jest.fn().mockReturnValue({
+      getValue: jest.fn()
+    })
   },
   FormUtils: {
     buildFormMachine: function(args) {

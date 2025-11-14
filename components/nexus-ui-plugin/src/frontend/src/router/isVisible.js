@@ -116,8 +116,7 @@ export default function isVisible(visibilityRequirements) {
     return false;
   }
 
-  if (NX.State.getValue('nexus.login.react.enabled', false) &&
-      anonymousAccessOrHasUser &&
+  if (anonymousAccessOrHasUser &&
       !(!!NX.State.getValue('anonymousUsername') || Security.hasUser())) {
     console.debug('anonymousAccessOrHasUser=false', anonymousAccessOrHasUser);
     return false;

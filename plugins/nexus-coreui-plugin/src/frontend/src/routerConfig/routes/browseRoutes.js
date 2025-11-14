@@ -532,8 +532,7 @@ export const browseRoutes = [
     data: {
       visibilityRequirements: {
         anonymousAccessOrHasUser: true,
-        // TODO uncomment after done NEXUS-48544-Remove-Feature-Flag-and-Legacy-Authentication-Code
-        // permissionsPrefix: 'nexus:repository-view',
+        permissionPrefix: 'nexus:repository-view',
         statesEnabled: [
           {
             key: 'browseableformats',
