@@ -16,11 +16,16 @@ import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.common.collect.NestedAttributesMap;
+import org.sonatype.nexus.common.collect.json.NestedAttributesMapDeserializer;
+import org.sonatype.nexus.common.collect.json.NestedAttributesMapSerializer;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.stereotype.Component;
@@ -47,6 +52,10 @@ public class ObjectMapperProvider
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapper.registerModule(new JavaTimeModule());
+    mapper.registerModule(new JodaModule());
+    mapper.registerModule(new SimpleModule()
+        .addSerializer(NestedAttributesMap.class, new NestedAttributesMapSerializer())
+        .addDeserializer(NestedAttributesMap.class, new NestedAttributesMapDeserializer()));
   }
 
   @Override

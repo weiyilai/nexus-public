@@ -29,6 +29,9 @@ import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.goodies.common.Time;
+import org.sonatype.nexus.common.collect.NestedAttributesMap;
+import org.sonatype.nexus.common.collect.json.NestedAttributesMapDeserializer;
+import org.sonatype.nexus.common.collect.json.NestedAttributesMapSerializer;
 import org.sonatype.nexus.common.io.SanitizingJsonOutputStream;
 
 import com.fasterxml.jackson.databind.JavaType;
@@ -65,7 +68,9 @@ public class JsonExporter
   static {
     OBJECT_MAPPER.registerModule(new SimpleModule()
         .addSerializer(Time.class, new SecondsSerializer())
-        .addDeserializer(Time.class, new SecondsDeserializer()));
+        .addDeserializer(Time.class, new SecondsDeserializer())
+        .addSerializer(NestedAttributesMap.class, new NestedAttributesMapSerializer())
+        .addDeserializer(NestedAttributesMap.class, new NestedAttributesMapDeserializer()));
     OBJECT_MAPPER.registerModule(new JavaTimeModule());
     OBJECT_MAPPER.registerModule(new JodaModule());
     OBJECT_MAPPER.registerModule(new Jdk8Module());
