@@ -35,6 +35,9 @@ public class FeatureFlags
   /* Terraform format is temporarily hidden behind the feature flag. Default value: false */
   public static final String TERRAFORM_FORMAT_ENABLED = "nexus.format.terraform.enabled";
 
+  /* Terraform Hosted repository type is hidden behind the feature flag. Default value: false */
+  public static final String TERRAFORM_HOSTED_ENABLED = "nexus.format.terraform.hosted.enabled";
+
   /* Docker GC Custom task enabled. Available values: true, false. Default value: false */
   public static final String DOCKER_GC_CUSTOM_TASK_ENABLED = "nexus.docker.gc.custom.enabled";
 
