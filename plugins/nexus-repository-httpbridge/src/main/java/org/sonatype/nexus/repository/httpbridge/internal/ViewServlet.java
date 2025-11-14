@@ -16,8 +16,6 @@ import java.io.IOException;
 import java.util.Enumeration;
 
 import javax.annotation.Nullable;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -45,9 +43,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HttpHeaders;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.web.util.WebUtils;
+import org.eclipse.jetty.io.EofException;
 import org.jboss.logging.MDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,7 +134,10 @@ public class ViewServlet
       send(null, HttpResponses.badRequest(e.getMessage()), httpResponse);
     }
     catch (Exception e) {
-      if (!(e instanceof AuthorizationException)) {
+      if (e instanceof EofException) {
+        log.info("Client terminated connection", log.isDebugEnabled() ? e : null);
+      }
+      else if (!(e instanceof AuthorizationException)) {
         log.warn("Failure servicing: {} {}", httpRequest.getMethod(), uri, e);
       }
       Throwables.propagateIfPossible(e, ServletException.class, IOException.class);

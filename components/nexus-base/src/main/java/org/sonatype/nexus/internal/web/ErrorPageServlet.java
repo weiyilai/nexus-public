@@ -25,6 +25,7 @@ import org.sonatype.nexus.internal.web.ErrorPageService.ErrorInfo;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.eclipse.jetty.io.EofException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -116,6 +117,9 @@ public class ErrorPageServlet
       // Log java.lang.Error exceptions at error level
       log.error("Unexpected exception", getRootCause(cause));
     }
+    else if (isEofException(cause)) {
+      log.trace("Client terminated connection", cause);
+    }
     else {
       log.debug("Attaching cause", cause);
     }
@@ -127,4 +131,13 @@ public class ErrorPageServlet
     return getRootCause(e) instanceof Error;
   }
 
+  /**
+   * Jetty throws an EofException when the client terminates the connection and the application attempts to write to the
+   * servlets stream.
+   *
+   * @see EofException
+   */
+  private static boolean isEofException(final Throwable e) {
+    return e instanceof EofException;
+  }
 }
