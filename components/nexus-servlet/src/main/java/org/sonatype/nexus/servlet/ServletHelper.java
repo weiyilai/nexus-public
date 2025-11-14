@@ -33,8 +33,19 @@ import static com.google.common.net.HttpHeaders.PRAGMA;
  */
 public class ServletHelper
 {
+  private static boolean debugEnabled = true;
+
   private ServletHelper() {
     // empty
+  }
+
+  /**
+   * Sets a flag that determines whether debug mode will be available
+   *
+   * @param enabled when true allow enabling debug mode
+   */
+  public static void setDebugEnabled(final boolean enabled) {
+    debugEnabled = enabled;
   }
 
   /**
@@ -42,6 +53,11 @@ public class ServletHelper
    */
   public static boolean isDebug(final HttpServletRequest request) {
     checkNotNull(request);
+
+    if (!debugEnabled) {
+      return false;
+    }
+
     String value = request.getParameter("debug");
 
     // not set
