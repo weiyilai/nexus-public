@@ -52,6 +52,7 @@ function readOnlyComponent(current, dynamicProps, id, initialValue) {
     case "string":
     case "number":
     case "url":
+    case "combobox":
     case "text-area":
       return simpleReadOnlyComponent(
         id,
@@ -74,7 +75,6 @@ function readOnlyComponent(current, dynamicProps, id, initialValue) {
         dynamicProps
       );
     case "itemselect":
-    case "combobox":
       return listReadOnlyComponent(
         id,
         dynamicProps.label || id,

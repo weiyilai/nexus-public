@@ -216,7 +216,7 @@ const testData = {
     required: true,
     disabled: false,
     readOnly: false,
-    initialValue: null,
+    initialValue: 'something',
     attributes: {},
     storeApi: 'coreui_Repository.readReferences',
     storeFilters: {
@@ -238,7 +238,7 @@ const testData = {
     required: true,
     disabled: false,
     readOnly: false,
-    initialValue: null,
+    initialValue: 'something',
     attributes: {},
     storeApi: 'coreui_Role.read',
     storeFilters: null,

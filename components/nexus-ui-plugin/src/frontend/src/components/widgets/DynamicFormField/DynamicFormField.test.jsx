@@ -932,25 +932,22 @@ describe('DynamicFormField', () => {
       expect(await screen.findByText('npm Repository')).toBeVisible();
     });
 
-    it('renders read-only combobox as text list', () => {
+    it('renders read-only combobox as text string', () => {
       render(
         <DynamicFormField
           {...defaultProps}
           dynamicProps={{ type: "combobox", label: "My Combobox", attributes: {} }}
-          initialValue={['hello', 'world']}
+          initialValue={'hello world'}
           readOnly={true}
         />
       );
 
       const comboboxLabel = screen.getByRole('term');
-      const comboboxValues = screen.getAllByRole('definition');
+      const comboboxValue = screen.getByRole('definition');
       expect(comboboxLabel).toBeVisible();
-      expect(comboboxValues.length).toBe(2);
-      expect(comboboxValues[0]).toBeVisible();
-      expect(comboboxValues[1]).toBeVisible();
+      expect(comboboxValue).toBeVisible();
       expect(comboboxLabel).toHaveTextContent('My Combobox');
-      expect(comboboxValues[0]).toHaveTextContent('hello');
-      expect(comboboxValues[1]).toHaveTextContent('world');
+      expect(comboboxValue).toHaveTextContent('hello world');
     });
   });
 
