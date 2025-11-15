@@ -59,9 +59,9 @@ public class Maven2MavenPathParser
   @Override
   public MavenPath parsePath(final String path, final boolean caseSensitive) {
     checkNotNull(path);
-    String pathWithoutLeadingSlash = path;
-    if (path.startsWith("/")) {
-      pathWithoutLeadingSlash = path.substring(1);
+    String pathWithoutLeadingSlash = path.replaceAll("\\\\", "/");
+    if (pathWithoutLeadingSlash.startsWith("/")) {
+      pathWithoutLeadingSlash = pathWithoutLeadingSlash.substring(1);
     }
     final Coordinates coordinates = maven2LayoutedPathToCoordinates(pathWithoutLeadingSlash, caseSensitive);
     return new MavenPath(pathWithoutLeadingSlash, coordinates);
