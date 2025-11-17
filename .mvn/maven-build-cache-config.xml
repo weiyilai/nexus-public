@@ -19,6 +19,7 @@
                 <dirName>test-classes</dirName>
                 <dirName>maven-status</dirName>
                 <dirName>webpack-modules</dirName>
+                <dirName>site</dirName>
             </dirNames>
         </attachedOutputs>
         <projectVersioning calculateProjectVersionChecksum="true" />
