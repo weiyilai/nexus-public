@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.config.Configuration;
@@ -34,8 +33,8 @@ import org.sonatype.nexus.repository.view.Request;
 import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.repository.view.ViewFacet;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
@@ -46,12 +45,13 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.repository.http.HttpStatus.NOT_FOUND;
 
-public class LegacyViewServletTest
-    extends TestSupport
+class LegacyViewServletTest
+    extends ViewServletTest
 {
   private static final String LEGACY_ENABLED =
       "org.sonatype.nexus.repository.httpbridge.internal.HttpBridgeModule.legacy";
@@ -103,8 +103,8 @@ public class LegacyViewServletTest
 
   private LegacyViewServlet viewServlet;
 
-  @Before
-  public void setup() throws Exception {
+  @BeforeEach
+  void setup() throws Exception {
     System.setProperty(LEGACY_ENABLED, "true");
 
     legacyViewContributors = new ArrayList<>();
@@ -120,15 +120,14 @@ public class LegacyViewServletTest
   }
 
   @Test
-  public void sendRequestWhenLegacyEnabled() throws Exception {
+  void sendRequestWhenLegacyEnabled() throws Exception {
     viewServlet.doService(request, response);
 
     verify(sender).send(nullable(Request.class), nullable(Response.class), eq(response));
   }
 
   @Test
-  public void sendNotFoundWhenLegacyUrlAndRepositoryNotFound() throws Exception {
-    when(repository.getFormat()).thenReturn(new Format("raw") { });
+  void sendNotFoundWhenLegacyUrlAndRepositoryNotFound() throws Exception {
     when(repositoryManager.get(REPOSITORY_NAME)).thenReturn(null);
     when(request.getPathInfo()).thenReturn("/test-repo/content.txt");
     when(request.getRequestURI()).thenReturn("/content/sites/test-repo/content.txt");
@@ -142,7 +141,7 @@ public class LegacyViewServletTest
   }
 
   @Test
-  public void sendNotFoundWhenLegacyUrlAndFormatDoesNotMatch() throws Exception {
+  void sendNotFoundWhenLegacyUrlAndFormatDoesNotMatch() throws Exception {
     when(repository.getFormat()).thenReturn(new Format("yum") { });
     when(request.getPathInfo()).thenReturn("/test-repo/content.txt");
     when(request.getRequestURI()).thenReturn("/content/sites/test-repo/content.txt");
@@ -161,7 +160,7 @@ public class LegacyViewServletTest
   }
 
   private void mockNames() {
-    when(names.hasMoreElements()).thenAnswer(new Answer<Boolean>()
+    lenient().when(names.hasMoreElements()).thenAnswer(new Answer<Boolean>()
     {
       int count = 0;
 
@@ -170,35 +169,37 @@ public class LegacyViewServletTest
         return count++ == 0;
       }
     });
-    when(names.nextElement()).thenReturn("header-name");
+    lenient().when(names.nextElement()).thenReturn("header-name");
   }
 
   private void mockRequest() {
-    when(request.getPathInfo()).thenReturn("/test-repo/remaining-path");
-    when(request.getRequestURI()).thenReturn("/test-repo/remaining-path");
-    when(request.getHeaderNames()).thenReturn(names);
-    when(request.getHeaders("header-name")).thenReturn(names);
-    when(request.getParameterNames()).thenReturn(names);
-    when(request.getAttributeNames()).thenReturn(names);
-    when(request.getMethod()).thenReturn("GET");
+    lenient().when(request.getPathInfo()).thenReturn("/test-repo/remaining-path");
+    lenient().when(request.getRequestURI()).thenReturn("/test-repo/remaining-path");
+    lenient().when(request.getHeaderNames()).thenReturn(names);
+    lenient().when(request.getHeaders("header-name")).thenReturn(names);
+    lenient().when(request.getParameterNames()).thenReturn(names);
+    lenient().when(request.getAttributeNames()).thenReturn(names);
+    lenient().when(request.getMethod()).thenReturn("GET");
   }
 
   private void mockRepository() {
-    when(repositoryManager.get(REPOSITORY_NAME)).thenReturn(repository);
-    when(repository.getConfiguration()).thenReturn(configuration);
-    when(repository.facet(ViewFacet.class)).thenReturn(viewFacet);
-    when(repository.getFormat()).thenReturn(new Format("maven") { });
-    when(configuration.isOnline()).thenReturn(true);
+    lenient().when(repositoryManager.get(REPOSITORY_NAME)).thenReturn(repository);
+    lenient().when(repository.getConfiguration()).thenReturn(configuration);
+    lenient().when(repository.facet(ViewFacet.class)).thenReturn(viewFacet);
+    lenient().when(repository.getFormat()).thenReturn(new Format("maven")
+    {
+    });
+    lenient().when(configuration.isOnline()).thenReturn(true);
   }
 
   private void mockContributor() {
-    when(rawContributor.contribute()).thenReturn(rawConfiguration);
-    when(rawConfiguration.getRequestPattern()).thenReturn(Pattern.compile("/content/sites/.*"));
-    when(rawConfiguration.getFormat()).thenReturn("raw");
+    lenient().when(rawContributor.contribute()).thenReturn(rawConfiguration);
+    lenient().when(rawConfiguration.getRequestPattern()).thenReturn(Pattern.compile("/content/sites/.*"));
+    lenient().when(rawConfiguration.getFormat()).thenReturn("raw");
   }
 
   private void mockResponseSender() {
-    when(httpResponseSenderSelector.sender(nullable(Repository.class))).thenReturn(sender);
-    when(httpResponseSenderSelector.defaultSender()).thenReturn(sender);
+    lenient().when(httpResponseSenderSelector.sender(nullable(Repository.class))).thenReturn(sender);
+    lenient().when(httpResponseSenderSelector.defaultSender()).thenReturn(sender);
   }
 }

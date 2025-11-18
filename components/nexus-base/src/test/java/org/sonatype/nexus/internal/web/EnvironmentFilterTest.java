@@ -19,29 +19,30 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.common.app.BaseUrlManager;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import static com.google.common.net.HttpHeaders.CONTENT_SECURITY_POLICY;
 import static com.google.common.net.HttpHeaders.SERVER;
 import static com.google.common.net.HttpHeaders.STRICT_TRANSPORT_SECURITY;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.sonatype.nexus.internal.web.EnvironmentFilter.SANDBOX;
 import static org.sonatype.nexus.internal.web.EnvironmentFilter.STS_VALUE;
 
-@RunWith(MockitoJUnitRunner.class)
-public class EnvironmentFilterTest
+class EnvironmentFilterTest
+    extends Test5Support
 {
   @Mock
   private ApplicationVersion applicationVersion;
@@ -49,82 +50,46 @@ public class EnvironmentFilterTest
   @Mock
   private BaseUrlManager baseUrlManager;
 
-  @Before
-  public void setup() {
-    when(applicationVersion.getVersion()).thenReturn("3.0.0");
-    when(applicationVersion.getEdition()).thenReturn("CORE");
+  @BeforeEach
+  void setup() {
+    lenient().when(applicationVersion.getVersion()).thenReturn("3.0.0");
+    lenient().when(applicationVersion.getEdition()).thenReturn("CORE");
   }
 
   @Test
-  public void doFilter_headerDisabled() throws ServletException, IOException {
-    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/", false);
+  void doFilter_headerDisabled() throws ServletException, IOException {
+    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, false);
     HttpServletRequest request = mock(HttpServletRequest.class);
-    when(request.getRequestURI()).thenReturn("/anything");
     HttpServletResponse response = mock(HttpServletResponse.class);
     FilterChain chain = mock(FilterChain.class);
 
     filter.doFilter(request, response, chain);
 
     verify(response, never()).setHeader(eq(SERVER), anyString());
+    verify(chain).doFilter(request, response);
   }
 
   @Test
-  public void doFilter_ContentSecurityPolicy_is_set() throws ServletException, IOException {
-    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/", true);
+  void doFilter_ContentSecurityPolicy_is_set() throws ServletException, IOException {
+    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, true);
     HttpServletRequest request = mock(HttpServletRequest.class);
-    when(request.getRequestURI()).thenReturn("/anything");
     HttpServletResponse response = mock(HttpServletResponse.class);
     FilterChain chain = mock(FilterChain.class);
 
     filter.doFilter(request, response, chain);
 
-    verify(response).setHeader(eq(CONTENT_SECURITY_POLICY), anyString());
+    // It is important that headers are set *before* the filter chain not after. We may overwrite the CSP later, and
+    // headers may not be set once the server starts writing the response
+    InOrder ordered = inOrder(response, chain);
+
+    ordered.verify(response).setHeader(eq(CONTENT_SECURITY_POLICY), anyString());
+    ordered.verify(chain).doFilter(request, response);
   }
 
   @Test
-  public void doFilter_ContentSecurityPolicy_sandbox_for_repository_content() throws ServletException, IOException {
-    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/", true);
+  void doFilter_StrictTransportSecurity_for_https() throws ServletException, IOException {
+    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, true);
     HttpServletRequest request = mock(HttpServletRequest.class);
-    when(request.getRequestURI()).thenReturn("/repository/raw/some-content.html");
-    HttpServletResponse response = mock(HttpServletResponse.class);
-    FilterChain chain = mock(FilterChain.class);
-
-    filter.doFilter(request, response, chain);
-
-    verify(response).setHeader(CONTENT_SECURITY_POLICY, SANDBOX);
-  }
-
-  @Test
-  public void doFilter_ContentSecurityPolicy_sandbox_for_repository_content_contextPath_set() throws ServletException, IOException {
-    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/nxrm/", true);
-    HttpServletRequest request = mock(HttpServletRequest.class);
-    when(request.getRequestURI()).thenReturn("/nxrm/repository/raw/some-content.html");
-    HttpServletResponse response = mock(HttpServletResponse.class);
-    FilterChain chain = mock(FilterChain.class);
-
-    filter.doFilter(request, response, chain);
-
-    verify(response).setHeader(CONTENT_SECURITY_POLICY, SANDBOX);
-  }
-
-  @Test
-  public void doFilter_ContentSecurityPolicy_sandbox_contextPath_no_trailing_slash() throws ServletException, IOException {
-    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/nxrm", true);
-    HttpServletRequest request = mock(HttpServletRequest.class);
-    when(request.getRequestURI()).thenReturn("/nxrm/repository/raw/some-content.html");
-    HttpServletResponse response = mock(HttpServletResponse.class);
-    FilterChain chain = mock(FilterChain.class);
-
-    filter.doFilter(request, response, chain);
-
-    verify(response).setHeader(CONTENT_SECURITY_POLICY, SANDBOX);
-  }
-
-  @Test
-  public void doFilter_StrictTransportSecurity_for_https() throws ServletException, IOException {
-    EnvironmentFilter filter = new EnvironmentFilter(applicationVersion, baseUrlManager, "/", true);
-    HttpServletRequest request = mock(HttpServletRequest.class);
-    when(request.getRequestURI()).thenReturn("/anything");
     when(request.getScheme()).thenReturn("https");
     HttpServletResponse response = mock(HttpServletResponse.class);
     FilterChain chain = mock(FilterChain.class);
@@ -133,5 +98,6 @@ public class EnvironmentFilterTest
 
     verify(response).setHeader(eq(CONTENT_SECURITY_POLICY), anyString());
     verify(response).setHeader(STRICT_TRANSPORT_SECURITY, STS_VALUE);
+    verify(chain).doFilter(request, response);
   }
 }

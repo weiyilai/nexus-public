@@ -13,10 +13,11 @@
 package org.sonatype.nexus.repository.httpbridge.internal;
 
 import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.app.BaseUrlHolder;
 import org.sonatype.nexus.repository.BadRequestException;
 import org.sonatype.nexus.repository.httpbridge.internal.describe.Description;
@@ -30,15 +31,19 @@ import org.sonatype.nexus.repository.view.Response;
 import org.sonatype.nexus.repository.view.ViewFacet;
 
 import com.google.common.net.HttpHeaders;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -48,8 +53,8 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for describe functionality of {@link ViewServlet}.
  */
-public class ViewServletTest
-    extends TestSupport
+class ViewServletTest
+    extends Test5Support
 {
   @Mock
   private Request request;
@@ -78,22 +83,22 @@ public class ViewServletTest
 
   private ViewServlet underTest;
 
-  @Before
-  public void setUp() throws Exception {
+  @BeforeEach
+  void setUp() throws Exception {
     defaultResponseSender = spy(new DefaultHttpResponseSender());
 
-    when(descriptionRenderer.renderHtml(any(Description.class))).thenReturn("HTML");
-    when(descriptionRenderer.renderJson(any(Description.class))).thenReturn("JSON");
+    lenient().when(descriptionRenderer.renderHtml(any(Description.class))).thenReturn("HTML");
+    lenient().when(descriptionRenderer.renderJson(any(Description.class))).thenReturn("JSON");
 
     underTest = spy(new ViewServlet(mock(RepositoryManager.class),
         new HttpResponseSenderSelector(List.of(), defaultResponseSender),
         mock(DescriptionHelper.class),
         descriptionRenderer));
 
-    when(request.getPath()).thenReturn("/test");
+    lenient().when(request.getPath()).thenReturn("/test");
 
     parameters = new Parameters();
-    when(request.getParameters()).thenReturn(parameters);
+    lenient().when(request.getParameters()).thenReturn(parameters);
 
     BaseUrlHolder.set("http://placebo", "");
   }
@@ -108,8 +113,8 @@ public class ViewServletTest
   }
 
   @Test
-  @Ignore("disabled, due to unknown heap issue with defaultResponseSender spy")
-  public void normalRequestReturnsFacetResponse() throws Exception {
+  @Disabled("disabled, due to unknown heap issue with defaultResponseSender spy")
+  void normalRequestReturnsFacetResponse() throws Exception {
     descriptionRequested(null);
     facetThrowsException(false);
 
@@ -124,7 +129,7 @@ public class ViewServletTest
   }
 
   @Test
-  public void describeRequestReturnsDescriptionResponse_HTML() throws Exception {
+  void describeRequestReturnsDescriptionResponse_HTML() throws Exception {
     descriptionRequested("HTML");
     facetThrowsException(false);
 
@@ -136,7 +141,7 @@ public class ViewServletTest
   }
 
   @Test
-  public void describeRequestReturnsDescriptionResponse_JSON() throws Exception {
+  void describeRequestReturnsDescriptionResponse_JSON() throws Exception {
     descriptionRequested("JSON");
     facetThrowsException(false);
 
@@ -147,16 +152,17 @@ public class ViewServletTest
     verify(servletResponse).setContentType(ContentTypes.APPLICATION_JSON);
   }
 
-  @Test(expected = RuntimeException.class)
-  public void facetExceptionsReturnedNormally() throws Exception {
+  @Test
+  void facetExceptionsReturnedNormally() throws Exception {
     descriptionRequested(null);
     facetThrowsException(true);
 
-    underTest.dispatchAndSend(request, facet, defaultResponseSender, servletResponse);
+    assertThrows(RuntimeException.class,
+        () -> underTest.dispatchAndSend(request, facet, defaultResponseSender, servletResponse));
   }
 
   @Test
-  public void facetExceptionsAreDescribed() throws Exception {
+  void facetExceptionsAreDescribed() throws Exception {
     descriptionRequested("HTML");
     facetThrowsException(true);
 
@@ -168,7 +174,7 @@ public class ViewServletTest
   }
 
   @Test
-  public void return400BadRequestOnBadRequestException() throws Exception {
+  void return400BadRequestOnBadRequestException() throws Exception {
     String message = "message";
     when(httpServletRequest.getPathInfo()).thenThrow(new BadRequestException(message));
     underTest.service(httpServletRequest, servletResponse);
@@ -176,7 +182,15 @@ public class ViewServletTest
   }
 
   @Test
-  public void responseHasXssProtectionDisabled() throws Exception {
+  void responseHasContentSecurityPolicy() throws Exception {
+    underTest.service(httpServletRequest, servletResponse);
+
+    assertThat(ViewServlet.SANDBOX, containsString("sandbox"));
+    verify(servletResponse).setHeader(HttpHeaders.CONTENT_SECURITY_POLICY, ViewServlet.SANDBOX);
+  }
+
+  @Test
+  void responseHasXssProtectionDisabled() throws Exception {
     underTest.service(httpServletRequest, servletResponse);
 
     verify(servletResponse).setHeader(HttpHeaders.X_XSS_PROTECTION, "0");

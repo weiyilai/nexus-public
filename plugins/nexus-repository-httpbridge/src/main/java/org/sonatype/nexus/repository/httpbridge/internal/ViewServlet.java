@@ -72,6 +72,10 @@ public class ViewServlet
   private static final Logger log = LoggerFactory.getLogger(ViewServlet.class);
 
   @VisibleForTesting
+  static final String SANDBOX =
+      "sandbox allow-forms allow-modals allow-popups allow-presentation allow-scripts allow-top-navigation";
+
+  @VisibleForTesting
   static final String P_DESCRIBE = "describe";
 
   protected static final String REPOSITORY_NOT_FOUND_MESSAGE = "Repository not found";
@@ -152,6 +156,7 @@ public class ViewServlet
       final HttpServletRequest httpRequest,
       final HttpServletResponse httpResponse) throws Exception
   {
+    httpResponse.setHeader(HttpHeaders.CONTENT_SECURITY_POLICY, SANDBOX);
     httpResponse.setHeader(HttpHeaders.X_XSS_PROTECTION, "0");
 
     // resolve repository for request

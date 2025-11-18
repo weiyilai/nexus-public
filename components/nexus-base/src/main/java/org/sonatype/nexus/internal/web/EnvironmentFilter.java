@@ -55,9 +55,6 @@ public class EnvironmentFilter
     extends ComponentSupport
     implements Filter
 {
-  static final String SANDBOX =
-      "sandbox allow-forms allow-modals allow-popups allow-presentation allow-scripts allow-top-navigation";
-
   static final String STS_VALUE = "max-age=31536000; includeSubDomains;";
 
   @Nullable
@@ -65,13 +62,10 @@ public class EnvironmentFilter
 
   private final BaseUrlManager baseUrlManager;
 
-  private final String contextPath;
-
   @Inject
   public EnvironmentFilter(
       final ApplicationVersion applicationVersion,
       final BaseUrlManager baseUrlManager,
-      @Value("nexus-context-path") final String contextPath,
       @Value("${nexus.header.server:true}") final boolean includeServerHeader)
   {
     // cache "Server" header value
@@ -82,7 +76,6 @@ public class EnvironmentFilter
         : null;
 
     this.baseUrlManager = checkNotNull(baseUrlManager);
-    this.contextPath = resolveContextPath(contextPath);
   }
 
   @Override
@@ -121,40 +114,15 @@ public class EnvironmentFilter
     if (serverHeader != null) {
       response.setHeader(SERVER, serverHeader);
     }
-
     // NEXUS-5023 disable IE for sniffing into response content
     response.setHeader(X_CONTENT_TYPE_OPTIONS, "nosniff");
 
-    if (request.getRequestURI().startsWith(contextPath + "repository")) {
-      // user-submitted content gets a different CSP to prevent stored XSS
-      response.setHeader(CONTENT_SECURITY_POLICY, SANDBOX);
-    }
-    else {
-      response.setHeader(CONTENT_SECURITY_POLICY,
-          "default-src " + request.getScheme() + ": data: blob: 'unsafe-inline'; script-src " + request.getScheme()
-              + ": 'unsafe-inline' 'unsafe-eval'");
-    }
+    response.setHeader(CONTENT_SECURITY_POLICY,
+        "default-src " + request.getScheme() + ": data: blob: 'unsafe-inline'; script-src " + request.getScheme()
+            + ": 'unsafe-inline' 'unsafe-eval'");
 
     if ("https".equals(request.getScheme())) {
       response.setHeader(STRICT_TRANSPORT_SECURITY, STS_VALUE);
-    }
-  }
-
-  /**
-   * Guarantee that the contextPath ends with a trailing slash.
-   *
-   * @param contextPath
-   * @return never null, either "/" or the contextPath with a trailing slash
-   */
-  private String resolveContextPath(final String contextPath) {
-    if (contextPath == null || contextPath.isEmpty()) {
-      return "/";
-    }
-    else if (contextPath.endsWith("/")) {
-      return contextPath;
-    }
-    else {
-      return contextPath + "/";
     }
   }
 }
