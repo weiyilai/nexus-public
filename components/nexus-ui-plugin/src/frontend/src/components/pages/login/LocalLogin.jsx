@@ -37,7 +37,7 @@ const { LOGIN_BUTTON_LOADING, USERNAME_LABEL, PASSWORD_LABEL, LOGIN_BUTTON } = L
  * Local authentication form component that handles username/password login.
  *
  * @param {Object} props - Component props
- * @param {boolean} props.primaryButton - REQUIRED: If true, login button uses primary variant and username field will be focused on mount
+ * @param {boolean} props.primaryButton - REQUIRED: If true, login button uses primary variant
  * @param {Function} props.onError - Optional callback to report server errors to parent component
  */
 export default function LocalLogin({ primaryButton, onError }) {
@@ -140,8 +140,7 @@ export default function LocalLogin({ primaryButton, onError }) {
             inputAttributes={{
               id: 'username',
               'data-analytics-id': 'login-username-input',
-              'aria-required': 'true',
-              autoFocus: primaryButton
+              'aria-required': 'true'
             }}
           />
         </NxFormGroup>

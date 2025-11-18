@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -26,6 +27,7 @@ import jakarta.inject.Singleton;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.QualifierUtil;
+import org.sonatype.nexus.repository.Format;
 import org.sonatype.nexus.repository.Recipe;
 import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.config.Configuration;
@@ -137,15 +139,9 @@ public class RepositoryPermissionChecker
    */
   public List<Configuration> userCanBrowseRepositories(final Configuration... repositories) {
     Subject subject = securityHelper.subject();
-    // Filter out repositories with unavailable recipes first - they should not be accessible
-    Configuration[] availableRepositories = Arrays.stream(repositories)
-        .filter(this::hasAvailableRecipe)
-        .toArray(Configuration[]::new);
-
-    List<Configuration> filteredRepositories = new ArrayList<>(Arrays.asList(availableRepositories));
+    List<Configuration> filteredRepositories = new ArrayList<>(Arrays.asList(repositories));
     List<Configuration> permittedRepositories =
-        userHasPermission(c -> new RepositoryViewPermission(toFormat(c), c.getRepositoryName(), BROWSE),
-            availableRepositories);
+        userHasPermission(c -> new RepositoryViewPermission(toFormat(c), c.getRepositoryName(), BROWSE), repositories);
     filteredRepositories.removeAll(permittedRepositories);
 
     if (!filteredRepositories.isEmpty()) {
@@ -222,10 +218,7 @@ public class RepositoryPermissionChecker
       final Iterable<Configuration> configurations,
       final String... actions)
   {
-    // Filter out configurations with unavailable recipes
-    Configuration[] repos = StreamSupport.stream(configurations.spliterator(), false)
-        .filter(this::hasAvailableRecipe)
-        .toArray(Configuration[]::new);
+    Configuration[] repos = Iterables.toArray(configurations, Configuration.class);
     return userHasPermission(c -> new RepositoryAdminPermission(toFormat(c), c.getRepositoryName(), actions), repos);
   }
 
@@ -302,28 +295,13 @@ public class RepositoryPermissionChecker
       final Subject subject,
       final List<Configuration> configurations)
   {
-    // Filter configurations to only those with available recipes
-    List<Configuration> availableConfigurations = configurations.stream()
-        .filter(this::hasAvailableRecipe)
-        .collect(Collectors.toList());
-
-    if (availableConfigurations.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    List<String> repositoryNames = availableConfigurations.stream()
+    List<String> repositoryNames = configurations.stream()
         .map(Configuration::getRepositoryName)
         .collect(Collectors.toList());
-    List<String> formats = availableConfigurations.stream()
+    List<String> formats = configurations.stream()
         .map(this::toFormat)
-        .filter(format -> format != null) // Defensive: filter out null formats
         .distinct()
         .collect(Collectors.toList());
-
-    if (formats.isEmpty()) {
-      return Collections.emptyList();
-    }
-
     List<SelectorConfiguration> selectors = selectorManager.browseActive(repositoryNames, formats);
 
     if (selectors.isEmpty()) {
@@ -331,13 +309,9 @@ public class RepositoryPermissionChecker
     }
 
     List<Configuration> permittedRepositories = new ArrayList<>();
-    for (Configuration configuration : availableConfigurations) {
-      String format = toFormat(configuration);
-      if (format == null) {
-        continue; // Skip configurations with unavailable formats
-      }
+    for (Configuration configuration : configurations) {
       Permission[] permissions = selectors.stream()
-          .map(s -> new RepositoryContentSelectorPermission(s.getName(), format,
+          .map(s -> new RepositoryContentSelectorPermission(s.getName(), toFormat(configuration),
               configuration.getRepositoryName(), singletonList(BROWSE)))
           .toArray(Permission[]::new);
       if (securityHelper.anyPermitted(subject, permissions)) {
@@ -348,37 +322,11 @@ public class RepositoryPermissionChecker
     return permittedRepositories;
   }
 
-  /**
-   * Converts a repository configuration to its format name.
-   *
-   * @param configuration the repository configuration
-   * @return the format name, or null if the recipe is not available
-   */
   private String toFormat(final Configuration configuration) {
-    Recipe recipe = recipes.get(configuration.getRecipeName());
-    if (recipe == null) {
-      log.warn(
-          "Recipe '{}' not available for repository '{}'. This repository will be excluded from permission checks. "
-              + "This may occur if the format plugin is not loaded or if the repository was configured for an unavailable edition.",
-          configuration.getRecipeName(), configuration.getRepositoryName());
-      return null;
-    }
-    return recipe.getFormat().getValue();
-  }
-
-  /**
-   * Checks if a configuration has an available recipe.
-   *
-   * @param configuration the repository configuration to check
-   * @return true if the recipe is available, false otherwise
-   */
-  private boolean hasAvailableRecipe(final Configuration configuration) {
-    boolean available = recipes.containsKey(configuration.getRecipeName());
-    if (!available) {
-      log.debug("Recipe '{}' not available for repository '{}' - filtering out",
-          configuration.getRecipeName(), configuration.getRepositoryName());
-    }
-    return available;
+    return Optional.ofNullable(recipes.get(configuration.getRecipeName()))
+        .map(Recipe::getFormat)
+        .map(Format::getValue)
+        .orElseThrow(() -> new IllegalArgumentException("Unknown repository type: " + configuration.getRecipeName()));
   }
 
   private boolean userHasAnyContentSelectorAccessTo(final Repository repository, final String... actions) {
@@ -411,16 +359,6 @@ public class RepositoryPermissionChecker
       return selectorManager.evaluate(selector, variableSource);
     }
     catch (SelectorEvaluationException e) {
-      // Check if this is due to missing 'path' variable (asset-level variable at repository-level evaluation)
-      if (e.getCause() != null && e.getCause().getMessage() != null &&
-          e.getCause().getMessage().contains("undefined variable path")) {
-        log.debug(
-            "Selector '{}' references 'path' variable which is not available at repository level for repository '{}'. "
-                + "Deferring evaluation to asset level where path information is available.",
-            selector.getName(), repository.getName());
-        return true; // Allow at repository level, will be properly evaluated at asset level with path variable
-      }
-
       log.warn("Failed to evaluate selector '{}' for repository '{}'", selector.getName(), repository.getName(), e);
       return false;
     }

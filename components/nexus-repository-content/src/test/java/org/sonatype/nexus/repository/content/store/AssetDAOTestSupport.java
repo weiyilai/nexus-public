@@ -1037,7 +1037,7 @@ public abstract class AssetDAOTestSupport
     generateSingleRepository(UUID.fromString(entityId.getValue()));
     repositoryId = generatedRepositories().get(0).repositoryId;
 
-    OffsetDateTime sameTime = OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS);
+    OffsetDateTime sameTime = OffsetDateTime.now(ZoneOffset.UTC);
 
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       AssetDAO assetDao = session.access(TestAssetDAO.class);

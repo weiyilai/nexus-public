@@ -23,7 +23,6 @@ const { SSO_BUTTON, SSO_BUTTON_LOADING } = UIStrings;
 /**
  * SSO Login Button component that redirects to the appropriate authentication endpoint
  * based on the configured SSO method (SAML or OAuth2/OIDC)
- * The button always receives focus on mount to prioritize SSO login when available.
  */
 export default function SsoLogin() {
   const samlEnabled = ExtJS.useState(() => ExtJS.state().getValue('samlEnabled', false));
@@ -64,7 +63,6 @@ export default function SsoLogin() {
       disabled={isRedirecting}
       className="sso-login-button"
       data-analytics-id="nxrm-login-sso"
-      autoFocus={true}
     >
       {isRedirecting ? (
         <NxLoadingSpinner>
@@ -76,4 +74,3 @@ export default function SsoLogin() {
     </NxButton>
   );
 }
-
