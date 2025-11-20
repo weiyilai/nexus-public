@@ -14,6 +14,7 @@ package org.sonatype.nexus.bootstrap.entrypoint;
 
 import java.util.Map;
 
+import org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusProperties;
 import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEdition;
 import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionSelector;
 
@@ -30,6 +31,8 @@ import org.springframework.core.env.MapPropertySource;
 import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusPropertiesVerifier.COMMUNITY;
+import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusPropertiesVerifier.FALSE;
 
 @Component
 @Singleton
@@ -45,25 +48,31 @@ public class ApplicationLauncher
 
   private final SpringComponentScan springComponentScan;
 
+  private final NexusProperties nexusProperties;
+
   @Inject
   public ApplicationLauncher(
       final NexusEditionSelector nexusEditionSelector,
       final ConfigurableApplicationContext context,
-      final SpringComponentScan springComponentScan)
+      final SpringComponentScan springComponentScan,
+      final NexusProperties nexusProperties)
 
   {
     this.nexusEditionSelector = checkNotNull(nexusEditionSelector);
     this.context = checkNotNull(context);
     this.springComponentScan = checkNotNull(springComponentScan);
+    this.nexusProperties = checkNotNull(nexusProperties);
   }
 
   @PostConstruct
-  private void initialize() {
+  void initialize() {
     SLF4JBridgeHandler.removeHandlersForRootLogger();
     SLF4JBridgeHandler.install();
     NexusEdition nexusEdition = nexusEditionSelector.getCurrent();
 
     LOG.info("Starting nexus with edition {}", nexusEdition.getShortName());
+
+    mayForceAnalytics(nexusEdition);
 
     context
         .getEnvironment()
@@ -71,6 +80,17 @@ public class ApplicationLauncher
         .addFirst(new MapPropertySource(
             "application-launcher",
             Map.of("nexus.edition", nexusEdition)));
+  }
+
+  private void mayForceAnalytics(final NexusEdition nexusEdition) {
+    // If edition is CE, ensure analytics is always enabled
+    if (COMMUNITY.equals(nexusEdition.getId())) {
+      if (FALSE.equals(nexusProperties.getProperty("nexus.analytics.enabled"))) {
+        LOG.warn(
+            "Attempt to disable analytics in Community Edition detected. Analytics will remain enabled as this is required for CE.");
+      }
+      nexusProperties.enforceCommunityEditionAnalytics();
+    }
   }
 
   /**

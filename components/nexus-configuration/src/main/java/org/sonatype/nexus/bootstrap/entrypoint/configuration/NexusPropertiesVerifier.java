@@ -12,11 +12,6 @@
  */
 package org.sonatype.nexus.bootstrap.entrypoint.configuration;
 
-import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionSelector;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.Boolean.parseBoolean;
 import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirectoryConfiguration.BASEDIR_SYS_PROP;
@@ -24,9 +19,9 @@ import static org.sonatype.nexus.bootstrap.entrypoint.configuration.NexusDirecto
 import static org.sonatype.nexus.common.app.FeatureFlags.*;
 
 /**
- * This class will make sure that the NexusProperties are set correctly, that there aren't
- * mutually exclusive configurations, and that required properties are present.
- *
+ * This class will make sure that the NexusProperties are set correctly, that there aren't mutually exclusive
+ * configurations, and that required properties are present.
+ * <p>
  * A reworking of the NexusEditionPropertiesConfigurer to be used in the new spring-only world
  */
 public class NexusPropertiesVerifier
@@ -39,17 +34,10 @@ public class NexusPropertiesVerifier
 
   public static final String COMMUNITY = "nexus-community-edition";
 
-  private static final Logger log = LoggerFactory.getLogger(NexusPropertiesVerifier.class);
-
   public void verify(final NexusProperties nexusProperties) {
     // Ensure required properties exist
     requireProperty(nexusProperties, BASEDIR_SYS_PROP);
     requireProperty(nexusProperties, DATADIR_SYS_PROP);
-
-    if (nexusProperties.getProperty(NexusEditionSelector.PROPERTY_KEY) == null) {
-      // Default to CORE
-      nexusProperties.put(NexusEditionSelector.PROPERTY_KEY, "CORE");
-    }
 
     applyEnvironmentVariables(nexusProperties);
 
@@ -57,7 +45,6 @@ public class NexusPropertiesVerifier
     selectDatastoreFeature(nexusProperties);
     selectAuthenticationFeature(nexusProperties);
 
-    requireProperty(nexusProperties, NexusEditionSelector.PROPERTY_KEY);
     requireProperty(nexusProperties, DB_FEATURE_PROPERTY_KEY);
     ensureHACIsDisabled(nexusProperties);
     selectDefaults(nexusProperties);
@@ -99,15 +86,6 @@ public class NexusPropertiesVerifier
     }
     else if (parseBoolean(nexusProperties.getProperty(ELASTIC_SEARCH_ENABLED))) {
       nexusProperties.put(DATASTORE_TABLE_SEARCH, FALSE);
-    }
-
-    // If edition is CE, ensure analytics is always enabled
-    if (COMMUNITY.equals(nexusProperties.getProperty(NexusEditionSelector.PROPERTY_KEY))) {
-      if (FALSE.equals(nexusProperties.getProperty("nexus.analytics.enabled"))) {
-        log.warn(
-            "Attempt to disable analytics in Community Edition detected. Analytics will remain enabled as this is required for CE.");
-      }
-      nexusProperties.put("nexus.analytics.enabled", TRUE);
     }
 
     nexusProperties.put(DB_FEATURE_PROPERTY_KEY, "nexus-datastore-mybatis");

@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.sonatype.goodies.testsupport.Test5Support;
-import org.sonatype.nexus.bootstrap.entrypoint.edition.NexusEditionSelector;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,8 +42,6 @@ import static org.sonatype.nexus.common.app.FeatureFlags.*;
 class NexusPropertiesVerifierTest
     extends Test5Support
 {
-  private static final String NEXUS_ANALYTICS = "nexus.analytics.enabled";
-
   private static final String TRUE = Boolean.TRUE.toString();
 
   private static final String FALSE = Boolean.FALSE.toString();
@@ -88,17 +85,6 @@ class NexusPropertiesVerifierTest
   }
 
   @Test
-  void testVerifyEnsuresAnalyticsEnabledForCommunityEdition() {
-    mockRequiredProperties();
-    nexusProperties.put(NexusEditionSelector.PROPERTY_KEY, NexusPropertiesVerifier.COMMUNITY);
-    nexusProperties.put(NEXUS_ANALYTICS, FALSE);
-
-    nexusPropertiesVerifier.verify(nexusProperties);
-
-    assertThat(nexusProperties.getProperty(NEXUS_ANALYTICS), is(TRUE));
-  }
-
-  @Test
   void testVerifyEnsureHACDisabled() {
     mockRequiredProperties();
 
@@ -110,17 +96,6 @@ class NexusPropertiesVerifierTest
 
     nexusProperties.put("nexus.clustered", "true");
     assertThrows(IllegalStateException.class, () -> nexusPropertiesVerifier.verify(nexusProperties));
-  }
-
-  @Test
-  void testVerifyLeavesAnalyticsDisabledForProEdition() {
-    mockRequiredProperties();
-    nexusProperties.put(NexusEditionSelector.PROPERTY_KEY, "PRO");
-    nexusProperties.put(NEXUS_ANALYTICS, FALSE);
-
-    nexusPropertiesVerifier.verify(nexusProperties);
-
-    assertThat(nexusProperties.getProperty(NEXUS_ANALYTICS), is(FALSE));
   }
 
   @Test
@@ -187,17 +162,6 @@ class NexusPropertiesVerifierTest
   }
 
   @Test
-  void testSelectDatastoreFeature_CommunityEdition_EnforcesAnalyticsEnabled() {
-    mockRequiredProperties();
-    nexusProperties.put(NexusEditionSelector.PROPERTY_KEY, NexusPropertiesVerifier.COMMUNITY);
-    nexusProperties.put(NEXUS_ANALYTICS, FALSE);
-
-    nexusPropertiesVerifier.verify(nexusProperties);
-
-    assertThat(nexusProperties.getProperty(NEXUS_ANALYTICS), is(TRUE));
-  }
-
-  @Test
   void testSelectDatastoreFeature_AlwaysSetsDbFeatureAndDefaults() {
     mockRequiredProperties();
 
@@ -211,30 +175,6 @@ class NexusPropertiesVerifierTest
         is("nexus-datastore-mybatis"));
     assertThat(nexusProperties.getProperty(CHANGE_REPO_BLOBSTORE_TASK_ENABLED), is(TRUE));
     assertThat(nexusProperties.getProperty("nexus.quartz.jobstore.jdbc"), is(TRUE));
-  }
-
-  @Test
-  void testAnalyticsAlwaysEnabledForCommunityEdition() {
-    mockRequiredProperties();
-
-    nexusProperties.put(NexusEditionSelector.PROPERTY_KEY, "nexus-community-edition");
-    nexusProperties.put("nexus.analytics.enabled", "false");
-
-    nexusPropertiesVerifier.verify(nexusProperties);
-
-    assertThat(properties.get("nexus.analytics.enabled"), is("true"));
-  }
-
-  @Test
-  void testAnalyticsCanBeDisabledForProEdition() {
-    mockRequiredProperties();
-
-    nexusProperties.put(NexusEditionSelector.PROPERTY_KEY, "nexus-professional-edition");
-    nexusProperties.put("nexus.analytics.enabled", "false");
-
-    nexusPropertiesVerifier.verify(nexusProperties);
-
-    assertThat(properties.get("nexus.analytics.enabled"), is("false"));
   }
 
   @Test

@@ -15,6 +15,7 @@ package org.sonatype.nexus.bootstrap.entrypoint.edition;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
 import jakarta.inject.Inject;
 
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_SINGLETON;
@@ -26,8 +27,6 @@ import org.springframework.stereotype.Component;
 @Scope(SCOPE_SINGLETON)
 public class NexusEditionSelector
 {
-  public static final String PROPERTY_KEY = "nexus-edition";
-
   private final List<NexusEdition> editions;
 
   @Inject
