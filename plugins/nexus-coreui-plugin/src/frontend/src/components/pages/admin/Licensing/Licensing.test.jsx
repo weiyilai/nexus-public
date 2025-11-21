@@ -220,6 +220,22 @@ describe('Licensing', () => {
     it('uses proper url', function() {
       expect(licenseUrl).toBe('service/rest/v1/system/license');
     });
+
+    it('shows DESCRIPTION_EXISTING when license is installed', async function() {
+      await renderComponent();
+
+      expect(screen.getByText(INSTALL.DESCRIPTION_EXISTING)).toBeInTheDocument();
+      expect(screen.queryByText(INSTALL.DESCRIPTION)).not.toBeInTheDocument();
+    });
+
+    it('shows DESCRIPTION when no license is installed', async function() {
+      when(Axios.get).calledWith(licenseUrl).mockRejectedValue({message: 'Error'});
+
+      await renderComponent();
+
+      expect(screen.getByText(INSTALL.DESCRIPTION)).toBeInTheDocument();
+      expect(screen.queryByText(INSTALL.DESCRIPTION_EXISTING)).not.toBeInTheDocument();
+    });
   });
 
   describe('historical usage tab', () => {

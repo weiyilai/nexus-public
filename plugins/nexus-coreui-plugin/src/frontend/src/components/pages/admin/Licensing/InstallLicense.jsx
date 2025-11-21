@@ -46,7 +46,7 @@ export default function InstallLicense({service}) {
   }
 
   const {
-    data: {files},
+    data: {files, contactCompany},
     saveError,
     isPristine,
     validationErrors,
@@ -55,6 +55,7 @@ export default function InstallLicense({service}) {
   const isValid = !FormUtils.isInvalid(validationErrors);
   const isSaving = state.matches('saving');
   const isShowAgreementModal = state.matches('agreement');
+  const hasExistingLicense = !!contactCompany;
 
   const showAgreementModal = () => send({type: 'SHOW_AGREEMENT_MODAL'});
   const reset = () => send({type: 'RESET'});
@@ -78,7 +79,7 @@ export default function InstallLicense({service}) {
         {!canEdit && <NxInfoAlert>{SETTINGS.READ_ONLY.WARNING}</NxInfoAlert>}
         {canEdit &&
             <NxLoadWrapper loading={isSaving} retryHandler={()=>{}}>
-              <NxP>{LABELS.INSTALL.DESCRIPTION}</NxP>
+              <NxP>{hasExistingLicense ? LABELS.INSTALL.DESCRIPTION_EXISTING : LABELS.INSTALL.DESCRIPTION}</NxP>
               <NxFormGroup
                   label={LABELS.INSTALL.LABEL}
                   isRequired

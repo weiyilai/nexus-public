@@ -72,6 +72,7 @@ export default {
     INSTALL: {
       LABEL: 'License',
       DESCRIPTION: 'Installing a new license requires restarting the server to take effect',
+      DESCRIPTION_EXISTING: 'Restart is only required if the new license enables additional features',
       MESSAGES: {
         ERROR: (error) => `Unable to update license for the reason identified below. Verify that you selected the correct file. If the problem persists, contact our support team. Reason: ${error}`,
         SUCCESS: 'License installed. Restart is only required if you are enabling new PRO features.',
