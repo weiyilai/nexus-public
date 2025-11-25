@@ -12,7 +12,9 @@
  */
 package org.sonatype.nexus.content.maven.internal.recipe;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
@@ -21,6 +23,7 @@ import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.Type;
 import org.sonatype.nexus.repository.cache.RepositoryCacheInvalidationService;
 import org.sonatype.nexus.repository.content.Asset;
+import org.sonatype.nexus.repository.content.browse.BrowseFacet;
 import org.sonatype.nexus.repository.content.Component;
 import org.sonatype.nexus.repository.content.event.asset.AssetUploadedEvent;
 import org.sonatype.nexus.repository.content.event.component.ComponentDeletedEvent;
@@ -28,6 +31,7 @@ import org.sonatype.nexus.repository.content.facet.ContentFacet;
 import org.sonatype.nexus.repository.content.fluent.FluentAsset;
 import org.sonatype.nexus.repository.content.fluent.FluentAssetBuilder;
 import org.sonatype.nexus.repository.content.fluent.FluentAssets;
+import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.repository.maven.internal.Maven2MavenPathParser;
@@ -38,7 +42,14 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_BASE_VERSION;
 
 public class MavenContentGroupFacetImplTest
@@ -91,6 +102,132 @@ public class MavenContentGroupFacetImplTest
     when(event.getRepository()).thenReturn(Optional.of(repository));
     underTest.onAssetUploadedEvent(event);
     verify(assets).path("/com/example/foo/1.0-SNAPSHOT/maven-metadata.xml");
+  }
+
+  @Test
+  public void testCleanupOrphanedGroupAssets_deletesAssetsAndBrowseNodes() throws Exception {
+    Repository repository = mock(Repository.class);
+    when(repository.getName()).thenReturn("maven-group");
+
+    ContentFacet contentFacet = mock(ContentFacet.class);
+    FluentAssets fluentAssets = mock(FluentAssets.class);
+    when(contentFacet.assets()).thenReturn(fluentAssets);
+
+    FluentAsset orphanedAsset1 = mock(FluentAsset.class);
+    when(orphanedAsset1.component()).thenReturn(Optional.empty());
+    when(orphanedAsset1.path()).thenReturn("/junit/junit/maven-metadata.xml");
+
+    FluentAsset orphanedAsset2 = mock(FluentAsset.class);
+    when(orphanedAsset2.component()).thenReturn(Optional.empty());
+    when(orphanedAsset2.path()).thenReturn("/junit/junit/maven-metadata.xml.sha1");
+
+    FluentAsset normalAsset = mock(FluentAsset.class);
+    when(normalAsset.component()).thenReturn(Optional.of(mock(org.sonatype.nexus.repository.content.Component.class)));
+
+    Continuation<FluentAsset> continuation = mock(Continuation.class);
+    when(continuation.nextContinuationToken()).thenReturn(null);
+    when(fluentAssets.browse(any(Integer.class), any())).thenReturn(continuation);
+    doAnswer(invocation -> {
+      java.util.function.Consumer<FluentAsset> consumer = invocation.getArgument(0);
+      consumer.accept(orphanedAsset1);
+      consumer.accept(orphanedAsset2);
+      consumer.accept(normalAsset);
+      return null;
+    }).when(continuation).forEach(any());
+
+    BrowseFacet browseFacet = mock(BrowseFacet.class);
+
+    when(repository.facet(ContentFacet.class)).thenReturn(contentFacet);
+    when(repository.optionalFacet(BrowseFacet.class)).thenReturn(Optional.of(browseFacet));
+
+    underTest.attach(repository);
+
+    Set<String> removedMembers = new HashSet<>();
+    removedMembers.add("maven-hosted");
+    removedMembers.add("maven-proxy");
+
+    underTest.cleanupOrphanedGroupAssets(removedMembers);
+
+    verify(orphanedAsset1).delete();
+    verify(orphanedAsset2).delete();
+    verify(normalAsset, never()).delete();
+  }
+
+  @Test
+  public void testCleanupOrphanedGroupAssets_handlesMissingBrowseFacet() throws Exception {
+    Repository repository = mock(Repository.class);
+    when(repository.getName()).thenReturn("maven-group");
+
+    ContentFacet contentFacet = mock(ContentFacet.class);
+    FluentAssets fluentAssets = mock(FluentAssets.class);
+    when(contentFacet.assets()).thenReturn(fluentAssets);
+
+    FluentAsset orphanedAsset = mock(FluentAsset.class);
+    when(orphanedAsset.component()).thenReturn(Optional.empty());
+    when(orphanedAsset.path()).thenReturn("/junit/junit/maven-metadata.xml");
+
+    Continuation<FluentAsset> continuation = mock(Continuation.class);
+    when(continuation.nextContinuationToken()).thenReturn(null);
+    when(fluentAssets.browse(any(Integer.class), any())).thenReturn(continuation);
+    doAnswer(invocation -> {
+      java.util.function.Consumer<FluentAsset> consumer = invocation.getArgument(0);
+      consumer.accept(orphanedAsset);
+      return null;
+    }).when(continuation).forEach(any());
+
+    when(repository.facet(ContentFacet.class)).thenReturn(contentFacet);
+    when(repository.optionalFacet(BrowseFacet.class)).thenReturn(Optional.empty());
+
+    underTest.attach(repository);
+
+    Set<String> removedMembers = new HashSet<>();
+    removedMembers.add("maven-hosted");
+
+    underTest.cleanupOrphanedGroupAssets(removedMembers);
+
+    verify(orphanedAsset).delete();
+  }
+
+  @Test
+  public void testCleanupOrphanedGroupAssets_continuesOnError() throws Exception {
+    Repository repository = mock(Repository.class);
+    when(repository.getName()).thenReturn("maven-group");
+
+    ContentFacet contentFacet = mock(ContentFacet.class);
+    FluentAssets fluentAssets = mock(FluentAssets.class);
+    when(contentFacet.assets()).thenReturn(fluentAssets);
+
+    FluentAsset failingAsset = mock(FluentAsset.class);
+    when(failingAsset.component()).thenReturn(Optional.empty());
+    when(failingAsset.path()).thenReturn("/junit/junit/maven-metadata.xml");
+    when(failingAsset.delete()).thenThrow(new RuntimeException("Delete failed"));
+
+    FluentAsset successAsset = mock(FluentAsset.class);
+    when(successAsset.component()).thenReturn(Optional.empty());
+    when(successAsset.path()).thenReturn("/org/example/maven-metadata.xml");
+
+    Continuation<FluentAsset> continuation = mock(Continuation.class);
+    when(continuation.nextContinuationToken()).thenReturn(null);
+    when(fluentAssets.browse(any(Integer.class), any())).thenReturn(continuation);
+    doAnswer(invocation -> {
+      java.util.function.Consumer<FluentAsset> consumer = invocation.getArgument(0);
+      consumer.accept(failingAsset);
+      consumer.accept(successAsset);
+      return null;
+    }).when(continuation).forEach(any());
+
+    when(repository.facet(ContentFacet.class)).thenReturn(contentFacet);
+    when(repository.optionalFacet(BrowseFacet.class)).thenReturn(Optional.empty());
+
+    underTest.attach(repository);
+
+    Set<String> removedMembers = new HashSet<>();
+    removedMembers.add("maven-hosted");
+
+    underTest.cleanupOrphanedGroupAssets(removedMembers);
+
+    verify(failingAsset).delete();
+    verify(successAsset).delete();
   }
 
   /**

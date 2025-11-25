@@ -186,7 +186,21 @@ public class GroupFacetImpl
     if (!Iterables.elementsEqual(config.memberNames, previousMemberNames)) {
       cacheController.invalidateCache();
       postCacheTokenEvent(getRepository(), cacheController.current().getCacheToken());
+
+      Set<String> removedMembers = new HashSet<>(previousMemberNames);
+      removedMembers.removeAll(config.memberNames);
+
+      if (!removedMembers.isEmpty()) {
+        cleanupOrphanedGroupAssets(removedMembers);
+        scheduleBrowseNodeCleanup();
+      }
     }
+  }
+
+  protected void cleanupOrphanedGroupAssets(final Set<String> removedMemberNames) {
+  }
+
+  protected void scheduleBrowseNodeCleanup() {
   }
 
   @Override

@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
@@ -27,6 +30,8 @@ import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.sonatype.nexus.common.collect.AttributesMap;
+import org.sonatype.nexus.common.entity.Continuation;
+import org.sonatype.nexus.common.entity.Continuations;
 import org.sonatype.nexus.common.entity.DetachedEntityId;
 import org.sonatype.nexus.common.event.EventAware;
 import org.sonatype.nexus.common.hash.HashAlgorithm;
@@ -35,6 +40,7 @@ import org.sonatype.nexus.repository.Repository;
 import org.sonatype.nexus.repository.Type;
 import org.sonatype.nexus.repository.cache.RepositoryCacheInvalidationService;
 import org.sonatype.nexus.repository.content.Asset;
+import org.sonatype.nexus.repository.content.browse.BrowseFacet;
 import org.sonatype.nexus.repository.content.event.asset.AssetCreatedEvent;
 import org.sonatype.nexus.repository.content.event.asset.AssetDeletedEvent;
 import org.sonatype.nexus.repository.content.event.asset.AssetEvent;
@@ -106,12 +112,74 @@ public class MavenContentGroupFacetImpl
       final RepositoryManager repositoryManager,
       final ConstraintViolationFactory constraintViolationFactory,
       @Qualifier(GroupType.NAME) final Type groupType,
-      RepositoryCacheInvalidationService repositoryCacheInvalidationService)
+      final RepositoryCacheInvalidationService repositoryCacheInvalidationService)
   {
     super(repositoryManager, constraintViolationFactory, groupType, repositoryCacheInvalidationService);
 
-    repositoryMetadataMerger = new RepositoryMetadataMerger();
-    archetypeCatalogMerger = new ArchetypeCatalogMerger();
+    this.repositoryMetadataMerger = new RepositoryMetadataMerger();
+    this.archetypeCatalogMerger = new ArchetypeCatalogMerger();
+  }
+
+  @Override
+  protected void cleanupOrphanedGroupAssets(final Set<String> removedMemberNames) {
+    log.info("Deleting ALL orphaned Maven assets for removed members: {}", removedMemberNames);
+
+    try {
+      ContentFacet contentFacet = getRepository().facet(ContentFacet.class);
+      Continuation<FluentAsset> assetPage = contentFacet.assets().browse(Continuations.BROWSE_LIMIT, null);
+      AtomicInteger deletedCount = new AtomicInteger(0);
+
+      while (assetPage != null) {
+        assetPage.forEach(asset -> {
+          if (!asset.component().isPresent()) {
+            try {
+              asset.delete();
+              log.debug("Deleted orphaned asset: {}", asset.path());
+              deletedCount.incrementAndGet();
+            }
+            catch (Exception e) {
+              log.warn("Failed to delete orphaned asset: {}", asset.path(), e);
+            }
+          }
+        });
+
+        try {
+          String nextToken = assetPage.nextContinuationToken();
+          assetPage = nextToken != null ? contentFacet.assets().browse(Continuations.BROWSE_LIMIT, nextToken) : null;
+        }
+        catch (IllegalStateException e) {
+          assetPage = null;
+        }
+      }
+
+      log.info("Deleted {} orphaned assets", deletedCount.get());
+      log.info("Completed orphaned asset cleanup");
+    }
+    catch (Exception e) {
+      log.error("Failed to cleanup orphaned Maven metadata after removing members", e);
+    }
+  }
+
+  protected void scheduleBrowseNodeCleanup() {
+    CompletableFuture.runAsync(() -> {
+      try {
+        Thread.sleep(1000);
+        getRepository().optionalFacet(BrowseFacet.class).ifPresent(browseFacet -> {
+          try {
+            log.info("Trimming empty browse node folders after asset cleanup");
+            browseFacet.trimBrowseNodes();
+            log.info("Successfully trimmed empty browse node folders");
+          }
+          catch (Exception e) {
+            log.warn("Failed to trim empty browse node folders", e);
+          }
+        });
+      }
+      catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        log.warn("Browse node cleanup was interrupted", e);
+      }
+    });
   }
 
   @Nullable
