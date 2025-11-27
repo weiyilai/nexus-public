@@ -617,7 +617,7 @@ Ext.define('NX.coreui.controller.Tasks', {
   },
 
   updateReconciliationPlanInformation: function(store, records) {
-    const planItems = (records[0].data && records[0].data.items) || [];
+    const planItems = (records[0] && records[0].data && records[0].data.items) || [];
     const me = this;
 
     var planCount = 0;
@@ -629,7 +629,7 @@ Ext.define('NX.coreui.controller.Tasks', {
       var planItem = planItems[i];
       var conf = planItem.configuration;
 
-      if(Ext.Array.contains(['PLANNED', 'EXECUTE'], planItem.state)) {
+      if(Ext.Array.contains(['PLANNED', 'EXECUTE', 'EXECUTING', 'EXECUTED'], planItem.state)) {
         planCount++;
 
         if (conf && conf.planStartDate) {
