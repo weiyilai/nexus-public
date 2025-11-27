@@ -38,8 +38,12 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.sonatype.nexus.common.cluster.ClusterCoordinationService;
+import org.sonatype.nexus.common.cluster.LocalClusterCoordinationService;
+
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.config.CustomEditorConfigurer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -78,5 +82,11 @@ public class CommonConfiguration
         .addModule(new ParameterNamesModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         .build();
+  }
+
+  @Bean
+  @ConditionalOnMissingBean(ClusterCoordinationService.class)
+  public ClusterCoordinationService localClusterCoordinationService() {
+    return new LocalClusterCoordinationService();
   }
 }
