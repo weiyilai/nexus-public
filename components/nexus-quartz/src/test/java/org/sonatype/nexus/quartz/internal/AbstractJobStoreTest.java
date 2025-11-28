@@ -34,13 +34,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.node.NodeAccess;
+import org.sonatype.nexus.testdb.DatabaseTest;
 
-import junit.framework.Assert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.quartz.DateBuilder;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -69,22 +68,25 @@ import org.quartz.spi.TriggerFiredResult;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Based on original Quartz 2.3.x AbstractJobStoreTest.
  *
- * @see <a href="https://github.com/quartz-scheduler/quartz/blob/quartz-2.3.x/quartz-core/src/test/java/org/quartz/AbstractJobStoreTest.java">AbstractJobStoreTest.java</a>
+ * @see <a href=
+ *      "https://github.com/quartz-scheduler/quartz/blob/quartz-2.3.x/quartz-core/src/test/java/org/quartz/AbstractJobStoreTest.java">AbstractJobStoreTest.java</a>
  */
 public abstract class AbstractJobStoreTest
-    extends TestSupport
+    extends Test5Support
 {
   private JobStore fJobStore;
+
   private JobDetailImpl fJobDetail;
+
   private SampleSignaler fSignaler;
 
   @SuppressWarnings("deprecation")
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     this.fSignaler = new SampleSignaler();
     ClassLoadHelper loadHelper = new CascadingClassLoadHelper();
@@ -98,7 +100,7 @@ public abstract class AbstractJobStoreTest
     this.fJobStore.storeJob(this.fJobDetail, false);
   }
 
-  @After
+  @AfterEach
   public void tearDown() {
     destroyJobStore("AbstractJobStoreTest");
   }
@@ -107,7 +109,7 @@ public abstract class AbstractJobStoreTest
 
   protected abstract void destroyJobStore(String name);
 
-  @Test
+  @DatabaseTest
   @SuppressWarnings("deprecation")
   public void testAcquireNextTrigger() throws Exception {
 
@@ -120,7 +122,7 @@ public abstract class AbstractJobStoreTest
             new Date(baseFireTime + 200000), 2, 2000);
     OperableTrigger trigger2 =
         new SimpleTriggerImpl("trigger2", "triggerGroup1", this.fJobDetail.getName(),
-            this.fJobDetail.getGroup(), new Date(baseFireTime +  50000),
+            this.fJobDetail.getGroup(), new Date(baseFireTime + 50000),
             new Date(baseFireTime + 200000), 2, 2000);
     OperableTrigger trigger3 =
         new SimpleTriggerImpl("trigger1", "triggerGroup2", this.fJobDetail.getName(),
@@ -149,15 +151,15 @@ public abstract class AbstractJobStoreTest
     assertTrue(
         this.fJobStore.acquireNextTriggers(firstFireTime + 10000, 1, 0L).isEmpty());
 
-
     // release trigger3
     this.fJobStore.releaseAcquiredTrigger(trigger3);
     assertEquals(
         trigger3,
-        this.fJobStore.acquireNextTriggers(new Date(trigger1.getNextFireTime().getTime()).getTime() + 10000, 1, 1L).get(0));
+        this.fJobStore.acquireNextTriggers(new Date(trigger1.getNextFireTime().getTime()).getTime() + 10000, 1, 1L)
+            .get(0));
   }
 
-  @Test
+  @DatabaseTest
   @SuppressWarnings("deprecation")
   public void testAcquireNextTriggerBatch() throws Exception {
 
@@ -260,7 +262,7 @@ public abstract class AbstractJobStoreTest
     this.fJobStore.releaseAcquiredTrigger(trigger1);
   }
 
-  @Test
+  @DatabaseTest
   @SuppressWarnings("deprecation")
   public void testTriggerStates() throws Exception {
     OperableTrigger trigger =
@@ -281,7 +283,7 @@ public abstract class AbstractJobStoreTest
         new Date(trigger.getNextFireTime().getTime()).getTime() + 10000, 1, 1L).get(0);
     assertNotNull(trigger);
     this.fJobStore.releaseAcquiredTrigger(trigger);
-    trigger=this.fJobStore.acquireNextTriggers(
+    trigger = this.fJobStore.acquireNextTriggers(
         new Date(trigger.getNextFireTime().getTime()).getTime() + 10000, 1, 1L).get(0);
     assertNotNull(trigger);
     assertTrue(this.fJobStore.acquireNextTriggers(
@@ -289,7 +291,7 @@ public abstract class AbstractJobStoreTest
   }
 
   // See: http://jira.opensymphony.com/browse/QUARTZ-606
-  @Test
+  @DatabaseTest
   @SuppressWarnings("deprecation")
   public void testStoreTriggerReplacesTrigger() throws Exception {
 
@@ -300,30 +302,30 @@ public abstract class AbstractJobStoreTest
 
     String trName = "StoreTriggerReplacesTrigger";
     String trGroup = "StoreTriggerReplacesTriggerGroup";
-    OperableTrigger tr = new SimpleTriggerImpl(trName ,trGroup, new Date());
+    OperableTrigger tr = new SimpleTriggerImpl(trName, trGroup, new Date());
     tr.setJobKey(new JobKey(jobName, jobGroup));
     tr.setCalendarName(null);
 
     fJobStore.storeTrigger(tr, false);
-    assertEquals(tr,fJobStore.retrieveTrigger(tr.getKey()));
+    assertEquals(tr, fJobStore.retrieveTrigger(tr.getKey()));
 
     try {
       fJobStore.storeTrigger(tr, false);
       fail("an attempt to store duplicate trigger succeeded");
-    } catch(ObjectAlreadyExistsException oaee) {
+    }
+    catch (ObjectAlreadyExistsException oaee) {
       // expected
     }
 
     tr.setCalendarName("QQ");
-    fJobStore.storeTrigger(tr, true); //fails here
+    fJobStore.storeTrigger(tr, true); // fails here
     assertEquals(tr, fJobStore.retrieveTrigger(tr.getKey()));
-    assertEquals( "StoreJob doesn't replace triggers", "QQ", fJobStore.retrieveTrigger(tr.getKey()).getCalendarName());
+    assertEquals("StoreJob doesn't replace triggers", "QQ", fJobStore.retrieveTrigger(tr.getKey()).getCalendarName());
   }
 
-  @Test
+  @DatabaseTest
   @SuppressWarnings("deprecation")
-  public void testPauseJobGroupPausesNewJob() throws Exception
-  {
+  public void testPauseJobGroupPausesNewJob() throws Exception {
     // Pausing job groups in JDBCJobStore is broken, see QTZ-208
     if (fJobStore instanceof JobStoreSupport)
       return;
@@ -349,8 +351,7 @@ public abstract class AbstractJobStoreTest
     assertEquals(TriggerState.PAUSED, fJobStore.getTriggerState(tr.getKey()));
   }
 
-
-  @Test
+  @DatabaseTest
   public void testStoreAndRetrieveJobs() throws Exception {
     SchedulerSignaler schedSignaler = new SampleSignaler();
     ClassLoadHelper loadHelper = new CascadingClassLoadHelper();
@@ -360,24 +361,24 @@ public abstract class AbstractJobStoreTest
     store.initialize(loadHelper, schedSignaler);
 
     // Store jobs.
-    for (int i=0; i < 10; i++) {
-      String group =  i < 5 ? "a" : "b";
+    for (int i = 0; i < 10; i++) {
+      String group = i < 5 ? "a" : "b";
       JobDetail job = JobBuilder.newJob(MyJob.class).withIdentity("job" + i, group).build();
       store.storeJob(job, false);
     }
     // Retrieve jobs.
-    for (int i=0; i < 10; i++) {
-      String group =  i < 5 ? "a" : "b";
+    for (int i = 0; i < 10; i++) {
+      String group = i < 5 ? "a" : "b";
       JobKey jobKey = JobKey.jobKey("job" + i, group);
       JobDetail storedJob = store.retrieveJob(jobKey);
-      Assert.assertEquals(jobKey, storedJob.getKey());
+      assertEquals(jobKey, storedJob.getKey());
     }
     // Retrieve by group
-    Assert.assertEquals("Wrong number of jobs in group 'a'", store.getJobKeys(GroupMatcher.jobGroupEquals("a")).size(), 5);
-    Assert.assertEquals("Wrong number of jobs in group 'b'", store.getJobKeys(GroupMatcher.jobGroupEquals("b")).size(), 5);
+    assertEquals("Wrong number of jobs in group 'a'", store.getJobKeys(GroupMatcher.jobGroupEquals("a")).size(), 5);
+    assertEquals("Wrong number of jobs in group 'b'", store.getJobKeys(GroupMatcher.jobGroupEquals("b")).size(), 5);
   }
 
-  @Test
+  @DatabaseTest
   public void testStoreAndRetriveTriggers() throws Exception {
     SchedulerSignaler schedSignaler = new SampleSignaler();
     ClassLoadHelper loadHelper = new CascadingClassLoadHelper();
@@ -387,31 +388,34 @@ public abstract class AbstractJobStoreTest
     store.initialize(loadHelper, schedSignaler);
 
     // Store jobs and triggers.
-    for (int i=0; i < 10; i++) {
-      String group =  i < 5 ? "a" : "b";
+    for (int i = 0; i < 10; i++) {
+      String group = i < 5 ? "a" : "b";
       JobDetail job = JobBuilder.newJob(MyJob.class).withIdentity("job" + i, group).build();
       store.storeJob(job, true);
       SimpleScheduleBuilder schedule = SimpleScheduleBuilder.simpleSchedule();
-      Trigger trigger = TriggerBuilder.newTrigger().withIdentity("job" + i, group).withSchedule(schedule).forJob(job).build();
-      store.storeTrigger((OperableTrigger)trigger, true);
+      Trigger trigger =
+          TriggerBuilder.newTrigger().withIdentity("job" + i, group).withSchedule(schedule).forJob(job).build();
+      store.storeTrigger((OperableTrigger) trigger, true);
     }
     // Retrieve job and trigger.
-    for (int i=0; i < 10; i++) {
-      String group =  i < 5 ? "a" : "b";
+    for (int i = 0; i < 10; i++) {
+      String group = i < 5 ? "a" : "b";
       JobKey jobKey = JobKey.jobKey("job" + i, group);
       JobDetail storedJob = store.retrieveJob(jobKey);
-      Assert.assertEquals(jobKey, storedJob.getKey());
+      assertEquals(jobKey, storedJob.getKey());
 
       TriggerKey triggerKey = TriggerKey.triggerKey("job" + i, group);
       Trigger storedTrigger = store.retrieveTrigger(triggerKey);
-      Assert.assertEquals(triggerKey, storedTrigger.getKey());
+      assertEquals(triggerKey, storedTrigger.getKey());
     }
     // Retrieve by group
-    Assert.assertEquals("Wrong number of triggers in group 'a'", store.getTriggerKeys(GroupMatcher.triggerGroupEquals("a")).size(), 5);
-    Assert.assertEquals("Wrong number of triggers in group 'b'", store.getTriggerKeys(GroupMatcher.triggerGroupEquals("b")).size(), 5);
+    assertEquals("Wrong number of triggers in group 'a'",
+        store.getTriggerKeys(GroupMatcher.triggerGroupEquals("a")).size(), 5);
+    assertEquals("Wrong number of triggers in group 'b'",
+        store.getTriggerKeys(GroupMatcher.triggerGroupEquals("b")).size(), 5);
   }
 
-  @Test
+  @DatabaseTest
   public void testMatchers() throws Exception {
     SchedulerSignaler schedSignaler = new SampleSignaler();
     ClassLoadHelper loadHelper = new CascadingClassLoadHelper();
@@ -423,78 +427,79 @@ public abstract class AbstractJobStoreTest
     JobDetail job = JobBuilder.newJob(MyJob.class).withIdentity("job1", "aaabbbccc").build();
     store.storeJob(job, true);
     SimpleScheduleBuilder schedule = SimpleScheduleBuilder.simpleSchedule();
-    Trigger trigger = TriggerBuilder.newTrigger().withIdentity("trig1", "aaabbbccc").withSchedule(schedule).forJob(job).build();
+    Trigger trigger =
+        TriggerBuilder.newTrigger().withIdentity("trig1", "aaabbbccc").withSchedule(schedule).forJob(job).build();
     store.storeTrigger((OperableTrigger) trigger, true);
 
     job = JobBuilder.newJob(MyJob.class).withIdentity("job1", "xxxyyyzzz").build();
     store.storeJob(job, true);
     schedule = SimpleScheduleBuilder.simpleSchedule();
     trigger = TriggerBuilder.newTrigger().withIdentity("trig1", "xxxyyyzzz").withSchedule(schedule).forJob(job).build();
-    store.storeTrigger((OperableTrigger)trigger, true);
+    store.storeTrigger((OperableTrigger) trigger, true);
 
     job = JobBuilder.newJob(MyJob.class).withIdentity("job2", "xxxyyyzzz").build();
     store.storeJob(job, true);
     schedule = SimpleScheduleBuilder.simpleSchedule();
     trigger = TriggerBuilder.newTrigger().withIdentity("trig2", "xxxyyyzzz").withSchedule(schedule).forJob(job).build();
-    store.storeTrigger((OperableTrigger)trigger, true);
+    store.storeTrigger((OperableTrigger) trigger, true);
 
     Set<JobKey> jkeys = store.getJobKeys(GroupMatcher.anyJobGroup());
-    Assert.assertEquals("Wrong number of jobs found by anything matcher", 3, jkeys.size());
+    assertEquals("Wrong number of jobs found by anything matcher", 3, jkeys.size());
 
     jkeys = store.getJobKeys(GroupMatcher.jobGroupEquals("xxxyyyzzz"));
-    Assert.assertEquals("Wrong number of jobs found by equals matcher", 2, jkeys.size());
+    assertEquals("Wrong number of jobs found by equals matcher", 2, jkeys.size());
 
     jkeys = store.getJobKeys(GroupMatcher.jobGroupEquals("aaabbbccc"));
-    Assert.assertEquals("Wrong number of jobs found by equals matcher", 1, jkeys.size());
+    assertEquals("Wrong number of jobs found by equals matcher", 1, jkeys.size());
 
     jkeys = store.getJobKeys(GroupMatcher.jobGroupStartsWith("aa"));
-    Assert.assertEquals("Wrong number of jobs found by starts with matcher", 1, jkeys.size());
+    assertEquals("Wrong number of jobs found by starts with matcher", 1, jkeys.size());
 
     jkeys = store.getJobKeys(GroupMatcher.jobGroupStartsWith("xx"));
-    Assert.assertEquals("Wrong number of jobs found by starts with matcher", 2, jkeys.size());
+    assertEquals("Wrong number of jobs found by starts with matcher", 2, jkeys.size());
 
     jkeys = store.getJobKeys(GroupMatcher.jobGroupEndsWith("cc"));
-    Assert.assertEquals("Wrong number of jobs found by ends with matcher", 1, jkeys.size());
+    assertEquals("Wrong number of jobs found by ends with matcher", 1, jkeys.size());
 
     jkeys = store.getJobKeys(GroupMatcher.jobGroupEndsWith("zzz"));
-    Assert.assertEquals("Wrong number of jobs found by ends with matcher", 2, jkeys.size());
+    assertEquals("Wrong number of jobs found by ends with matcher", 2, jkeys.size());
 
     jkeys = store.getJobKeys(GroupMatcher.jobGroupContains("bc"));
-    Assert.assertEquals("Wrong number of jobs found by contains with matcher", 1, jkeys.size());
+    assertEquals("Wrong number of jobs found by contains with matcher", 1, jkeys.size());
 
     jkeys = store.getJobKeys(GroupMatcher.jobGroupContains("yz"));
-    Assert.assertEquals("Wrong number of jobs found by contains with matcher", 2, jkeys.size());
+    assertEquals("Wrong number of jobs found by contains with matcher", 2, jkeys.size());
 
     Set<TriggerKey> tkeys = store.getTriggerKeys(GroupMatcher.anyTriggerGroup());
-    Assert.assertEquals("Wrong number of triggers found by anything matcher", 3, tkeys.size());
+    assertEquals("Wrong number of triggers found by anything matcher", 3, tkeys.size());
 
     tkeys = store.getTriggerKeys(GroupMatcher.triggerGroupEquals("xxxyyyzzz"));
-    Assert.assertEquals("Wrong number of triggers found by equals matcher", 2, tkeys.size());
+    assertEquals("Wrong number of triggers found by equals matcher", 2, tkeys.size());
 
     tkeys = store.getTriggerKeys(GroupMatcher.triggerGroupEquals("aaabbbccc"));
-    Assert.assertEquals("Wrong number of triggers found by equals matcher", 1, tkeys.size());
+    assertEquals("Wrong number of triggers found by equals matcher", 1, tkeys.size());
 
     tkeys = store.getTriggerKeys(GroupMatcher.triggerGroupStartsWith("aa"));
-    Assert.assertEquals("Wrong number of triggers found by starts with matcher", 1, tkeys.size());
+    assertEquals("Wrong number of triggers found by starts with matcher", 1, tkeys.size());
 
     tkeys = store.getTriggerKeys(GroupMatcher.triggerGroupStartsWith("xx"));
-    Assert.assertEquals("Wrong number of triggers found by starts with matcher", 2, tkeys.size());
+    assertEquals("Wrong number of triggers found by starts with matcher", 2, tkeys.size());
 
     tkeys = store.getTriggerKeys(GroupMatcher.triggerGroupEndsWith("cc"));
-    Assert.assertEquals("Wrong number of triggers found by ends with matcher", 1, tkeys.size());
+    assertEquals("Wrong number of triggers found by ends with matcher", 1, tkeys.size());
 
     tkeys = store.getTriggerKeys(GroupMatcher.triggerGroupEndsWith("zzz"));
-    Assert.assertEquals("Wrong number of triggers found by ends with matcher", 2, tkeys.size());
+    assertEquals("Wrong number of triggers found by ends with matcher", 2, tkeys.size());
 
     tkeys = store.getTriggerKeys(GroupMatcher.triggerGroupContains("bc"));
-    Assert.assertEquals("Wrong number of triggers found by contains with matcher", 1, tkeys.size());
+    assertEquals("Wrong number of triggers found by contains with matcher", 1, tkeys.size());
 
     tkeys = store.getTriggerKeys(GroupMatcher.triggerGroupContains("yz"));
-    Assert.assertEquals("Wrong number of triggers found by contains with matcher", 2, tkeys.size());
+    assertEquals("Wrong number of triggers found by contains with matcher", 2, tkeys.size());
 
   }
 
-  @Test
+  @DatabaseTest
   public void testAcquireTriggers() throws Exception {
     SchedulerSignaler schedSignaler = new SampleSignaler();
     ClassLoadHelper loadHelper = new CascadingClassLoadHelper();
@@ -506,35 +511,40 @@ public abstract class AbstractJobStoreTest
     // Setup: Store jobs and triggers.
     long MIN = 60 * 1000L;
     Date startTime0 = new Date(System.currentTimeMillis() + MIN); // a min from now.
-    for (int i=0; i < 10; i++) {
+    for (int i = 0; i < 10; i++) {
       Date startTime = new Date(startTime0.getTime() + i * MIN); // a min apart
       JobDetail job = JobBuilder.newJob(MyJob.class).withIdentity("job" + i).build();
       SimpleScheduleBuilder schedule = SimpleScheduleBuilder.repeatMinutelyForever(2);
-      OperableTrigger trigger = (OperableTrigger)TriggerBuilder.newTrigger().withIdentity("job" + i).withSchedule(schedule).forJob(job).startAt(startTime).build();
+      OperableTrigger trigger = (OperableTrigger) TriggerBuilder.newTrigger()
+          .withIdentity("job" + i)
+          .withSchedule(schedule)
+          .forJob(job)
+          .startAt(startTime)
+          .build();
 
       // Manually trigger the first fire time computation that scheduler would do. Otherwise
       // the store.acquireNextTriggers() will not work properly.
       Date fireTime = trigger.computeFirstFireTime(null);
-      Assert.assertEquals(true, fireTime != null);
+      assertEquals(true, fireTime != null);
 
       store.storeJobAndTrigger(job, trigger);
     }
 
     // Test acquire one trigger at a time
-    for (int i=0; i < 10; i++) {
-      long noLaterThan = (startTime0.getTime() + i * MIN);
+    for (int i = 0; i < 10; i++) {
+      long noLaterThan = startTime0.getTime() + i * MIN;
       int maxCount = 1;
       long timeWindow = 0;
       List<OperableTrigger> triggers = store.acquireNextTriggers(noLaterThan, maxCount, timeWindow);
-      Assert.assertEquals(1, triggers.size());
-      Assert.assertEquals("job" + i, triggers.get(0).getKey().getName());
+      assertEquals(1, triggers.size());
+      assertEquals("job" + i, triggers.get(0).getKey().getName());
 
       // Let's remove the trigger now.
       store.removeJob(triggers.get(0).getJobKey());
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testAcquireTriggersInBatch() throws Exception {
     SchedulerSignaler schedSignaler = new SampleSignaler();
     ClassLoadHelper loadHelper = new CascadingClassLoadHelper();
@@ -546,16 +556,21 @@ public abstract class AbstractJobStoreTest
     // Setup: Store jobs and triggers.
     long MIN = 60 * 1000L;
     Date startTime0 = new Date(System.currentTimeMillis() + MIN); // a min from now.
-    for (int i=0; i < 10; i++) {
+    for (int i = 0; i < 10; i++) {
       Date startTime = new Date(startTime0.getTime() + i * MIN); // a min apart
       JobDetail job = JobBuilder.newJob(MyJob.class).withIdentity("job" + i).build();
       SimpleScheduleBuilder schedule = SimpleScheduleBuilder.repeatMinutelyForever(2);
-      OperableTrigger trigger = (OperableTrigger)TriggerBuilder.newTrigger().withIdentity("job" + i).withSchedule(schedule).forJob(job).startAt(startTime).build();
+      OperableTrigger trigger = (OperableTrigger) TriggerBuilder.newTrigger()
+          .withIdentity("job" + i)
+          .withSchedule(schedule)
+          .forJob(job)
+          .startAt(startTime)
+          .build();
 
       // Manually trigger the first fire time computation that scheduler would do. Otherwise
       // the store.acquireNextTriggers() will not work properly.
       Date fireTime = trigger.computeFirstFireTime(null);
-      Assert.assertEquals(true, fireTime != null);
+      assertEquals(true, fireTime != null);
 
       store.storeJobAndTrigger(job, trigger);
     }
@@ -566,13 +581,13 @@ public abstract class AbstractJobStoreTest
     // time window needs to be big to be able to pick up multiple triggers when they are a minute apart
     long timeWindow = 8 * MIN;
     List<OperableTrigger> triggers = store.acquireNextTriggers(noLaterThan, maxCount, timeWindow);
-    Assert.assertEquals(7, triggers.size());
-    for (int i=0; i < 7; i++) {
-      Assert.assertEquals("job" + i, triggers.get(i).getKey().getName());
+    assertEquals(7, triggers.size());
+    for (int i = 0; i < 7; i++) {
+      assertEquals("job" + i, triggers.get(i).getKey().getName());
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testResetErrorTrigger() throws Exception {
 
     Date baseFireTimeDate = DateBuilder.evenMinuteDateAfterNow();
@@ -589,7 +604,6 @@ public abstract class AbstractJobStoreTest
 
     long firstFireTime = new Date(trigger1.getNextFireTime().getTime()).getTime();
 
-
     // pretend to fire it
     List<OperableTrigger> aqTs = this.fJobStore.acquireNextTriggers(
         firstFireTime + 10000, 1, 0L);
@@ -599,7 +613,8 @@ public abstract class AbstractJobStoreTest
     TriggerFiredResult ft = fTs.get(0);
 
     // get the trigger into error state
-    this.fJobStore.triggeredJobComplete(ft.getTriggerFiredBundle().getTrigger(), ft.getTriggerFiredBundle().getJobDetail(), Trigger.CompletedExecutionInstruction.SET_TRIGGER_ERROR);
+    this.fJobStore.triggeredJobComplete(ft.getTriggerFiredBundle().getTrigger(),
+        ft.getTriggerFiredBundle().getJobDetail(), Trigger.CompletedExecutionInstruction.SET_TRIGGER_ERROR);
     TriggerState state = this.fJobStore.getTriggerState(trigger1.getKey());
     assertEquals(TriggerState.ERROR, state);
 
@@ -609,7 +624,9 @@ public abstract class AbstractJobStoreTest
     assertEquals(TriggerState.NORMAL, state);
   }
 
-  public static class SampleSignaler implements SchedulerSignaler {
+  public static class SampleSignaler
+      implements SchedulerSignaler
+  {
     volatile int fMisfireCount = 0;
 
     @Override
@@ -636,14 +653,17 @@ public abstract class AbstractJobStoreTest
   }
 
   /** An empty job for testing purpose. */
-  public static class MyJob implements Job {
+  public static class MyJob
+      implements Job
+  {
     @Override
     public void execute(final JobExecutionContext context) throws JobExecutionException {
       //
     }
   }
 
-  public static class SimpleNodeAccess implements NodeAccess
+  public static class SimpleNodeAccess
+      implements NodeAccess
   {
     @Override
     public String getId() {

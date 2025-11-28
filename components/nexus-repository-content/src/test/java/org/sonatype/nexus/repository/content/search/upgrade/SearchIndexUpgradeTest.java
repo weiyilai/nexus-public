@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.entity.EntityId;
@@ -33,13 +33,15 @@ import org.sonatype.nexus.repository.content.store.example.TestContentRepository
 import org.sonatype.nexus.repository.types.GroupType;
 import org.sonatype.nexus.repository.types.HostedType;
 import org.sonatype.nexus.repository.types.ProxyType;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import com.google.common.collect.ImmutableMap;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 
@@ -53,13 +55,12 @@ import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.repository.search.index.SearchUpdateService.SEARCH_INDEX_OUTDATED;
 
-public class SearchIndexUpgradeTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class SearchIndexUpgradeTest
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME)
-      .access(ConfigurationDAO.class)
-      .access(TestContentRepositoryDAO.class);
+  @DataSessionConfiguration(daos = {ConfigurationDAO.class, TestContentRepositoryDAO.class})
+  TestDataSessionSupplier sessionRule;
 
   private DataStore<?> store;
 
@@ -86,7 +87,7 @@ public class SearchIndexUpgradeTest
 
   private MockedStatic<QualifierUtil> mockedStatic;
 
-  @Before
+  @BeforeEach
   public void setup() {
     mockedStatic = mockStatic(QualifierUtil.class);
     Format testFormat = new Format("test")
@@ -99,7 +100,6 @@ public class SearchIndexUpgradeTest
     when(testProxyRecipe.getFormat()).thenReturn(testFormat);
     when(testProxyRecipe.getType()).thenReturn(new ProxyType());
 
-    when(testGroupRecipe.getFormat()).thenReturn(testFormat);
     when(testGroupRecipe.getType()).thenReturn(new GroupType());
 
     when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(ImmutableMap.of(
@@ -109,7 +109,7 @@ public class SearchIndexUpgradeTest
     underTest = new TestSearchIndexUpgrade();
     underTest.inject(List.of(testHostedRecipe, testProxyRecipe, testGroupRecipe));
 
-    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).get();
+    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME);
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       configurationDAO = session.access(ConfigurationDAO.class);
       contentRepositoryDAO = session.access(TestContentRepositoryDAO.class);
@@ -130,12 +130,12 @@ public class SearchIndexUpgradeTest
     }
   }
 
-  @After
+  @AfterEach
   public void teardown() {
     mockedStatic.close();
   }
 
-  @Test
+  @DatabaseTest
   public void testMigration() throws Exception {
     try (Connection conn = store.openConnection()) {
       underTest.migrate(conn);

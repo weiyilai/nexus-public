@@ -57,7 +57,9 @@ import static org.sonatype.nexus.datastore.mybatis.MyBatisDataStoreDescriptor.JD
  * JUnit rule to supply {@link DataSession}s without needing the full store ceremony.
  *
  * @since 3.19
+ * @deprecated Use {@link DatabaseExtension} and JUnit5
  */
+@Deprecated
 public class DataSessionRule
     extends ExternalResource
     implements DataSessionSupplier

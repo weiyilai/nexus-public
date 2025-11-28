@@ -17,11 +17,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.common.event.EventManager;
-import org.sonatype.nexus.crypto.secrets.SecretsFactory;
-import org.sonatype.nexus.datastore.mybatis.handlers.SecretTypeHandler;
 import org.sonatype.nexus.internal.security.apikey.store.ApiKeyStore;
 import org.sonatype.nexus.internal.security.apikey.store.ApiKeyStoreImpl;
 import org.sonatype.nexus.internal.security.apikey.store.ApiKeyStoreV2Impl;
@@ -32,15 +30,16 @@ import org.sonatype.nexus.security.UserPrincipalsExpired;
 import org.sonatype.nexus.security.UserPrincipalsHelper;
 import org.sonatype.nexus.security.authc.apikey.ApiKeyFactory;
 import org.sonatype.nexus.security.user.UserNotFoundException;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.internal.stubbing.defaultanswers.ReturnsMocks;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -49,6 +48,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -56,8 +56,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @SuppressWarnings("deprecation")
-public class ApiKeyServiceImplTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class ApiKeyServiceImplTest
+    extends Test5Support
 {
   private static final String NUGET = "Nuget";
 
@@ -91,20 +92,17 @@ public class ApiKeyServiceImplTest
   @Mock
   private ApiKeyStoreV2Impl v2;
 
-  private SecretsFactory factory = mock(SecretsFactory.class, new ReturnsMocks());
-
-  @Rule
-  public DataSessionRule sessionRule =
-      new DataSessionRule().access(ApiKeyV2DAO.class).handle(new SecretTypeHandler(factory));
+  @DataSessionConfiguration(daos = ApiKeyV2DAO.class)
+  TestDataSessionSupplier sessionRule;
 
   private ApiKeyServiceImpl underTest;
 
-  @Before
+  @BeforeEach
   public void setup() {
     underTest = new ApiKeyServiceImpl(v1, v2, check, kv, principalsHelper, apiKeyFactories, defaultApiKeyFactory);
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowse_migrationComplete() {
     setMigrationComplete();
     underTest.browse(NUGET);
@@ -112,7 +110,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowse_migrationInProgress() {
     setMigrationInProgress();
     underTest.browse(NUGET);
@@ -120,7 +118,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowse_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.browse(NUGET);
@@ -128,7 +126,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowseByCreatedDate_migrationComplete() {
     setMigrationComplete();
     underTest.browseByCreatedDate(NUGET, OffsetDateTime.now());
@@ -136,7 +134,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowseByCreatedDate_migrationInProgress() {
     setMigrationInProgress();
     underTest.browseByCreatedDate(NUGET, OffsetDateTime.now());
@@ -144,7 +142,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowseByCreatedDate_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.browseByCreatedDate(NUGET, OffsetDateTime.now());
@@ -152,7 +150,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowsePaginated_migrationComplete() {
     setMigrationComplete();
     underTest.browsePaginated(NUGET, 0, 100);
@@ -160,7 +158,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowsePaginated_migrationInProgress() {
     setMigrationInProgress();
     underTest.browsePaginated(NUGET, 0, 100);
@@ -168,7 +166,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowsePaginated_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.browsePaginated(NUGET, 0, 100);
@@ -176,7 +174,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testCount_migrationComplete() {
     setMigrationComplete();
     underTest.count(NUGET);
@@ -184,7 +182,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testCount_migrationInProgress() {
     setMigrationInProgress();
 
@@ -196,7 +194,7 @@ public class ApiKeyServiceImplTest
     verify(v2).count(NUGET);
   }
 
-  @Test
+  @DatabaseTest
   public void testCount_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.count(NUGET);
@@ -204,7 +202,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testCreateApiKey_migrationComplete() {
     setMigrationComplete();
     underTest.createApiKey(NUGET, PRINCIPALS);
@@ -212,7 +210,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testCreateApiKey_migrationInProgress() {
     setMigrationInProgress();
     underTest.createApiKey(NUGET, PRINCIPALS);
@@ -220,7 +218,7 @@ public class ApiKeyServiceImplTest
     verify(v2).persistApiKey(anyString(), any(), any());
   }
 
-  @Test
+  @DatabaseTest
   public void testCreateApiKey_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.createApiKey(NUGET, PRINCIPALS);
@@ -228,7 +226,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKey_migrationComplete() {
     setMigrationComplete();
     underTest.deleteApiKey(NUGET, PRINCIPALS);
@@ -236,7 +234,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKey_migrationInProgress() {
     setMigrationInProgress();
     when(v1.deleteApiKey(anyString(), any())).thenReturn(99);
@@ -247,7 +245,7 @@ public class ApiKeyServiceImplTest
     verify(v2).deleteApiKey(NUGET, PRINCIPALS);
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKey_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.deleteApiKey(NUGET, PRINCIPALS);
@@ -255,7 +253,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_OffsetDateTime_migrationComplete() {
     setMigrationComplete();
     underTest.deleteApiKeys(OffsetDateTime.now());
@@ -263,7 +261,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_OffsetDateTime_migrationInProgress() {
     setMigrationInProgress();
     when(v1.deleteApiKeys(any(OffsetDateTime.class))).thenReturn(9);
@@ -274,7 +272,7 @@ public class ApiKeyServiceImplTest
     verify(v2).deleteApiKeys(any(OffsetDateTime.class));
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_OffsetDateTime_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.deleteApiKeys(OffsetDateTime.now());
@@ -282,7 +280,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_Principals_migrationComplete() {
     setMigrationComplete();
     underTest.deleteApiKeys(PRINCIPALS);
@@ -290,7 +288,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_Principals_migrationInProgress() {
     setMigrationInProgress();
     when(v1.deleteApiKeys(PRINCIPALS)).thenReturn(9);
@@ -301,7 +299,7 @@ public class ApiKeyServiceImplTest
     verify(v2).deleteApiKeys(PRINCIPALS);
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_Principals_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.deleteApiKeys(PRINCIPALS);
@@ -309,7 +307,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_Domain_migrationComplete() {
     setMigrationComplete();
     underTest.deleteApiKeys(NUGET);
@@ -317,7 +315,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_Domain_migrationInProgress() {
     setMigrationInProgress();
     when(v1.deleteApiKeys(NUGET)).thenReturn(9);
@@ -328,7 +326,7 @@ public class ApiKeyServiceImplTest
     verify(v2).deleteApiKeys(NUGET);
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_Domain_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.deleteApiKeys(NUGET);
@@ -336,7 +334,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testGetApiKey_migrationComplete() {
     setMigrationComplete();
     underTest.getApiKey(NUGET, PRINCIPALS);
@@ -344,7 +342,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testGetApiKey_migrationInProgress() {
     setMigrationInProgress();
     underTest.getApiKey(NUGET, PRINCIPALS);
@@ -352,7 +350,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testGetApiKey_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.getApiKey(NUGET, PRINCIPALS);
@@ -360,7 +358,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testGetApiKeyByToken_migrationComplete() {
     setMigrationComplete();
     underTest.getApiKeyByToken(NUGET, TOKEN);
@@ -368,7 +366,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testGetApiKeyByToken_migrationInProgress() {
     setMigrationInProgress();
     underTest.getApiKeyByToken(NUGET, TOKEN);
@@ -376,7 +374,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testGetApiKeyByToken_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.getApiKeyByToken(NUGET, TOKEN);
@@ -384,7 +382,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testPersistApiKey_migrationComplete() {
     setMigrationComplete();
     underTest.persistApiKey(NUGET, PRINCIPALS, TOKEN);
@@ -392,7 +390,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testPersistApiKey_migrationInProgress() {
     setMigrationInProgress();
     underTest.persistApiKey(NUGET, PRINCIPALS, TOKEN);
@@ -400,7 +398,7 @@ public class ApiKeyServiceImplTest
     verify(v2).persistApiKey(NUGET, PRINCIPALS, TOKEN, null);
   }
 
-  @Test
+  @DatabaseTest
   public void testPersistApiKey_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.persistApiKey(NUGET, PRINCIPALS, TOKEN);
@@ -408,7 +406,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testPersistApiKey_withCreated_migrationComplete() {
     setMigrationComplete();
     underTest.persistApiKey(NUGET, PRINCIPALS, TOKEN, OffsetDateTime.now());
@@ -416,7 +414,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testPersistApiKey_withCreated_migrationInProgress() {
     setMigrationInProgress();
     underTest.persistApiKey(NUGET, PRINCIPALS, TOKEN, OffsetDateTime.now());
@@ -424,7 +422,7 @@ public class ApiKeyServiceImplTest
     verify(v2).persistApiKey(eq(NUGET), any(), eq(TOKEN), any());
   }
 
-  @Test
+  @DatabaseTest
   public void testPersistApiKey_withCreated_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.persistApiKey(NUGET, PRINCIPALS, TOKEN, OffsetDateTime.now());
@@ -432,7 +430,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testPurgeApiKeys_migrationComplete() {
     setupPurge(v2);
     setMigrationComplete();
@@ -442,7 +440,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testPurgeApiKeys_migrationInProgress() {
     setupPurge(v1);
     setMigrationInProgress();
@@ -453,7 +451,7 @@ public class ApiKeyServiceImplTest
     verifyNoMoreInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testPurgeApiKeys_migrationNotStarted() {
     setupPurge(v1);
     setMigrationNotStarted();
@@ -463,7 +461,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testUpdateApiKeyRealm_migrationComplete() {
     setMigrationComplete();
     ApiKeyInternal from = mock(ApiKeyInternal.class);
@@ -473,7 +471,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v1);
   }
 
-  @Test
+  @DatabaseTest
   public void testUpdateApiKeyRealm_migrationInProgress() {
     setMigrationInProgress();
     ApiKeyInternal from = mock(ApiKeyInternal.class);
@@ -483,7 +481,7 @@ public class ApiKeyServiceImplTest
     verify(v2).updateApiKey(from, to);
   }
 
-  @Test
+  @DatabaseTest
   public void testUpdateApiKeyRealm_migrationNotStarted() {
     setMigrationNotStarted();
     ApiKeyInternal from = mock(ApiKeyInternal.class);
@@ -493,7 +491,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testOn_KeyValueEvent() {
     setMigrationNotStarted();
     assertFalse(underTest.isMigrationComplete());
@@ -501,7 +499,7 @@ public class ApiKeyServiceImplTest
     assertTrue(underTest.isMigrationComplete());
   }
 
-  @Test
+  @DatabaseTest
   public void testOn_UserPrincipalsExpired_migrationNotStarted() {
     setMigrationNotStarted();
     underTest.on(new UserPrincipalsExpired("bob", "ldap"));
@@ -509,7 +507,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testOn_UserPrincipalsExpired_migrationInProgress() {
     setMigrationInProgress();
     underTest.on(new UserPrincipalsExpired("bob", "ldap"));
@@ -517,7 +515,7 @@ public class ApiKeyServiceImplTest
     verify(v2).deleteApiKeys(PRINCIPALS);
   }
 
-  @Test
+  @DatabaseTest
   public void testOn_UserPrincipalsExpired_migrationComplete() {
     setMigrationComplete();
     underTest.on(new UserPrincipalsExpired("bob", "ldap"));
@@ -525,7 +523,7 @@ public class ApiKeyServiceImplTest
     verify(v2).deleteApiKeys(PRINCIPALS);
   }
 
-  @Test
+  @DatabaseTest
   public void testOn_UserPrincipalsExpired_null_migrationNotStarted() {
     setMigrationNotStarted();
     setupPurge(v1);
@@ -534,7 +532,7 @@ public class ApiKeyServiceImplTest
     verifyNoInteractions(v2);
   }
 
-  @Test
+  @DatabaseTest
   public void testOn_UserPrincipalsExpired_null_migrationInProgress() {
     setMigrationInProgress();
     setupPurge(v1, v2);
@@ -543,7 +541,7 @@ public class ApiKeyServiceImplTest
     verify(v2).deleteApiKeys(MISSING_USER);
   }
 
-  @Test
+  @DatabaseTest
   public void testOn_UserPrincipalsExpired_null_migrationComplete() {
     setMigrationComplete();
     setupPurge(v2);
@@ -566,7 +564,7 @@ public class ApiKeyServiceImplTest
   }
 
   private void setMigrationComplete() {
-    when(check.isAtLeast(anyString())).thenReturn(true);
+    lenient().when(check.isAtLeast(anyString())).thenReturn(true);
     when(kv.getBoolean(any())).thenReturn(Optional.of(true));
     try {
       underTest.start();
@@ -577,12 +575,12 @@ public class ApiKeyServiceImplTest
   }
 
   private void setMigrationInProgress() {
-    when(check.isAtLeast(anyString())).thenReturn(true);
-    when(kv.getBoolean(any())).thenReturn(Optional.empty());
+    lenient().when(check.isAtLeast(anyString())).thenReturn(true);
+    lenient().when(kv.getBoolean(any())).thenReturn(Optional.empty());
   }
 
   private void setMigrationNotStarted() {
-    when(check.isAtLeast(anyString())).thenReturn(false);
-    when(kv.getBoolean(any())).thenReturn(Optional.empty());
+    lenient().when(check.isAtLeast(anyString())).thenReturn(false);
+    lenient().when(kv.getBoolean(any())).thenReturn(Optional.empty());
   }
 }

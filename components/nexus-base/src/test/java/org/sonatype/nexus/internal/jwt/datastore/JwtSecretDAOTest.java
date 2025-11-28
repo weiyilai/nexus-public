@@ -17,45 +17,45 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.SingletonDataAccess;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@Category(SQLTestGroup.class)
-public class JwtSecretDAOTest
+@ExtendWith(DatabaseExtension.class)
+class JwtSecretDAOTest
     extends TestSupport
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule().access(JwtSecretDAO.class);
+  @DataSessionConfiguration(daos = JwtSecretDAO.class)
+  TestDataSessionSupplier sessionRule;
 
   private DataSession<?> session;
 
   private JwtSecretDAO dao;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(JwtSecretDAO.class);
   }
 
-  @After
-  public void cleanup() {
+  @AfterEach
+  void cleanup() {
     session.close();
   }
 
-  @Test
-  public void testSetAndGet() {
+  @DatabaseTest
+  void testSetAndGet() {
     Optional<String> emptySecret = withDao(SingletonDataAccess::get);
     assertThat(emptySecret.isPresent(), is(false));
 

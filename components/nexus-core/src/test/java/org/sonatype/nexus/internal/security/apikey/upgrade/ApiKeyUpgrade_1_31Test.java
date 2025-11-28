@@ -14,22 +14,22 @@ package org.sonatype.nexus.internal.security.apikey.upgrade;
 
 import java.sql.Connection;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.internal.security.apikey.store.ApiKeyDAO;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@Category(SQLTestGroup.class)
-public class ApiKeyUpgrade_1_31Test
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class ApiKeyUpgrade_1_31Test
+    extends Test5Support
 {
   private static final String NEW_INDEX_NAME = "pk_api_key_primaryprincipal_domain_principals";
 
@@ -46,12 +46,12 @@ public class ApiKeyUpgrade_1_31Test
       + "    );\n"
       + "";
 
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME);
+  @DataSessionConfiguration
+  TestDataSessionSupplier sessionRule;
 
   private ApiKeyUpgrade_1_31 underTest = new ApiKeyUpgrade_1_31();
 
-  @Test
+  @DatabaseTest
   public void testUpgrade() throws Exception {
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       // create old schema
@@ -68,7 +68,7 @@ public class ApiKeyUpgrade_1_31Test
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testUpgrade_tableNotExist() throws Exception {
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       underTest.migrate(conn);
@@ -77,10 +77,9 @@ public class ApiKeyUpgrade_1_31Test
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testUpgrade_notRequired() throws Exception {
     sessionRule.getDataStore(DEFAULT_DATASTORE_NAME)
-        .orElseThrow(() -> new IllegalStateException())
         .register(ApiKeyDAO.class);
 
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {

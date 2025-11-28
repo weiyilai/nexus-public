@@ -23,11 +23,13 @@ import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.group.BlobStoreGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -37,23 +39,24 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class BlobStoreConfigurationDAOTest
+@ExtendWith(DatabaseExtension.class)
+class BlobStoreConfigurationDAOTest
     extends TestSupport
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule().access(BlobStoreConfigurationDAO.class);
+  @DataSessionConfiguration(daos = BlobStoreConfigurationDAO.class)
+  TestDataSessionSupplier sessionRule;
 
   private DataSession<?> session;
 
   BlobStoreConfigurationDAO mapper;
 
-  @Before
+  @BeforeEach
   public void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     mapper = session.access(BlobStoreConfigurationDAO.class);
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowsing() {
     IntStream.range(1, 6).forEach(it -> mapper.create(blobStore("name-" + it, "type-" + it, new HashMap<>())));
 
@@ -61,7 +64,7 @@ public class BlobStoreConfigurationDAOTest
     assertThat(items, hasSize(5));
   }
 
-  @Test
+  @DatabaseTest
   public void testCRUD() {
     BlobStoreConfigurationData config = blobStore("name", "type", new HashMap<>());
     mapper.create(config);
@@ -87,7 +90,7 @@ public class BlobStoreConfigurationDAOTest
     assertThat(collect(mapper.browse()), hasSize(0));
   }
 
-  @Test
+  @DatabaseTest
   public void testFindingParent() {
     List<String> memberNames = List.of("A", "B", "C");
 

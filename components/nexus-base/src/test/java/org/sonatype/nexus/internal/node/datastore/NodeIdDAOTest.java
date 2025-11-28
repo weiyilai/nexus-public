@@ -12,48 +12,49 @@
  */
 package org.sonatype.nexus.internal.node.datastore;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DuplicateKeyException;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsNot.not;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@Category(SQLTestGroup.class)
-public class NodeIdDAOTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class NodeIdDAOTest
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule().access(NodeIdDAO.class);
+  @DataSessionConfiguration(daos = NodeIdDAO.class)
+  TestDataSessionSupplier sessionRule;
 
-  private DataSession session;
+  private DataSession<?> session;
 
   private NodeIdDAO dao;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
-    dao = (NodeIdDAO) session.access(NodeIdDAO.class);
+    dao = session.access(NodeIdDAO.class);
   }
 
-  @After
-  public void cleanup() {
+  @AfterEach
+  void cleanup() {
     session.close();
   }
 
-  @Test
-  public void testSetAndGet() {
+  @DatabaseTest
+  void testSetAndGet() {
     String nodeId = "";
     dao.set(nodeId);
     String readData = dao.get().orElse(null);
@@ -73,8 +74,8 @@ public class NodeIdDAOTest
     assertThat(readData, nullValue());
   }
 
-  @Test
-  public void testCreate() {
+  @DatabaseTest
+  void testCreate() {
     String nodeId = "";
     dao.create(nodeId);
 
@@ -82,8 +83,8 @@ public class NodeIdDAOTest
     assertThat(readData, is(nodeId));
   }
 
-  @Test(expected = DuplicateKeyException.class)
-  public void testCreate_fail() {
+  @DatabaseTest
+  void testCreate_fail() {
     String nodeId = "";
     // setup
     dao.create(nodeId);
@@ -92,6 +93,6 @@ public class NodeIdDAOTest
     assertThat(dao.get().isPresent(), is(true));
 
     // call create when it already exists
-    dao.create("b");
+    assertThrows(DuplicateKeyException.class, () -> dao.create("b"));
   }
 }

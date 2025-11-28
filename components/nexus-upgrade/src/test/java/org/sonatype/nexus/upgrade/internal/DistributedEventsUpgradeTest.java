@@ -16,12 +16,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -29,22 +31,23 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class DistributedEventsUpgradeTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class DistributedEventsUpgradeTest
+    extends Test5Support
 {
   public static final String TABLE_NAME = "distributed_events";
 
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME);
+  @DataSessionConfiguration
+  TestDataSessionSupplier sessionRule;
 
-  @Before
+  @BeforeEach
   public void setup() throws SQLException {
     try (Connection conn = sessionRule.openConnection("nexus")) {
       conn.prepareCall("CREATE TABLE distributed_events ( foo varchar );").execute();
     }
   }
 
-  @Test
+  @DatabaseTest
   public void shouldSkipMigrationWhenClusterEnabled() throws Exception {
     DistributedEventsUpgrade underTest = new DistributedEventsUpgrade(true);
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
@@ -58,7 +61,7 @@ public class DistributedEventsUpgradeTest
     }
   }
 
-  @Test
+  @DatabaseTest
   public void shouldDropTableWhenClusteringDisabled() throws Exception {
     DistributedEventsUpgrade underTest = new DistributedEventsUpgrade(false);
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
@@ -70,12 +73,12 @@ public class DistributedEventsUpgradeTest
     }
   }
 
-  @Test
+  @DatabaseTest
   public void shouldNotFailWhenTableMissing() throws Exception {
     DistributedEventsUpgrade underTest = new DistributedEventsUpgrade(false);
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       dropTable(conn);
-	  // sanity check
+      // sanity check
       assertThat(underTest.tableExists(conn, TABLE_NAME), is(false));
 
       underTest.migrate(conn);

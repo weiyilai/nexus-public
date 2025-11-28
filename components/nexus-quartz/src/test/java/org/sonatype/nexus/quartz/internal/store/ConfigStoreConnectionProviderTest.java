@@ -15,15 +15,15 @@ package org.sonatype.nexus.quartz.internal.store;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -32,28 +32,28 @@ import static org.hamcrest.Matchers.startsWith;
 /**
  * Test the {@link ConfigStoreConnectionProvider}.
  */
-@Category(SQLTestGroup.class)
-public class ConfigStoreConnectionProviderTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class ConfigStoreConnectionProviderTest
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule();
+  @DataSessionConfiguration(postgresql = false)
+  TestDataSessionSupplier sessionRule;
 
   private ConfigStoreConnectionProvider underTest;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     underTest = new ConfigStoreConnectionProvider(sessionRule);
     underTest.initialize();
   }
 
-  @After
+  @AfterEach
   public void tearDown() {
     underTest.shutdown();
     underTest = null;
   }
 
-  @Test
+  @DatabaseTest
   public void testCanOpenConnection() throws SQLException {
     try (Connection connection = underTest.getConnection()) {
       if (System.getProperty("test.postgres") != null) {

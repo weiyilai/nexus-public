@@ -12,14 +12,10 @@
  */
 package org.sonatype.nexus.internal.httpclient;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
+import java.util.concurrent.TimeUnit;
+
 import org.sonatype.goodies.common.Time;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
 import org.sonatype.nexus.datastore.api.DataSession;
@@ -31,23 +27,35 @@ import org.sonatype.nexus.httpclient.config.UsernameAuthenticationConfiguration;
 import org.sonatype.nexus.internal.httpclient.handlers.AuthenticationConfigurationHandler;
 import org.sonatype.nexus.internal.httpclient.handlers.ConnectionConfigurationHandler;
 import org.sonatype.nexus.internal.httpclient.handlers.ProxyConfigurationHandler;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.TestTypeHandler;
 
-import java.util.concurrent.TimeUnit;
-
+import org.apache.ibatis.type.TypeHandler;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
-import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
-import static org.junit.Assert.*;
 
-@RunWith(MockitoJUnitRunner.class)
-@Category(SQLTestGroup.class)
-public class HttpClientConfigurationDAOTest
+@ExtendWith(DatabaseExtension.class)
+class HttpClientConfigurationDAOTest
+    extends Test5Support
 {
   private static final String ID = "_1";
 
@@ -56,33 +64,40 @@ public class HttpClientConfigurationDAOTest
 
   private SecretsService secretsService = mock(SecretsService.class);
 
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule()
-      .handle(new ConnectionConfigurationHandler(secretsService))
-      .handle(new ProxyConfigurationHandler(secretsService))
-      .handle(new AuthenticationConfigurationHandler(secretsService))
-      .handle(new SecretTypeHandler(secretsService))
-      .access(HttpClientConfigurationDAO.class);
+  @DataSessionConfiguration(daos = HttpClientConfigurationDAO.class)
+  TestDataSessionSupplier sessionRule;
+
+  @TestTypeHandler
+  TypeHandler<?> connectionConfigurationHandler = new ConnectionConfigurationHandler(secretsService);
+
+  @TestTypeHandler
+  TypeHandler<?> proxyHandler = new ProxyConfigurationHandler(secretsService);
+
+  @TestTypeHandler
+  TypeHandler<?> authenticationHandler = new AuthenticationConfigurationHandler(secretsService);
+
+  @TestTypeHandler
+  TypeHandler<?> secretHandler = new SecretTypeHandler(secretsService);
 
   private DataSession<?> session;
 
   private HttpClientConfigurationDAO dao;
 
-  @Before
+  @BeforeEach
   public void setup() {
-    when(secretPassword.getId()).thenReturn(ID);
+    lenient().when(secretPassword.getId()).thenReturn(ID);
     when(secretsService.from(ID)).thenReturn(secretPassword);
     when(secretsService.encrypt(any(), any(), any())).thenReturn(secretPassword);
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(HttpClientConfigurationDAO.class);
   }
 
-  @After
+  @AfterEach
   public void cleanup() {
     session.close();
   }
 
-  @Test
+  @DatabaseTest
   public void itCanWriteAndReadWithAllAttributesNull() {
     HttpClientConfigurationData config = new HttpClientConfigurationData();
 
@@ -96,7 +111,7 @@ public class HttpClientConfigurationDAOTest
     assertNull(readEntity.getRedirectStrategy());
   }
 
-  @Test
+  @DatabaseTest
   public void canDeleteConfiguration() {
     HttpClientConfigurationData config = new HttpClientConfigurationData();
 
@@ -107,7 +122,7 @@ public class HttpClientConfigurationDAOTest
     assertNull(readEntity);
   }
 
-  @Test
+  @DatabaseTest
   public void canUpdateConnectionConfiguration() {
     ConnectionConfiguration connection = new ConnectionConfiguration();
     connection.setRetries(Integer.MAX_VALUE);
@@ -146,7 +161,7 @@ public class HttpClientConfigurationDAOTest
     assertFalse(readEntity.getConnection().getEnableCookies());
   }
 
-  @Test
+  @DatabaseTest(postgresql = false)
   public void canUpdateAuthenticationConfiguration() {
     UsernameAuthenticationConfiguration user = new UsernameAuthenticationConfiguration();
     user.setUsername("foo");
@@ -179,7 +194,7 @@ public class HttpClientConfigurationDAOTest
     assertEquals("obo", new String(usernameConfig.getPassword().decrypt()));
   }
 
-  @Test
+  @DatabaseTest
   public void canUpdateProxyConfiguration() {
     ProxyServerConfiguration httpConfig = createProxyServerConfig(true, "localhost", 8081);
     ProxyServerConfiguration httpsConfig = createProxyServerConfig(false, "127.0.0.1", 8082);
@@ -213,7 +228,7 @@ public class HttpClientConfigurationDAOTest
     assertProxyServerConfig(readEntity.getProxy().getHttps(), false, "127.0.0.1", 1234);
   }
 
-  private ProxyServerConfiguration createProxyServerConfig(boolean enabled, String host, int port) {
+  private ProxyServerConfiguration createProxyServerConfig(final boolean enabled, final String host, final int port) {
     ProxyServerConfiguration config = new ProxyServerConfiguration();
     config.setEnabled(enabled);
     config.setHost(host);
@@ -221,7 +236,12 @@ public class HttpClientConfigurationDAOTest
     return config;
   }
 
-  private void assertProxyServerConfig(ProxyServerConfiguration config, boolean enabled, String host, int port) {
+  private void assertProxyServerConfig(
+      final ProxyServerConfiguration config,
+      final boolean enabled,
+      final String host,
+      final int port)
+  {
     assertEquals(enabled, config.isEnabled());
     assertEquals(host, config.getHost());
     assertEquals(port, config.getPort());

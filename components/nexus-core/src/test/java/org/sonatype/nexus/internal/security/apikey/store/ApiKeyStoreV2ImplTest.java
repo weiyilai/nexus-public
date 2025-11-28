@@ -17,23 +17,26 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsFactory;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
-import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.datastore.api.DuplicateKeyException;
 import org.sonatype.nexus.datastore.mybatis.handlers.SecretTypeHandler;
 import org.sonatype.nexus.internal.security.apikey.ApiKeyInternal;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.TestTypeHandler;
 
+import org.apache.ibatis.type.TypeHandler;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.assertj.db.type.Table;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
 import static org.assertj.db.api.Assertions.assertThat;
@@ -45,17 +48,18 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.internal.security.apikey.store.ApiKeyStoreV2Impl.accessKey;
 import static org.sonatype.nexus.internal.security.apikey.store.ApiKeyStoreV2Impl.secret;
 
-public class ApiKeyStoreV2ImplTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class ApiKeyStoreV2ImplTest
+    extends Test5Support
 {
   private static final String BOB = "bob";
 
@@ -81,22 +85,24 @@ public class ApiKeyStoreV2ImplTest
   @Mock
   private SecretsService secretsService;
 
-  @Rule
-  public DataSessionRule sessionRule =
-      new DataSessionRule().access(ApiKeyV2DAO.class).handle(new SecretTypeHandler(factory));
+  @TestTypeHandler
+  TypeHandler<?> secretTypeHandler = new SecretTypeHandler(factory);
+
+  @DataSessionConfiguration(daos = ApiKeyV2DAO.class)
+  TestDataSessionSupplier sessionRule;
 
   private ApiKeyStoreV2Impl underTest;
 
-  @Before
+  @BeforeEach
   public void setup() {
     underTest = new ApiKeyStoreV2Impl(sessionRule, secretsService);
     underTest.setDependencies(eventManager);
 
-    when(secretsService.encrypt(any(), any(), any()))
+    lenient().when(secretsService.encrypt(any(), any(), any()))
         .thenAnswer(invocation -> {
           Secret secret = mock(Secret.class);
-          when(secret.getId()).thenReturn("" + secrets.size());
-          when(secret.decrypt()).thenReturn(invocation.getArgument(1, char[].class));
+          lenient().when(secret.getId()).thenReturn("" + secrets.size());
+          lenient().when(secret.decrypt()).thenReturn(invocation.getArgument(1, char[].class));
           secrets.put(secrets.size(), secret);
           return secret;
         });
@@ -104,7 +110,7 @@ public class ApiKeyStoreV2ImplTest
         .thenAnswer(invocation -> secrets.get(Integer.valueOf(invocation.getArgument(0, String.class))));
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKey() {
     // test with no records
     assertThat(underTest.deleteApiKey(NUGET, PRINCIPALS), is(0));
@@ -117,7 +123,7 @@ public class ApiKeyStoreV2ImplTest
     verify(secretsService).remove(any(Secret.class));
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_byExpiration() {
     // test with no records
     assertThat(underTest.deleteApiKeys(OffsetDateTime.now()), is(0));
@@ -136,7 +142,7 @@ public class ApiKeyStoreV2ImplTest
     assertTrue(underTest.getApiKey(NUGET, PRINCIPALS).isPresent());
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_byDomain() {
     // test with no records
     assertThat(underTest.deleteApiKeys(NPM), is(0));
@@ -154,7 +160,7 @@ public class ApiKeyStoreV2ImplTest
     assertTrue(underTest.getApiKey(NUGET, PRINCIPALS).isPresent());
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteApiKeys_byUser() {
     // test with no records
     assertThat(underTest.deleteApiKeys(PRINCIPALS), is(0));
@@ -173,7 +179,7 @@ public class ApiKeyStoreV2ImplTest
 
   }
 
-  @Test
+  @DatabaseTest
   public void testGetApiKey() {
     // test with no records
     assertFalse(underTest.getApiKey(NUGET, PRINCIPALS).isPresent());
@@ -191,7 +197,7 @@ public class ApiKeyStoreV2ImplTest
     assertThat(token.get().getPrincipals().getRealmNames(), contains("ldap"));
   }
 
-  @Test
+  @DatabaseTest
   public void testGetApiByToken() {
     // test with no records
     assertFalse(underTest.getApiKey(NUGET, PRINCIPALS).isPresent());
@@ -211,7 +217,7 @@ public class ApiKeyStoreV2ImplTest
     assertFalse(underTest.getApiKeyByToken(NUGET, copiedKey).isPresent());
   }
 
-  @Test
+  @DatabaseTest
   public void testPersistApiKey() {
     underTest.persistApiKey(NUGET, PRINCIPALS, KEY, null);
 
@@ -228,7 +234,7 @@ public class ApiKeyStoreV2ImplTest
     verify(secretsService).encrypt(NUGET, secret(KEY), BOB);
   }
 
-  @Test
+  @DatabaseTest
   public void testPersistApiKey_replace() {
     underTest.persistApiKey(NUGET, PRINCIPALS, KEY, null);
     // sanity check
@@ -247,7 +253,7 @@ public class ApiKeyStoreV2ImplTest
         .hasValues("1");
   }
 
-  @Test
+  @DatabaseTest
   public void testPersistApiKey_failure() {
     OffsetDateTime now = OffsetDateTime.now();
     underTest.persistApiKey(NUGET, PRINCIPALS, KEY, now);
@@ -260,7 +266,7 @@ public class ApiKeyStoreV2ImplTest
     verify(secretsService).remove(secrets.get(1));
   }
 
-  @Test
+  @DatabaseTest
   public void testUpdateApiKeyRealm() {
     underTest.persistApiKey(NUGET, PRINCIPALS, KEY);
     reset(secretsService);
@@ -283,7 +289,7 @@ public class ApiKeyStoreV2ImplTest
         .hasValues("0");
   }
 
-  @Test
+  @DatabaseTest
   public void testAccessKey() {
     // Reminder changes here should also affect testSecret below
     // even number
@@ -292,7 +298,7 @@ public class ApiKeyStoreV2ImplTest
     assertThat(ApiKeyStoreV2Impl.accessKey("abcdefg".toCharArray()), is("abc"));
   }
 
-  @Test
+  @DatabaseTest
   public void testSecret() {
     // Reminder changes here should also affect testAccessKey above
     // even number
@@ -302,7 +308,6 @@ public class ApiKeyStoreV2ImplTest
   }
 
   private Table table() {
-    DataStore<?> dataStore = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).orElseThrow(RuntimeException::new);
-    return new Table(dataStore.getDataSource(), "api_key_v2");
+    return sessionRule.table("api_key_v2");
   }
 }

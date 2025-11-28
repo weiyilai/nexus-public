@@ -16,7 +16,7 @@ import java.sql.Connection;
 import java.util.Map;
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.content.maven.store.Maven2ContentRepositoryDAO;
@@ -26,12 +26,14 @@ import org.sonatype.nexus.repository.config.ConfigurationDAO;
 import org.sonatype.nexus.repository.config.internal.ConfigurationData;
 import org.sonatype.nexus.repository.content.ContentRepository;
 import org.sonatype.nexus.repository.content.store.ContentRepositoryData;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import com.google.common.collect.ImmutableMap;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
@@ -40,13 +42,12 @@ import static org.junit.Assert.assertTrue;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.repository.search.index.SearchUpdateService.SEARCH_INDEX_OUTDATED;
 
-public class MavenIndexUpgradeTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class MavenIndexUpgradeTest
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME)
-      .access(ConfigurationDAO.class)
-      .access(Maven2ContentRepositoryDAO.class);
+  @DataSessionConfiguration(daos = {ConfigurationDAO.class, Maven2ContentRepositoryDAO.class})
+  TestDataSessionSupplier sessionRule;
 
   private DataStore<?> store;
 
@@ -54,7 +55,8 @@ public class MavenIndexUpgradeTest
 
   private Maven2ContentRepositoryDAO contentRepositoryDAO;
 
-  private final MavenIndexUpgrade underTest = new MavenIndexUpgrade() {
+  private final MavenIndexUpgrade underTest = new MavenIndexUpgrade()
+  {
     @Override
     public Optional<String> version() {
       return Optional.of("1.0");
@@ -67,12 +69,12 @@ public class MavenIndexUpgradeTest
 
   private ConfigurationData groupConfig;
 
-  @Before
+  @BeforeEach
   public void setup() {
-    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).get();
-    try (DataSession session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
-      configurationDAO = (ConfigurationDAO) session.access(ConfigurationDAO.class);
-      contentRepositoryDAO = (Maven2ContentRepositoryDAO) session.access(Maven2ContentRepositoryDAO.class);
+    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME);
+    try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
+      configurationDAO = session.access(ConfigurationDAO.class);
+      contentRepositoryDAO = session.access(Maven2ContentRepositoryDAO.class);
 
       hosted1Config = createConfig("hosted1", "maven2-hosted");
       createConfig("hosted2", "maven2-hosted");
@@ -90,7 +92,7 @@ public class MavenIndexUpgradeTest
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testMigration() throws Exception {
     try (Connection conn = store.openConnection()) {
       underTest.migrate(conn);

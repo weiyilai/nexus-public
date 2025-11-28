@@ -16,47 +16,50 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.repository.routing.RoutingMode;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.repository.routing.RoutingMode.ALLOW;
 import static org.sonatype.nexus.repository.routing.RoutingMode.BLOCK;
 
-public class RoutingRuleDAOTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class RoutingRuleDAOTest
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule().access(RoutingRuleDAO.class);
+  @DataSessionConfiguration(daos = RoutingRuleDAO.class)
+  TestDataSessionSupplier sessionRule;
 
   private DataSession<?> session;
 
   private RoutingRuleDAO dao;
 
-  @Before
+  @BeforeEach
   public void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(RoutingRuleDAO.class);
   }
 
-  @After
+  @AfterEach
   public void cleanup() {
     session.close();
   }
 
-  @Test
+  @DatabaseTest
   public void testCRUD() {
     RoutingRuleData routingRule = routingRule("foo", ALLOW, "desc", "a", "b", "c");
     // the routing rule is stored

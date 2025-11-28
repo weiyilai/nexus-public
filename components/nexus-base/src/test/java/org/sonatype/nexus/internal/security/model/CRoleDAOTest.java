@@ -16,17 +16,17 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DataStoreManager;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import com.google.common.collect.Iterables;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
@@ -35,30 +35,30 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
-@Category(SQLTestGroup.class)
-public class CRoleDAOTest
+@ExtendWith(DatabaseExtension.class)
+class CRoleDAOTest
     extends TestSupport
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule().access(CRoleDAO.class);
+  @DataSessionConfiguration(daos = CRoleDAO.class)
+  TestDataSessionSupplier sessionRule;
 
-  private DataSession session;
+  private DataSession<?> session;
 
   private CRoleDAO dao;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     session = sessionRule.openSession(DataStoreManager.DEFAULT_DATASTORE_NAME);
-    dao = (CRoleDAO) session.access(CRoleDAO.class);
+    dao = session.access(CRoleDAO.class);
   }
 
-  @After
-  public void cleanup() {
+  @AfterEach
+  void cleanup() {
     session.close();
   }
 
-  @Test
-  public void testCreateReadUpdateDelete() {
+  @DatabaseTest
+  void testCreateReadUpdateDelete() {
     CRoleData role = new CRoleData();
     role.setId("admin");
     role.setName("administrator");
@@ -100,8 +100,8 @@ public class CRoleDAOTest
     assertThat(dao.read("admin").isPresent(), is(false));
   }
 
-  @Test
-  public void testBrowse() {
+  @DatabaseTest
+  void testBrowse() {
     CRoleData role1 = new CRoleData();
     role1.setId("role1");
     role1.setName("Role1");
@@ -131,8 +131,8 @@ public class CRoleDAOTest
     assertThat(Iterables.size(dao.browse()), is(3));
   }
 
-  @Test
-  public void testUpdate_returnsStatus() {
+  @DatabaseTest
+  void testUpdate_returnsStatus() {
     CRoleData role = new CRoleData();
     role.setId("role1");
     role.setName("Role1");
@@ -149,8 +149,8 @@ public class CRoleDAOTest
     assertThat(dao.update(role), is(true));
   }
 
-  @Test
-  public void testReadByIds() {
+  @DatabaseTest
+  void testReadByIds() {
     CRoleData role1 = new CRoleData();
     role1.setId("role1");
     role1.setName("Role1");

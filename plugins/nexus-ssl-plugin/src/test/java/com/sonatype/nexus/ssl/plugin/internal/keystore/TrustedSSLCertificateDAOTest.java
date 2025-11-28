@@ -16,39 +16,41 @@ import java.util.List;
 import java.util.Optional;
 
 import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class TrustedSSLCertificateDAOTest
+@ExtendWith(DatabaseExtension.class)
+class TrustedSSLCertificateDAOTest
 {
-
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule().access(TrustedSSLCertificateDAO.class);
+  @DataSessionConfiguration(daos = TrustedSSLCertificateDAO.class)
+  TestDataSessionSupplier sessionRule;
 
   private DataSession<?> session;
 
   private TrustedSSLCertificateDAO dao;
 
-  @Before
+  @BeforeEach
   public void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(TrustedSSLCertificateDAO.class);
   }
 
-  @After
+  @AfterEach
   public void cleanup() {
     session.close();
   }
 
-  @Test
+  @DatabaseTest
   public void testCreateReadUpdateDeleteOperations() {
     TrustedSSLCertificateData entity = new TrustedSSLCertificateData();
     entity.setAlias("keystorename");

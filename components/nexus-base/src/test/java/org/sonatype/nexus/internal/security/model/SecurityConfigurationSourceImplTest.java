@@ -16,8 +16,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.security.config.AdminPasswordFileManager;
 import org.sonatype.nexus.security.config.CPrivilege;
 import org.sonatype.nexus.security.config.CRole;
@@ -33,15 +32,16 @@ import org.sonatype.nexus.security.role.NoSuchRoleException;
 import org.sonatype.nexus.security.user.DuplicateUserException;
 import org.sonatype.nexus.security.user.NoSuchRoleMappingException;
 import org.sonatype.nexus.security.user.UserNotFoundException;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 import org.sonatype.nexus.transaction.UnitOfWork;
 
 import org.apache.shiro.authc.credential.PasswordService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
 import static java.util.Collections.emptySet;
@@ -53,6 +53,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
@@ -61,19 +62,15 @@ import static org.sonatype.nexus.security.config.CUser.STATUS_ACTIVE;
 /**
  * Tests for {@link SecurityConfigurationSourceImpl}.
  */
-@Category(SQLTestGroup.class)
-public class SecurityConfigurationSourceImplTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class SecurityConfigurationSourceImplTest
+    extends Test5Support
 {
   final String PASSWORD1 =
       "$shiro1$SHA-512$1024$NYQKemFvZqat9CepP2xO9A==$4m4dBi9f/EtJLpJSW6/7+IVxW3wHR4RNeGtbopiH+D5tlVDFqNKo667eMnqWUxFrRz4Y4IQvn5hv/BnWmEfN0Q==";
 
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule()
-      .access(CPrivilegeDAO.class)
-      .access(CRoleDAO.class)
-      .access(CUserDAO.class)
-      .access(CUserRoleMappingDAO.class);
+  @DataSessionConfiguration(daos = {CPrivilegeDAO.class, CRoleDAO.class, CUserDAO.class, CUserRoleMappingDAO.class})
+  TestDataSessionSupplier sessionRule;
 
   @Mock
   private PasswordService passwordService;
@@ -83,10 +80,10 @@ public class SecurityConfigurationSourceImplTest
 
   private SecurityConfigurationSourceImpl underTest;
 
-  @Before
-  public void setup() throws Exception {
-    when(passwordService.encryptPassword(any())).thenReturn("encrypted");
-    when(adminPasswordFileManager.readFile()).thenReturn("password");
+  @BeforeEach
+  void setup() throws Exception {
+    lenient().when(passwordService.encryptPassword(any())).thenReturn("encrypted");
+    lenient().when(adminPasswordFileManager.readFile()).thenReturn("password");
 
     MemorySecurityConfiguration defaults = new MemorySecurityConfiguration();
 
@@ -133,7 +130,7 @@ public class SecurityConfigurationSourceImplTest
     defaults.addUser(userData, emptySet());
 
     SecurityConfigurationSource defaultSource = mock(SecurityConfigurationSource.class);
-    when(defaultSource.getConfiguration()).thenReturn(defaults);
+    lenient().when(defaultSource.getConfiguration()).thenReturn(defaults);
 
     SecurityConfigurationImpl impl = new SecurityConfigurationImpl(sessionRule, new CPrivilegeStore(sessionRule),
         new CRoleStore(sessionRule), new CUserRoleMappingStore(sessionRule), new CUserStore(sessionRule));
@@ -145,20 +142,20 @@ public class SecurityConfigurationSourceImplTest
     underTest.loadConfiguration();
   }
 
-  @After
-  public void cleanup() {
+  @AfterEach
+  void cleanup() {
     UnitOfWork.end();
   }
 
-  @Test
-  public void testLoadingOfDefaults() {
+  @DatabaseTest
+  void testLoadingOfDefaults() {
     assertThat(underTest.getConfiguration().getPrivileges().size(), is(3));
     assertThat(underTest.getConfiguration().getRoles().size(), is(2));
     assertThat(underTest.getConfiguration().getUsers().size(), is(1));
   }
 
-  @Test
-  public void testUpdatePrivilege_persistence() {
+  @DatabaseTest
+  void testUpdatePrivilege_persistence() {
     CPrivilegeData privilegeData = new CPrivilegeData();
     privilegeData.setId("test");
     privilegeData.setName("test");
@@ -186,8 +183,8 @@ public class SecurityConfigurationSourceImplTest
     }
   }
 
-  @Test
-  public void testAddPrivilege_duplicateId() {
+  @DatabaseTest
+  void testAddPrivilege_duplicateId() {
     CPrivilegeData privilegeData = new CPrivilegeData();
     privilegeData.setId("test");
     privilegeData.setName("test");
@@ -208,8 +205,8 @@ public class SecurityConfigurationSourceImplTest
     }
   }
 
-  @Test
-  public void testUpdateRole_persistence() {
+  @DatabaseTest
+  void testUpdateRole_persistence() {
     CRoleData roleData = new CRoleData();
     roleData.setId("test");
     roleData.setName("test");
@@ -241,8 +238,8 @@ public class SecurityConfigurationSourceImplTest
     }
   }
 
-  @Test
-  public void testAddRole_duplicateId() {
+  @DatabaseTest
+  void testAddRole_duplicateId() {
     CRoleData roleData = new CRoleData();
     roleData.setId("test");
     roleData.setName("test");
@@ -267,8 +264,8 @@ public class SecurityConfigurationSourceImplTest
     }
   }
 
-  @Test
-  public void testUpdateUser_persistence() throws Exception {
+  @DatabaseTest
+  void testUpdateUser_persistence() throws Exception {
     CUser user1 = underTest.getConfiguration().getUser("user1");
     CUser newUser = new CUserData();
     newUser.setId("new");
@@ -287,8 +284,8 @@ public class SecurityConfigurationSourceImplTest
     }
   }
 
-  @Test
-  public void testAddUser_duplicateId() throws Exception {
+  @DatabaseTest
+  void testAddUser_duplicateId() throws Exception {
     CUserData userData = new CUserData();
     userData.setId("test");
     userData.setFirstName("first");
@@ -311,8 +308,8 @@ public class SecurityConfigurationSourceImplTest
     }
   }
 
-  @Test
-  public void testUserRoleMappings_userIdsCaseSensitive() {
+  @DatabaseTest
+  void testUserRoleMappings_userIdsCaseSensitive() {
     Set<String> roles = singleton("test-role");
     String userId = "userid";
     String src = "other";
@@ -343,8 +340,8 @@ public class SecurityConfigurationSourceImplTest
     assertThat(underTest.getConfiguration().getUserRoleMapping(userId, src), not(nullValue()));
   }
 
-  @Test
-  public void testUserRoleMappings_notCaseSensitive_bySource() throws Exception {
+  @DatabaseTest
+  void testUserRoleMappings_notCaseSensitive_bySource() throws Exception {
     testUserRoleMappings_notCaseSensitive("ldap");
     testUserRoleMappings_notCaseSensitive("crowd");
   }

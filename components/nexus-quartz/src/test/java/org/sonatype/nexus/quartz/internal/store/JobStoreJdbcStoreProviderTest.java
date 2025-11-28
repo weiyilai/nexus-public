@@ -12,25 +12,23 @@
  */
 package org.sonatype.nexus.quartz.internal.store;
 
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.quartz.internal.AbstractJobStoreTest;
 import org.sonatype.nexus.quartz.internal.JobStoreJdbcProvider;
 import org.sonatype.nexus.quartz.internal.datastore.QuartzDAO;
 import org.sonatype.nexus.quartz.internal.datastore.QuartzJobDataTypeHandler;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.Rule;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.quartz.spi.JobStore;
 
-@Category(SQLTestGroup.class)
-public class JobStoreJdbcStoreProviderTest
+@ExtendWith(DatabaseExtension.class)
+class JobStoreJdbcStoreProviderTest
     extends AbstractJobStoreTest
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule()
-      .handle(new QuartzJobDataTypeHandler())
-      .access(QuartzDAO.class);
+  @DataSessionConfiguration(daos = QuartzDAO.class, typeHandlers = QuartzJobDataTypeHandler.class)
+  TestDataSessionSupplier sessionRule;
 
   private JobStore jobStore;
 

@@ -12,19 +12,22 @@
  */
 package org.sonatype.nexus.internal.email;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.mockito.Mockito;
-
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsFactory;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.mybatis.handlers.SecretTypeHandler;
 import org.sonatype.nexus.email.EmailConfiguration;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.TestTypeHandler;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -33,15 +36,17 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.mock;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class EmailConfigurationDAOTest
+@ExtendWith(DatabaseExtension.class)
+class EmailConfigurationDAOTest
     extends TestSupport
 {
-
   private final SecretsFactory secretsFactory = mock(SecretsFactory.class);
 
-  @Rule
-  public DataSessionRule sessionRule =
-      new DataSessionRule().access(EmailConfigurationDAO.class).handle(new SecretTypeHandler(secretsFactory));
+  @TestTypeHandler
+  SecretTypeHandler secretTypeHandler = new SecretTypeHandler(secretsFactory);
+
+  @DataSessionConfiguration(daos = EmailConfigurationDAO.class)
+  TestDataSessionSupplier sessionRule;
 
   private DataSession<?> session;
 
@@ -49,19 +54,19 @@ public class EmailConfigurationDAOTest
 
   private Secret secret;
 
-  @Before
+  @BeforeEach
   public void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(EmailConfigurationDAO.class);
     secret = mock(Secret.class);
   }
 
-  @After
+  @AfterEach
   public void tearDown() {
     session.close();
   }
 
-  private EmailConfigurationData createEmailConfigurationData(Secret secret) {
+  private EmailConfigurationData createEmailConfigurationData(final Secret secret) {
     Mockito.when(secret.getId()).thenReturn("_1");
     Mockito.when(secretsFactory.from("_1")).thenReturn(secret);
     EmailConfigurationData entity = new EmailConfigurationData();
@@ -80,7 +85,7 @@ public class EmailConfigurationDAOTest
     return entity;
   }
 
-  @Test
+  @DatabaseTest
   public void testReadWriteSingleEmailConfiguration() {
     EmailConfigurationData entity = createEmailConfigurationData(secret);
 
@@ -102,7 +107,7 @@ public class EmailConfigurationDAOTest
     assertThat(readEntity.isNexusTrustStoreEnabled(), is(true));
   }
 
-  @Test
+  @DatabaseTest
   public void testUpdateEmailConfiguration() {
     EmailConfigurationData entity = createEmailConfigurationData(secret);
     Secret otherSecret = mock(Secret.class);
@@ -144,7 +149,7 @@ public class EmailConfigurationDAOTest
     assertThat(updatedEntity.isNexusTrustStoreEnabled(), is(false));
   }
 
-  @Test
+  @DatabaseTest
   public void testDeleteEmailConfiguration() {
     EmailConfigurationData entity = createEmailConfigurationData(secret);
 

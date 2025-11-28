@@ -21,20 +21,22 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Statement;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
 import org.sonatype.nexus.common.io.DirectoryHelper;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.repository.internal.blobstore.BlobStoreConfigurationDAO;
 import org.sonatype.nexus.repository.internal.blobstore.BlobStoreConfigurationData;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import com.google.common.collect.ImmutableMap;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -55,22 +57,22 @@ import static org.sonatype.nexus.repository.content.upgrades.DatastoreBlobReconc
 import static org.sonatype.nexus.repository.content.upgrades.DatastoreBlobReconciliationLogMigrator_1_11.RECONCILIATION_DIRECTORY_NAME;
 import static org.sonatype.nexus.repository.content.upgrades.DatastoreBlobReconciliationLogMigrator_1_11.TABLE_NAME;
 
-public class DatastoreBlobReconciliationLogMigrator_1_11_Test
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class DatastoreBlobReconciliationLogMigrator_1_11_Test
+    extends Test5Support
 {
   private static final String BLOBSTORE_1 = "blobstore-1";
 
   private static final String BLOBSTORE_2 = "blobstore-2";
 
-  @Rule
-  public TemporaryFolder sourceReconciliationLogFolder = new TemporaryFolder();
+  @TempDir
+  File sourceReconciliationLogFolder;
 
-  @Rule
-  public TemporaryFolder destReconciliationLogFolder = new TemporaryFolder();
+  @TempDir
+  File destReconciliationLogFolder;
 
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME)
-      .access(BlobStoreConfigurationDAO.class);
+  @DataSessionConfiguration(daos = BlobStoreConfigurationDAO.class)
+  TestDataSessionSupplier sessionRule;
 
   @Mock
   private ApplicationDirectories appDirs;
@@ -81,21 +83,21 @@ public class DatastoreBlobReconciliationLogMigrator_1_11_Test
 
   private DatastoreBlobReconciliationLogMigrator_1_11 underTest;
 
-  @Before
+  @BeforeEach
   public void setup() throws Exception {
-    currentReconciliationLogBaseDir = Paths.get(sourceReconciliationLogFolder.getRoot().toString(), BLOBSTORE);
+    currentReconciliationLogBaseDir = Paths.get(sourceReconciliationLogFolder.toString(), BLOBSTORE);
     DirectoryHelper.mkdir(currentReconciliationLogBaseDir.toFile());
 
     underTest = new DatastoreBlobReconciliationLogMigrator_1_11(appDirs);
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
   }
 
-  @After
+  @AfterEach
   public void cleanup() {
     session.close();
   }
 
-  @Test
+  @DatabaseTest
   public void shouldDoNothingWhenTableDoesNotExist() throws Exception {
     try (Connection connection = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       dropTable(connection);
@@ -105,7 +107,7 @@ public class DatastoreBlobReconciliationLogMigrator_1_11_Test
     }
   }
 
-  @Test
+  @DatabaseTest
   public void shouldDoNothingWhenNoReconciliationLogs() throws Exception {
     try (Connection connection = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
 
@@ -115,7 +117,7 @@ public class DatastoreBlobReconciliationLogMigrator_1_11_Test
     }
   }
 
-  @Test
+  @DatabaseTest
   public void shouldNotCopyFilesWhenBlobStoreDoesNotExist() throws Exception {
     try (Connection connection = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
 
@@ -131,7 +133,7 @@ public class DatastoreBlobReconciliationLogMigrator_1_11_Test
     }
   }
 
-  @Test
+  @DatabaseTest
   public void shouldMoveLogsToAppropriateBlobStore() throws Exception {
     try (Connection connection = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
 
@@ -142,7 +144,7 @@ public class DatastoreBlobReconciliationLogMigrator_1_11_Test
       session.getTransaction().commit();
 
       when(appDirs.getWorkDirectory(BLOBSTORE_LOG_PATH)).thenReturn(currentReconciliationLogBaseDir.toFile());
-      when(appDirs.getWorkDirectory(BASEDIR)).thenReturn(destReconciliationLogFolder.getRoot());
+      when(appDirs.getWorkDirectory(BASEDIR)).thenReturn(destReconciliationLogFolder);
       createExistingReconciliationLogFiles();
 
       underTest.migrate(connection);
@@ -165,8 +167,8 @@ public class DatastoreBlobReconciliationLogMigrator_1_11_Test
     }
   }
 
-  private Path getReconciliationDirectoryPath(final TemporaryFolder folder, final String blobStoreName) {
-    return folder.getRoot().toPath().resolve(Paths.get(blobStoreName, RECONCILIATION_DIRECTORY_NAME));
+  private static Path getReconciliationDirectoryPath(final File folder, final String blobStoreName) {
+    return folder.toPath().resolve(Paths.get(blobStoreName, RECONCILIATION_DIRECTORY_NAME));
   }
 
   private void createExistingReconciliationLogFiles() throws IOException {
@@ -184,7 +186,7 @@ public class DatastoreBlobReconciliationLogMigrator_1_11_Test
   private void writeReconciliationLogFile(final String blobStoreName, final String fileName) throws IOException {
     String filePath = Paths.get(BLOBSTORE, blobStoreName, fileName).toString();
     String sampleContent = fileName + " 15:00:01,00000000-0000-0000-0000-000000000001";
-    File newFile = sourceReconciliationLogFolder.newFile(filePath);
+    File newFile = new File(sourceReconciliationLogFolder, filePath);
     Files.write(newFile.toPath(), sampleContent.getBytes(StandardCharsets.UTF_8), CREATE);
   }
 

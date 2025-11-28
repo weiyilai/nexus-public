@@ -12,16 +12,16 @@
  */
 package org.sonatype.nexus.internal.security.realm;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -30,30 +30,30 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsNot.not;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@Category(SQLTestGroup.class)
-public class RealmConfigurationDAOTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class RealmConfigurationDAOTest
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule().access(RealmConfigurationDAO.class);
+  @DataSessionConfiguration(daos = RealmConfigurationDAO.class)
+  TestDataSessionSupplier sessionRule;
 
-  private DataSession session;
+  private DataSession<?> session;
 
   private RealmConfigurationDAO dao;
 
-  @Before
-  public void setup() throws Exception {
+  @BeforeEach
+  void setup() throws Exception {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
-    dao = (RealmConfigurationDAO) session.access(RealmConfigurationDAO.class);
+    dao = session.access(RealmConfigurationDAO.class);
   }
 
-  @After
-  public void cleaup() {
+  @AfterEach
+  void cleaup() {
     session.close();
   }
 
-  @Test
-  public void testSetAndGet() {
+  @DatabaseTest
+  void testSetAndGet() {
     RealmConfigurationData config = new RealmConfigurationData();
     config.setRealmNames(asList("hello", "world"));
     dao.set(config);

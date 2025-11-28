@@ -15,19 +15,19 @@ package org.sonatype.nexus.quartz.internal.upgrades;
 import java.sql.Connection;
 import java.util.Locale;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.quartz.internal.datastore.QuartzDAO;
 import org.sonatype.nexus.quartz.internal.datastore.QuartzJobDataTypeHandler;
 import org.sonatype.nexus.quartz.internal.datastore.QuartzTestDAO;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
@@ -37,15 +37,13 @@ import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTOR
 /**
  * Unit tests for {@link JobDescriptionMigrationStep_1_3} class
  */
-@Category(SQLTestGroup.class)
-public class JobDescriptionMigrationStep_1_3Test
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class JobDescriptionMigrationStep_1_3Test
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule()
-      .handle(new QuartzJobDataTypeHandler())
-      .access(QuartzDAO.class)
-      .access(QuartzTestDAO.class);
+  @DataSessionConfiguration(daos = {QuartzDAO.class, QuartzTestDAO.class},
+      typeHandlers = QuartzJobDataTypeHandler.class)
+  TestDataSessionSupplier sessionRule;
 
   private DataSession<?> session;
 
@@ -59,19 +57,19 @@ public class JobDescriptionMigrationStep_1_3Test
 
   private final static String ONE_BILLION_CHARACTERS = "1000000000";
 
-  @Before
+  @BeforeEach
   public void setup() {
     upgradeStep = new JobDescriptionMigrationStep_1_3();
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(QuartzTestDAO.class);
   }
 
-  @After
+  @AfterEach
   public void cleanup() {
     session.close();
   }
 
-  @Test
+  @DatabaseTest
   public void testMigration() throws Exception {
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       upgradeStep.migrate(conn);
@@ -92,7 +90,8 @@ public class JobDescriptionMigrationStep_1_3Test
       // of character varying is set high for this column, so we are now testing the length as well
       assertThat(dao.getColumnCharacterLimit(qrtzJobDetailsTableName, columnName), is(ONE_BILLION_CHARACTERS));
       assertThat(dao.getColumnCharacterLimit(quartzTriggersTableName, columnName), is(ONE_BILLION_CHARACTERS));
-    } else {
+    }
+    else {
       assertThat(dao.getTableColumnType(qrtzJobDetailsTableName, columnName), equalToIgnoringCase(TEXT));
       assertThat(dao.getTableColumnType(quartzTriggersTableName, columnName), equalToIgnoringCase(TEXT));
     }

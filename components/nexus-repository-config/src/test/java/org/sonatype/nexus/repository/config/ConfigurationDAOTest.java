@@ -17,20 +17,22 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.repository.config.internal.ConfigurationData;
 import org.sonatype.nexus.repository.routing.RoutingMode;
 import org.sonatype.nexus.repository.routing.internal.RoutingRuleDAO;
 import org.sonatype.nexus.repository.routing.internal.RoutingRuleData;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import com.google.common.collect.ImmutableSet;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -40,12 +42,12 @@ import static org.junit.Assert.assertFalse;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.repository.routing.RoutingMode.ALLOW;
 
-public class ConfigurationDAOTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class ConfigurationDAOTest
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule =
-      new DataSessionRule().access(RoutingRuleDAO.class).access(ConfigurationDAO.class);
+  @DataSessionConfiguration(daos = {RoutingRuleDAO.class, ConfigurationDAO.class})
+  TestDataSessionSupplier sessionRule;
 
   private DataSession<?> session;
 
@@ -55,7 +57,7 @@ public class ConfigurationDAOTest
 
   private EntityId id1, id2, id3;
 
-  @Before
+  @BeforeEach
   public void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(ConfigurationDAO.class);
@@ -75,12 +77,12 @@ public class ConfigurationDAOTest
     id3 = routingRuleDAO.readByName("baz").get().getId();
   }
 
-  @After
+  @AfterEach
   public void cleanup() {
     session.close();
   }
 
-  @Test
+  @DatabaseTest
   public void testCRUD() {
     ConfigurationData configuration = configurationData("foo", "bar", true, Map.of("baz", Map.of("buzz", "booz")), id1);
 
@@ -120,7 +122,7 @@ public class ConfigurationDAOTest
     assertFalse(dao.readByName(configuration.getName()).isPresent());
   }
 
-  @Test
+  @DatabaseTest
   public void testPasswordAttribute() {
     ConfigurationData configuration =
         configurationData("foo", "bar", true, Map.of("baz", Map.of("userpassword", "booz")), id1);
@@ -132,7 +134,7 @@ public class ConfigurationDAOTest
     assertThat(read.getAttributes().get("baz").get("userpassword"), is("booz"));
   }
 
-  @Test
+  @DatabaseTest
   public void testReadByNames() {
     ConfigurationData configuration1 =
         configurationData("foo", "foo", true, Map.of("baz", Map.of("buzz", "booz")), id1);
@@ -155,7 +157,7 @@ public class ConfigurationDAOTest
     assertThat(names, containsInAnyOrder(configuration1.getName(), configuration3.getName()));
   }
 
-  @Test
+  @DatabaseTest
   public void testReadByRecipe() {
     ConfigurationData conanProxyConfig1 =
         configurationData("conan-proxy-1", "conan-proxy", true, Map.of("baz", Map.of("buzz", "booz")), id1);

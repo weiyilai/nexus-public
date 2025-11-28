@@ -20,15 +20,17 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.kv.NexusKeyValue;
 import org.sonatype.nexus.kv.ValueType;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -37,14 +39,14 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertTrue;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class NexusKeyValueDAOTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class NexusKeyValueDAOTest
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule()
-      .access(NexusKeyValueDAO.class);
+  @DataSessionConfiguration(daos = NexusKeyValueDAO.class)
+  TestDataSessionSupplier sessionRule;
 
-  @Test
+  @DatabaseTest
   public void testStringValue() {
     NexusKeyValue kv = new NexusKeyValue();
     kv.setKey("boolean-test");
@@ -54,7 +56,7 @@ public class NexusKeyValueDAOTest
     assertKeyValueOperations(() -> kv, (existing) -> assertThat(existing.getAsString(), is("test-value")));
   }
 
-  @Test
+  @DatabaseTest
   public void testIntValue() {
     NexusKeyValue kv = new NexusKeyValue();
     kv.setKey("int-test");
@@ -64,7 +66,7 @@ public class NexusKeyValueDAOTest
     assertKeyValueOperations(() -> kv, (existing) -> assertThat(existing.getAsInt(), is(10)));
   }
 
-  @Test
+  @DatabaseTest
   public void testBooleanValue() {
     NexusKeyValue kv = new NexusKeyValue();
     kv.setKey("boolean-test");
@@ -74,7 +76,7 @@ public class NexusKeyValueDAOTest
     assertKeyValueOperations(() -> kv, (existing) -> assertThat(existing.getAsBoolean(), is(false)));
   }
 
-  @Test
+  @DatabaseTest
   public void testObjectValue() {
     TestObject objectValue = new TestObject("test", 23, true);
 
@@ -89,7 +91,7 @@ public class NexusKeyValueDAOTest
     });
   }
 
-  @Test
+  @DatabaseTest
   public void testObjectList() {
     TestObject object1 = new TestObject("object-1", 32, false);
     TestObject object2 = new TestObject("object-2", 65, true);

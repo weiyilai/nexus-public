@@ -16,30 +16,32 @@ import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.repository.config.ConfigurationDAO;
 import org.sonatype.nexus.repository.config.internal.ConfigurationData;
 import org.sonatype.nexus.repository.maven.internal.MavenDefaultRepositoriesContributor;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import com.google.common.collect.ImmutableMap;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class MavenDefaultReposUpgrade_1_17Test
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class MavenDefaultReposUpgrade_1_17Test
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME)
-      .access(ConfigurationDAO.class);
+  @DataSessionConfiguration(daos = ConfigurationDAO.class)
+  TestDataSessionSupplier sessionRule;
 
   private DataStore<?> store;
 
@@ -55,7 +57,7 @@ public class MavenDefaultReposUpgrade_1_17Test
 
   private ConfigurationData nonDefaultRepo;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     createMockData();
 
@@ -66,7 +68,7 @@ public class MavenDefaultReposUpgrade_1_17Test
   }
 
   private void createMockData() {
-    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).get();
+    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME);
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       configurationDAO = session.access(ConfigurationDAO.class);
 
@@ -79,7 +81,7 @@ public class MavenDefaultReposUpgrade_1_17Test
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testMigrationWorksAsExpected() throws Exception {
     try (Connection conn = store.openConnection()) {
       migrationStep.migrate(conn);
@@ -97,20 +99,22 @@ public class MavenDefaultReposUpgrade_1_17Test
       assertEquals("INLINE", modifiedHostedRepo.attributes("maven").get("contentDisposition", String.class));
       assertEquals("INLINE", modifiedProxyRepo.attributes("maven").get("contentDisposition", String.class));
 
-      //if it is a group repo , it shouldn't change
+      // if it is a group repo , it shouldn't change
       assertEquals("ATTACHMENT", groupRepo.attributes("maven").get("contentDisposition", String.class));
 
-      //If it is a non-default repo , then the value shouldn't change
+      // If it is a non-default repo , then the value shouldn't change
       assertEquals("ATTACHMENT", nonDefault.attributes("maven").get("contentDisposition", String.class));
     }
   }
 
-  private ConfigurationData createConfig(final String name, final String recipeName, String contentDisposition) {
+  private ConfigurationData createConfig(final String name, final String recipeName, final String contentDisposition) {
     ConfigurationData config = new ConfigurationData();
     config.setName(name);
     config.setRecipeName(recipeName);
-    config.setAttributes(ImmutableMap.of("maven", contentDisposition != null ? ImmutableMap.of("contentDisposition",
-        contentDisposition) : Collections.emptyMap()));
+    config.setAttributes(ImmutableMap.of("maven", contentDisposition != null
+        ? ImmutableMap.of("contentDisposition",
+            contentDisposition)
+        : Collections.emptyMap()));
 
     configurationDAO.create(config);
     return config;

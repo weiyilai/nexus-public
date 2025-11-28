@@ -12,95 +12,95 @@
  */
 package org.sonatype.nexus.repository.content.blobstore.metrics;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.blobstore.api.metrics.BlobStoreMetricsEntity;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DuplicateKeyException;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@Category(SQLTestGroup.class)
-public class BlobStoreMetricsDAOTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class BlobStoreMetricsDAOTest
+    extends Test5Support
 {
-
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME).access(BlobStoreMetricsDAO.class);
+  @DataSessionConfiguration(daos = BlobStoreMetricsDAO.class)
+  TestDataSessionSupplier sessionRule;
 
   private DataSession<?> dataSession;
 
   private BlobStoreMetricsDAO dao;
 
-  @Before
+  @BeforeEach
   public void setup() {
     dataSession = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dataSession.getTransaction().begin();
     dao = dataSession.access(BlobStoreMetricsDAO.class);
   }
 
-  @After
+  @AfterEach
   public void teardown() {
     dataSession.getTransaction().rollback();
     dataSession.close();
   }
 
-  @Test(expected = Test.None.class)
+  @DatabaseTest
   public void canRecreateSchemaMultipleTimes() {
     dao.createSchema();
     dao.createSchema();
   }
 
-  @Test
-  public void initializeMetrics(){
+  @DatabaseTest
+  public void initializeMetrics() {
     dao.initializeMetrics("test");
     assertThat(dao.get("test"), is(notNullValue()));
     assertThat(dao.get("test").getBlobStoreName(), is("test"));
   }
 
-  @Test(expected = DuplicateKeyException.class)
-  public void initializeMetricsFailsIfAlreadyInitialized(){
+  @DatabaseTest
+  public void initializeMetricsFailsIfAlreadyInitialized() {
     dao.initializeMetrics("test");
-    dao.initializeMetrics("test");
+    assertThrows(DuplicateKeyException.class, () -> dao.initializeMetrics("test"));
   }
 
-  @Test
-  public void removalOfMetricsSucceeds(){
+  @DatabaseTest
+  public void removalOfMetricsSucceeds() {
     dao.initializeMetrics("test");
     dao.remove("test");
 
     assertThat(dao.get("test"), is(nullValue()));
   }
 
-  @Test
-  public void incrementalUpdateOfMetricsSucceeds(){
+  @DatabaseTest
+  public void incrementalUpdateOfMetricsSucceeds() {
     dao.initializeMetrics("test");
     BlobStoreMetricsEntity blobStoreMetricsEntity = new BlobStoreMetricsEntity();
 
     blobStoreMetricsEntity.setBlobStoreName("test");
 
-    //generic
+    // generic
     blobStoreMetricsEntity.setBlobCount(1);
     blobStoreMetricsEntity.setTotalSize(100);
 
-    //upload
+    // upload
     blobStoreMetricsEntity.setUploadBlobSize(100);
     blobStoreMetricsEntity.setUploadSuccessfulRequests(1);
     blobStoreMetricsEntity.setUploadTimeOnRequests(500);
     blobStoreMetricsEntity.setUploadErrorRequests(2);
 
-    //download
+    // download
     blobStoreMetricsEntity.setDownloadSuccessfulRequests(2);
     blobStoreMetricsEntity.setDownloadBlobSize(200);
     blobStoreMetricsEntity.setDownloadTimeOnRequests(50);
@@ -109,50 +109,63 @@ public class BlobStoreMetricsDAOTest
     dao.updateMetrics(blobStoreMetricsEntity);
     BlobStoreMetricsEntity updatedBlobStoreMetricsEntity = dao.get("test");
 
-    //generic
+    // generic
     assertThat(updatedBlobStoreMetricsEntity.getBlobCount(), is(blobStoreMetricsEntity.getBlobCount()));
     assertThat(updatedBlobStoreMetricsEntity.getTotalSize(), is(blobStoreMetricsEntity.getTotalSize()));
 
-    //upload
+    // upload
     assertThat(updatedBlobStoreMetricsEntity.getUploadBlobSize(), is(blobStoreMetricsEntity.getUploadBlobSize()));
-    assertThat(updatedBlobStoreMetricsEntity.getUploadSuccessfulRequests(), is(blobStoreMetricsEntity.getUploadSuccessfulRequests()));
-    assertThat(updatedBlobStoreMetricsEntity.getUploadTimeOnRequests(), is(blobStoreMetricsEntity.getUploadTimeOnRequests()));
-    assertThat(updatedBlobStoreMetricsEntity.getUploadErrorRequests(), is(blobStoreMetricsEntity.getUploadErrorRequests()));
+    assertThat(updatedBlobStoreMetricsEntity.getUploadSuccessfulRequests(),
+        is(blobStoreMetricsEntity.getUploadSuccessfulRequests()));
+    assertThat(updatedBlobStoreMetricsEntity.getUploadTimeOnRequests(),
+        is(blobStoreMetricsEntity.getUploadTimeOnRequests()));
+    assertThat(updatedBlobStoreMetricsEntity.getUploadErrorRequests(),
+        is(blobStoreMetricsEntity.getUploadErrorRequests()));
 
-    //download
+    // download
     assertThat(updatedBlobStoreMetricsEntity.getDownloadBlobSize(), is(blobStoreMetricsEntity.getDownloadBlobSize()));
-    assertThat(updatedBlobStoreMetricsEntity.getDownloadSuccessfulRequests(), is(blobStoreMetricsEntity.getDownloadSuccessfulRequests()));
-    assertThat(updatedBlobStoreMetricsEntity.getDownloadTimeOnRequests(), is(blobStoreMetricsEntity.getDownloadTimeOnRequests()));
-    assertThat(updatedBlobStoreMetricsEntity.getDownloadErrorRequests(), is(blobStoreMetricsEntity.getDownloadErrorRequests()));
+    assertThat(updatedBlobStoreMetricsEntity.getDownloadSuccessfulRequests(),
+        is(blobStoreMetricsEntity.getDownloadSuccessfulRequests()));
+    assertThat(updatedBlobStoreMetricsEntity.getDownloadTimeOnRequests(),
+        is(blobStoreMetricsEntity.getDownloadTimeOnRequests()));
+    assertThat(updatedBlobStoreMetricsEntity.getDownloadErrorRequests(),
+        is(blobStoreMetricsEntity.getDownloadErrorRequests()));
 
-    //updated metrics again
+    // updated metrics again
     dao.updateMetrics(blobStoreMetricsEntity);
     updatedBlobStoreMetricsEntity = dao.get("test");
 
     assertThat(updatedBlobStoreMetricsEntity.getBlobCount(), is(blobStoreMetricsEntity.getBlobCount() * 2));
     assertThat(updatedBlobStoreMetricsEntity.getTotalSize(), is(blobStoreMetricsEntity.getTotalSize() * 2));
 
-    //upload
+    // upload
     assertThat(updatedBlobStoreMetricsEntity.getUploadBlobSize(), is(blobStoreMetricsEntity.getUploadBlobSize() * 2));
-    assertThat(updatedBlobStoreMetricsEntity.getUploadSuccessfulRequests(), is(blobStoreMetricsEntity.getUploadSuccessfulRequests() * 2));
-    assertThat(updatedBlobStoreMetricsEntity.getUploadTimeOnRequests(), is(blobStoreMetricsEntity.getUploadTimeOnRequests() * 2));
-    assertThat(updatedBlobStoreMetricsEntity.getUploadErrorRequests(), is(blobStoreMetricsEntity.getUploadErrorRequests() * 2));
+    assertThat(updatedBlobStoreMetricsEntity.getUploadSuccessfulRequests(),
+        is(blobStoreMetricsEntity.getUploadSuccessfulRequests() * 2));
+    assertThat(updatedBlobStoreMetricsEntity.getUploadTimeOnRequests(),
+        is(blobStoreMetricsEntity.getUploadTimeOnRequests() * 2));
+    assertThat(updatedBlobStoreMetricsEntity.getUploadErrorRequests(),
+        is(blobStoreMetricsEntity.getUploadErrorRequests() * 2));
 
-    //download
-    assertThat(updatedBlobStoreMetricsEntity.getDownloadBlobSize(), is(blobStoreMetricsEntity.getDownloadBlobSize() * 2));
-    assertThat(updatedBlobStoreMetricsEntity.getDownloadSuccessfulRequests(), is(blobStoreMetricsEntity.getDownloadSuccessfulRequests() * 2));
-    assertThat(updatedBlobStoreMetricsEntity.getDownloadTimeOnRequests(), is(blobStoreMetricsEntity.getDownloadTimeOnRequests() * 2));
-    assertThat(updatedBlobStoreMetricsEntity.getDownloadErrorRequests(), is(blobStoreMetricsEntity.getDownloadErrorRequests() * 2));
+    // download
+    assertThat(updatedBlobStoreMetricsEntity.getDownloadBlobSize(),
+        is(blobStoreMetricsEntity.getDownloadBlobSize() * 2));
+    assertThat(updatedBlobStoreMetricsEntity.getDownloadSuccessfulRequests(),
+        is(blobStoreMetricsEntity.getDownloadSuccessfulRequests() * 2));
+    assertThat(updatedBlobStoreMetricsEntity.getDownloadTimeOnRequests(),
+        is(blobStoreMetricsEntity.getDownloadTimeOnRequests() * 2));
+    assertThat(updatedBlobStoreMetricsEntity.getDownloadErrorRequests(),
+        is(blobStoreMetricsEntity.getDownloadErrorRequests() * 2));
   }
 
-  @Test
-  public void decrementOfMetricsSucceeds(){
+  @DatabaseTest
+  public void decrementOfMetricsSucceeds() {
     dao.initializeMetrics("test");
     BlobStoreMetricsEntity blobStoreMetricsEntity = new BlobStoreMetricsEntity();
 
     blobStoreMetricsEntity.setBlobStoreName("test");
 
-    //generic
+    // generic
     blobStoreMetricsEntity.setBlobCount(2);
     blobStoreMetricsEntity.setTotalSize(200);
 
@@ -161,14 +174,14 @@ public class BlobStoreMetricsDAOTest
     blobStoreMetricsEntity.setBlobCount(-1);
     blobStoreMetricsEntity.setTotalSize(-30);
 
-    //updated metrics again
+    // updated metrics again
     dao.updateMetrics(blobStoreMetricsEntity);
     BlobStoreMetricsEntity updatedBlobStoreMetricsEntity = dao.get("test");
     assertThat(updatedBlobStoreMetricsEntity.getBlobCount(), is(1L));
     assertThat(updatedBlobStoreMetricsEntity.getTotalSize(), is(170L));
   }
 
-  @Test
+  @DatabaseTest
   public void testClearOperationalMetrics() {
     dao.initializeMetrics("test");
 

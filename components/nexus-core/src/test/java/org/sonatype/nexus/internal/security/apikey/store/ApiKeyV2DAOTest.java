@@ -23,28 +23,29 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.crypto.LegacyCipherFactory.PbeCipher;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsFactory;
 import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.datastore.mybatis.handlers.PrincipalCollectionTypeHandler;
 import org.sonatype.nexus.datastore.mybatis.handlers.SecretTypeHandler;
 import org.sonatype.nexus.internal.security.apikey.ApiKeyInternal;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.TestTypeHandler;
 
+import org.apache.ibatis.type.TypeHandler;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.assertj.db.type.Table;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsMocks;
 
@@ -59,15 +60,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.internal.security.apikey.store.ApiKeyStoreV2Impl.accessKey;
 import static org.sonatype.nexus.internal.security.apikey.store.ApiKeyStoreV2Impl.secret;
 
-@Category(SQLTestGroup.class)
-public class ApiKeyV2DAOTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class ApiKeyV2DAOTest
+    extends Test5Support
 {
   private static final String DOMAIN = "a domain";
 
@@ -93,30 +95,28 @@ public class ApiKeyV2DAOTest
 
   private SecretsFactory factory = mock(SecretsFactory.class, new ReturnsMocks());
 
-  private final PrincipalCollectionTypeHandler principalHandler = new PrincipalCollectionTypeHandler();
+  @TestTypeHandler
+  TypeHandler<?> secretTypeHandler = new SecretTypeHandler(factory);
 
   @Mock
   private PbeCipher cipher;
 
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule()
-      .access(ApiKeyV2DAO.class)
-      .handle(new SecretTypeHandler(factory))
-      .handle(principalHandler);
+  @DataSessionConfiguration(daos = ApiKeyV2DAO.class, typeHandlers = PrincipalCollectionTypeHandler.class)
+  TestDataSessionSupplier sessionRule;
 
-  @Before
+  @BeforeEach
   public void setup() {
     when(factory.from(anyString()))
         .thenAnswer(i -> storedSecrets.get(i.getArguments()[0]));
 
-    when(cipher.encrypt(any())).thenAnswer(i -> i.getArguments()[0]);
-    when(cipher.decrypt(any())).thenAnswer(i -> i.getArguments()[0]);
+    lenient().when(cipher.encrypt(any())).thenAnswer(i -> i.getArguments()[0]);
+    lenient().when(cipher.decrypt(any())).thenAnswer(i -> i.getArguments()[0]);
   }
 
   /*
    * create should successfully create and fetch an ApiKey record
    */
-  @Test
+  @DatabaseTest
   public void testCreate() {
     ApiKeyV2Data apiKeyEntity = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
 
@@ -129,7 +129,7 @@ public class ApiKeyV2DAOTest
   /*
    * Create the same user in different realms
    */
-  @Test
+  @DatabaseTest
   public void testCreate_differentRealm() {
     OffsetDateTime created = OffsetDateTime.now();
     ApiKeyV2Data apiKeyEntity = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL, A_REALM, created);
@@ -144,7 +144,7 @@ public class ApiKeyV2DAOTest
   /*
    * update should successfully update matching ApiKey record
    */
-  @Test
+  @DatabaseTest
   public void testUpdatePrincipal() {
     ApiKeyV2Data apiKeyEntity = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyV2Data anotherApiKeyEntity = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -169,7 +169,7 @@ public class ApiKeyV2DAOTest
   /*
    * delete should successfully delete matching ApiKey record
    */
-  @Test
+  @DatabaseTest
   public void testDelete() {
     ApiKeyV2Data entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyV2Data entity2 = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -192,7 +192,7 @@ public class ApiKeyV2DAOTest
   /*
    * browse should fetch all records
    */
-  @Test
+  @DatabaseTest
   public void testBrowsePrincipals() {
     ApiKeyV2Data entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyV2Data entity2 = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -209,7 +209,7 @@ public class ApiKeyV2DAOTest
   /*
    * findApiKey should fetch records matching given domain and primary principal
    */
-  @Test
+  @DatabaseTest
   public void testFindApiKey() {
     withDao(dao -> dao.save(anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL)));
     withDao(dao -> dao.save(anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL)));
@@ -230,7 +230,7 @@ public class ApiKeyV2DAOTest
   /*
    * findPrincipals should fetch records matching given domain and api key
    */
-  @Test
+  @DatabaseTest
   public void testFindPrincipals() {
     ApiKeyV2Data apiKeyEntity = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyV2Data anotherApiKeyEntity = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -244,7 +244,7 @@ public class ApiKeyV2DAOTest
     assertThat(result.get().getPrincipals().getPrimaryPrincipal(), is(ANOTHER_PRINCIPAL));
   }
 
-  @Test
+  @DatabaseTest
   public void testCount() {
     ApiKeyV2Data entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyV2Data entity2 = anApiKeyEntity(API_KEY2, ANOTHER_DOMAIN, ANOTHER_PRINCIPAL);
@@ -254,7 +254,7 @@ public class ApiKeyV2DAOTest
     assertThat(callDao(dao -> dao.count(DOMAIN)), is(1));
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowse() {
     ApiKeyV2Data entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyV2Data entity2 = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -265,7 +265,7 @@ public class ApiKeyV2DAOTest
     assertThat(callDao(dao -> dao.browse(DOMAIN)), containsInAnyOrder(token(entity1), token(entity2)));
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowseCreatedAfter() {
     ApiKeyV2Data entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyV2Data entity2 = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -284,7 +284,7 @@ public class ApiKeyV2DAOTest
     assertThat(callDao(dao -> dao.browseCreatedAfter(DOMAIN, entity1Date)), contains(token(entity2), token(entity3)));
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowseCreatedBefore() {
     ApiKeyV2Data entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyV2Data entity2 = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -344,9 +344,9 @@ public class ApiKeyV2DAOTest
     char[] dataChars = secret(apiKey);
     storedSecrets.put(key, secret);
 
-    when(secret.decrypt()).thenReturn(dataChars);
+    lenient().when(secret.decrypt()).thenReturn(dataChars);
 
-    when(secret.getId()).thenReturn(key);
+    lenient().when(secret.getId()).thenReturn(key);
     data.setSecret(secret);
   }
 
@@ -357,8 +357,7 @@ public class ApiKeyV2DAOTest
   }
 
   private Table table() {
-    DataStore<?> dataStore = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).orElseThrow(RuntimeException::new);
-    return new Table(dataStore.getDataSource(), "api_key_v2");
+    return sessionRule.table("api_key_v2");
   }
 
   private <E> E callDao(final Function<ApiKeyV2DAO, E> consumer) {

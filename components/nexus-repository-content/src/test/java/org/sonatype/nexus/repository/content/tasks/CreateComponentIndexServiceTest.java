@@ -18,14 +18,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Locale;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.repository.Format;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationUtility;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
 import static java.util.Arrays.asList;
@@ -34,11 +36,12 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class CreateComponentIndexServiceTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class CreateComponentIndexServiceTest
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME);
+  @DataSessionConfiguration(postgresql = false)
+  TestDataSessionSupplier sessionRule;
 
   @Mock
   private Format fakeFormat1;
@@ -57,7 +60,7 @@ public class CreateComponentIndexServiceTest
 
   private CreateComponentIndexService underTest;
 
-  @Before
+  @BeforeEach
   public void setup() {
     when(fakeFormat1.getValue()).thenReturn("test1");
     when(fakeFormat2.getValue()).thenReturn("test2");
@@ -71,7 +74,7 @@ public class CreateComponentIndexServiceTest
             asList(fakeFormat1, fakeFormat2, fakeFormat3, fakeFormat4, fakeFormat5));
   }
 
-  @Test
+  @DatabaseTest
   public void testRecreateComponentIndexes() throws Exception {
     try (Connection connection = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       createTableAndIndex(connection, "test1");

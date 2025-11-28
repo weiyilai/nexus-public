@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.entity.EntityUUID;
@@ -26,59 +26,63 @@ import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.repository.content.store.ContentRepositoryDAO;
 import org.sonatype.nexus.repository.content.store.ContentRepositoryData;
 import org.sonatype.nexus.repository.content.store.example.TestContentRepositoryDAO;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import org.assertj.db.type.Table;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.assertj.db.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.datastore.mybatis.CombUUID.combUUID;
 
-public class KeyValueDAOTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class KeyValueDAOTest
+    extends Test5Support
 {
   private static final String CATEGORY = "test";
 
   private static final String CATEGORY_2 = "category-2";
 
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule()
-      .access(TestContentRepositoryDAO.class)
-      .access(TestKeyValueDAO.class);
+  @DataSessionConfiguration(daos = {TestContentRepositoryDAO.class, TestKeyValueDAO.class}, postgresql = false)
+  TestDataSessionSupplier sessionRule;
 
   private Integer contentRepositoryId;
 
   private Integer otherRepositoryId;
 
-  @Before
+  @BeforeEach
   public void setup() {
     contentRepositoryId = createContentRepository(randomContentRepository());
     otherRepositoryId = createContentRepository(randomContentRepository());
   }
 
-  @Test
+  @DatabaseTest
   public void testSet() {
     withDAO(dao -> dao.set(contentRepositoryId, CATEGORY, "foo", "bar"));
 
     assertThat(table()).hasNumberOfRows(1)
         .row(0)
-        .value("category").isEqualTo(CATEGORY)
-        .value("key").isEqualTo("foo")
-        .value("value").isEqualTo("bar");
+        .value("category")
+        .isEqualTo(CATEGORY)
+        .value("key")
+        .isEqualTo("foo")
+        .value("value")
+        .isEqualTo("bar");
   }
 
-  @Test
+  @DatabaseTest
   public void testGet() {
     Optional<String> result = callDAO(dao -> dao.get(contentRepositoryId, CATEGORY, "foo"));
 
@@ -92,7 +96,7 @@ public class KeyValueDAOTest
     assertEquals("bar", result.get());
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowse() {
     Function<String, Continuation<KeyValue>> browse =
         continuationToken -> callDAO(dao -> dao.browse(contentRepositoryId, CATEGORY, 1, continuationToken));
@@ -106,7 +110,7 @@ public class KeyValueDAOTest
     assertEquals(0, values.size());
     assertTrue(values.isEmpty());
 
-    //matching targets
+    // matching targets
     insert(CATEGORY, "foo", "bar");
     insert(CATEGORY, "bar", "foo");
 
@@ -132,7 +136,7 @@ public class KeyValueDAOTest
     assertThat(completeResults, contains("foo", "bar"));
   }
 
-  @Test
+  @DatabaseTest
   public void testBrowseCategories() {
     List<String> categories = callDAO(dao -> dao.browseCategories(contentRepositoryId));
     assertThat(categories, empty());
@@ -146,7 +150,7 @@ public class KeyValueDAOTest
     assertThat(categories, containsInAnyOrder(CATEGORY, CATEGORY_2));
   }
 
-  @Test
+  @DatabaseTest
   public void testFindCategories() {
     List<String> categories = callDAO(dao -> dao.findCategories(contentRepositoryId, "some-key"));
     assertThat(categories, empty());
@@ -159,7 +163,7 @@ public class KeyValueDAOTest
     assertThat(categories, containsInAnyOrder(CATEGORY, CATEGORY_2));
   }
 
-  @Test
+  @DatabaseTest
   public void testCount() {
     int count = callDAO(dao -> dao.count(contentRepositoryId, CATEGORY));
     assertEquals(0, count);
@@ -176,16 +180,16 @@ public class KeyValueDAOTest
     count = callDAO(dao -> dao.count(contentRepositoryId, CATEGORY));
     assertEquals(0, count);
 
-    //matching target
+    // matching target
     insert(CATEGORY, "foo", "bar");
 
     count = callDAO(dao -> dao.count(contentRepositoryId, CATEGORY));
     assertEquals(1, count);
   }
 
-  @Test
+  @DatabaseTest
   public void testRemove() {
-    //matching target
+    // matching target
     insert(CATEGORY, "foo", "bar");
     // different key
     insert(CATEGORY, "bar", "foo");
@@ -196,15 +200,18 @@ public class KeyValueDAOTest
 
     assertThat(table()).hasNumberOfRows(2)
         .row(0)
-        .value("category").isEqualTo(CATEGORY)
-        .value("key").isEqualTo("bar")
+        .value("category")
+        .isEqualTo(CATEGORY)
+        .value("key")
+        .isEqualTo("bar")
         .row(1)
-        .value("category").isEqualTo("test2");
+        .value("category")
+        .isEqualTo("test2");
   }
 
-  @Test
+  @DatabaseTest
   public void testRemoveAll() {
-    //matching targets
+    // matching targets
     insert(CATEGORY, "foo", "bar");
     insert(CATEGORY, "bar", "foo");
     // different category
@@ -222,13 +229,17 @@ public class KeyValueDAOTest
     assertEquals(0, removed);
 
     assertThat(table()).hasNumberOfRows(2)
-        .row(0).value("category").isEqualTo("test2")
-        .row(1).value("repository_id").isEqualTo(otherRepositoryId);
+        .row(0)
+        .value("category")
+        .isEqualTo("test2")
+        .row(1)
+        .value("repository_id")
+        .isEqualTo(otherRepositoryId);
   }
 
-  @Test
+  @DatabaseTest
   public void testRemoveRepository() {
-    //matching targets
+    // matching targets
     insert(CATEGORY, "foo", "bar");
     insert(CATEGORY, "bar", "foo");
     // different repository
@@ -245,7 +256,8 @@ public class KeyValueDAOTest
 
     assertThat(table()).hasNumberOfRows(1)
         .row(0)
-        .value("repository_id").isEqualTo(otherRepositoryId);
+        .value("repository_id")
+        .isEqualTo(otherRepositoryId);
   }
 
   private void insert(final String category, final String key, final String value) {
@@ -257,7 +269,7 @@ public class KeyValueDAOTest
   }
 
   private Table table() {
-    return new Table(sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).get().getDataSource(), "test_key_value");
+    return sessionRule.table("test_key_value");
   }
 
   private void withDAO(final Consumer<KeyValueDAO> consumer) {
@@ -269,7 +281,7 @@ public class KeyValueDAOTest
 
   private <R> R callDAO(final Function<KeyValueDAO, R> consumer) {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
-      R result =  consumer.apply(session.access(TestKeyValueDAO.class));
+      R result = consumer.apply(session.access(TestKeyValueDAO.class));
 
       session.getTransaction().commit();
       return result;

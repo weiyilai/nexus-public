@@ -17,13 +17,15 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.blobstore.s3.internal.S3BlobStore;
+import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -32,11 +34,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class ScheduleS3CompactTasksMigrationStepTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class ScheduleS3CompactTasksMigrationStepTest
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule dataSessionRule = new DataSessionRule();
+  @DataSessionConfiguration
+  TestDataSessionSupplier dataSessionRule;
 
   @Mock
   private UpgradeTaskScheduler upgradeTaskScheduler;
@@ -44,7 +47,7 @@ public class ScheduleS3CompactTasksMigrationStepTest
   @InjectMocks
   private ScheduleS3CompactTasksMigrationStep undertest;
 
-  @Test
+  @DatabaseTest
   public void testMigrate() throws Exception {
     createTable();
     createBlobstoreRecord(S3BlobStore.TYPE);
@@ -56,7 +59,7 @@ public class ScheduleS3CompactTasksMigrationStepTest
     verify(upgradeTaskScheduler).schedule(any());
   }
 
-  @Test
+  @DatabaseTest
   public void testMigrate_noTable() throws Exception {
     try (Connection connection = dataSessionRule.openConnection("nexus")) {
       undertest.migrate(connection);
@@ -64,7 +67,7 @@ public class ScheduleS3CompactTasksMigrationStepTest
     verifyNoInteractions(upgradeTaskScheduler);
   }
 
-  @Test
+  @DatabaseTest
   public void testMigrate_noS3BlobStores() throws Exception {
     createTable();
     createBlobstoreRecord("File");

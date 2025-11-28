@@ -19,22 +19,25 @@ import org.sonatype.nexus.blobstore.api.softdeleted.SoftDeletedBlob;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.time.UTC;
 import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class SoftDeletedBlobsDAOTest
+@ExtendWith(DatabaseExtension.class)
+class SoftDeletedBlobsDAOTest
     extends TestSupport
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule().access(SoftDeletedBlobsDAO.class);
+  @DataSessionConfiguration(daos = SoftDeletedBlobsDAO.class)
+  TestDataSessionSupplier sessionRule;
 
   private DataSession<?> session;
 
@@ -42,19 +45,19 @@ public class SoftDeletedBlobsDAOTest
 
   private static final String FAKE_BLOB_STORE_NAME = "fakeBlobStore";
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(SoftDeletedBlobsDAO.class);
   }
 
-  @After
-  public void cleanup() {
+  @AfterEach
+  void cleanup() {
     session.close();
   }
 
-  @Test
-  public void testDAOOperations() {
+  @DatabaseTest
+  void testDAOOperations() {
     int limit = 100;
     Continuation<SoftDeletedBlob> emptyData = dao.readRecords(null, limit, FAKE_BLOB_STORE_NAME);
     assertThat(emptyData.isEmpty(), is(true));

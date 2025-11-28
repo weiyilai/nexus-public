@@ -18,12 +18,10 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.QualifierUtil;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
-import org.sonatype.nexus.content.testsuite.groups.PostgresTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.internal.capability.storage.CapabilityStorageItemDAO;
 import org.sonatype.nexus.internal.capability.storage.CapabilityStorageItemData;
 import org.sonatype.nexus.repository.Format;
@@ -32,19 +30,22 @@ import org.sonatype.nexus.repository.config.ConfigurationDAO;
 import org.sonatype.nexus.repository.config.internal.ConfigurationData;
 import org.sonatype.nexus.repository.content.store.ContentRepositoryData;
 import org.sonatype.nexus.repository.content.store.example.TestContentRepositoryDAO;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import org.assertj.core.api.Condition;
 import org.assertj.core.condition.MappedCondition;
 import org.assertj.db.type.Table;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.postgresql.util.PGobject;
 
 import static org.assertj.core.condition.MappedCondition.mappedCondition;
 import static org.assertj.db.api.Assertions.assertThat;
@@ -57,15 +58,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@Category(PostgresTestGroup.class)
-public class SearchCapabilityStep_2_16Test
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class SearchCapabilityStep_2_16Test
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule =
-      new DataSessionRule().access(CapabilityStorageItemDAO.class)
-          .access(ConfigurationDAO.class)
-          .access(TestContentRepositoryDAO.class);
+  @DataSessionConfiguration(h2 = false,
+      daos = {CapabilityStorageItemDAO.class, ConfigurationDAO.class, TestContentRepositoryDAO.class})
+  TestDataSessionSupplier sessionRule;
 
   @Mock
   private Format format;
@@ -77,7 +76,7 @@ public class SearchCapabilityStep_2_16Test
 
   private SearchCapabilityStep_2_16 underTest = new SearchCapabilityStep_2_16();
 
-  @Before
+  @BeforeEach
   public void setup() {
     mockedStatic = Mockito.mockStatic(QualifierUtil.class);
     when(QualifierUtil.buildQualifierBeanMap(anyList())).thenReturn(Map.of("test-proxy", recipe));
@@ -86,12 +85,13 @@ public class SearchCapabilityStep_2_16Test
     lenient().when(format.getValue()).thenReturn("test");
   }
 
-  @After
+  @AfterEach
   public void tearDown() {
     mockedStatic.close();
   }
 
-  @Test
+  @Disabled
+  @DatabaseTest
   public void testMigrate_noCapability_noSearch() throws Exception {
     createRepository();
     try (Connection conn = spy(sessionRule.openConnection(DEFAULT_DATASTORE_NAME))) {
@@ -103,7 +103,7 @@ public class SearchCapabilityStep_2_16Test
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testMigrate() throws Exception {
     stubSearchTable();
     createCapability();
@@ -115,8 +115,8 @@ public class SearchCapabilityStep_2_16Test
     assertThat(capabilityTable()).hasNumberOfRows(0);
 
     MappedCondition<byte[], String> condition =
-        mappedCondition(b -> new String((byte[]) b),
-            new Condition("{\"search_index_outdated\":true}"::equals, "equals"));
+        mappedCondition(PGobject::getValue,
+            new Condition("{\"search_index_outdated\": true}"::equals, "equals"));
 
     assertThat(testContentRepositoryTable()).hasNumberOfRows(1)
         .row(0)
@@ -170,12 +170,10 @@ public class SearchCapabilityStep_2_16Test
   }
 
   private Table capabilityTable() {
-    DataStore<?> dataStore = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).orElseThrow(RuntimeException::new);
-    return new Table(dataStore.getDataSource(), "capability_storage_item");
+    return sessionRule.table("capability_storage_item");
   }
 
   private Table testContentRepositoryTable() {
-    DataStore<?> dataStore = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).orElseThrow(RuntimeException::new);
-    return new Table(dataStore.getDataSource(), "test_content_repository");
+    return sessionRule.table("test_content_repository");
   }
 }

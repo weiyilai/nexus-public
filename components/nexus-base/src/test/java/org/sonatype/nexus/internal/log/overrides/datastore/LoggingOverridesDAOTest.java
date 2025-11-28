@@ -14,18 +14,18 @@ package org.sonatype.nexus.internal.log.overrides.datastore;
 
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.entity.Continuation;
 import org.sonatype.nexus.common.log.LoggerLevel;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -34,12 +34,12 @@ import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTOR
 /**
  * {@link LoggingOverridesDAO} tests
  */
-@Category(SQLTestGroup.class)
-public class LoggingOverridesDAOTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class LoggingOverridesDAOTest
+    extends Test5Support
 {
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule().access(LoggingOverridesDAO.class);
+  @DataSessionConfiguration(daos = LoggingOverridesDAO.class)
+  TestDataSessionSupplier sessionRule;
 
   private DataSession<?> session;
 
@@ -49,19 +49,19 @@ public class LoggingOverridesDAOTest
 
   private static final String FAKE_LEVEL = LoggerLevel.DEBUG.toString();
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(LoggingOverridesDAO.class);
   }
 
-  @After
-  public void cleanup() {
+  @AfterEach
+  void cleanup() {
     session.close();
   }
 
-  @Test
-  public void testBrowse() {
+  @DatabaseTest
+  void testBrowse() {
     Continuation<LoggingOverridesData> emptyData = dao.readRecords(null);
     assertThat(emptyData.isEmpty(), is(true));
 
@@ -84,8 +84,8 @@ public class LoggingOverridesDAOTest
     assertThat(records.size(), is(3));
   }
 
-  @Test
-  public void testCreateRecord() {
+  @DatabaseTest
+  void testCreateRecord() {
     LoggingOverridesData data = new LoggingOverridesData();
     data.setName(FAKE_NAME);
     data.setLevel(FAKE_LEVEL);
@@ -97,8 +97,8 @@ public class LoggingOverridesDAOTest
     assertThat(record.get().getLevel(), is(FAKE_LEVEL));
   }
 
-  @Test
-  public void testUpdate() {
+  @DatabaseTest
+  void testUpdate() {
     LoggingOverridesData data = new LoggingOverridesData();
     data.setName(FAKE_NAME);
     data.setLevel(FAKE_LEVEL);
@@ -115,8 +115,8 @@ public class LoggingOverridesDAOTest
     assertThat(updated.get().getLevel(), is(LoggerLevel.INFO.toString()));
   }
 
-  @Test
-  public void testDeleteByName() {
+  @DatabaseTest
+  void testDeleteByName() {
     LoggingOverridesData dataOne = new LoggingOverridesData();
     dataOne.setName(FAKE_NAME + "_ONE");
     dataOne.setLevel(FAKE_LEVEL);

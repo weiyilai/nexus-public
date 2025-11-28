@@ -17,15 +17,17 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.datastore.api.DataSessionSupplier;
 import org.sonatype.nexus.repository.Format;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,11 +36,12 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-public class CreateAssetBlobIndexTaskTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class CreateAssetBlobIndexTaskTest
+    extends Test5Support
 {
   private static final String TEST_FORMAT = "test";
 
@@ -52,8 +55,8 @@ public class CreateAssetBlobIndexTaskTest
 
   private static final String MAVEN_ASSET_BLOB_TABLE = "maven_asset_blob";
 
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME);
+  @DataSessionConfiguration(postgresql = false)
+  TestDataSessionSupplier sessionRule;
 
   @Mock
   private Format testFormat;
@@ -69,7 +72,7 @@ public class CreateAssetBlobIndexTaskTest
   private DatabaseMigrationStep dbHelper = new DatabaseMigrationStep()
   {
     @Override
-    public void migrate(Connection connection) throws Exception {
+    public void migrate(final Connection connection) throws Exception {
       // Not used
     }
 
@@ -79,15 +82,15 @@ public class CreateAssetBlobIndexTaskTest
     }
   };
 
-  @Before
+  @BeforeEach
   public void setup() throws SQLException {
-    when(testFormat.getValue()).thenReturn(TEST_FORMAT);
-    when(mavenFormat.getValue()).thenReturn(MAVEN_FORMAT);
-    when(dataSessionSupplier.openConnection(DEFAULT_DATASTORE_NAME))
+    lenient().when(testFormat.getValue()).thenReturn(TEST_FORMAT);
+    lenient().when(mavenFormat.getValue()).thenReturn(MAVEN_FORMAT);
+    lenient().when(dataSessionSupplier.openConnection(DEFAULT_DATASTORE_NAME))
         .thenAnswer(invocation -> sessionRule.openConnection(DEFAULT_DATASTORE_NAME));
   }
 
-  @Test
+  @DatabaseTest
   public void testExecute_createsIndexWhenTableExists() throws Exception {
     underTest = new CreateAssetBlobIndexTask(Collections.singletonList(testFormat), dataSessionSupplier);
 
@@ -114,7 +117,7 @@ public class CreateAssetBlobIndexTaskTest
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testExecute_idempotent() throws Exception {
     underTest = new CreateAssetBlobIndexTask(Collections.singletonList(testFormat), dataSessionSupplier);
 
@@ -138,7 +141,7 @@ public class CreateAssetBlobIndexTaskTest
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testExecute_handlesMultipleFormats() throws Exception {
     underTest = new CreateAssetBlobIndexTask(
         Arrays.asList(testFormat, mavenFormat), dataSessionSupplier);
@@ -162,7 +165,7 @@ public class CreateAssetBlobIndexTaskTest
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testExecute_whenTableDoesNotExist() throws Exception {
     underTest = new CreateAssetBlobIndexTask(Collections.singletonList(testFormat), dataSessionSupplier);
 
@@ -182,7 +185,7 @@ public class CreateAssetBlobIndexTaskTest
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testExecute_continuesOnError() throws Exception {
     underTest = new CreateAssetBlobIndexTask(
         Arrays.asList(testFormat, mavenFormat), dataSessionSupplier);
@@ -203,7 +206,7 @@ public class CreateAssetBlobIndexTaskTest
     }
   }
 
-  @Test
+  @DatabaseTest(postgresql = false)
   public void testExecute_withH2Database() throws Exception {
     underTest = new CreateAssetBlobIndexTask(Collections.singletonList(testFormat), dataSessionSupplier);
 
@@ -223,7 +226,7 @@ public class CreateAssetBlobIndexTaskTest
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testGetMessage() {
     underTest = new CreateAssetBlobIndexTask(Collections.singletonList(testFormat), dataSessionSupplier);
 
@@ -235,7 +238,7 @@ public class CreateAssetBlobIndexTaskTest
         equalTo("Creating asset blob indexes for blob_created and asset_blob_id"));
   }
 
-  @Test
+  @DatabaseTest
   public void testExecute_withIndexAlreadyExists() throws Exception {
     underTest = new CreateAssetBlobIndexTask(Collections.singletonList(testFormat), dataSessionSupplier);
 
@@ -260,7 +263,7 @@ public class CreateAssetBlobIndexTaskTest
     }
   }
 
-  @Test
+  @DatabaseTest
   public void testExecute_withEmptyFormatList() throws Exception {
     underTest = new CreateAssetBlobIndexTask(Collections.emptyList(), dataSessionSupplier);
 
@@ -271,7 +274,7 @@ public class CreateAssetBlobIndexTaskTest
     assertEquals("Should have created 0 indexes with empty format list", 0, result);
   }
 
-  private void createAssetBlobTable(Connection conn, String tableName) throws SQLException {
+  private void createAssetBlobTable(final Connection conn, final String tableName) throws SQLException {
     String createTable = "CREATE TABLE IF NOT EXISTS " + tableName + " ("
         + "asset_blob_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,"
         + "blob_ref VARCHAR NOT NULL,"
@@ -283,7 +286,7 @@ public class CreateAssetBlobIndexTaskTest
     dbHelper.runStatement(conn, createTable);
   }
 
-  private void createIndex(Connection conn, String tableName, String indexName) throws SQLException {
+  private void createIndex(final Connection conn, final String tableName, final String indexName) throws SQLException {
     String format = tableName.replace("_asset_blob", "");
     String createIndex = "CREATE INDEX " + indexName +
         " ON " + tableName + " (blob_created DESC, asset_blob_id ASC)";

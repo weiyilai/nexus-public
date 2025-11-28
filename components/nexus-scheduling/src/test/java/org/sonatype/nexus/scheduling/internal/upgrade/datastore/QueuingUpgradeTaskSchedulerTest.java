@@ -19,7 +19,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.TimeUnit;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.cooperation2.Cooperation2;
 import org.sonatype.nexus.common.cooperation2.Cooperation2Factory;
 import org.sonatype.nexus.common.cooperation2.Cooperation2Selector;
@@ -29,7 +29,6 @@ import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 import org.sonatype.nexus.common.upgrade.events.UpgradeCompletedEvent;
 import org.sonatype.nexus.common.upgrade.events.UpgradeFailedEvent;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.scheduling.ExternalTaskState;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskInfo;
@@ -38,14 +37,15 @@ import org.sonatype.nexus.scheduling.TaskState;
 import org.sonatype.nexus.scheduling.events.TaskEventStoppedCanceled;
 import org.sonatype.nexus.scheduling.events.TaskEventStoppedDone;
 import org.sonatype.nexus.scheduling.events.TaskEventStoppedFailed;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import com.google.common.collect.ImmutableMap;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
 import static org.awaitility.Awaitility.await;
@@ -55,20 +55,20 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
 /**
  * Tests for {@link QueuingUpgradeTaskScheduler}
  */
-@Category(SQLTestGroup.class)
-public class QueuingUpgradeTaskSchedulerTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class QueuingUpgradeTaskSchedulerTest
+    extends Test5Support
 {
   private static final Duration ONE_SECOND = Duration.ofSeconds(1);
 
@@ -106,21 +106,21 @@ public class QueuingUpgradeTaskSchedulerTest
 
   private UpgradeTaskStore upgradeTaskStore;
 
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME).access(UpgradeTaskDAO.class);
+  @DataSessionConfiguration(daos = UpgradeTaskDAO.class)
+  TestDataSessionSupplier sessionRule;
 
-  @Before
+  @BeforeEach
   public void start() {
     mockCooperation();
 
-    when(taskScheduler.createTaskConfigurationInstance(any())).thenReturn(taskConfiguration);
-    when(taskConfiguration.asMap()).thenReturn(TASK_CONFIG);
-    when(taskConfiguration.getId()).thenReturn(TASK_ID);
+    lenient().when(taskScheduler.createTaskConfigurationInstance(any())).thenReturn(taskConfiguration);
+    lenient().when(taskConfiguration.asMap()).thenReturn(TASK_CONFIG);
+    lenient().when(taskConfiguration.getId()).thenReturn(TASK_ID);
 
-    when(taskInfo.getId()).thenReturn(TASK_ID);
-    when(taskInfo.getConfiguration()).thenReturn(taskConfiguration);
+    lenient().when(taskInfo.getId()).thenReturn(TASK_ID);
+    lenient().when(taskInfo.getConfiguration()).thenReturn(taskConfiguration);
 
-    when(taskScheduler.submit(any())).thenReturn(taskInfo);
+    lenient().when(taskScheduler.submit(any())).thenReturn(taskInfo);
 
     upgradeTaskStore = new UpgradeTaskStore(sessionRule);
     upgradeTaskStore.setDependencies(eventManager);
@@ -129,7 +129,7 @@ public class QueuingUpgradeTaskSchedulerTest
         Duration.ofSeconds(0), localCooperationSelector, distributedCooperationSelector);
   }
 
-  @After
+  @AfterEach
   public void stop() {
     // the default behavior is to use the distributed impl, so we should have selected it and see nothing be done with
     // the local impl
@@ -139,7 +139,7 @@ public class QueuingUpgradeTaskSchedulerTest
   /*
    * Verify that tasks requested to be scheduled before startup are scheduled after startup
    */
-  @Test
+  @DatabaseTest
   public void testSchedule_beforeStart() throws Exception {
     underTest.schedule(taskConfiguration);
 
@@ -158,7 +158,7 @@ public class QueuingUpgradeTaskSchedulerTest
   /*
    * Verify that tasks requested to be scheduled after startup are scheduled immediately
    */
-  @Test
+  @DatabaseTest
   public void testSchedule_afterStart() throws Exception {
     startQueuingUpgradeTaskScheduler();
     underTest.schedule(taskConfiguration);
@@ -170,7 +170,7 @@ public class QueuingUpgradeTaskSchedulerTest
     verifyNoInteractions(taskScheduler);
   }
 
-  @Test
+  @DatabaseTest
   public void testOn_upgradeCompleted() throws Exception {
     startQueuingUpgradeTaskScheduler();
     underTest.schedule(taskConfiguration);
@@ -187,7 +187,7 @@ public class QueuingUpgradeTaskSchedulerTest
     verify(taskScheduler).submit(any());
   }
 
-  @Test
+  @DatabaseTest
   public void testOn_upgradeFailed() throws Exception {
     startQueuingUpgradeTaskScheduler();
     underTest.schedule(taskConfiguration);
@@ -207,7 +207,7 @@ public class QueuingUpgradeTaskSchedulerTest
   /*
    * Verify behaviour when processing a task completed event.
    */
-  @Test
+  @DatabaseTest
   public void testOn_taskCompleted() throws Exception {
     startQueuingUpgradeTaskScheduler();
     // No task has been registered as an upgrade, the main thing here is that we don't fail
@@ -233,7 +233,7 @@ public class QueuingUpgradeTaskSchedulerTest
   /*
    * Verify behaviour when processing is invoked with an item in the queue which has no associated task
    */
-  @Test
+  @DatabaseTest
   public void testMaybeStartQueue_nextItem_hasNoTask() throws Exception {
     startQueuingUpgradeTaskScheduler();
 
@@ -250,7 +250,7 @@ public class QueuingUpgradeTaskSchedulerTest
   /*
    * Verify behaviour when processing is invoked with an item in the queue and the task indicates OK
    */
-  @Test
+  @DatabaseTest
   public void testMaybeStartQueue_nextItem_hasOkTask() throws Exception {
     startQueuingUpgradeTaskScheduler();
 
@@ -270,7 +270,7 @@ public class QueuingUpgradeTaskSchedulerTest
   /*
    * Verify behaviour when processing is invoked with an item in the queue and the associated task is currently running
    */
-  @Test
+  @DatabaseTest
   public void testMaybeStartQueue_nextItem_hasRunningTask() throws Exception {
     startQueuingUpgradeTaskScheduler();
 
@@ -290,7 +290,7 @@ public class QueuingUpgradeTaskSchedulerTest
   /*
    * Verify behaviour when processing is invoked with no items in the queue
    */
-  @Test
+  @DatabaseTest
   public void testMaybeStartQueue_noQueuedTask() throws Exception {
     startQueuingUpgradeTaskScheduler();
 
@@ -303,7 +303,7 @@ public class QueuingUpgradeTaskSchedulerTest
   /*
    * Verify behaviour when processing a task canceled event.
    */
-  @Test
+  @DatabaseTest
   public void testOn_taskCanceled() throws Exception {
     startQueuingUpgradeTaskScheduler();
     // No task has been registered as an upgrade, the main thing here is that we don't fail
@@ -326,7 +326,7 @@ public class QueuingUpgradeTaskSchedulerTest
   /*
    * Verify behaviour when processing a task failed event.
    */
-  @Test
+  @DatabaseTest
   public void testOn_taskFailed() throws Exception {
     startQueuingUpgradeTaskScheduler();
     // No task has been registered as an upgrade, the main thing here is that we don't fail
@@ -347,7 +347,7 @@ public class QueuingUpgradeTaskSchedulerTest
   }
 
   private void mockCooperation() {
-    when(localCooperationSelector.select()).thenReturn(cooperationFactory);
+    lenient().when(localCooperationSelector.select()).thenReturn(cooperationFactory);
     when(distributedCooperationSelector.select()).thenReturn(cooperationFactory);
 
     Cooperation2Factory.Builder cooperationBuilder = mock(Cooperation2Factory.Builder.class);

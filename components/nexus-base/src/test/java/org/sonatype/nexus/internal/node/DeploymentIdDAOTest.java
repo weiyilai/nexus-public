@@ -12,55 +12,55 @@
  */
 package org.sonatype.nexus.internal.node;
 
-import org.sonatype.goodies.testsupport.TestSupport;
-import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.testdb.DataSessionRule;
+import org.sonatype.nexus.testdb.DataSessionConfiguration;
+import org.sonatype.nexus.testdb.DatabaseExtension;
+import org.sonatype.nexus.testdb.DatabaseTest;
+import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@Category(SQLTestGroup.class)
-public class DeploymentIdDAOTest
-    extends TestSupport
+@ExtendWith(DatabaseExtension.class)
+class DeploymentIdDAOTest
+    extends Test5Support
 {
   private static final String DEPLOYMENT_ID = "aslfsd";
 
-  @Rule
-  public DataSessionRule sessionRule = new DataSessionRule().access(DeploymentIdDAO.class);
+  @DataSessionConfiguration(daos = DeploymentIdDAO.class)
+  TestDataSessionSupplier sessionRule;
 
-  private DataSession session;
+  private DataSession<?> session;
 
   private DeploymentIdDAO dao;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
-    dao = (DeploymentIdDAO) session.access(DeploymentIdDAO.class);
+    dao = session.access(DeploymentIdDAO.class);
     dao.set(DEPLOYMENT_ID);
   }
 
-  @After
-  public void cleanup() {
+  @AfterEach
+  void cleanup() {
     session.close();
   }
 
-  @Test
-  public void testGet() {
+  @DatabaseTest
+  void testGet() {
     String deploymentId = dao.get().orElse(null);
 
     assertThat(deploymentId, is(DEPLOYMENT_ID));
   }
 
-  @Test
-  public void testSet() {
+  @DatabaseTest
+  void testSet() {
     dao.set("DEPLOYMENT_ID");
     String deploymentId = dao.get().orElse(null);
 
