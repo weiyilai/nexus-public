@@ -12,9 +12,12 @@
  */
 package com.sonatype.nexus.ssl.plugin.internal.keystore;
 
+import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
+
+import com.google.common.collect.ImmutableList;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -62,6 +65,12 @@ public class KeyStoreStorageManagerImpl
   public void save(final KeyStoreData data) {
     postCommitEvent(() -> event(data.getName()));
     dao().save(data);
+  }
+
+  @Transactional
+  @Override
+  public List<KeyStoreData> browse() {
+    return ImmutableList.copyOf(dao().browse());
   }
 
   private static KeyStoreDataEvent event(final String keyStoreName) {

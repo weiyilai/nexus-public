@@ -29,4 +29,6 @@ public interface KeyStoreDAO
   boolean save(KeyStoreData entity);
 
   boolean delete(String name);
+
+  Iterable<KeyStoreData> browse();
 }

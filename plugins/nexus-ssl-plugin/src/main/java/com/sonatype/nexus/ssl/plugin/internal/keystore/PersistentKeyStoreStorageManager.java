@@ -12,6 +12,7 @@
  */
 package com.sonatype.nexus.ssl.plugin.internal.keystore;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -24,4 +25,6 @@ public interface PersistentKeyStoreStorageManager
   Optional<KeyStoreData> load(final String keyStoreName);
 
   void save(final KeyStoreData data);
+
+  List<KeyStoreData> browse();
 }
