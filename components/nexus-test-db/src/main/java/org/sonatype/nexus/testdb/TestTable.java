@@ -17,27 +17,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.extension.ExtendWith;
+import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-/**
- * Used to indicate that a test should be run with databases. See {@link DatabaseExtension} for a description of usage.
- */
-@Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD, ElementType.TYPE})
+@Target({ElementType.PARAMETER, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-@TestTemplate
-@ExtendWith(DatabaseExtension.class)
-public @interface DatabaseTest
+public @interface TestTable
 {
   /**
-   * Can be used to disable creating a test run of the annotated method using the H2 database. {@code true} only used
-   * if the related {@link DataSessionConfiguration} also has H2 enabled.
+   * The name of the table
    */
-  boolean h2() default true;
+  String table();
 
   /**
-   * Can be used to disable creating a test run of the annotated method using the PostgreSQL database. {@code true} only
-   * used if the related {@link DataSessionConfiguration} also has PostgreSQL enabled.
+   * The data store
    */
-  boolean postgresql() default true;
+  String storeName() default DEFAULT_DATASTORE_NAME;
 }

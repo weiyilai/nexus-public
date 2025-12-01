@@ -18,18 +18,16 @@ import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.cleanup.storage.CleanupPolicy;
 import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
 import com.google.common.collect.Iterables;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
@@ -38,29 +36,28 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class CleanupPolicyDAOTest
-    extends Test5Support
+public class CleanupPolicyDAOTest
+    extends TestSupport
 {
-  @DataSessionConfiguration(daos = CleanupPolicyDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(CleanupPolicyDAO.class);
 
   private DataSession<?> session;
 
   private CleanupPolicyDAO dao;
 
-  @BeforeEach
+  @Before
   public void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(CleanupPolicyDAO.class);
   }
 
-  @AfterEach
+  @After
   public void cleanup() {
     session.close();
   }
 
-  @DatabaseTest
+  @Test
   public void testCRUD() {
     // a cleanup policy
     CleanupPolicyData policy = policy("foo", "some text", "maven2", "deletion", Map.of("bar", "one", "baz", "two"));

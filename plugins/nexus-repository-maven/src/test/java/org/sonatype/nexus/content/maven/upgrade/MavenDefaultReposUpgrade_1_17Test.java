@@ -16,32 +16,30 @@ import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.repository.config.ConfigurationDAO;
 import org.sonatype.nexus.repository.config.internal.ConfigurationData;
 import org.sonatype.nexus.repository.maven.internal.MavenDefaultRepositoriesContributor;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
 import com.google.common.collect.ImmutableMap;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class MavenDefaultReposUpgrade_1_17Test
-    extends Test5Support
+public class MavenDefaultReposUpgrade_1_17Test
+    extends TestSupport
 {
-  @DataSessionConfiguration(daos = ConfigurationDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME)
+      .access(ConfigurationDAO.class);
 
   private DataStore<?> store;
 
@@ -57,7 +55,7 @@ class MavenDefaultReposUpgrade_1_17Test
 
   private ConfigurationData nonDefaultRepo;
 
-  @BeforeEach
+  @Before
   public void setUp() {
     createMockData();
 
@@ -68,7 +66,7 @@ class MavenDefaultReposUpgrade_1_17Test
   }
 
   private void createMockData() {
-    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME);
+    store = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).get();
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       configurationDAO = session.access(ConfigurationDAO.class);
 
@@ -81,7 +79,7 @@ class MavenDefaultReposUpgrade_1_17Test
     }
   }
 
-  @DatabaseTest
+  @Test
   public void testMigrationWorksAsExpected() throws Exception {
     try (Connection conn = store.openConnection()) {
       migrationStep.migrate(conn);
@@ -107,7 +105,7 @@ class MavenDefaultReposUpgrade_1_17Test
     }
   }
 
-  private ConfigurationData createConfig(final String name, final String recipeName, final String contentDisposition) {
+  private ConfigurationData createConfig(final String name, final String recipeName, String contentDisposition) {
     ConfigurationData config = new ConfigurationData();
     config.setName(name);
     config.setRecipeName(recipeName);

@@ -12,16 +12,16 @@
  */
 package org.sonatype.nexus.internal.security.anonymous;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -29,30 +29,30 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsNot.not;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class AnonymousConfigurationDAOTest
-    extends Test5Support
+@Category(SQLTestGroup.class)
+public class AnonymousConfigurationDAOTest
+    extends TestSupport
 {
-  @DataSessionConfiguration(daos = AnonymousConfigurationDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(AnonymousConfigurationDAO.class);
 
-  private DataSession<?> session;
+  private DataSession session;
 
   private AnonymousConfigurationDAO dao;
 
-  @BeforeEach
-  void setup() {
+  @Before
+  public void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
-    dao = session.access(AnonymousConfigurationDAO.class);
+    dao = (AnonymousConfigurationDAO) session.access(AnonymousConfigurationDAO.class);
   }
 
-  @AfterEach
-  void cleanup() {
+  @After
+  public void cleanup() {
     session.close();
   }
 
-  @DatabaseTest
-  void testSetAndGet() {
+  @Test
+  public void testSetAndGet() {
     AnonymousConfigurationData config = new AnonymousConfigurationData();
     config.setEnabled(true);
     config.setUserId("anon");

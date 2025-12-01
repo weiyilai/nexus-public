@@ -13,32 +13,29 @@
 
 package org.sonatype.nexus.internal.capability.storage;
 
+import com.google.common.collect.ImmutableMap;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
+import org.sonatype.nexus.datastore.api.DataSession;
+import org.sonatype.nexus.testdb.DataSessionRule;
+
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
-
-import com.google.common.collect.ImmutableMap;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class CapabilityStorageItemDAOTest
+@Category(SQLTestGroup.class)
+public class CapabilityStorageItemDAOTest
 {
-  @DataSessionConfiguration(daos = CapabilityStorageItemDAO.class)
-  TestDataSessionSupplier sessionRule;
+
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(CapabilityStorageItemDAO.class);
 
   private DataSession<?> session;
 
@@ -46,19 +43,19 @@ class CapabilityStorageItemDAOTest
 
   private CapabilityStorageImpl store;
 
-  @BeforeEach
+  @Before
   public void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(CapabilityStorageItemDAO.class);
     store = new CapabilityStorageImpl(sessionRule);
   }
 
-  @AfterEach
+  @After
   public void cleanup() {
     session.close();
   }
 
-  @DatabaseTest
+  @Test
   public void itWillCreateReadUpdateDeleteAndBrowseCapabilityStorageItems() {
     // Create an item
     CapabilityStorageItemData entity =

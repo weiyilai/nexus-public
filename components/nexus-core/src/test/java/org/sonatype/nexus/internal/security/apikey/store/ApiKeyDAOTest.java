@@ -20,13 +20,12 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
+import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.internal.security.apikey.ApiKeyInternal;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
 import com.google.common.collect.Iterables;
 import org.apache.shiro.subject.PrincipalCollection;
@@ -35,9 +34,11 @@ import org.assertj.db.type.Table;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.assertj.db.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -50,10 +51,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@SuppressWarnings("deprecation")
-@ExtendWith(DatabaseExtension.class)
-class ApiKeyDAOTest
-    extends Test5Support
+@Category(SQLTestGroup.class)
+public class ApiKeyDAOTest
+    extends TestSupport
 {
   private static final String DOMAIN = "domain";
 
@@ -79,16 +79,17 @@ class ApiKeyDAOTest
 
   DataSession<?> session;
 
-  @DataSessionConfiguration(daos = ApiKeyDAO.class, typeHandlers = ApiKeyTokenTypeHandler.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule =
+      new DataSessionRule().access(ApiKeyDAO.class).handle(new ApiKeyTokenTypeHandler());
 
-  @BeforeEach
+  @Before
   public void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     apiKeyDAO = session.access(ApiKeyDAO.class);
   }
 
-  @AfterEach
+  @After
   public void cleanup() {
     session.close();
   }
@@ -96,7 +97,7 @@ class ApiKeyDAOTest
   /*
    * create should successfully create and fetch an ApiKey record
    */
-  @DatabaseTest
+  @Test
   public void testCreate() {
     ApiKeyData apiKeyEntity = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
 
@@ -109,7 +110,7 @@ class ApiKeyDAOTest
   /*
    * Create the same user in different realms
    */
-  @DatabaseTest
+  @Test
   public void testCreate_differentRealm() {
     OffsetDateTime created = OffsetDateTime.now();
     ApiKeyData apiKeyEntity = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL, A_REALM, created);
@@ -124,7 +125,7 @@ class ApiKeyDAOTest
   /*
    * update should successfully update matching ApiKey record
    */
-  @DatabaseTest
+  @Test
   public void testUpdate() {
     ApiKeyData apiKeyEntity = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     withDao(dao -> dao.save(apiKeyEntity));
@@ -140,7 +141,6 @@ class ApiKeyDAOTest
   /*
    * delete should successfully delete matching ApiKey record
    */
-  @DatabaseTest
   public void testDelete() {
     ApiKeyData entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyData entity2 = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -163,7 +163,7 @@ class ApiKeyDAOTest
   /*
    * browse should fetch all records
    */
-  @DatabaseTest
+  @Test
   public void testBrowsePrincipals() {
     ApiKeyData entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyData entity2 = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -179,7 +179,7 @@ class ApiKeyDAOTest
   /*
    * findApiKey should fetch records matching given domain and primary principal
    */
-  @DatabaseTest
+  @Test
   public void testFindApiKey() {
     apiKeyDAO.save(anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL));
     apiKeyDAO.save(anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL));
@@ -203,7 +203,7 @@ class ApiKeyDAOTest
   /*
    * findPrincipals should fetch records matching given domain and api key
    */
-  @DatabaseTest
+  @Test
   public void testFindPrincipals() {
     ApiKeyData apiKeyEntity = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyData anotherApiKeyEntity = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -217,7 +217,7 @@ class ApiKeyDAOTest
     assertThat(result.get().getPrincipals().getPrimaryPrincipal(), is(ANOTHER_PRINCIPAL));
   }
 
-  @DatabaseTest
+  @Test
   public void testCount() {
     ApiKeyData entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyData entity2 = anApiKeyEntity(API_KEY2, ANOTHER_DOMAIN, ANOTHER_PRINCIPAL);
@@ -227,7 +227,7 @@ class ApiKeyDAOTest
     assertThat(apiKeyDAO.count(DOMAIN), is(1));
   }
 
-  @DatabaseTest
+  @Test
   public void testBrowse() {
     ApiKeyData entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyData entity2 = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -238,7 +238,7 @@ class ApiKeyDAOTest
     assertThat(apiKeyDAO.browse(DOMAIN), containsInAnyOrder(token(entity1), token(entity2)));
   }
 
-  @DatabaseTest
+  @Test
   public void testBrowseByCreatedDate() {
     ApiKeyData entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyData entity2 = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -256,7 +256,7 @@ class ApiKeyDAOTest
     assertThat(apiKeyDAO.browseByCreatedDate(DOMAIN, entity2Date.minusSeconds(1L)), contains(token(entity2)));
   }
 
-  @DatabaseTest
+  @Test
   public void testBrowseAllSince() {
     ApiKeyData entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
     ApiKeyData entity2 = anApiKeyEntity(API_KEY2, DOMAIN, ANOTHER_PRINCIPAL);
@@ -273,7 +273,7 @@ class ApiKeyDAOTest
     assertThat(apiKeyDAO.browseAllSince(entity2Date.minusSeconds(1L), 10), contains(token(entity2)));
   }
 
-  @DatabaseTest
+  @Test
   public void testDeleteApiKeysByDomain() {
     // keys in different domains
     ApiKeyData entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL);
@@ -293,7 +293,7 @@ class ApiKeyDAOTest
     assertThat(apiKeyDAO.browse(ANOTHER_DOMAIN), hasSize(1));
   }
 
-  @DatabaseTest
+  @Test
   public void testDeleteApiKeyByExpirationDate() {
     OffsetDateTime createdToday = OffsetDateTime.now().plusMinutes(5);
     ApiKeyData entity1 = anApiKeyEntity(API_KEY1, DOMAIN, A_PRINCIPAL, A_REALM, createdToday);
@@ -358,7 +358,8 @@ class ApiKeyDAOTest
   }
 
   private Table table() {
-    return sessionRule.table("api_key");
+    DataStore<?> dataStore = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).orElseThrow(RuntimeException::new);
+    return new Table(dataStore.getDataSource(), "api_key");
   }
 
   private void withDao(final Consumer<ApiKeyDAO> consumer) {

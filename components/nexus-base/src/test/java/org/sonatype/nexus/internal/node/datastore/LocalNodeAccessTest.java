@@ -15,19 +15,19 @@ package org.sonatype.nexus.internal.node.datastore;
 import java.util.Collections;
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.node.NodeAccess;
+import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataStoreManager;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 import org.sonatype.nexus.transaction.UnitOfWork;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -37,12 +37,12 @@ import static org.hamcrest.Matchers.is;
 /**
  * Tests for local {@link NodeAccess}.
  */
-@ExtendWith(DatabaseExtension.class)
-class LocalNodeAccessTest
-    extends Test5Support
+@Category(SQLTestGroup.class)
+public class LocalNodeAccessTest
+    extends TestSupport
 {
-  @DataSessionConfiguration(daos = NodeIdDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(NodeIdDAO.class);
 
   @Mock
   private EventManager eventManager;
@@ -51,8 +51,8 @@ class LocalNodeAccessTest
 
   private NodeIdStoreImpl store;
 
-  @BeforeEach
-  void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     store = new NodeIdStoreImpl(sessionRule);
     store.setDependencies(eventManager);
     nodeAccess = new LocalNodeAccess(store);
@@ -60,38 +60,38 @@ class LocalNodeAccessTest
     UnitOfWork.beginBatch(() -> sessionRule.openSession(DataStoreManager.DEFAULT_DATASTORE_NAME));
   }
 
-  @AfterEach
-  void tearDown() throws Exception {
+  @After
+  public void tearDown() throws Exception {
     if (nodeAccess != null) {
       nodeAccess.stop();
     }
     UnitOfWork.end();
   }
 
-  @DatabaseTest
-  void testGeneratesId() throws Exception {
+  @Test
+  public void testGeneratesId() throws Exception {
     nodeAccess.start();
 
     Optional<String> nodeId = store.get();
     assertThat(nodeId.isPresent(), is(true));
   }
 
-  @DatabaseTest
-  void testUsesDatabaseId() throws Exception {
+  @Test
+  public void testUsesDatabaseId() throws Exception {
     store.set("foo");
     nodeAccess.start();
 
     assertThat(nodeAccess.getId(), is("foo"));
   }
 
-  @DatabaseTest
-  void localIsOldestNode() throws Exception {
+  @Test
+  public void localIsOldestNode() throws Exception {
     nodeAccess.start();
     assertThat(nodeAccess.isOldestNode(), is(true));
   }
 
-  @DatabaseTest
-  void getMemberAliasesKeyValueEqualToIdentity() throws Exception {
+  @Test
+  public void getMemberAliasesKeyValueEqualToIdentity() throws Exception {
     nodeAccess.start();
     assertThat(nodeAccess.getMemberAliases(),
         equalTo(Collections.singletonMap(nodeAccess.getId(), nodeAccess.getId())));

@@ -15,22 +15,23 @@ package org.sonatype.nexus.upgrade.datastore;
 import java.sql.Connection;
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.Test5Support;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.content.testsuite.groups.PostgresTestGroup;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class DatabaseMigrationStepTest
-    extends Test5Support
+@Category(PostgresTestGroup.class)
+public class DatabaseMigrationStepTest
+    extends TestSupport
 {
+
   private static final String CUSTOM_SQL = "CREATE TABLE IF NOT EXISTS custom.test (\n"
       + "      domain            VARCHAR(200)   NOT NULL,\n"
       + "      token             VARCHAR(200)   NOT NULL,\n"
@@ -38,10 +39,10 @@ class DatabaseMigrationStepTest
       + "    );\n"
       + "";
 
-  @DataSessionConfiguration(h2 = false)
-  TestDataSessionSupplier customSessionRule;
+  @Rule
+  public DataSessionRule customSessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME);
 
-  @DatabaseTest
+  @Test
   public void testCustomSchemaIndexExists() throws Exception {
     try (Connection conn = customSessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       underTest.runStatement(conn, "drop schema if exists custom");
@@ -58,7 +59,6 @@ class DatabaseMigrationStepTest
 
   private final DatabaseMigrationStep underTest = new DatabaseMigrationStep()
   {
-    @Override
     public Optional<String> version() {
       return Optional.of("0.0");
     }

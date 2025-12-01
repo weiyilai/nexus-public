@@ -15,13 +15,11 @@ package org.sonatype.nexus.repository.content.upgrades;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.sonatype.goodies.testsupport.Test5Support;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Rule;
+import org.junit.Test;
 
 import static java.util.Arrays.stream;
 import static org.junit.Assert.assertFalse;
@@ -34,9 +32,8 @@ import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrati
 import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrationStep_2_18.OLD_REVISION_TIME_COLUMN_NAME;
 import static org.sonatype.nexus.repository.content.upgrades.ConanCleanupMigrationStep_2_18.TABLE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class ConanCleanupMigrationStep_2_18Test
-    extends Test5Support
+public class ConanCleanupMigrationStep_2_18Test
+    extends TestSupport
 {
   private static final String NEW_INDEX_NAME = "idx_conan_component_coordinates";
 
@@ -77,12 +74,12 @@ class ConanCleanupMigrationStep_2_18Test
           TABLE_NAME)
   };
 
-  @DataSessionConfiguration
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME);
 
   private ConanCleanupMigrationStep_2_18 underTest = new ConanCleanupMigrationStep_2_18();
 
-  @DatabaseTest
+  @Test
   public void testUpgrade() throws Exception {
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       // create old schema
@@ -118,7 +115,7 @@ class ConanCleanupMigrationStep_2_18Test
     }
   }
 
-  @DatabaseTest
+  @Test
   public void testUpgrade_tableNotExist() throws Exception {
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       underTest.migrate(conn);
@@ -127,7 +124,7 @@ class ConanCleanupMigrationStep_2_18Test
     }
   }
 
-  @DatabaseTest
+  @Test
   public void testUpgrade_skipsAddConstraintWhenDropConstraintDoesNothing() throws Exception {
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       // create old schema

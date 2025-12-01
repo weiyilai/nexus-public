@@ -21,7 +21,8 @@ import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DuplicateKeyException;
 import org.sonatype.nexus.repository.content.ContentRepository;
 import org.sonatype.nexus.repository.content.store.example.TestContentRepositoryDAO;
-import org.sonatype.nexus.testdb.DatabaseTest;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -39,7 +40,7 @@ import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTOR
 class ContentRepositoryDAOTest
     extends ExampleContentTestSupport
 {
-  @DatabaseTest
+  @Test
   void testCrudOperations() throws InterruptedException {
 
     ContentRepositoryData contentRepository1 = generateContentRepository();

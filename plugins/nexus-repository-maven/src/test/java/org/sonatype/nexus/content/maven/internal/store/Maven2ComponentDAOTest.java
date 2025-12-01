@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.collect.NestedAttributesMap;
 import org.sonatype.nexus.common.entity.EntityUUID;
 import org.sonatype.nexus.content.maven.store.GAV;
@@ -34,14 +34,12 @@ import org.sonatype.nexus.repository.content.store.BlobRefTypeHandler;
 import org.sonatype.nexus.repository.content.store.ContentRepositoryDAO;
 import org.sonatype.nexus.repository.content.store.ContentRepositoryData;
 import org.sonatype.nexus.repository.search.normalize.VersionNumberExpander;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
 import com.google.common.collect.ImmutableMap;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -49,19 +47,22 @@ import static org.hamcrest.Matchers.is;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 import static org.sonatype.nexus.datastore.mybatis.CombUUID.combUUID;
 
-@ExtendWith(DatabaseExtension.class)
-class Maven2ComponentDAOTest
-    extends Test5Support
+public class Maven2ComponentDAOTest
+    extends TestSupport
 {
   private ContentRepositoryData contentRepository;
 
   private int repositoryId;
 
-  @DataSessionConfiguration(daos = {Maven2ContentRepositoryDAO.class, Maven2ComponentDAO.class,
-      Maven2AssetBlobDAO.class, Maven2AssetDAO.class}, typeHandlers = BlobRefTypeHandler.class, postgresql = false)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME)
+      .handle(new BlobRefTypeHandler())
+      .access(Maven2ContentRepositoryDAO.class)
+      .access(Maven2ComponentDAO.class)
+      .access(Maven2AssetBlobDAO.class)
+      .access(Maven2AssetDAO.class);
 
-  @BeforeEach
+  @Before
   public void setupContent() {
     contentRepository = new ContentRepositoryData();
     contentRepository.setConfigRepositoryId(new EntityUUID(combUUID()));
@@ -81,7 +82,7 @@ class Maven2ComponentDAOTest
     }
   }
 
-  @DatabaseTest
+  @Test
   public void findComponent() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       Maven2ComponentDAO dao = session.access(Maven2ComponentDAO.class);
@@ -90,7 +91,7 @@ class Maven2ComponentDAOTest
     }
   }
 
-  @DatabaseTest
+  @Test
   public void findGavsWithSnaphots() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       Maven2ComponentDAO dao = session.access(Maven2ComponentDAO.class);
@@ -103,7 +104,7 @@ class Maven2ComponentDAOTest
     }
   }
 
-  @DatabaseTest
+  @Test
   public void findGavsWithSnaphotsLessMinimum() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       Maven2ComponentDAO dao = session.access(Maven2ComponentDAO.class);
@@ -113,7 +114,7 @@ class Maven2ComponentDAOTest
     }
   }
 
-  @DatabaseTest
+  @Test
   public void findComponentsForGav() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       Maven2ComponentDAO dao = session.access(Maven2ComponentDAO.class);
@@ -128,7 +129,7 @@ class Maven2ComponentDAOTest
     }
   }
 
-  @DatabaseTest
+  @Test
   public void selectSnapshotsAfterRelease() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       Maven2ComponentDAO dao = session.access(Maven2ComponentDAO.class);
@@ -142,7 +143,7 @@ class Maven2ComponentDAOTest
     }
   }
 
-  @DatabaseTest
+  @Test
   public void selectSnapshotsAfterReleaseInGracePeriod() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       Maven2ComponentDAO dao = session.access(Maven2ComponentDAO.class);

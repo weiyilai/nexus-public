@@ -12,70 +12,70 @@
  */
 package org.sonatype.nexus.repository.content.blobstore.metrics;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.api.metrics.BlobStoreMetricsEntity;
+import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DuplicateKeyException;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class BlobStoreMetricsDAOTest
-    extends Test5Support
+@Category(SQLTestGroup.class)
+public class BlobStoreMetricsDAOTest
+    extends TestSupport
 {
-  @DataSessionConfiguration(daos = BlobStoreMetricsDAO.class)
-  TestDataSessionSupplier sessionRule;
+
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME).access(BlobStoreMetricsDAO.class);
 
   private DataSession<?> dataSession;
 
   private BlobStoreMetricsDAO dao;
 
-  @BeforeEach
+  @Before
   public void setup() {
     dataSession = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dataSession.getTransaction().begin();
     dao = dataSession.access(BlobStoreMetricsDAO.class);
   }
 
-  @AfterEach
+  @After
   public void teardown() {
     dataSession.getTransaction().rollback();
     dataSession.close();
   }
 
-  @DatabaseTest
+  @Test(expected = Test.None.class)
   public void canRecreateSchemaMultipleTimes() {
     dao.createSchema();
     dao.createSchema();
   }
 
-  @DatabaseTest
+  @Test
   public void initializeMetrics() {
     dao.initializeMetrics("test");
     assertThat(dao.get("test"), is(notNullValue()));
     assertThat(dao.get("test").getBlobStoreName(), is("test"));
   }
 
-  @DatabaseTest
+  @Test(expected = DuplicateKeyException.class)
   public void initializeMetricsFailsIfAlreadyInitialized() {
     dao.initializeMetrics("test");
-    assertThrows(DuplicateKeyException.class, () -> dao.initializeMetrics("test"));
+    dao.initializeMetrics("test");
   }
 
-  @DatabaseTest
+  @Test
   public void removalOfMetricsSucceeds() {
     dao.initializeMetrics("test");
     dao.remove("test");
@@ -83,7 +83,7 @@ class BlobStoreMetricsDAOTest
     assertThat(dao.get("test"), is(nullValue()));
   }
 
-  @DatabaseTest
+  @Test
   public void incrementalUpdateOfMetricsSucceeds() {
     dao.initializeMetrics("test");
     BlobStoreMetricsEntity blobStoreMetricsEntity = new BlobStoreMetricsEntity();
@@ -158,7 +158,7 @@ class BlobStoreMetricsDAOTest
         is(blobStoreMetricsEntity.getDownloadErrorRequests() * 2));
   }
 
-  @DatabaseTest
+  @Test
   public void decrementOfMetricsSucceeds() {
     dao.initializeMetrics("test");
     BlobStoreMetricsEntity blobStoreMetricsEntity = new BlobStoreMetricsEntity();
@@ -181,7 +181,7 @@ class BlobStoreMetricsDAOTest
     assertThat(updatedBlobStoreMetricsEntity.getTotalSize(), is(170L));
   }
 
-  @DatabaseTest
+  @Test
   public void testClearOperationalMetrics() {
     dao.initializeMetrics("test");
 

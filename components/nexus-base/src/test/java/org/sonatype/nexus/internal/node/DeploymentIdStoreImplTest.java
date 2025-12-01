@@ -14,51 +14,48 @@ package org.sonatype.nexus.internal.node;
 
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.event.EventManager;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@ExtendWith(DatabaseExtension.class)
-class DeploymentIdStoreImplTest
-    extends Test5Support
+public class DeploymentIdStoreImplTest
+    extends TestSupport
 {
   private static final String DEPLOYMENT_ID = "ipuaeycw934r";
 
   private static final String DEPLOYMENT_ID_NEW = "ipuaeycw934re4rgt0f34r";
 
-  @DataSessionConfiguration(daos = DeploymentIdDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(DeploymentIdDAO.class);
 
   @Mock
   private EventManager eventManager;
 
   private DeploymentIdStoreImpl underTest;
 
-  @BeforeEach
-  void setup() {
+  @Before
+  public void setup() {
     underTest = new DeploymentIdStoreImpl(sessionRule);
     underTest.setDependencies(eventManager);
   }
 
-  @DatabaseTest
-  void testGet_must_be_empty() {
+  @Test
+  public void testGet_must_be_empty() {
     Optional<String> deploymentId = underTest.get();
 
     assertThat(deploymentId.isPresent(), is(false));
   }
 
-  @DatabaseTest
-  void testGet_must_contain_deployment_id() {
+  @Test
+  public void testGet_must_contain_deployment_id() {
     underTest.set(DEPLOYMENT_ID);
 
     Optional<String> deploymentId = underTest.get();
@@ -67,8 +64,8 @@ class DeploymentIdStoreImplTest
     assertThat(deploymentId.get(), is(DEPLOYMENT_ID));
   }
 
-  @DatabaseTest
-  void testGet_must_contain_new_deployment_id() {
+  @Test
+  public void testGet_must_contain_new_deployment_id() {
     underTest.set(DEPLOYMENT_ID);
 
     Optional<String> deploymentId = underTest.get();

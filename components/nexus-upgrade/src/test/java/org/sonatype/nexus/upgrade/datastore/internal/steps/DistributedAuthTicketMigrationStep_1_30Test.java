@@ -15,29 +15,26 @@ package org.sonatype.nexus.upgrade.datastore.internal.steps;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.datastore.api.DataStore;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
 import org.assertj.db.type.Table;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Rule;
+import org.junit.Test;
 
 import static org.assertj.db.api.Assertions.assertThat;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class DistributedAuthTicketMigrationStep_1_30Test
-    extends Test5Support
+public class DistributedAuthTicketMigrationStep_1_30Test
+    extends TestSupport
 {
-  @DataSessionConfiguration
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME);
 
   private DistributedAuthTicketMigrationStep_1_30 underTest = new DistributedAuthTicketMigrationStep_1_30();
 
-  @DatabaseTest
+  @Test
   public void testMigrate() throws Exception {
     stubTable();
     // Sanity check
@@ -49,7 +46,7 @@ class DistributedAuthTicketMigrationStep_1_30Test
     assertThat(table()).hasNumberOfRows(0);
   }
 
-  @DatabaseTest
+  @Test
   public void testMigrate_noTable() throws Exception {
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       underTest.migrate(conn);
@@ -76,7 +73,7 @@ class DistributedAuthTicketMigrationStep_1_30Test
   }
 
   private Table table() {
-    DataStore<?> dataStore = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME);
+    DataStore<?> dataStore = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).orElseThrow(RuntimeException::new);
     return new Table(dataStore.getDataSource(), "distributed_auth_ticket_cache");
   }
 }

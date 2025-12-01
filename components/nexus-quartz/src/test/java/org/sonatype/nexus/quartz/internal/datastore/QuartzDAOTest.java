@@ -18,16 +18,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.quartz.internal.store.ConfigStoreConnectionProvider;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.quartz.DateBuilder;
 import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.Job;
@@ -57,17 +57,19 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class QuartzDAOTest
-    extends Test5Support
+@Category(SQLTestGroup.class)
+public class QuartzDAOTest
+    extends TestSupport
 {
   static final String SCHEDULER_NAME = "nexus";
 
-  @DataSessionConfiguration(daos = {QuartzDAO.class, QuartzTestDAO.class},
-      typeHandlers = QuartzJobDataTypeHandler.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule()
+      .handle(new QuartzJobDataTypeHandler())
+      .access(QuartzDAO.class)
+      .access(QuartzTestDAO.class);
 
-  @DatabaseTest
+  @Test
   public void testSchemaCreationFunctionsAndIsReRunnable() {
     try (DataSession<?> session = sessionRule.openSession(DEFAULT_DATASTORE_NAME)) {
       QuartzDAO underTest = session.access(QuartzDAO.class);
@@ -89,7 +91,7 @@ class QuartzDAOTest
     }
   }
 
-  @DatabaseTest
+  @Test
   public void testQuartzSchedulerWorksWithTheCreatedSchema() throws Exception {
     Scheduler scheduler = createScheduler();
 

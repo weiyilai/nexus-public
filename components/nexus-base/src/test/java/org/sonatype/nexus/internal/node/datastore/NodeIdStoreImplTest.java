@@ -12,40 +12,37 @@
  */
 package org.sonatype.nexus.internal.node.datastore;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.event.EventManager;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@ExtendWith(DatabaseExtension.class)
-class NodeIdStoreImplTest
-    extends Test5Support
+public class NodeIdStoreImplTest
+    extends TestSupport
 {
-  @DataSessionConfiguration(daos = NodeIdDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(NodeIdDAO.class);
 
   @Mock
   private EventManager eventManager;
 
   private NodeIdStoreImpl underTest;
 
-  @BeforeEach
-  void setup() {
+  @Before
+  public void setup() {
     underTest = new NodeIdStoreImpl(sessionRule);
     underTest.setDependencies(eventManager);
   }
 
-  @DatabaseTest
-  void testGetOrCreate_existing() {
+  @Test
+  public void testGetOrCreate_existing() {
     underTest.set("foo");
 
     String result = underTest.getOrCreate();
@@ -55,8 +52,8 @@ class NodeIdStoreImplTest
     assertThat(underTest.get().get(), is("foo"));
   }
 
-  @DatabaseTest
-  void testGetOrCreate_unset() {
+  @Test
+  public void testGetOrCreate_unset() {
     String result = underTest.getOrCreate();
 
     assertThat(underTest.get().isPresent(), is(true));

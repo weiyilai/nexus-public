@@ -13,15 +13,14 @@
 package org.sonatype.nexus.quartz;
 
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
-import org.sonatype.nexus.scheduling.CurrentState;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskInfo;
+import org.sonatype.nexus.scheduling.CurrentState;
 import org.sonatype.nexus.scheduling.TaskState;
-import org.sonatype.nexus.testdb.DatabaseTest;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -43,7 +42,7 @@ class UpdatingTasksTest
   /**
    * Updating a non cancelable task that is not running.
    */
-  @DatabaseTest
+  @Test
   void updateNonRunningNonCancelableTask() {
     TaskInfo taskInfo = createTask(SleeperTaskDescriptor.TYPE_ID, taskScheduler.getScheduleFactory().manual());
     TaskConfiguration taskConfiguration = taskInfo.getConfiguration();
@@ -78,14 +77,14 @@ class UpdatingTasksTest
   /**
    * Updating a non cancelable task that is running.
    */
-  @DatabaseTest
+  @Test
   void updateRunningNonCancelableTask() throws Exception {
     TaskInfo taskInfo = createTask(SleeperTaskDescriptor.TYPE_ID, taskScheduler.getScheduleFactory().manual());
     TaskConfiguration taskConfiguration = taskInfo.getConfiguration();
     taskInfo.runNow();
 
     // give it some time to start
-    SleeperTask.youWait.await(10, TimeUnit.SECONDS);
+    SleeperTask.youWait.await();
 
     assertThat(taskInfo, notNullValue());
     assertThat(taskInfo.getId(), equalTo(taskConfiguration.getId()));
@@ -130,7 +129,7 @@ class UpdatingTasksTest
     assertRunningTaskCount(0);
   }
 
-  @DatabaseTest(postgresql = false)
+  @Test
   void taskDisableEnableResumesTask() throws Exception {
     // create the task
     final TaskConfiguration taskConfiguration =
@@ -139,14 +138,14 @@ class UpdatingTasksTest
     taskConfiguration.setString(SleeperTask.RESULT_KEY, "result");
 
     TaskInfo taskInfo = taskScheduler.scheduleTask(taskConfiguration, taskScheduler.getScheduleFactory().manual());
-    Future<?> future = taskInfo.runNow().getCurrentState().getFuture();
+    Future future = taskInfo.runNow().getCurrentState().getFuture();
     assertThat(future, notNullValue());
 
     // give it some time to start and make it immediately done
-    SleeperTask.youWait.await(10, TimeUnit.SECONDS);
+    SleeperTask.youWait.await();
     SleeperTask.meWait.countDown();
     Thread.yield();
-    assertThat(future.get(10, TimeUnit.SECONDS), notNullValue());
+    assertThat(future.get(), notNullValue());
     assertTaskState(taskInfo, TaskState.WAITING);
 
     SleeperTask.reset();
@@ -165,9 +164,9 @@ class UpdatingTasksTest
     assertThat(future, notNullValue());
 
     // give it some time to start and make it immediately done
-    SleeperTask.youWait.await(10, TimeUnit.SECONDS);
+    SleeperTask.youWait.await();
     SleeperTask.meWait.countDown();
     Thread.yield();
-    assertThat(future.get(10, TimeUnit.SECONDS), notNullValue());
+    assertThat(future.get(), notNullValue());
   }
 }

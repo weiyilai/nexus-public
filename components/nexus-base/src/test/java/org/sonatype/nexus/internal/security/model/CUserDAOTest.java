@@ -12,18 +12,18 @@
  */
 package org.sonatype.nexus.internal.security.model;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DataStoreManager;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
 import com.google.common.collect.Iterables;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -32,9 +32,9 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.sonatype.nexus.security.config.CUser.STATUS_ACTIVE;
 import static org.sonatype.nexus.security.config.CUser.STATUS_DISABLED;
 
-@ExtendWith(DatabaseExtension.class)
-class CUserDAOTest
-    extends Test5Support
+@Category(SQLTestGroup.class)
+public class CUserDAOTest
+    extends TestSupport
 {
   private static final String PASSWORD1 =
       "$shiro1$SHA-512$1024$NYQKemFvZqat9CepP2xO9A==$4m4dBi9f/EtJLpJSW6/7+IVxW3wHR4RNeGtbopiH+D5tlVDFqNKo667eMnqWUxFrRz4Y4IQvn5hv/BnWmEfN0Q==";
@@ -42,26 +42,26 @@ class CUserDAOTest
   private static final String PASSWORD2 =
       "$shiro1$SHA-512$1024$IDetfwWXaulpIe+XL7nOyQ==$ad70UxpgqaXRzaJ41mLnKMy1hzyu3+v7dQ44VHrrNVRpA11S17ZnQX22MZZhjih9DLDEWTe3hJmCfZ8s7/mRHQ==";
 
-  @DataSessionConfiguration(daos = CUserDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(CUserDAO.class);
 
-  private DataSession<?> session;
+  private DataSession session;
 
   private CUserDAO dao;
 
-  @BeforeEach
-  void setup() {
+  @Before
+  public void setup() {
     session = sessionRule.openSession(DataStoreManager.DEFAULT_DATASTORE_NAME);
-    dao = session.access(CUserDAO.class);
+    dao = (CUserDAO) session.access(CUserDAO.class);
   }
 
-  @AfterEach
-  void cleanup() {
+  @After
+  public void cleanup() {
     session.close();
   }
 
-  @DatabaseTest
-  void testCreateReadUpdateDelete() {
+  @Test
+  public void testCreateReadUpdateDelete() {
     CUserData user = new CUserData();
     user.setId("jdoe");
     user.setFirstName("John");
@@ -99,8 +99,8 @@ class CUserDAOTest
     assertThat(dao.read("jdoe").isPresent(), is(false));
   }
 
-  @DatabaseTest
-  void testBrowse() {
+  @Test
+  public void testBrowse() {
     CUserData user1 = new CUserData();
     user1.setId("jdoe");
     user1.setFirstName("John");
@@ -130,8 +130,8 @@ class CUserDAOTest
     assertThat(Iterables.size(dao.browse()), is(3));
   }
 
-  @DatabaseTest
-  void testUpdate_returnsStatus() {
+  @Test
+  public void testUpdate_returnsStatus() {
     CUserData user = new CUserData();
     user.setId("jdoe");
     user.setFirstName("John");

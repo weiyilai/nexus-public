@@ -19,22 +19,19 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.upgrade.events.UpgradeCompletedEvent;
 import org.sonatype.nexus.common.upgrade.events.UpgradeStartedEvent;
 import org.sonatype.nexus.datastore.api.DataStore;
 import org.sonatype.nexus.datastore.api.DataStoreManager;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 import org.sonatype.nexus.upgrade.datastore.DatabaseMigrationStep;
 import org.sonatype.nexus.upgrade.datastore.UpgradeException;
 
 import org.flywaydb.core.api.MigrationVersion;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
 import static java.util.Collections.emptyList;
@@ -48,15 +45,14 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class UpgradeManagerImplTest
-    extends Test5Support
+public class UpgradeManagerImplTest
+    extends TestSupport
 {
   private static final String SELECT_FROM_FLYWAY_SCHEMA_HISTORY = "SELECT * FROM \"flyway_schema_history\"";
 
@@ -64,8 +60,8 @@ class UpgradeManagerImplTest
 
   private static final String SELECT_FROM_SKIPPED = "SELECT * FROM skipped";
 
-  @DataSessionConfiguration
-  TestDataSessionSupplier dataSessionRule;
+  @Rule
+  public DataSessionRule dataSessionRule = new DataSessionRule();
 
   @Mock
   private DataStoreManager dataStoreManager;
@@ -75,12 +71,12 @@ class UpgradeManagerImplTest
 
   TestMigrationStep migrationStep = new TestMigrationStep();
 
-  @BeforeEach
+  @Before
   public void setUp() {
-    lenient().when(dataStoreManager.get(DEFAULT_DATASTORE_NAME)).thenReturn(getDataStore());
+    when(dataStoreManager.get(DEFAULT_DATASTORE_NAME)).thenReturn(getDataStore());
   }
 
-  @DatabaseTest
+  @Test
   public void testNoUpgrades() throws Exception {
     UpgradeManagerImpl upgradeManager = new UpgradeManagerImpl(dataStoreManager, auditor, emptyList());
     upgradeManager.migrate();
@@ -100,7 +96,7 @@ class UpgradeManagerImplTest
     verifyNoInteractions(auditor);
   }
 
-  @DatabaseTest
+  @Test
   public void testExampleUpgrade() throws Exception {
     UpgradeManagerImpl upgradeManager = new UpgradeManagerImpl(dataStoreManager, auditor, singletonList(migrationStep));
 
@@ -136,11 +132,7 @@ class UpgradeManagerImplTest
     verifyNoMoreInteractions(auditor);
   }
 
-  private static void assertForExampleTable(
-      final ResultSet results,
-      final String name,
-      final String fawkes) throws SQLException
-  {
+  private static void assertForExampleTable(ResultSet results, String name, String fawkes) throws SQLException {
     assertTrue(results.next());
     assertThat(results.getString(name), equalTo(fawkes));
     assertFalse(results.next());
@@ -159,7 +151,7 @@ class UpgradeManagerImplTest
     upgradeManagerWithoutFuture.migrate();
   }
 
-  @DatabaseTest
+  @Test
   public void testUpgradeSkippedStep() throws UpgradeException {
     FutureMigrationStep futureMigrationStep = new FutureMigrationStep();
     UpgradeManagerImpl upgradeManager =
@@ -181,7 +173,7 @@ class UpgradeManagerImplTest
     }
   }
 
-  @DatabaseTest
+  @Test
   public void testMaxMigrations() {
     FutureMigrationStep futureMigrationStep = new FutureMigrationStep();
 
@@ -191,7 +183,7 @@ class UpgradeManagerImplTest
     assertThat(upgradeManagerWithFutureMigration.getMaxMigrationVersion().get().getVersion(), equalTo("4.5.6"));
   }
 
-  @DatabaseTest
+  @Test
   public void testGetBaselineWorksAsExpected() {
     TestBaselineMigrationStep baselineMigrationStep = new TestBaselineMigrationStep();
     FutureMigrationStep futureMigrationStep = new FutureMigrationStep();
@@ -206,7 +198,7 @@ class UpgradeManagerImplTest
   }
 
   private Optional<DataStore<?>> getDataStore() {
-    return Optional.of(dataSessionRule.getDataStore(DEFAULT_DATASTORE_NAME));
+    return dataSessionRule.getDataStore(DEFAULT_DATASTORE_NAME);
   }
 
   private Connection getConnection() throws SQLException {

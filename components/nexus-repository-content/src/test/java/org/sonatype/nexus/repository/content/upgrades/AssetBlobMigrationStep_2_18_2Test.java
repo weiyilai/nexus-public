@@ -14,17 +14,15 @@ package org.sonatype.nexus.repository.content.upgrades;
 
 import java.sql.Connection;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.repository.content.tasks.CreateAssetBlobIndexTaskDescriptor;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.UpgradeTaskScheduler;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -35,17 +33,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class AssetBlobMigrationStep_2_18_2Test
-    extends Test5Support
+public class AssetBlobMigrationStep_2_18_2Test
+    extends TestSupport
 {
-  @DataSessionConfiguration
-  TestDataSessionSupplier dataSessionRule;
+  @Rule
+  public DataSessionRule dataSessionRule = new DataSessionRule(DEFAULT_DATASTORE_NAME);
 
   @Mock
   private UpgradeTaskScheduler upgradeTaskScheduler;
@@ -53,18 +51,17 @@ class AssetBlobMigrationStep_2_18_2Test
   @InjectMocks
   private AssetBlobMigrationStep_2_18_2 underTest;
 
-  @Mock
   private TaskConfiguration mockTaskConfiguration;
 
-  @BeforeEach
+  @Before
   public void setup() {
-    lenient().when(upgradeTaskScheduler
-        .createTaskConfigurationInstance(
-            CreateAssetBlobIndexTaskDescriptor.TYPE_ID))
-        .thenReturn(mockTaskConfiguration);
+    mockTaskConfiguration = mock(TaskConfiguration.class);
+    when(upgradeTaskScheduler.createTaskConfigurationInstance(
+        CreateAssetBlobIndexTaskDescriptor.TYPE_ID))
+            .thenReturn(mockTaskConfiguration);
   }
 
-  @DatabaseTest
+  @Test
   public void testMigrate_schedulesTask() throws Exception {
     try (Connection connection = dataSessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       underTest.migrate(connection);
@@ -84,7 +81,7 @@ class AssetBlobMigrationStep_2_18_2Test
         equalTo(mockTaskConfiguration));
   }
 
-  @DatabaseTest
+  @Test
   public void testMigrate_calledOnce() throws Exception {
     try (Connection connection = dataSessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       underTest.migrate(connection);
@@ -96,13 +93,13 @@ class AssetBlobMigrationStep_2_18_2Test
     verify(upgradeTaskScheduler, times(1)).schedule(any(TaskConfiguration.class));
   }
 
-  @DatabaseTest
+  @Test
   public void testVersion() {
     assertTrue("version should be present", underTest.version().isPresent());
     assertEquals("version should be 2.18.2", "2.18.2", underTest.version().get());
   }
 
-  @DatabaseTest
+  @Test
   public void testMigrate_doesNotFailWithNullConnection() throws Exception {
     // This tests that the migration doesn't depend on connection state
     try (Connection connection = dataSessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
@@ -113,7 +110,7 @@ class AssetBlobMigrationStep_2_18_2Test
     verify(upgradeTaskScheduler).schedule(any(TaskConfiguration.class));
   }
 
-  @DatabaseTest
+  @Test
   public void testMigrate_multipleCallsScheduleMultipleTasks() throws Exception {
     // Simulate multiple calls to migrate (shouldn't happen in practice, but tests idempotency)
     try (Connection connection1 = dataSessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
@@ -128,7 +125,7 @@ class AssetBlobMigrationStep_2_18_2Test
     verify(upgradeTaskScheduler, times(2)).schedule(any(TaskConfiguration.class));
   }
 
-  @DatabaseTest
+  @Test
   public void testMigrate_usesCorrectTypeId() throws Exception {
     try (Connection connection = dataSessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       underTest.migrate(connection);

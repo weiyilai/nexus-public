@@ -16,20 +16,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DataStoreManager;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static java.util.Collections.emptyMap;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -37,30 +37,30 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
-@ExtendWith(DatabaseExtension.class)
-class CPrivilegeDAOTest
-    extends Test5Support
+@Category(SQLTestGroup.class)
+public class CPrivilegeDAOTest
+    extends TestSupport
 {
-  @DataSessionConfiguration(daos = CPrivilegeDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(CPrivilegeDAO.class);
 
-  private DataSession<?> session;
+  private DataSession session;
 
   private CPrivilegeDAO dao;
 
-  @BeforeEach
-  void setup() {
+  @Before
+  public void setup() {
     session = sessionRule.openSession(DataStoreManager.DEFAULT_DATASTORE_NAME);
-    dao = session.access(CPrivilegeDAO.class);
+    dao = (CPrivilegeDAO) session.access(CPrivilegeDAO.class);
   }
 
-  @AfterEach
-  void cleanup() {
+  @After
+  public void cleanup() {
     session.close();
   }
 
-  @DatabaseTest
-  void testCreateReadUpdateDelete() {
+  @Test
+  public void testCreateReadUpdateDelete() {
     CPrivilegeData privilege = new CPrivilegeData();
     privilege.setId("notes-read");
     privilege.setName("app-notes-read");
@@ -101,8 +101,8 @@ class CPrivilegeDAOTest
     assertThat(dao.read("notes-read").isPresent(), is(false));
   }
 
-  @DatabaseTest
-  void testBrowse() {
+  @Test
+  public void testBrowse() {
     Set<String> ids = ImmutableSet.of("1", "2", "3");
     List<CPrivilegeData> privileges = generatePrivileges(ids);
     privileges.forEach(privilege -> dao.create(privilege));
@@ -110,8 +110,8 @@ class CPrivilegeDAOTest
     assertThat(Iterables.size(dao.browse()), is(ids.size()));
   }
 
-  @DatabaseTest
-  void testUpdate_returnsStatus() {
+  @Test
+  public void testUpdate_returnsStatus() {
     CPrivilegeData privilege = new CPrivilegeData();
     privilege.setId("privilege1");
     privilege.setName("Privilege1");
@@ -128,8 +128,8 @@ class CPrivilegeDAOTest
     assertThat(dao.update(privilege), is(true));
   }
 
-  @DatabaseTest
-  void testFindByIds() {
+  @Test
+  public void testFindByIds() {
     Set<String> ids = ImmutableSet.of("1", "2", "3");
     List<CPrivilegeData> privileges = generatePrivileges(ids);
     privileges.forEach(privilege -> dao.create(privilege));
@@ -137,7 +137,7 @@ class CPrivilegeDAOTest
     assertThat(dao.findByIds(ids).size(), is(ids.size()));
   }
 
-  private static List<CPrivilegeData> generatePrivileges(final Set<String> ids) {
+  private List<CPrivilegeData> generatePrivileges(final Set<String> ids) {
     List<CPrivilegeData> privileges = new ArrayList<>(ids.size());
     for (String id : ids) {
       CPrivilegeData privilege = new CPrivilegeData();

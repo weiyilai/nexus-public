@@ -12,44 +12,41 @@
  */
 package com.sonatype.nexus.ssl.plugin.internal.keystore;
 
-import java.util.Optional;
-
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.sonatype.nexus.datastore.api.DataSession;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class KeyStoreDAOTest
+public class KeyStoreDAOTest
 {
-  @DataSessionConfiguration(daos = KeyStoreDAO.class)
-  TestDataSessionSupplier sessionRule;
+
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(KeyStoreDAO.class);
 
   private DataSession<?> session;
 
   private KeyStoreDAO dao;
 
-  @BeforeEach
+  @Before
   public void setup() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(KeyStoreDAO.class);
   }
 
-  @AfterEach
+  @After
   public void cleanup() {
     session.close();
   }
 
-  @DatabaseTest
+  @Test
   public void testCreateReadUpdateDeleteOperations() {
     // Create a KeyStoreData entity
     KeyStoreData entity = new KeyStoreData();

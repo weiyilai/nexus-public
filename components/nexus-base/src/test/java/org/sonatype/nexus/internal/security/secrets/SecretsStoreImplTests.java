@@ -15,17 +15,16 @@ package org.sonatype.nexus.internal.security.secrets;
 import java.util.List;
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.crypto.secrets.SecretData;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.datastore.api.DataStore;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
 import org.assertj.db.type.Table;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.mockito.Mock;
 
 import static org.assertj.db.api.Assertions.assertThat;
@@ -36,10 +35,10 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class SecretsStoreImplTests
-    extends Test5Support
+public class SecretsStoreImplTests
+    extends TestSupport
 {
   private static final String LDAP = "ldap";
 
@@ -51,22 +50,22 @@ class SecretsStoreImplTests
 
   private static final String MY_KEY = "my-key";
 
-  @DataSessionConfiguration(daos = SecretsDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(SecretsDAO.class);
 
   @Mock
   private EventManager eventManager;
 
   SecretsStoreImpl underTest;
 
-  @BeforeEach
-  void setUp() {
+  @Before
+  public void setUp() {
     underTest = new SecretsStoreImpl(sessionRule);
     underTest.setDependencies(eventManager);
   }
 
-  @DatabaseTest
-  void testCreate() {
+  @Test
+  public void testCreate() {
     final int id = underTest.create(LDAP, MY_KEY, MY_SECRET, "jsmith");
 
     assertThat(table()).row()
@@ -82,8 +81,8 @@ class SecretsStoreImplTests
         .isEqualTo("jsmith");
   }
 
-  @DatabaseTest
-  void testDelete() {
+  @Test
+  public void testDelete() {
     // create another row so the DB has data
     final int id = underTest.create(LDAP, MY_KEY, MY_SECRET, null);
 
@@ -93,8 +92,8 @@ class SecretsStoreImplTests
     assertThat(table()).hasNumberOfRows(0);
   }
 
-  @DatabaseTest
-  void testDelete_missing() {
+  @Test
+  public void testDelete_missing() {
     // create another row so the DB has data
     final int id = underTest.create(LDAP, MY_KEY, MY_SECRET, null);
 
@@ -104,8 +103,8 @@ class SecretsStoreImplTests
     assertThat(table()).hasNumberOfRows(1);
   }
 
-  @DatabaseTest
-  void testUpdate() {
+  @Test
+  public void testUpdate() {
     final int id = underTest.create(LDAP, MY_KEY, MY_SECRET, null);
     assertTrue(underTest.update(id, MY_SECRET, MY_KEY2, MY_SECRET2));
 
@@ -122,8 +121,8 @@ class SecretsStoreImplTests
         .isNull();
   }
 
-  @DatabaseTest
-  void testUpdateFailsOnUnexpectedSecret() {
+  @Test
+  public void testUpdateFailsOnUnexpectedSecret() {
     final int id = underTest.create(LDAP, MY_KEY, MY_SECRET, null);
     assertFalse(underTest.update(id, MY_SECRET2, MY_KEY2, MY_SECRET2));
 
@@ -140,48 +139,48 @@ class SecretsStoreImplTests
         .isNull();
   }
 
-  @DatabaseTest
-  void testUpdate_missing() {
+  @Test
+  public void testUpdate_missing() {
     // create a different row so the db has data
     int id = underTest.create(LDAP, MY_KEY, MY_SECRET, null);
 
     assertFalse("No rows updated", underTest.update(id + 1, MY_SECRET, MY_KEY, MY_SECRET));
   }
 
-  @DatabaseTest
-  void testRead() {
+  @Test
+  public void testRead() {
     final int id = underTest.create(LDAP, MY_KEY, MY_SECRET, "jsmith");
 
     Optional<SecretData> actual = underTest.read(id);
     assertSecret(actual, id, MY_KEY, MY_SECRET, "jsmith");
   }
 
-  @DatabaseTest
-  void testRead_missing() {
+  @Test
+  public void testRead_missing() {
     final int id = underTest.create(LDAP, MY_KEY, MY_SECRET, "jsmith");
 
     Optional<SecretData> actual = underTest.read(id + 1);
     assertFalse(actual.isPresent());
   }
 
-  @DatabaseTest
-  void testExistWithDifferentKeyId() {
+  @Test
+  public void testExistWithDifferentKeyId() {
     underTest.create(LDAP, MY_KEY, MY_SECRET, null);
     underTest.create(LDAP, MY_KEY2, MY_SECRET, null);
 
     assertTrue(underTest.existWithDifferentKeyId(MY_KEY));
   }
 
-  @DatabaseTest
-  void testNotExistWithDifferentKeyId() {
+  @Test
+  public void testNotExistWithDifferentKeyId() {
     underTest.create(LDAP, MY_KEY, MY_SECRET, null);
     underTest.create(LDAP, MY_KEY, MY_SECRET, null);
 
     assertFalse(underTest.existWithDifferentKeyId(MY_KEY));
   }
 
-  @DatabaseTest
-  void testFetchExistWithDifferentKeyId() {
+  @Test
+  public void testFetchExistWithDifferentKeyId() {
     underTest.create(LDAP, MY_KEY, MY_SECRET, null);
     underTest.create(LDAP, MY_KEY, MY_SECRET, null);
 
@@ -203,7 +202,8 @@ class SecretsStoreImplTests
   }
 
   private Table table() {
-    return sessionRule.table("secrets");
+    DataStore<?> dataStore = sessionRule.getDataStore(DEFAULT_DATASTORE_NAME).orElseThrow(RuntimeException::new);
+    return new Table(dataStore.getDataSource(), "secrets");
   }
 
   private static void assertSecret(

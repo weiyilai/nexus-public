@@ -19,21 +19,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.capability.CapabilityIdentity;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.internal.capability.storage.CapabilityStorageImpl;
 import org.sonatype.nexus.internal.capability.storage.CapabilityStorageItem;
 import org.sonatype.nexus.internal.capability.storage.CapabilityStorageItemDAO;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 import org.sonatype.nexus.transaction.UnitOfWork;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.mockito.Mock;
 
 import static java.util.Collections.emptyMap;
@@ -47,12 +45,11 @@ import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTOR
 /**
  * Tests for {@link CleanupCapabilityDuplicatesService}
  */
-@ExtendWith(DatabaseExtension.class)
-class CleanupCapabilityDuplicatesServiceTest
-    extends Test5Support
+public class CleanupCapabilityDuplicatesServiceTest
+    extends TestSupport
 {
-  @DataSessionConfiguration(daos = CapabilityStorageItemDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(CapabilityStorageItemDAO.class);
 
   @Mock
   private EventManager eventManager;
@@ -61,7 +58,7 @@ class CleanupCapabilityDuplicatesServiceTest
 
   private CleanupCapabilityDuplicatesService underTest;
 
-  @BeforeEach
+  @Before
   public void start() {
     capabilityStorage = new CapabilityStorageImpl(sessionRule);
     capabilityStorage.setDependencies(eventManager);
@@ -70,12 +67,12 @@ class CleanupCapabilityDuplicatesServiceTest
     UnitOfWork.beginBatch(() -> sessionRule.openSession(DEFAULT_DATASTORE_NAME));
   }
 
-  @AfterEach
+  @After
   public void tearDown() {
     UnitOfWork.end();
   }
 
-  @DatabaseTest
+  @Test
   public void testCleanup() throws Exception {
     prepareTestCapabilitiesWithDuplicates();
 
@@ -92,7 +89,7 @@ class CleanupCapabilityDuplicatesServiceTest
     assertCapabilitiesCount(duplicates, 0);
   }
 
-  @DatabaseTest
+  @Test
   public void testCleanupDoesNotTouchUniqueRecords() throws Exception {
     prepareUniqueTestCapabilities();
 
@@ -105,7 +102,7 @@ class CleanupCapabilityDuplicatesServiceTest
     assertThat(capabilityStorage.getAll(), aMapWithSize(5));
   }
 
-  @DatabaseTest
+  @Test
   public void testCleanupNotNeeded() throws Exception {
     underTest.doCleanup();
 

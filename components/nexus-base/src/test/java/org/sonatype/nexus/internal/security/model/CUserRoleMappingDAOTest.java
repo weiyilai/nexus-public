@@ -14,18 +14,18 @@ package org.sonatype.nexus.internal.security.model;
 
 import java.util.stream.Stream;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.datastore.api.DataStoreManager;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
 import com.google.common.collect.Iterables;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
@@ -35,30 +35,30 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
-@ExtendWith(DatabaseExtension.class)
-class CUserRoleMappingDAOTest
-    extends Test5Support
+@Category(SQLTestGroup.class)
+public class CUserRoleMappingDAOTest
+    extends TestSupport
 {
-  @DataSessionConfiguration(daos = CUserRoleMappingDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(CUserRoleMappingDAO.class);
 
-  private DataSession<?> session;
+  private DataSession session;
 
   private CUserRoleMappingDAO dao;
 
-  @BeforeEach
-  void setup() {
+  @Before
+  public void setup() {
     session = sessionRule.openSession(DataStoreManager.DEFAULT_DATASTORE_NAME);
-    dao = session.access(CUserRoleMappingDAO.class);
+    dao = (CUserRoleMappingDAO) session.access(CUserRoleMappingDAO.class);
   }
 
-  @AfterEach
-  void cleanup() {
+  @After
+  public void cleanup() {
     session.close();
   }
 
-  @DatabaseTest
-  void testCreateReadUpdateDelete_caseSensitive() {
+  @Test
+  public void testCreateReadUpdateDelete_caseSensitive() {
     CUserRoleMappingData roleMapping = new CUserRoleMappingData();
     roleMapping.setUserId("admin");
     roleMapping.setSource("other");
@@ -98,8 +98,8 @@ class CUserRoleMappingDAOTest
     assertThat(dao.read("admin", "other").isPresent(), is(false));
   }
 
-  @DatabaseTest
-  void testBrowse() {
+  @Test
+  public void testBrowse() {
     CUserRoleMappingData roleMapping1 = new CUserRoleMappingData();
     roleMapping1.setUserId("user1");
     roleMapping1.setSource("default");
@@ -120,8 +120,8 @@ class CUserRoleMappingDAOTest
     assertThat(Iterables.size(dao.browse()), is(3));
   }
 
-  @DatabaseTest
-  void testUpdate_returnsStatus() {
+  @Test
+  public void testUpdate_returnsStatus() {
     CUserRoleMappingData roleMapping = new CUserRoleMappingData();
     roleMapping.setUserId("user1");
     roleMapping.setSource("default");

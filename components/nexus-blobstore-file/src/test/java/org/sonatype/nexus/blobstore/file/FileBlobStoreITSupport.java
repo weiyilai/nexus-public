@@ -27,7 +27,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.blobstore.BlobStoreReconciliationLogger;
 import org.sonatype.nexus.blobstore.DefaultBlobIdLocationResolver;
 import org.sonatype.nexus.blobstore.MockBlobStoreConfiguration;
@@ -39,24 +39,15 @@ import org.sonatype.nexus.blobstore.api.BlobStoreMetrics;
 import org.sonatype.nexus.blobstore.api.metrics.BlobStoreMetricsEntity;
 import org.sonatype.nexus.blobstore.api.metrics.BlobStoreMetricsStore;
 import org.sonatype.nexus.blobstore.file.internal.SimpleFileOperations;
-import org.sonatype.nexus.blobstore.file.internal.datastore.DatastoreFileBlobDeletionIndex;
 import org.sonatype.nexus.blobstore.file.internal.datastore.metrics.DatastoreFileBlobStoreMetricsService;
-import org.sonatype.nexus.blobstore.internal.softdeleted.SoftDeletedBlobsDAO;
-import org.sonatype.nexus.blobstore.internal.softdeleted.SoftDeletedBlobsStoreImpl;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaService;
 import org.sonatype.nexus.blobstore.quota.BlobStoreQuotaUsageChecker;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
-import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.io.DirectoryHelper;
 import org.sonatype.nexus.common.log.DryRunPrefix;
 import org.sonatype.nexus.common.node.NodeAccess;
 import org.sonatype.nexus.common.property.PropertiesFile;
-import org.sonatype.nexus.common.scheduling.PeriodicJobService;
 import org.sonatype.nexus.scheduling.internal.PeriodicJobServiceImpl;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
@@ -64,9 +55,8 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -83,11 +73,9 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -105,9 +93,8 @@ import static org.sonatype.nexus.blobstore.api.BlobStore.TEMPORARY_BLOB_HEADER;
 /**
  * {@link FileBlobStore} integration tests.
  */
-@ExtendWith(DatabaseExtension.class)
-class FileBlobStoreIT
-    extends Test5Support
+public abstract class FileBlobStoreITSupport
+    extends TestSupport
 {
   public static final int TEST_DATA_LENGTH = 10;
 
@@ -154,34 +141,16 @@ class FileBlobStoreIT
   @Mock
   private BlobStoreReconciliationLogger reconciliationLogger;
 
-  @DataSessionConfiguration(daos = SoftDeletedBlobsDAO.class)
-  TestDataSessionSupplier sessionRule;
+  protected abstract FileBlobDeletionIndex fileBlobDeletionIndex();
 
-  @Mock
-  private EventManager eventManager;
-
-  @Mock
-  private PeriodicJobService periodicJobService;
-
-  private SoftDeletedBlobsStoreImpl store;
-
-  protected FileBlobDeletionIndex fileBlobDeletionIndex() {
-    if (store == null) {
-      store = new SoftDeletedBlobsStoreImpl(sessionRule);
-      store.setDependencies(eventManager);
-    }
-
-    return new DatastoreFileBlobDeletionIndex(store, periodicJobService, Duration.ofSeconds(1));
-  }
-
-  @BeforeEach
+  @Before
   public void setUp() throws Exception {
     metricsStore = spy(new DatastoreFileBlobStoreMetricsService(METRICS_FLUSH_TIMEOUT, blobStoreMetricsStore,
         new PeriodicJobServiceImpl(10)));
 
-    lenient().when(nodeAccess.getId()).thenReturn(UUID.randomUUID().toString());
-    lenient().when(nodeAccess.isOldestNode()).thenReturn(true);
-    lenient().when(dryRunPrefix.get()).thenReturn("");
+    when(nodeAccess.getId()).thenReturn(UUID.randomUUID().toString());
+    when(nodeAccess.isOldestNode()).thenReturn(true);
+    when(dryRunPrefix.get()).thenReturn("");
     blobStoreDirectory = util.createTempDir().toPath();
     contentDirectory = blobStoreDirectory.resolve("content");
     when(applicationDirectories.getWorkDirectory(anyString())).thenReturn(blobStoreDirectory.toFile());
@@ -192,11 +161,6 @@ class FileBlobStoreIT
 
     underTest = createBlobStore(UUID.randomUUID().toString(), fileBlobDeletionIndex());
     reset(metricsStore, blobStoreMetricsStore);
-    // Setup synchronous running of the soft deleted blob index for the tests
-    lenient().doAnswer(invocation -> {
-      invocation.getArgument(0, Runnable.class).run();
-      return null;
-    }).when(periodicJobService).runOnce(any(Runnable.class), anyInt());
   }
 
   protected FileBlobStore createBlobStore(final String name, final FileBlobDeletionIndex index) throws Exception {
@@ -220,7 +184,7 @@ class FileBlobStoreIT
     }
   }
 
-  @DatabaseTest
+  @Test
   public void basicSmokeTest() throws Exception {
     final byte[] content = randomBytes();
 
@@ -255,7 +219,7 @@ class FileBlobStoreIT
     assertThat(deletedBlob, is(nullValue()));
   }
 
-  @DatabaseTest
+  @Test
   public void createAndDeleteBlobWithDirectPathSuccessful() throws IOException {
     final byte[] content = randomBytes();
 
@@ -291,12 +255,12 @@ class FileBlobStoreIT
     return content;
   }
 
-  @DatabaseTest
+  @Test
   public void getDirectPathBlobIdStreamEmpty() {
     assertThat(underTest.getDirectPathBlobIdStream("nothing").count(), is(0L));
   }
 
-  @DatabaseTest
+  @Test
   public void testExistsMethodForDirectPathBlob() {
     byte[] content = "hello".getBytes();
     final ImmutableMap<String, String> DIRECT_PATH_HEADERS = ImmutableMap.of(
@@ -313,7 +277,7 @@ class FileBlobStoreIT
     assertThat(underTest.exists(blob.getId()), is(true));
   }
 
-  @DatabaseTest
+  @Test
   public void getDirectPathBlobIdStreamSuccess() throws IOException {
     byte[] content = "hello".getBytes();
     Blob blob = underTest.create(new ByteArrayInputStream(content), ImmutableMap.of(
@@ -337,7 +301,7 @@ class FileBlobStoreIT
     assertThat(blobId.asUniqueString().contains("/"), is(true));
   }
 
-  @DatabaseTest
+  @Test
   public void itWillReturnAllBlobIdsInTheStream() {
     byte[] content = "hello".getBytes();
     Blob regularBlob = underTest.create(new ByteArrayInputStream(content), ImmutableMap.of(
@@ -359,7 +323,7 @@ class FileBlobStoreIT
     underTest.getDirectPathBlobIdStream("../content");
   }
 
-  @DatabaseTest
+  @Test
   public void overwriteDirectPathBlobSuccessful() throws IOException {
     byte[] content = "hello".getBytes();
     final long initialSize = content.length;
@@ -404,7 +368,7 @@ class FileBlobStoreIT
     assertThat(deletedBlob, is(nullValue()));
   }
 
-  @DatabaseTest
+  @Test
   public void testDeleteHardUpdatesMetrics() {
     final byte[] content = new byte[TEST_DATA_LENGTH];
     final Blob blob = underTest.create(new ByteArrayInputStream(content), TEST_HEADERS);
@@ -416,7 +380,7 @@ class FileBlobStoreIT
     verify(metricsStore).recordDeletion(TEST_DATA_LENGTH);
   }
 
-  @DatabaseTest
+  @Test
   public void testSoftDeleteMetricsOnlyUpdateOnCompact() throws IOException {
     final byte[] content = new byte[TEST_DATA_LENGTH];
 
@@ -434,7 +398,7 @@ class FileBlobStoreIT
     verify(metricsStore).recordDeletion(TEST_DATA_LENGTH);
   }
 
-  @DatabaseTest
+  @Test
   public void temporaryBlobMoveFallback() throws Exception {
     final byte[] content = randomBytes();
 
@@ -450,7 +414,7 @@ class FileBlobStoreIT
     assertThat("size must be calculated correctly", metrics.getContentSize(), is(equalTo((long) TEST_DATA_LENGTH)));
   }
 
-  @DatabaseTest
+  @Test
   public void temporaryBlobMoveFallbackPersists() throws Exception {
     final byte[] content = randomBytes();
 
@@ -463,7 +427,7 @@ class FileBlobStoreIT
     verify(fileOperations, times(4)).move(any(), any());
   }
 
-  @DatabaseTest
+  @Test
   public void hardLinkIngestion() throws Exception {
 
     final byte[] content = testData();
@@ -487,7 +451,7 @@ class FileBlobStoreIT
     assertThat("blob must have been modified", extractContent(blob), is(equalTo(extractContent(sourceFile))));
   }
 
-  @DatabaseTest
+  @Test
   public void blobCopyingPreservesBytesUsingHardLink() throws Exception {
 
     byte[] content = testData();
@@ -521,7 +485,7 @@ class FileBlobStoreIT
     assertThat(copy.getId().asUniqueString(), not(startsWith(TEMPORARY_BLOB_ID_PREFIX)));
   }
 
-  @DatabaseTest
+  @Test
   public void blobCopyingPreservesBytesUsingInputStream() throws Exception {
 
     byte[] content = testData();
@@ -587,7 +551,7 @@ class FileBlobStoreIT
     }
   }
 
-  @DatabaseTest
+  @Test
   public void hardDeletePreventsGetDespiteOpenStreams() throws Exception {
     final byte[] content = randomBytes();
 
@@ -605,7 +569,7 @@ class FileBlobStoreIT
     assertThat(newBlob, is(nullValue()));
   }
 
-  @DatabaseTest
+  @Test
   public void blobstoreRemovalPreservesExternalFiles() throws Exception {
     final byte[] content = randomBytes();
 
@@ -623,7 +587,7 @@ class FileBlobStoreIT
     underTest = null; // The store is stopped, no cleanup required
   }
 
-  @DatabaseTest
+  @Test
   public void blobstoreRemovalDeletesInternalFiles() throws Exception {
 
     assertThat(Files.exists(this.blobStoreDirectory), is(true));
@@ -636,7 +600,7 @@ class FileBlobStoreIT
     underTest = null; // The store is stopped, no cleanup required
   }
 
-  @DatabaseTest
+  @Test
   public void blobMoveRetriesOnFileSystemException() throws Exception {
     byte[] content = testData();
     HashCode sha1 = Hashing.sha1().hashBytes(content);
@@ -652,7 +616,7 @@ class FileBlobStoreIT
     verify(fileOperations, times(2)).delete(any());
   }
 
-  @DatabaseTest
+  @Test
   public void testSoftDeleteFallsBackToHardDelete() throws Exception {
     byte[] content = new byte[TEST_DATA_LENGTH];
     Blob blob = underTest.create(new ByteArrayInputStream(content), TEST_HEADERS);
@@ -673,7 +637,7 @@ class FileBlobStoreIT
     assertThat(Files.exists(propertiesPath), is(false));
   }
 
-  @DatabaseTest
+  @Test
   public void testCompactWithoutIndex() throws Exception {
     byte[] content = new byte[TEST_DATA_LENGTH];
     final Blob blob1 = underTest.create(new ByteArrayInputStream(content), TEST_HEADERS);

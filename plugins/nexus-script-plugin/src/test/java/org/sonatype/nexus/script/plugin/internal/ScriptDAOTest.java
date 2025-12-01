@@ -12,46 +12,45 @@
  */
 package org.sonatype.nexus.script.plugin.internal;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.junit.Before;
+import org.junit.After;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.script.Script;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTORE_NAME;
 
-@ExtendWith(DatabaseExtension.class)
-class ScriptDAOTest
-    extends Test5Support
+@Category(SQLTestGroup.class)
+public class ScriptDAOTest
+    extends TestSupport
 {
-  @DataSessionConfiguration(daos = ScriptDAO.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule().access(ScriptDAO.class);
 
   private DataSession<?> session;
 
   private ScriptDAO dao;
 
-  @BeforeEach
+  @Before
   public void setUp() {
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(ScriptDAO.class);
   }
 
-  @AfterEach
+  @After
   public void tearDown() {
     session.close();
   }
 
-  @DatabaseTest
+  @Test
   public void testCreateReadUpdateDelete() {
     ScriptData script = new ScriptData();
     script.setName("hello");

@@ -15,19 +15,19 @@ package org.sonatype.nexus.quartz.internal.upgrades;
 import java.sql.Connection;
 import java.util.Locale;
 
-import org.sonatype.goodies.testsupport.Test5Support;
+import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.nexus.content.testsuite.groups.SQLTestGroup;
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.quartz.internal.datastore.QuartzDAO;
 import org.sonatype.nexus.quartz.internal.datastore.QuartzJobDataTypeHandler;
 import org.sonatype.nexus.quartz.internal.datastore.QuartzTestDAO;
-import org.sonatype.nexus.testdb.DataSessionConfiguration;
-import org.sonatype.nexus.testdb.DatabaseExtension;
-import org.sonatype.nexus.testdb.DatabaseTest;
-import org.sonatype.nexus.testdb.TestDataSessionSupplier;
+import org.sonatype.nexus.testdb.DataSessionRule;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
@@ -37,13 +37,15 @@ import static org.sonatype.nexus.datastore.api.DataStoreManager.DEFAULT_DATASTOR
 /**
  * Unit tests for {@link JobDescriptionMigrationStep_1_3} class
  */
-@ExtendWith(DatabaseExtension.class)
-class JobDescriptionMigrationStep_1_3Test
-    extends Test5Support
+@Category(SQLTestGroup.class)
+public class JobDescriptionMigrationStep_1_3Test
+    extends TestSupport
 {
-  @DataSessionConfiguration(daos = {QuartzDAO.class, QuartzTestDAO.class},
-      typeHandlers = QuartzJobDataTypeHandler.class)
-  TestDataSessionSupplier sessionRule;
+  @Rule
+  public DataSessionRule sessionRule = new DataSessionRule()
+      .handle(new QuartzJobDataTypeHandler())
+      .access(QuartzDAO.class)
+      .access(QuartzTestDAO.class);
 
   private DataSession<?> session;
 
@@ -57,19 +59,19 @@ class JobDescriptionMigrationStep_1_3Test
 
   private final static String ONE_BILLION_CHARACTERS = "1000000000";
 
-  @BeforeEach
+  @Before
   public void setup() {
     upgradeStep = new JobDescriptionMigrationStep_1_3();
     session = sessionRule.openSession(DEFAULT_DATASTORE_NAME);
     dao = session.access(QuartzTestDAO.class);
   }
 
-  @AfterEach
+  @After
   public void cleanup() {
     session.close();
   }
 
-  @DatabaseTest
+  @Test
   public void testMigration() throws Exception {
     try (Connection conn = sessionRule.openConnection(DEFAULT_DATASTORE_NAME)) {
       upgradeStep.migrate(conn);

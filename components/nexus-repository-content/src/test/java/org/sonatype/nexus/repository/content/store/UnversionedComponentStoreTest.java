@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.content.store;
 
-import org.sonatype.nexus.testdb.DatabaseTest;
-
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class UnversionedComponentStoreTest
     extends ComponentStoreTestSupport
@@ -25,13 +24,13 @@ class UnversionedComponentStoreTest
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testPurge_byComponentIds() {
     super.testPurge_byComponentIds();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testPurge_byComponent() {
     super.testPurge_byComponent();
   }

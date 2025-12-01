@@ -12,9 +12,8 @@
  */
 package org.sonatype.nexus.repository.content.store;
 
-import org.sonatype.nexus.testdb.DatabaseTest;
-
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test {@link AssetDAO} without setting the component's entity version
@@ -28,151 +27,151 @@ class UnversionedAssetDAOTest
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testCrudOperations() throws InterruptedException {
     super.testCrudOperations();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testLastDownloaded() throws InterruptedException {
     super.testLastDownloaded();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testAttachingBlobs() throws InterruptedException {
     super.testAttachingBlobs();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testBrowseComponentAssets() {
     super.testBrowseComponentAssets();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testContinuationBrowsing() {
     super.testContinuationBrowsing();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testFlaggedBrowsing() {
     super.testFlaggedBrowsing();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testReadPathTest() {
     super.testReadPathTest();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testDeleteAllAssets() {
     super.testDeleteAllAssets();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testReadPaths() {
     super.testReadPaths();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testPurgeOperation() {
     super.testPurgeOperation();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testRoundTrip() {
     super.testRoundTrip();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testBrowseAssetsInRepositories() {
     super.testBrowseAssetsInRepositories();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testBrowseEagerAssetsInRepository() {
     super.testBrowseEagerAssetsInRepository();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testBrowseEagerAssetsInRepositoryOrderingByBlobCreated() throws InterruptedException {
     super.testBrowseEagerAssetsInRepositoryOrderingByBlobCreated();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testBrowseEagerAssetsInRepositoryPaginationWithBlobCreated() throws InterruptedException {
     super.testBrowseEagerAssetsInRepositoryPaginationWithBlobCreated();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testBrowseEagerAssetsInRepositorySameTimestampDifferentAssetId() throws InterruptedException {
     super.testBrowseEagerAssetsInRepositorySameTimestampDifferentAssetId();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testSetLastDownloaded() {
     super.testSetLastDownloaded();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testLastUpdated() {
     super.testLastUpdated();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testFilterClauseIsolation() {
     super.testFilterClauseIsolation();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testFindByBlobRef() throws InterruptedException {
     super.testFindByBlobRef();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testFindByComponentIds() {
     super.testFindByComponentIds();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testFindAddedToRepository() {
     super.testFindAddedToRepository();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testFindAddedToRepositoryTruncatesToMilliseconds() {
     super.testFindAddedToRepositoryTruncatesToMilliseconds();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testDeleteByPaths() {
     super.testDeleteByPaths();
   }
 
   @Override
-  @DatabaseTest
+  @Test
   protected void testAssetRecordsExist() {
     super.testAssetRecordsExist();
   }
