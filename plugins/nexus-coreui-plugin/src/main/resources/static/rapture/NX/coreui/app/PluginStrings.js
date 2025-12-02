@@ -1353,7 +1353,7 @@ Ext.define('NX.coreui.app.PluginStrings', {
     Task_TaskScopeDates_EndDate_FieldLabel: 'End date',
     Task_TaskScope_Duration_Item: 'Duration',
     Task_TaskScope_Duration_FieldLabel: 'Task scope duration',
-    Task_TaskScope_Duration_FieldHelpText: 'Limit the reconcile scope to files added or deleted in the timespan starting from when the task runs.',
+    Task_TaskScope_Duration_FieldHelpText: 'Limit how far back the task checks for added or deleted files.',
     Task_TaskScope_Duration_SinceDays_FieldLabel: 'Days',
     Task_TaskScope_Duration_SinceHours_FieldLabel: 'Hours',
     Task_TaskScope_Duration_SinceMinutes_FieldLabel: 'Minutes',
