@@ -29,9 +29,11 @@ import org.sonatype.nexus.common.app.WebFilterPriority;
 import org.sonatype.nexus.security.authc.NexusAuthenticationException;
 import org.sonatype.nexus.servlet.XFrameOptions;
 
+import com.google.common.base.Throwables;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.shiro.authc.AuthenticationException;
+import org.eclipse.jetty.io.EofException;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -87,6 +89,15 @@ public class ErrorPageFilter
       chain.doFilter(request, response);
     }
     catch (Exception e) {
+      // NEXUS-49601: Rethrow EofException as IOException (unwrapped) so Jetty properly aborts the response.
+      // If the exception is not thrown, Jetty's handleException() doesn't abort early and continues to
+      // the COMPLETE state, which validates Content-Length vs bytes written, causing spurious
+      // "Insufficient content written" errors when clients disconnect during large file transfers.
+      if (e instanceof EofException) {
+        log.debug("Client terminated connection", e);
+        Throwables.propagateIfPossible(e, ServletException.class, IOException.class);
+      }
+
       ErrorPageServlet.attachCause(request, e);
       if (resp.isCommitted()) {
         log.debug("Response is committed, cannot change status", e);

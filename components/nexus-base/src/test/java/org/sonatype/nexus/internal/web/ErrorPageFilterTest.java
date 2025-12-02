@@ -21,14 +21,17 @@ import javax.servlet.http.HttpServletResponse;
 import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.servlet.XFrameOptions;
 
+import org.eclipse.jetty.io.EofException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import static com.google.common.net.HttpHeaders.X_FRAME_OPTIONS;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 public class ErrorPageFilterTest
     extends TestSupport
@@ -57,5 +60,14 @@ public class ErrorPageFilterTest
     underTest.doFilter(request, response, filterChain);
 
     verify(response).setHeader(X_FRAME_OPTIONS, "DENY");
+  }
+
+  @Test
+  public void testDoFilter_eofExceptionRethrown() throws Exception {
+    EofException eofException = new EofException("Client disconnected");
+    doThrow(eofException).when(filterChain).doFilter(any(), any());
+
+    assertThrows(EofException.class, () -> underTest.doFilter(request, response, filterChain));
+    verifyNoInteractions(response);
   }
 }
