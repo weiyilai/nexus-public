@@ -2094,4 +2094,46 @@ describe('UploadDetails', function() {
         }
     );
   });
+
+  describe('directory field validation', function() {
+    it('allows uppercase letters in directory paths', async function() {
+      useCurrentStateAndParams.mockReturnValue({params: {itemId: 'raw-repo'}});
+      when(axios.post).calledWith('service/rest/internal/ui/upload/raw-repo', expect.anything())
+        .mockResolvedValue({ data: { success: true, data: 'test-upload' } });
+
+      render();
+
+      const form = await selectors.form('find'),
+          fileUpload = selectors.fileUploadByGroup(form),
+          directoryField = screen.getByRole('textbox', { name: 'Directory' }),
+          file = new File(['test content'], 'test.txt', { type: 'text/plain' });
+
+      await userEvent.type(directoryField, '/A/B/C/');
+      setFileUploadValue(fileUpload, file);
+
+      expect(directoryField).toHaveValue('/A/B/C/');
+      expect(directoryField).toBeValid();
+      expect(directoryField).not.toHaveAccessibleErrorMessage();
+    });
+
+    it('allows dots and special characters in directory paths', async function() {
+      useCurrentStateAndParams.mockReturnValue({params: {itemId: 'raw-repo'}});
+      when(axios.post).calledWith('service/rest/internal/ui/upload/raw-repo', expect.anything())
+        .mockResolvedValue({ data: { success: true, data: 'test-upload' } });
+
+      render();
+
+      const form = await selectors.form('find'),
+          fileUpload = selectors.fileUploadByGroup(form),
+          directoryField = screen.getByRole('textbox', { name: 'Directory' }),
+          file = new File(['test content'], 'test.txt', { type: 'text/plain' });
+
+      await userEvent.type(directoryField, '/v1.0/my-folder_2024/');
+      setFileUploadValue(fileUpload, file);
+
+      expect(directoryField).toHaveValue('/v1.0/my-folder_2024/');
+      expect(directoryField).toBeValid();
+      expect(directoryField).not.toHaveAccessibleErrorMessage();
+    });
+  });
 });

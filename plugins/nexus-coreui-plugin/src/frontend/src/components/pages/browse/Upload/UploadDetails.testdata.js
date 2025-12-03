@@ -24,6 +24,7 @@ export const sampleRepoSettings = {
         { name: 'multi-repo', format: 'multi', type: 'hosted', status: { online: true } },
         { name: 'regex-map-repo', format: 'foo-format', type: 'hosted' },
         { name: 'maven-repo', format: 'maven2', type: 'hosted' },
+        { name: 'raw-repo', format: 'raw', type: 'hosted' },
         { name: 'proxy-repo', format: 'nuget', type: 'proxy' },
         { name: 'group-repo', format: 'nuget', type: 'group' },
         { name: 'offline-repo', format: 'nuget', type: 'hosted', status: { online: false } },
@@ -205,6 +206,23 @@ const mavenUploadDefinition = {
   }
 };
 
+const rawUploadDefinition = {
+  uiUpload: true,
+  multipleUpload: true,
+  format: 'raw',
+  componentFields: [
+    {
+      displayName: 'Directory',
+      helpText: null,
+      name: 'directory',
+      optional: true,
+      type: 'STRING',
+      group: null
+    }
+  ],
+  assetFields: []
+};
+
 export const sampleUploadDefinitions = {
   data: {
     result: {
@@ -214,6 +232,7 @@ export const sampleUploadDefinitions = {
         multiUploadDefinition,
         regexUploadDefinition,
         mavenUploadDefinition,
+        rawUploadDefinition,
         uiUploadDisabledUploadDefinition
       ]
     }

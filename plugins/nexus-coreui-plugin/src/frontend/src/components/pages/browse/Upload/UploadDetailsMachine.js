@@ -71,28 +71,6 @@ import { SUBMIT_MASK_SUCCESS_VISIBLE_TIME_MS, combineValidationErrors, hasValida
 import { APIConstants, ExtJS, FormUtils, ValidationUtils, ExtAPIUtils, UIStrings, Utils }
   from '@sonatype/nexus-ui-plugin';
 
-// Custom validator for directory field - only lowercase letters, numbers, forward slashes, hyphens, and underscores
-const validateDirectory = (value) => {
-  if (!value) return null;
-  
-  // Check for spaces first
-  if (/\s/.test(value)) {
-    return 'Directory must not contain spaces';
-  }
-  
-  // Check for capital letters
-  if (/[A-Z]/.test(value)) {
-    return 'Directory must not contain capital letters';
-  }
-  
-  // Check for other invalid characters (anything not lowercase, numbers, /, -, _)
-  if (!/^[a-z0-9/_-]*$/.test(value)) {
-    return 'Directory contains invalid characters';
-  }
-  
-  return null;
-};
-
 import { repoSupportsUiUpload } from '../BrowseUtils';
 import {
   COMPOUND_FIELD_PARENT_NAME,
@@ -405,8 +383,6 @@ export default FormUtils.buildFormMachine({
         const assetKeys = filter(test(ASSET_NUM_MATCHER), keys(data)),
             requiredFields = getRequiredFieldNames(componentFieldsByGroup, assetFields, assetKeys, hasPomExtension),
             fieldValidationErrors = applyToPaths(requiredFields, ValidationUtils.validateNotBlank, data),
-            // Add directory field validation
-            directoryValidationErrors = applyToPaths([['directory']], validateDirectory, data),
 
             fileUploadFullNamePaths = map(pair(__, COMPOUND_FIELD_PARENT_NAME), assetKeys),
             fileUploadValidationErrors = applyToPaths(fileUploadFullNamePaths, fileValidator, data),
@@ -416,9 +392,7 @@ export default FormUtils.buildFormMachine({
                 checkAssetFieldUniqueness(data, assetKeysWithoutFieldValidationErrors),
 
             validationErrors = mergeDeepRight(
-                mergeDeepWith(combineValidationErrors, 
-                    mergeDeepWith(combineValidationErrors, fieldValidationErrors, directoryValidationErrors),
-                    fileUploadValidationErrors),
+                mergeDeepWith(combineValidationErrors, fieldValidationErrors, fileUploadValidationErrors),
                 assetFieldUniquenessValidationErrors
             );
 
