@@ -13,9 +13,6 @@
 package org.sonatype.nexus.internal.web;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.URL;
 
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -23,7 +20,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import javax.ws.rs.core.Response.Status;
 
-import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.template.TemplateHelper;
 import org.sonatype.nexus.common.template.TemplateParameters;
 import org.sonatype.nexus.common.template.TemplateThrowableAdapter;
@@ -35,32 +31,20 @@ import org.apache.shiro.web.servlet.ShiroHttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.net.HttpHeaders.X_FRAME_OPTIONS;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 /**
- * Service to write a rendered HTML page
+ * Service to write a rendered HTML error page
  */
 @Component
 public class ErrorPageService
-    extends ComponentSupport
+    extends PageServiceSupport
 {
   private static final String TEMPLATE_RESOURCE = "errorPageHtml.vm";
 
-  private final TemplateHelper templateHelper;
-
-  private final XFrameOptions xFrameOptions;
-
-  private final URL template;
-
   @Autowired
   public ErrorPageService(final TemplateHelper templateHelper, final XFrameOptions xFrameOptions) {
-    this.templateHelper = checkNotNull(templateHelper);
-    this.xFrameOptions = checkNotNull(xFrameOptions);
-
-    template = getClass().getResource(TEMPLATE_RESOURCE);
-    checkNotNull(template);
+    super(templateHelper, xFrameOptions, TEMPLATE_RESOURCE);
   }
 
   /**
@@ -78,8 +62,6 @@ public class ErrorPageService
       final HttpServletResponse response) throws IOException
   {
     log.debug("Writing error response for {}", errorInfo);
-
-    writeHeaders(request, response);
 
     Integer errorCode = errorInfo.code;
     String errorMessage = errorInfo.message;
@@ -110,36 +92,17 @@ public class ErrorPageService
       }
     }
 
-    writeResponse(errorCode, errorMessage, errorInfo.cause, request, response);
-  }
-
-  private void writeHeaders(final HttpServletRequest request, final HttpServletResponse response) {
-    ServletHelper.addNoCacheResponseHeaders(response);
-    response.setHeader(X_FRAME_OPTIONS, xFrameOptions.getValueForPath(request.getPathInfo()));
-    response.setContentType("text/html");
-  }
-
-  private void writeResponse(
-      final Integer errorCode,
-      final String errorMessage,
-      @Nullable final Throwable cause,
-      final HttpServletRequest request,
-      final HttpServletResponse response) throws IOException
-  {
     TemplateParameters params = templateHelper.parameters();
     params.set("errorCode", errorCode);
     params.set("errorName", Status.fromStatusCode(errorCode).getReasonPhrase());
     params.set("errorDescription", errorMessage);
 
     // add cause if ?debug enabled and there is an exception
-    if (cause != null && ServletHelper.isDebug(request)) {
-      params.set("errorCause", new TemplateThrowableAdapter(cause));
+    if (errorInfo.cause != null && ServletHelper.isDebug(request)) {
+      params.set("errorCause", new TemplateThrowableAdapter(errorInfo.cause));
     }
 
-    String html = templateHelper.render(template, params);
-    try (PrintWriter out = new PrintWriter(new OutputStreamWriter(response.getOutputStream()))) {
-      out.println(html);
-    }
+    writeResponseWithoutCaching(params, request, response);
   }
 
   /**

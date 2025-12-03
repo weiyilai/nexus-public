@@ -37,6 +37,7 @@
     <java-jwt.version>3.16.0</java-jwt.version>
     <nimbusds.jwt.version>10.2</nimbusds.jwt.version>
     <nimbusds.oauth2.version>11.23.1</nimbusds.oauth2.version>
+    <open.saml.version>4.3.2</open.saml.version>
   </properties>
 
   <dependencyManagement>
@@ -111,6 +112,34 @@
           </exclusion>
         </exclusions>
       </dependency>
+      
+      <dependency>
+        <groupId>org.opensaml</groupId>
+        <artifactId>opensaml-core</artifactId>
+        <version>${open.saml.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.opensaml</groupId>
+        <artifactId>opensaml-saml-api</artifactId>
+        <version>${open.saml.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.opensaml</groupId>
+        <artifactId>opensaml-saml-impl</artifactId>
+        <version>${open.saml.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
 
       <dependency>
         <groupId>org.bouncycastle</groupId>
@@ -158,6 +187,12 @@
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcpkix-fips</artifactId>
         <version>${bcpkix.fips.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-saml2-service-provider</artifactId>
+        <version>6.5.6</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

@@ -102,6 +102,7 @@
           if (typeof window.initializeTelemetry != 'function') {
             window.initializeTelemetry = initializeTelemetry;
           }
+          aptrinsic && aptrinsic('set', 'globalContext', {'edition' : '$edition', 'version' :'$version'});
         }
         else {
           log('Could not initialize telemetry');

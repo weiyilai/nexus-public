@@ -374,42 +374,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.keycloak</groupId>
-        <artifactId>keycloak-saml-servlet-filter-adapter</artifactId>
-        <version>18.0.2</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk15on</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.santuario</groupId>
-            <artifactId>xmlsec</artifactId>
-          </exclusion>
-
-          <!--
-          Exclude various legacy libraries in favour of more OSGi-friendly versions
-          -->
-          <exclusion>
-            <groupId>com.sun.activation</groupId>
-            <artifactId>jakarta.activation</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.sun.xml.ws</groupId>
-            <artifactId>rt</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
         <groupId>org.apache.santuario</groupId>
         <artifactId>xmlsec</artifactId>
         <version>2.3.4</version>
