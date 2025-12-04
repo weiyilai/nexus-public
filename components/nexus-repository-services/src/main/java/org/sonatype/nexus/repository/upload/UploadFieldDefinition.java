@@ -12,6 +12,7 @@
  */
 package org.sonatype.nexus.repository.upload;
 
+import java.util.Map;
 import java.util.Objects;
 
 import org.sonatype.nexus.common.text.Strings2;
@@ -25,7 +26,9 @@ public class UploadFieldDefinition
 {
   public enum Type
   {
-    BOOLEAN, STRING
+    BOOLEAN,
+    STRING,
+    SELECT
   }
 
   private String displayName;
@@ -40,6 +43,8 @@ public class UploadFieldDefinition
 
   private String group;
 
+  private Map<String, String> options;
+
   public UploadFieldDefinition(final String name, final boolean optional, final Type type) {
     this(name, Strings2.capitalize(name), null, optional, type, null);
   }
@@ -52,16 +57,35 @@ public class UploadFieldDefinition
     this(name, Strings2.capitalize(name), helpText, optional, type, null);
   }
 
-  public UploadFieldDefinition(final String name, final String helpText, final boolean optional, final Type type, final String group) {
+  public UploadFieldDefinition(
+      final String name,
+      final String helpText,
+      final boolean optional,
+      final Type type,
+      final String group)
+  {
     this(name, Strings2.capitalize(name), helpText, optional, type, group);
   }
 
-  public UploadFieldDefinition(final String name,
-                               final String displayName,
-                               final String helpText,
-                               final boolean optional,
-                               final Type type,
-                               final String group)
+  public UploadFieldDefinition(
+      final String name,
+      final String displayName,
+      final String helpText,
+      final boolean optional,
+      final Type type,
+      final String group)
+  {
+    this(name, displayName, helpText, optional, type, group, null);
+  }
+
+  public UploadFieldDefinition(
+      final String name,
+      final String displayName,
+      final String helpText,
+      final boolean optional,
+      final Type type,
+      final String group,
+      final Map<String, String> options)
   {
     this.name = name;
     this.displayName = displayName;
@@ -69,6 +93,7 @@ public class UploadFieldDefinition
     this.optional = optional;
     this.type = type;
     this.group = group;
+    this.options = options;
   }
 
   /**
@@ -113,9 +138,16 @@ public class UploadFieldDefinition
     return this.group;
   }
 
+  /**
+   * The options available for SELECT type fields
+   */
+  public Map<String, String> getOptions() {
+    return this.options;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(name, displayName, helpText, type, group, optional);
+    return Objects.hash(name, displayName, helpText, type, group, optional, options);
   }
 
   @Override
@@ -147,6 +179,10 @@ public class UploadFieldDefinition
     }
 
     if (!Objects.equals(group, other.group)) {
+      return false;
+    }
+
+    if (!Objects.equals(options, other.options)) {
       return false;
     }
 

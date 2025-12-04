@@ -21,6 +21,7 @@ import {
   NxForm,
   NxFormGroup,
   NxFormRow,
+  NxFormSelect,
   NxH1,
   NxH2,
   NxInfoAlert,
@@ -48,21 +49,48 @@ import { ROUTE_NAMES } from '../../../../routerConfig/routeNames/routeNames.js';
  * React component that renders a form group from a componentField/assetField structure and the
  * machine state
  */
-function Field({ displayName, helpText, name, type, optional, machineState, send, validatable }) {
+function Field({ displayName, helpText, name, type, optional, options, machineState, send, validatable }) {
   const disabled = !!path(split('.', name), machineState.context.disabledFields);
 
-  return type === 'BOOLEAN' ?
+  // Handle BOOLEAN type
+  if (type === 'BOOLEAN') {
+    return (
       <NxCheckbox { ...FormUtils.checkboxProps(name, machineState) }
                   disabled={disabled}
                   onChange={FormUtils.handleUpdate(name, send)}>
         {displayName}
-      </NxCheckbox> :
+      </NxCheckbox>
+    );
+  }
+
+  // Handle SELECT type
+  if (type === 'SELECT') {
+    return (
       <NxFormGroup label={displayName} sublabel={helpText} isRequired={!optional}>
-        <NxTextInput { ...FormUtils.fieldProps(name, machineState) }
+        <NxFormSelect { ...FormUtils.fieldProps(name, machineState) }
                       disabled={disabled}
-                     onChange={FormUtils.handleUpdate(name, send)}
-                     validatable={!optional || validatable} />
-      </NxFormGroup>;
+                      onChange={FormUtils.handleUpdate(name, send)}
+                      validatable={!optional || validatable}>
+          <option value="">Select...</option>
+          {options && Object.entries(options).map(([key, value]) => (
+            <option key={key} value={key}>
+              {value}
+            </option>
+          ))}
+        </NxFormSelect>
+      </NxFormGroup>
+    );
+  }
+
+  // Default STRING type
+  return (
+    <NxFormGroup label={displayName} sublabel={helpText} isRequired={!optional}>
+      <NxTextInput { ...FormUtils.fieldProps(name, machineState) }
+                    disabled={disabled}
+                   onChange={FormUtils.handleUpdate(name, send)}
+                   validatable={!optional || validatable} />
+    </NxFormGroup>
+  );
 }
 
 export default function UploadDetails() {

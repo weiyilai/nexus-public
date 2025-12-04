@@ -32,3 +32,10 @@ export const MAVEN_FORMAT = 'maven2';
 export const MAVEN_COMPONENT_COORDS_GROUP = 'Component coordinates';
 export const MAVEN_GENERATE_POM_FIELD_NAME = 'generate-pom';
 export const MAVEN_PACKAGING_FIELD_NAME = 'packaging';
+
+export const TERRAFORM_FORMAT = 'terraform';
+export const TERRAFORM_MODULE_COORDS_GROUP = 'Module Coordinates';
+export const TERRAFORM_PROVIDER_COORDS_GROUP = 'Provider Coordinates';
+export const TERRAFORM_UPLOAD_TYPE_FIELD_NAME = 'uploadType';
+export const TERRAFORM_UPLOAD_TYPE_MODULE = 'module';
+export const TERRAFORM_UPLOAD_TYPE_PROVIDER = 'provider';

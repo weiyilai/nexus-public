@@ -12,6 +12,7 @@
  */
 package org.sonatype.nexus.repository.rest.api;
 
+import java.util.Map;
 import java.util.Objects;
 
 import org.sonatype.nexus.repository.upload.UploadFieldDefinition;
@@ -30,6 +31,8 @@ public class UploadFieldDefinitionXO
   private boolean optional;
 
   private String group;
+
+  private Map<String, String> options;
 
   public String getName() {
     return name;
@@ -71,6 +74,14 @@ public class UploadFieldDefinitionXO
     this.group = group;
   }
 
+  public Map<String, String> getOptions() {
+    return options;
+  }
+
+  public void setOptions(Map<String, String> options) {
+    this.options = options;
+  }
+
   public static UploadFieldDefinitionXO from(final UploadFieldDefinition uploadFieldDefinition) {
     return builder()
         .name(uploadFieldDefinition.getName())
@@ -78,6 +89,7 @@ public class UploadFieldDefinitionXO
         .description(uploadFieldDefinition.getHelpText())
         .optional(uploadFieldDefinition.isOptional())
         .group(uploadFieldDefinition.getGroup())
+        .options(uploadFieldDefinition.getOptions())
         .build();
   }
 
@@ -106,6 +118,7 @@ public class UploadFieldDefinitionXO
         ", description='" + description + '\'' +
         ", optional=" + optional +
         ", group='" + group + '\'' +
+        ", options=" + options +
         '}';
   }
 
@@ -124,6 +137,8 @@ public class UploadFieldDefinitionXO
     private boolean optional;
 
     private String group;
+
+    private Map<String, String> options;
 
     public UploadFieldDefinitionXOBuilder name(String name) {
       this.name = name;
@@ -150,6 +165,11 @@ public class UploadFieldDefinitionXO
       return this;
     }
 
+    public UploadFieldDefinitionXOBuilder options(Map<String, String> options) {
+      this.options = options;
+      return this;
+    }
+
     public UploadFieldDefinitionXO build() {
       UploadFieldDefinitionXO uploadFieldDefinitionXO = new UploadFieldDefinitionXO();
       uploadFieldDefinitionXO.setName(name);
@@ -157,6 +177,7 @@ public class UploadFieldDefinitionXO
       uploadFieldDefinitionXO.setDescription(description);
       uploadFieldDefinitionXO.setOptional(optional);
       uploadFieldDefinitionXO.setGroup(group);
+      uploadFieldDefinitionXO.setOptions(options);
       return uploadFieldDefinitionXO;
     }
   }

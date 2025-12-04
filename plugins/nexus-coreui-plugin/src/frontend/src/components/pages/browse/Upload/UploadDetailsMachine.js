@@ -78,7 +78,13 @@ import {
   MAVEN_FORMAT,
   MAVEN_GENERATE_POM_FIELD_NAME,
   MAVEN_PACKAGING_FIELD_NAME,
-  MAVEN_COMPONENT_COORDS_GROUP
+  MAVEN_COMPONENT_COORDS_GROUP,
+  TERRAFORM_FORMAT,
+  TERRAFORM_MODULE_COORDS_GROUP,
+  TERRAFORM_PROVIDER_COORDS_GROUP,
+  TERRAFORM_UPLOAD_TYPE_FIELD_NAME,
+  TERRAFORM_UPLOAD_TYPE_MODULE,
+  TERRAFORM_UPLOAD_TYPE_PROVIDER
 } from './UploadDetailsUtils';
 import UploadStrings from '../../../../constants/pages/browse/upload/UploadStrings';
 
@@ -264,6 +270,10 @@ const getAssetKeysWithoutValidationErrors = pipe(filter(is(Object)), reject(objH
  * Special behaviors for the Maven format:
  * If any "Extension" asset field is set to "pom", disable all fields within the "Component coordinates" group.
  * If the "Generate a POM file with these coordinates" box is checked, disable the "Packaging" field.
+ *
+ * Special behaviors for the Terraform format:
+ * If uploadType is "module", disable all fields within the "Provider Coordinates" group.
+ * If uploadType is "provider", disable all fields within the "Module Coordinates" group.
  */
 const setDisabledAction = assign(context => {
   const { componentFieldsByGroup, data, repoSettings } = context;
@@ -282,6 +292,32 @@ const setDisabledAction = assign(context => {
         [MAVEN_PACKAGING_FIELD_NAME]: disabledByExtension[MAVEN_PACKAGING_FIELD_NAME] || !generatePomValue
       },
       hasPomExtension
+    };
+  }
+  else if (repoSettings.format === TERRAFORM_FORMAT) {
+    const uploadType = data[TERRAFORM_UPLOAD_TYPE_FIELD_NAME]?.trim();
+    const moduleCoordFieldNames = componentFieldsByGroup[TERRAFORM_MODULE_COORDS_GROUP] ?
+        map(prop('name'), componentFieldsByGroup[TERRAFORM_MODULE_COORDS_GROUP]) : [];
+    const providerCoordFieldNames = componentFieldsByGroup[TERRAFORM_PROVIDER_COORDS_GROUP] ?
+        map(prop('name'), componentFieldsByGroup[TERRAFORM_PROVIDER_COORDS_GROUP]) : [];
+
+    const disabledFields = {};
+
+    // Disable Provider Coordinates when uploadType is "module"
+    if (uploadType === TERRAFORM_UPLOAD_TYPE_MODULE) {
+      providerCoordFieldNames.forEach(fieldName => {
+        disabledFields[fieldName] = true;
+      });
+    }
+    // Disable Module Coordinates when uploadType is "provider"
+    else if (uploadType === TERRAFORM_UPLOAD_TYPE_PROVIDER) {
+      moduleCoordFieldNames.forEach(fieldName => {
+        disabledFields[fieldName] = true;
+      });
+    }
+
+    return {
+      disabledFields
     };
   }
   else {
