@@ -10,26 +10,30 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.quartz;
-
-import jakarta.inject.Singleton;
+package org.sonatype.nexus.quartz.internal.upgrades;
 
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-/**
- * Descriptor for {@link SleeperTask}.
- */
 @AvailabilityVersion(from = "1.0")
 @Component
-@Singleton
-public class SleeperTaskDescriptor
+public class QuartzJobKeyUnificationTaskDescriptor
     extends TaskDescriptorSupport
 {
-  public static final String TYPE_ID = "sleeper";
+  static final String TYPE_ID = "quartz.jobkey.unification";
 
-  public SleeperTaskDescriptor() {
-    super(TYPE_ID, SleeperTask.class, "Sleeper test", VISIBLE, EXPOSED);
+  static final String VISIBLE_FLAG_VALUE = "${nexus.quartz.jobkey.unification.visible:false}";
+
+  @Autowired
+  public QuartzJobKeyUnificationTaskDescriptor(@Value(VISIBLE_FLAG_VALUE) boolean visible) {
+    super(TYPE_ID,
+        QuartzJobKeyUnificationTask.class,
+        "Quartz - Job Key Unification",
+        visible,
+        visible);
   }
 }

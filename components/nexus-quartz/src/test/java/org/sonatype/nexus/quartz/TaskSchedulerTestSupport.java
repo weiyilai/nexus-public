@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.common.app.ApplicationDirectories;
+import org.sonatype.nexus.common.app.ApplicationVersion;
 import org.sonatype.nexus.common.app.BaseUrlManager;
 import org.sonatype.nexus.common.cooperation2.Cooperation2Selector;
 import org.sonatype.nexus.common.db.DatabaseCheck;
@@ -158,8 +159,12 @@ public abstract class TaskSchedulerTestSupport
   }
 
   protected void assertTaskState(final TaskInfo taskInfo, final TaskState expectedState) {
+    assertTaskState(RUN_TIMEOUT, taskInfo, expectedState);
+  }
+
+  protected void assertTaskState(final long waitMillis, final TaskInfo taskInfo, final TaskState expectedState) {
     // unfortunately, a task's Future.get() returns before the task state is updated so polling is in order to be safe
-    await().atMost(RUN_TIMEOUT, MILLISECONDS).until(() -> taskInfo.getCurrentState().getState(), is(expectedState));
+    await().atMost(waitMillis, MILLISECONDS).until(() -> taskInfo.getCurrentState().getState(), is(expectedState));
   }
 
   /**
@@ -253,6 +258,14 @@ public abstract class TaskSchedulerTestSupport
       DatabaseCheck databaseCheck = mock(DatabaseCheck.class);
       when(databaseCheck.isAllowedByVersion(any())).thenReturn(true);
       return databaseCheck;
+    }
+
+    @Bean
+    public ApplicationVersion applicationVersion() {
+      ApplicationVersion applicationVersion = mock(ApplicationVersion.class);
+      when(applicationVersion.getVersion()).thenReturn("test-version-1");
+      when(applicationVersion.getBuildRevision()).thenReturn("test-revision-1");
+      return applicationVersion;
     }
 
   }

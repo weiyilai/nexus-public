@@ -17,11 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import javax.annotation.Nullable;
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.event.EventAware;
@@ -31,8 +27,8 @@ import org.sonatype.nexus.common.log.LastShutdownTimeService;
 import org.sonatype.nexus.common.node.NodeAccess;
 import org.sonatype.nexus.common.stateguard.Guarded;
 import org.sonatype.nexus.common.thread.TcclBlock;
-import org.sonatype.nexus.quartz.internal.bulkread.BulkReadScheduler;
 import org.sonatype.nexus.quartz.internal.QuartzSchedulerSPI;
+import org.sonatype.nexus.quartz.internal.bulkread.BulkReadScheduler;
 import org.sonatype.nexus.quartz.internal.task.QuartzTaskInfo;
 import org.sonatype.nexus.quartz.internal.task.QuartzTaskJobListener;
 import org.sonatype.nexus.scheduling.TaskConfiguration;
@@ -41,6 +37,7 @@ import org.sonatype.nexus.scheduling.spi.SchedulerSPI;
 import org.sonatype.nexus.thread.DatabaseStatusDelayedExecutor;
 
 import com.google.common.eventbus.Subscribe;
+import jakarta.inject.Provider;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.JobListener;
@@ -49,28 +46,28 @@ import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.listeners.SchedulerListenerSupport;
 import org.quartz.spi.JobStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import static org.quartz.TriggerKey.triggerKey;
 import static org.quartz.impl.matchers.GroupMatcher.jobGroupEquals;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SERVICES;
 import static org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport.State.STARTED;
 import static org.sonatype.nexus.quartz.internal.task.QuartzTaskJobListener.listenerName;
-import org.springframework.stereotype.Component;
 
 /**
  * Quartz {@link SchedulerSPI}.
  */
 @Component
 @ManagedLifecycle(phase = SERVICES)
-@Singleton
 public class DatastoreQuartzSchedulerSPI
     extends QuartzSchedulerSPI
     implements EventAware
 {
   private final Object mutex = new Object();
 
-  @Inject
+  @Autowired
   public DatastoreQuartzSchedulerSPI(
       final EventManager eventManager,
       final NodeAccess nodeAccess,

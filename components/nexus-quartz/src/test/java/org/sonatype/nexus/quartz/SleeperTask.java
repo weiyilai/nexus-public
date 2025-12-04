@@ -30,17 +30,17 @@ import org.springframework.stereotype.Component;
 public class SleeperTask
     extends TaskSupport
 {
-  static final String RESULT_KEY = "result";
+  public static final String RESULT_KEY = "result";
 
   static final String SLEEP_MILLIS_KEY = "sleepMillis";
 
-  static CountDownLatch meWait;
+  public static CountDownLatch meWait;
 
-  static CountDownLatch youWait;
+  public static CountDownLatch youWait;
 
   static Exception exception;
 
-  static void reset() {
+  public static void reset() {
     meWait = new CountDownLatch(1);
     youWait = new CountDownLatch(1);
     exception = null;
