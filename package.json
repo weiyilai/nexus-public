@@ -8,10 +8,22 @@
   ],
   "packageManager": "yarn@4.9.1",
   "resolutions": {
+    "@babel/runtime": "=7.26.10",
+    "@hashgraphonline/standards-sdk": "=0.0.63",
+    "@nivo/line": "0.88.0",
     "autolinker": "=3.16.1",
+    "axios": "=1.12.0",
+    "brace-expansion": "=2.0.2",
     "core-js-pure": "=3.28.0",
     "dompurify": "=3.2.4",
-    "@hashgraphonline/standards-sdk": "=0.0.63"
+    "form-data": "=4.0.4",
+    "js-yaml": "=4.1.1",
+    "node-gyp": "=12.0.0",
+    "prismjs": "=1.30.0",
+    "ramda": "=0.28.0",
+    "ramda-adjunct": "=4.1.1",
+    "sha.js": "=2.4.12",
+    "tmp": "=0.2.4"
   },
   "dependencies": {
     "@react-hook/resize-observer": "^2.0.2",

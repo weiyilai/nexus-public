@@ -124,6 +124,7 @@ const renameScriptId = types => {
   const type = types[TYPES.SCRIPT];
   if (!type) return;
   const field = find(propEq('id', FIELDS.NAME.NAME))(type.formFields);
+  if (!field) return;
   field.id = FIELDS.SCRIPT_NAME.NAME;
 };
 
@@ -131,6 +132,7 @@ const renamePatternHelpText = types => {
   const type = types[TYPES.WILDCARD];
   if (!type) return;
   const field = find(propEq('id', FIELDS.PATTERN.NAME))(type.formFields);
+  if (!field) return;
   field.helpText = LABELS.PRIVILEGE_STRING.SUB_LABEL;
 };
 

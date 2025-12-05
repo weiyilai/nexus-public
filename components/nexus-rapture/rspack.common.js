@@ -15,7 +15,6 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 const { rspack } = require('@rspack/core');
-const CopyModulesPlugin = require('copy-modules-webpack-plugin');
 const path = require('path');
 const fs = require('fs');
 
@@ -78,9 +77,6 @@ module.exports = {
     ]
   },
   plugins: [
-    new CopyModulesPlugin({
-      destination: path.resolve(__dirname, 'target', 'webpack-modules')
-    }),
     new rspack.CssExtractRspackPlugin({
       filename: '[name].css'
     }),
