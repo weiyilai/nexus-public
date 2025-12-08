@@ -12,6 +12,10 @@
  */
 package org.sonatype.nexus.repository.maven.rest;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
+import org.sonatype.nexus.repository.maven.api.MavenAttributes;
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.repository.rest.api.model.GroupAttributes;
 import org.sonatype.nexus.repository.rest.api.model.GroupRepositoryApiRequest;
@@ -28,13 +32,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class MavenGroupRepositoryApiRequest
     extends GroupRepositoryApiRequest
 {
+  @Valid
+  @NotNull
+  protected final MavenAttributes maven;
+
   @JsonCreator
   public MavenGroupRepositoryApiRequest(
       @JsonProperty("name") final String name,
       @JsonProperty("online") final Boolean online,
       @JsonProperty("storage") final StorageAttributes storage,
-      @JsonProperty("group") final GroupAttributes group)
+      @JsonProperty("group") final GroupAttributes group,
+      @JsonProperty("maven") final MavenAttributes maven)
   {
     super(name, Maven2Format.NAME, online, storage, group);
+    this.maven = maven;
+  }
+
+  public MavenAttributes getMaven() {
+    return maven;
   }
 }
