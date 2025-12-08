@@ -10,7 +10,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import React, { Suspense } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { UIRouter, UIView, useRouter } from '@uirouter/react';
 import { ExtJS, UnsavedChangesModal } from '@sonatype/nexus-ui-plugin';
@@ -19,7 +19,6 @@ import { getRouter } from './routerConfig/routerConfig';
 import { ROUTE_NAMES } from './routerConfig/routeNames/routeNames';
 import LeftNavigationMenu from './components/LeftNavigationMenu/LeftNavigationMenu';
 import GlobalHeader from './components/GlobalHeader/GlobalHeader';
-import RouteLoadingFallback from './components/common/RouteLoadingFallback/RouteLoadingFallback';
 
 import './App.scss';
 import SystemNotices from './components/widgets/SystemStatusAlerts/SystemNotices';
@@ -70,9 +69,7 @@ export function App() {
 
       <UnsavedChangesModal/>
 
-      <Suspense fallback={<RouteLoadingFallback />}>
-        <UIView />
-      </Suspense>
+      <UIView />
 
       {footerEnabled && (
         <div

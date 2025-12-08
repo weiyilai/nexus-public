@@ -14,14 +14,11 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
+import UserAccount from '../../components/pages/admin/UserAccount/UserAccount';
+import NuGetApiToken from '../../components/pages/user/NuGetApiToken/NuGetApiToken';
 import { UIView } from '@uirouter/react';
+import UserToken from '../../components/pages/user/UserToken/UserToken';
 import { ROUTE_NAMES } from '../routeNames/routeNames';
-import { lazyLoad } from './lazyLoad';
-
-// Lazy load all route components for better code splitting
-const UserAccount = lazyLoad(() => import(/* webpackChunkName: "user-UserAccount" */ '../../components/pages/admin/UserAccount/UserAccount'));
-const NuGetApiToken = lazyLoad(() => import(/* webpackChunkName: "user-NuGetApiToken" */ '../../components/pages/user/NuGetApiToken/NuGetApiToken'));
-const UserToken = lazyLoad(() => import(/* webpackChunkName: "user-UserToken" */ '../../components/pages/user/UserToken/UserToken'));
 
 const USER = ROUTE_NAMES.USER;
 

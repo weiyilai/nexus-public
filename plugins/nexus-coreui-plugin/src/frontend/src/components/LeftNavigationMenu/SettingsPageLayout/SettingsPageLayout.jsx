@@ -10,19 +10,18 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import React, { Suspense } from 'react';
+import React from 'react';
 import { UIView } from '@uirouter/react';
 
 import SettingsSidebar from './SettingsSidebar';
-import RouteLoadingFallback from '../../common/RouteLoadingFallback/RouteLoadingFallback';
 
 export default function SettingsPageLayout() {
+
+
   return (
     <>
       <SettingsSidebar />
-      <Suspense fallback={<RouteLoadingFallback />}>
-        <UIView />
-      </Suspense>
+      <UIView />
     </>
   );
 }
