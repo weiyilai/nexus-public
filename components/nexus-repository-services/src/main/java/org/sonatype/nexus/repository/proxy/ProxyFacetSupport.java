@@ -75,6 +75,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.DateUtils;
 import org.apache.http.client.utils.HttpClientUtils;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -183,7 +185,11 @@ public abstract class ProxyFacetSupport
 
   private static final String CTX_REQ_STOPWATCH = "request.stopwatch";
 
+  private static final String CTX_REQ_URI = "request.uri";
+
   protected static final String HTTP_RESPONSE = "request.http_response";
+
+  protected static final String HTTP_CONTEXT = "request.http_context";
 
   static final String HTTPCLIENT_OUTBOUND_REQ_LOGGER_NAME = "outboundRequests";
 
@@ -440,10 +446,20 @@ public abstract class ProxyFacetSupport
       return;
     }
 
+    HttpContext httpContext = context.getAttribute(HTTP_CONTEXT, HttpContext.class);
+    String requestUri = context.getRequest().getPath();
+    if (httpContext != null) {
+      URI uri = (URI) httpContext.getAttribute(CTX_REQ_URI);
+      if (uri != null) {
+        requestUri = uri.toString();
+      }
+    }
+
     Stopwatch stopwatch = context.getAttribute(CTX_REQ_STOPWATCH, Stopwatch.class);
+
     outboundReqLog.info(OUTBOUND_REQUESTS_LOG_ONLY, "[{}] - \"Time for {}\" - - {} [{}]", dateFormat.format(new Date()),
-        context.getRequest().getPath(), stopwatch.elapsed(TimeUnit.MILLISECONDS), Thread.currentThread().getName());
-    outboundLog.debug("Request for {} took {} milliseconds", context.getRequest().getPath(),
+        requestUri, stopwatch.elapsed(TimeUnit.MILLISECONDS), Thread.currentThread().getName());
+    outboundLog.debug("Request for {} took {} milliseconds", requestUri,
         stopwatch.elapsed(TimeUnit.MILLISECONDS));
   }
 
@@ -759,7 +775,10 @@ public abstract class ProxyFacetSupport
       final HttpClient client,
       final HttpRequestBase request) throws IOException
   {
-    return client.execute(request);
+    HttpContext httpContext = new BasicHttpContext();
+    HttpResponse response = client.execute(request, httpContext);
+    context.setAttribute(HTTP_CONTEXT, httpContext);
+    return response;
   }
 
   /**

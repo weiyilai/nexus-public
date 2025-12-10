@@ -47,7 +47,6 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.client.utils.URIUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HttpContext;
@@ -279,8 +278,8 @@ public class HttpClientManagerImpl
     builder.addInterceptorLast(
         (HttpRequest httpRequest, HttpContext httpContext) -> {
           httpContext.setAttribute(CTX_REQ_STOPWATCH, Stopwatch.createStarted());
+          httpContext.setAttribute(CTX_REQ_URI, getRequestURI(httpContext));
           if (outboundLog.isDebugEnabled()) {
-            httpContext.setAttribute(CTX_REQ_URI, getRequestURI(httpContext));
             outboundLog.debug("{} > {}", httpContext.getAttribute(CTX_REQ_URI), httpRequest.getRequestLine());
           }
         });
@@ -393,9 +392,11 @@ public class HttpClientManagerImpl
 
   /**
    * Creates absolute request URI with full path from passed in context.
+   * Preserves URI encoding to avoid decoding special characters in logs.
    */
   @Nonnull
-  private URI getRequestURI(final HttpContext context) {
+  @VisibleForTesting
+  URI getRequestURI(final HttpContext context) {
     final HttpClientContext clientContext = HttpClientContext.adapt(context);
     final HttpRequest httpRequest = clientContext.getRequest();
     final HttpHost target = clientContext.getTargetHost();
@@ -408,7 +409,36 @@ public class HttpClientManagerImpl
       else {
         uri = URI.create(httpRequest.getRequestLine().getUri());
       }
-      return uri.isAbsolute() ? uri : URIUtils.resolve(URI.create(target.toURI()), uri);
+
+      if (uri.isAbsolute()) {
+        return uri;
+      }
+
+      // Build absolute URI manually to preserve encoding
+      // URIUtils.resolve() decodes the URI
+      String scheme = target.getSchemeName();
+      String host = target.getHostName();
+      int port = target.getPort();
+      String path = uri.getRawPath();
+      String query = uri.getRawQuery();
+      String fragment = uri.getRawFragment();
+
+      StringBuilder absoluteUri = new StringBuilder();
+      absoluteUri.append(scheme).append("://").append(host);
+      if (port != -1) {
+        absoluteUri.append(':').append(port);
+      }
+      if (path != null) {
+        absoluteUri.append(path);
+      }
+      if (query != null) {
+        absoluteUri.append('?').append(query);
+      }
+      if (fragment != null) {
+        absoluteUri.append('#').append(fragment);
+      }
+
+      return URI.create(absoluteUri.toString());
     }
     catch (Exception e) {
       log.warn("Could not create absolute request URI", e);
