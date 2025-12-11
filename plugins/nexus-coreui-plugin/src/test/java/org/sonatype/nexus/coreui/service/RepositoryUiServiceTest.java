@@ -218,6 +218,140 @@ class RepositoryUiServiceTest
   }
 
   @Test
+  void testPasswordPlaceholderIsRestoredOnUpdate() throws Exception {
+    when(repositoryXO.getName()).thenReturn("test");
+    when(repositoryXO.getOnline()).thenReturn(true);
+    when(repositoryXO.getRoutingRuleId()).thenReturn(null);
+
+    Map<String, Map<String, Object>> testAttributes = new HashMap<>();
+    Map<String, Object> httpclient = new HashMap<>();
+    Map<String, Object> authentication = new HashMap<>();
+    authentication.put("type", "username");
+    authentication.put("username", "testuser");
+    authentication.put("password", "#~NXRM~PLACEHOLDER~PASSWORD~#");
+    httpclient.put("authentication", authentication);
+    testAttributes.put("httpclient", httpclient);
+
+    Map<String, Map<String, Object>> storedAttributes = new HashMap<>();
+    Map<String, Object> storedHttpclient = new HashMap<>();
+    Map<String, Object> storedAuthentication = new HashMap<>();
+    storedAuthentication.put("password", "_123");
+    storedHttpclient.put("authentication", storedAuthentication);
+    storedAttributes.put("httpclient", storedHttpclient);
+
+    when(repositoryXO.getAttributes()).thenReturn(testAttributes);
+    when(configuration.getAttributes()).thenReturn(storedAttributes);
+
+    underTest.update(repositoryXO);
+
+    assertThat(authentication.get("password"), is("_123"));
+  }
+
+  @Test
+  void testBearerTokenPlaceholderIsRestoredOnUpdate() throws Exception {
+    when(repositoryXO.getName()).thenReturn("test");
+    when(repositoryXO.getOnline()).thenReturn(true);
+    when(repositoryXO.getRoutingRuleId()).thenReturn(null);
+
+    Map<String, Map<String, Object>> testAttributes = new HashMap<>();
+    Map<String, Object> httpclient = new HashMap<>();
+    Map<String, Object> authentication = new HashMap<>();
+    authentication.put("type", "bearerToken");
+    authentication.put("bearerTokenId", "#~NXRM~PLACEHOLDER~PASSWORD~#");
+    httpclient.put("authentication", authentication);
+    testAttributes.put("httpclient", httpclient);
+
+    Map<String, Map<String, Object>> storedAttributes = new HashMap<>();
+    Map<String, Object> storedHttpclient = new HashMap<>();
+    Map<String, Object> storedAuthentication = new HashMap<>();
+    storedAuthentication.put("bearerTokenId", "_456");
+    storedHttpclient.put("authentication", storedAuthentication);
+    storedAttributes.put("httpclient", storedHttpclient);
+
+    when(repositoryXO.getAttributes()).thenReturn(testAttributes);
+    when(configuration.getAttributes()).thenReturn(storedAttributes);
+
+    underTest.update(repositoryXO);
+
+    assertThat(authentication.get("bearerTokenId"), is("_456"));
+  }
+
+  @Test
+  void testNewPasswordIsNotReplacedOnUpdate() throws Exception {
+    when(repositoryXO.getName()).thenReturn("test");
+    when(repositoryXO.getOnline()).thenReturn(true);
+    when(repositoryXO.getRoutingRuleId()).thenReturn(null);
+
+    Map<String, Map<String, Object>> testAttributes = new HashMap<>();
+    Map<String, Object> httpclient = new HashMap<>();
+    Map<String, Object> authentication = new HashMap<>();
+    authentication.put("type", "username");
+    authentication.put("username", "testuser");
+    authentication.put("password", "newPassword123");
+    httpclient.put("authentication", authentication);
+    testAttributes.put("httpclient", httpclient);
+
+    when(repositoryXO.getAttributes()).thenReturn(testAttributes);
+
+    underTest.update(repositoryXO);
+
+    assertThat(authentication.get("password"), is("newPassword123"));
+  }
+
+  @Test
+  void testNewBearerTokenIsNotReplacedOnUpdate() throws Exception {
+    when(repositoryXO.getName()).thenReturn("test");
+    when(repositoryXO.getOnline()).thenReturn(true);
+    when(repositoryXO.getRoutingRuleId()).thenReturn(null);
+
+    Map<String, Map<String, Object>> testAttributes = new HashMap<>();
+    Map<String, Object> httpclient = new HashMap<>();
+    Map<String, Object> authentication = new HashMap<>();
+    authentication.put("type", "bearerToken");
+    authentication.put("bearerTokenId", "ghp_newToken123456");
+    httpclient.put("authentication", authentication);
+    testAttributes.put("httpclient", httpclient);
+
+    when(repositoryXO.getAttributes()).thenReturn(testAttributes);
+
+    underTest.update(repositoryXO);
+
+    assertThat(authentication.get("bearerTokenId"), is("ghp_newToken123456"));
+  }
+
+  @Test
+  void testBearerTokenPlaceholderFallsBackToOldKeyForPreMigrationRepositories() throws Exception {
+    when(repositoryXO.getName()).thenReturn("test");
+    when(repositoryXO.getOnline()).thenReturn(true);
+    when(repositoryXO.getRoutingRuleId()).thenReturn(null);
+
+    // UI sends bearerTokenId with placeholder (because filterAttributes replaces with placeholder)
+    Map<String, Map<String, Object>> testAttributes = new HashMap<>();
+    Map<String, Object> httpclient = new HashMap<>();
+    Map<String, Object> authentication = new HashMap<>();
+    authentication.put("type", "bearerToken");
+    authentication.put("bearerTokenId", "#~NXRM~PLACEHOLDER~PASSWORD~#");
+    httpclient.put("authentication", authentication);
+    testAttributes.put("httpclient", httpclient);
+
+    // Pre-migration repository only has the old bearerToken key
+    Map<String, Map<String, Object>> storedAttributes = new HashMap<>();
+    Map<String, Object> storedHttpclient = new HashMap<>();
+    Map<String, Object> storedAuthentication = new HashMap<>();
+    storedAuthentication.put("bearerToken", "_789_old_token");
+    storedHttpclient.put("authentication", storedAuthentication);
+    storedAttributes.put("httpclient", storedHttpclient);
+
+    when(repositoryXO.getAttributes()).thenReturn(testAttributes);
+    when(configuration.getAttributes()).thenReturn(storedAttributes);
+
+    underTest.update(repositoryXO);
+
+    // Should fallback to the old bearerToken value
+    assertThat(authentication.get("bearerTokenId"), is("_789_old_token"));
+  }
+
+  @Test
   void testReadContainsRepoSize() {
     String repoName = "testRepo";
     String recipeName = "testRecipe";

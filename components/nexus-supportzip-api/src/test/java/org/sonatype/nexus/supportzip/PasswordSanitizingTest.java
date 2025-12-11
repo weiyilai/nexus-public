@@ -34,22 +34,23 @@ public class PasswordSanitizingTest
   private final String PASSWORD = "admin123";
 
   private final Map<String, String> SENSITIVE_DATA = Stream.of(
-          "applicationPassword",
-          "password",
-          "systemPassword",
-          "keyStorePassword",
-          "secret",
-          "accessKeyId",
-          "secretAccessKey",
-          "sessionToken",
-          "auth_account_key",
-          "aptSigning",
-          "bearerToken",
-          "yumSigning",
-          "accountKey",
-          "destinationInstancePassword",
-          "NEXUS_DATASTORE_NEXUS_PASSWORD",
-          "NEXUS_SECURITY_INITIAL_PASSWORD")
+      "applicationPassword",
+      "password",
+      "systemPassword",
+      "keyStorePassword",
+      "secret",
+      "accessKeyId",
+      "secretAccessKey",
+      "sessionToken",
+      "auth_account_key",
+      "aptSigning",
+      "bearerTokenId",
+      "bearerToken",
+      "yumSigning",
+      "accountKey",
+      "destinationInstancePassword",
+      "NEXUS_DATASTORE_NEXUS_PASSWORD",
+      "NEXUS_SECURITY_INITIAL_PASSWORD")
       .collect(Collectors.toMap(key -> key, key -> PASSWORD));
 
   @Test

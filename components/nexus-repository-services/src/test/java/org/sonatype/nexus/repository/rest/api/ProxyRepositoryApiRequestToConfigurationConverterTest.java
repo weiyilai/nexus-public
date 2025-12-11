@@ -88,7 +88,7 @@ public class ProxyRepositoryApiRequestToConfigurationConverterTest
     NestedAttributesMap authenticationConfig = httpClientConfig.child("authentication");
     assertThat(authenticationConfig, is(notNullValue()));
     assertThat(authenticationConfig.get("type"), is("bearerToken"));
-    assertThat(authenticationConfig.get("bearerToken"), is(expectedBearerToken));
+    assertThat(authenticationConfig.get("bearerTokenId"), is(expectedBearerToken));
   }
 
   @Test

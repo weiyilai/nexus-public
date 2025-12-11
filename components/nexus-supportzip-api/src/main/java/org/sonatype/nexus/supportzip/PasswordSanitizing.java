@@ -51,6 +51,7 @@ public class PasswordSanitizing<T extends Map<String, ?>>
       "auth_account_key",
       "aptSigning",
       "bearerToken",
+      "bearerTokenId",
       "yumSigning",
       "accountKey",
       "destinationInstancePassword",

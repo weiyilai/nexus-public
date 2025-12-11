@@ -197,7 +197,7 @@ public class BaseRepositoryManagerTest
   private GroupMemberMappingCache groupMemberMappingCache;
 
   @Mock
-  private HttpAuthenticationPasswordEncoder httpAuthenticationPasswordEncoder;
+  private HttpAuthenticationSecretEncoder httpAuthenticationSecretEncoder;
 
   // Subject of the test
   private BaseRepositoryManager<BlobStoreManager> repositoryManager;
@@ -316,7 +316,7 @@ public class BaseRepositoryManagerTest
     repositoryManager = new BaseRepositoryManager<>(eventManager, configurationStore, repositoryFactory,
         configurationFacetProvider, List.of(), securityContributor,
         defaultRepositoriesContributorList, freezeService, skipDefaultRepositories, blobStoreManager,
-        groupMemberMappingCache, List.of(), httpAuthenticationPasswordEncoder)
+        groupMemberMappingCache, List.of(), httpAuthenticationSecretEncoder)
     {
     };
 

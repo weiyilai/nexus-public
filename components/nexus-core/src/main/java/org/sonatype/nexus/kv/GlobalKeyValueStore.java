@@ -37,6 +37,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Singleton
 public class GlobalKeyValueStore
     extends ConfigStoreSupport<NexusKeyValueDAO>
+    implements KeyValueStore
 {
   private final ObjectMapper mapper;
 
@@ -52,33 +53,38 @@ public class GlobalKeyValueStore
    * @param key a string key
    * @return {@link Optional<NexusKeyValue>}
    */
+  @Override
   @Transactional
   public Optional<NexusKeyValue> getKey(final String key) {
     return dao().get(key);
   }
 
   // TODO don't mark this as Transactional it is expensive
+  @Override
   public <E> Optional<E> get(final String key, final Class<E> clazz) {
     Optional<NexusKeyValue> val = getKey(key);
-    if (!val.isPresent()) {
+    if (val.isEmpty()) {
       return Optional.empty();
     }
 
     return val.map(o -> o.getAsObject(mapper, clazz));
   }
 
+  @Override
   @Transactional
   public Optional<Boolean> getBoolean(final String key) {
     return getKey(key)
         .map(NexusKeyValue::getAsBoolean);
   }
 
+  @Override
   @Transactional
   public Optional<String> getString(final String key) {
     return getKey(key)
         .map(NexusKeyValue::getAsString);
   }
 
+  @Override
   @Transactional
   public Optional<Integer> getInt(final String key) {
     return getKey(key)
@@ -90,27 +96,32 @@ public class GlobalKeyValueStore
    *
    * @param keyValue record to be created/updated
    */
+  @Override
   @Transactional
   public void setKey(final NexusKeyValue keyValue) {
     super.postCommitEvent(() -> new KeyValueEvent(keyValue.key(), Iterables.getOnlyElement(keyValue.value().values())));
     dao().set(keyValue);
   }
 
+  @Override
   @Transactional
   public void setBoolean(final String key, final boolean value) {
     setKey(new NexusKeyValue(key, ValueType.BOOLEAN, value));
   }
 
+  @Override
   @Transactional
   public void setInt(final String key, final int value) {
     setKey(new NexusKeyValue(key, ValueType.NUMBER, value));
   }
 
+  @Override
   @Transactional
   public void setString(final String key, final String value) {
     setKey(new NexusKeyValue(key, ValueType.CHARACTER, value));
   }
 
+  @Override
   @Transactional
   public void setString(final String key, final Object value) {
     setKey(new NexusKeyValue(key, ValueType.OBJECT, value));
@@ -122,6 +133,7 @@ public class GlobalKeyValueStore
    * @param key a string key
    * @return a primitive boolean indicating if the record was deleted successfully or not
    */
+  @Override
   @Transactional
   public boolean removeKey(final String key) {
     return dao().remove(key);

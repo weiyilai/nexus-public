@@ -17,34 +17,37 @@ import javax.validation.constraints.NotNull;
 import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.crypto.secrets.Secret;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Bearer Token authentication configuration
  *
  * @since 3.20
  */
 public class BearerTokenAuthenticationConfiguration
-  extends AuthenticationConfiguration
+    extends AuthenticationConfiguration
 {
   public static final String TYPE = "bearerToken";
 
   @NotNull
-  private String bearerToken;
+  @JsonProperty("bearerTokenId")
+  private Secret bearerToken;
 
   public BearerTokenAuthenticationConfiguration() {
     super(TYPE);
   }
 
-  public String getBearerToken() {
+  public Secret getBearerToken() {
     return bearerToken;
   }
 
-  public void setBearerToken(final String bearerToken) {
+  public void setBearerToken(final Secret bearerToken) {
     this.bearerToken = bearerToken;
   }
 
   @Override
   public Secret getSecret() {
-    return null;
+    return getBearerToken();
   }
 
   @Override

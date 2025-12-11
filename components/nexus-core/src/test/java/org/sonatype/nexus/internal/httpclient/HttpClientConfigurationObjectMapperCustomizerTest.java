@@ -17,6 +17,7 @@ import java.util.Map;
 import org.sonatype.goodies.common.Time;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
 import org.sonatype.nexus.httpclient.config.ConnectionConfiguration;
+import org.sonatype.nexus.kv.KeyValueStore;
 import org.sonatype.nexus.repository.httpclient.HttpClientConfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,13 +39,16 @@ public class HttpClientConfigurationObjectMapperCustomizerTest
   @Mock
   private SecretsService secretsService;
 
+  @Mock
+  private KeyValueStore keyValueStore;
+
   private HttpClientConfigurationObjectMapperCustomizer customizer;
 
   private ObjectMapper objectMapper;
 
   @Before
   public void setup() {
-    customizer = new HttpClientConfigurationObjectMapperCustomizer(secretsService);
+    customizer = new HttpClientConfigurationObjectMapperCustomizer(secretsService, keyValueStore);
     objectMapper = new ObjectMapper();
     customizer.customize(objectMapper);
   }

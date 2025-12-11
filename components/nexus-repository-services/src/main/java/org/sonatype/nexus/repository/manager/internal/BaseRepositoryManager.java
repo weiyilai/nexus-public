@@ -111,7 +111,7 @@ public abstract class BaseRepositoryManager<BSM extends BlobStoreManager>
 
   protected final List<ConfigurationValidator> configurationValidators;
 
-  protected final HttpAuthenticationPasswordEncoder httpAuthenticationPasswordEncoder;
+  protected final HttpAuthenticationSecretEncoder httpAuthenticationSecretEncoder;
 
   protected BaseRepositoryManager(
       final EventManager eventManager,
@@ -126,7 +126,7 @@ public abstract class BaseRepositoryManager<BSM extends BlobStoreManager>
       final BSM blobStoreManager,
       final GroupMemberMappingCache groupMemberMappingCache,
       final List<ConfigurationValidator> configurationValidators,
-      final HttpAuthenticationPasswordEncoder httpAuthenticationPasswordEncoder)
+      final HttpAuthenticationSecretEncoder httpAuthenticationSecretEncoder)
   {
     this.eventManager = checkNotNull(eventManager);
     this.store = checkNotNull(store);
@@ -140,7 +140,7 @@ public abstract class BaseRepositoryManager<BSM extends BlobStoreManager>
     this.blobStoreManager = checkNotNull(blobStoreManager);
     this.groupMemberMappingCache = checkNotNull(groupMemberMappingCache);
     this.configurationValidators = checkNotNull(configurationValidators);
-    this.httpAuthenticationPasswordEncoder = checkNotNull(httpAuthenticationPasswordEncoder);
+    this.httpAuthenticationSecretEncoder = checkNotNull(httpAuthenticationSecretEncoder);
   }
 
   /**
@@ -398,7 +398,7 @@ public abstract class BaseRepositoryManager<BSM extends BlobStoreManager>
 
     try {
       if (!EventHelper.isReplicating()) {
-        httpAuthenticationPasswordEncoder.encodeHttpAuthPassword(configuration.getAttributes());
+        httpAuthenticationSecretEncoder.encodeHttpAuthPassword(configuration.getAttributes());
       }
       validateConfiguration(configuration);
 
@@ -409,7 +409,7 @@ public abstract class BaseRepositoryManager<BSM extends BlobStoreManager>
       }
     }
     catch (Exception e) {
-      httpAuthenticationPasswordEncoder.removeSecret(configuration.getAttributes());
+      httpAuthenticationSecretEncoder.removeSecret(configuration.getAttributes());
       throw e;
     }
     repository.start();
@@ -436,7 +436,7 @@ public abstract class BaseRepositoryManager<BSM extends BlobStoreManager>
     final Configuration oldConfiguration = repository.getConfiguration().copy();
     try {
       if (!EventHelper.isReplicating()) {
-        httpAuthenticationPasswordEncoder.encodeHttpAuthPassword(oldConfiguration.getAttributes(),
+        httpAuthenticationSecretEncoder.encodeHttpAuthPassword(oldConfiguration.getAttributes(),
             configuration.getAttributes());
       }
 
@@ -447,11 +447,11 @@ public abstract class BaseRepositoryManager<BSM extends BlobStoreManager>
 
       if (!EventHelper.isReplicating()) {
         store.update(configuration);
-        httpAuthenticationPasswordEncoder.removeSecret(oldConfiguration.getAttributes(), configuration.getAttributes());
+        httpAuthenticationSecretEncoder.removeSecret(oldConfiguration.getAttributes(), configuration.getAttributes());
       }
     }
     catch (Exception e) {
-      httpAuthenticationPasswordEncoder.removeSecret(configuration.getAttributes(), oldConfiguration.getAttributes());
+      httpAuthenticationSecretEncoder.removeSecret(configuration.getAttributes(), oldConfiguration.getAttributes());
       throw e;
     }
 
@@ -489,7 +489,7 @@ public abstract class BaseRepositoryManager<BSM extends BlobStoreManager>
     repository.destroy();
 
     if (!EventHelper.isReplicating()) {
-      httpAuthenticationPasswordEncoder.removeSecret(configuration.getAttributes());
+      httpAuthenticationSecretEncoder.removeSecret(configuration.getAttributes());
       store.delete(configuration);
     }
 

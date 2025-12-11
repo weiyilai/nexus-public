@@ -22,6 +22,7 @@ import org.sonatype.nexus.crypto.secrets.SecretDeserializer;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
 import org.sonatype.nexus.datastore.mybatis.OverrideIgnoreTypeIntrospector;
 import org.sonatype.nexus.httpclient.config.AuthenticationConfiguration;
+import org.sonatype.nexus.kv.KeyValueStore;
 import org.sonatype.nexus.repository.config.ConfigurationObjectMapperCustomizer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,9 +46,15 @@ public class HttpClientConfigurationObjectMapperCustomizer
 {
   private final SecretsService secretsService;
 
+  private final KeyValueStore keyValueStore;
+
   @Inject
-  public HttpClientConfigurationObjectMapperCustomizer(final SecretsService secretsService) {
+  public HttpClientConfigurationObjectMapperCustomizer(
+      final SecretsService secretsService,
+      final KeyValueStore keyValueStore)
+  {
     this.secretsService = checkNotNull(secretsService);
+    this.keyValueStore = checkNotNull(keyValueStore);
   }
 
   @Override
@@ -64,7 +71,7 @@ public class HttpClientConfigurationObjectMapperCustomizer
                     new SecondsDeserializer())
                 .addSerializer(
                     AuthenticationConfiguration.class,
-                    new AuthenticationConfigurationSerializer())
+                    new AuthenticationConfigurationSerializer(keyValueStore))
                 .addDeserializer(
                     AuthenticationConfiguration.class,
                     new AuthenticationConfigurationDeserializer())

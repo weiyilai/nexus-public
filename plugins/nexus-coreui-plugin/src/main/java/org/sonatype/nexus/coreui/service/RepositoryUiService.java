@@ -281,25 +281,15 @@ public class RepositoryUiService
   public RepositoryXO update(final @NotNull @Valid RepositoryXO repositoryXO) throws Exception {
     Repository repository = safelyGetRepository(repositoryXO.getName(), BreadActions.EDIT);
 
-    // Replace stored password
+    // Replace stored password and bearerTokenId if placeholders are used
     Optional.of(repositoryXO)
         .map(RepositoryXO::getAttributes)
         .map(attr -> attr.get("httpclient"))
         .map(httpclient -> httpclient.get("authentication"))
         .map(Map.class::cast)
         .ifPresent(authentication -> {
-          String password = (String) authentication.get("password");
-          if (PasswordPlaceholder.is(password)) {
-            Optional.of(repository)
-                .map(Repository::getConfiguration)
-                .map(Configuration::getAttributes)
-                .map(attr -> attr.get("httpclient"))
-                .map(Map.class::cast)
-                .map(httpclient -> httpclient.get("authentication"))
-                .map(Map.class::cast)
-                .map(storedAuthentication -> storedAuthentication.get("password"))
-                .ifPresent(storedPassword -> authentication.put("password", storedPassword));
-          }
+          restoreSecretIfPlaceholder(repository, authentication, "password");
+          restoreSecretIfPlaceholder(repository, authentication, "bearerTokenId");
         });
 
     initializeCleanupAttributes(repositoryXO);
@@ -310,6 +300,46 @@ public class RepositoryUiService
     updatedConfiguration.setAttributes(repositoryXO.getAttributes());
 
     return asRepository(repositoryManager.update(updatedConfiguration));
+  }
+
+  private static final String BEARER_TOKEN = "bearerToken";
+
+  private static final String BEARER_TOKEN_ID = "bearerTokenId";
+
+  /**
+   * Restores a secret value from the stored repository configuration if the provided value is a placeholder.
+   *
+   * @param repository the repository containing the stored configuration
+   * @param authentication the authentication map to potentially update
+   * @param secretKey the key of the secret to check (e.g., "password" or "bearerTokenId")
+   */
+  private static void restoreSecretIfPlaceholder(
+      final Repository repository,
+      final Map<String, Object> authentication,
+      final String secretKey)
+  {
+    String value = (String) authentication.get(secretKey);
+    if (PasswordPlaceholder.is(value)) {
+      Optional<Map<String, Object>> storedAuth = Optional.of(repository)
+          .map(Repository::getConfiguration)
+          .map(Configuration::getAttributes)
+          .map(attr -> attr.get("httpclient"))
+          .map(Map.class::cast)
+          .map(httpclient -> httpclient.get("authentication"))
+          .map(Map.class::cast);
+
+      storedAuth
+          .map(auth -> auth.get(secretKey))
+          .ifPresentOrElse(
+              storedValue -> authentication.put(secretKey, storedValue),
+              () -> {
+                // For bearerTokenId, fallback to bearerToken key for pre-migration repositories
+                if (BEARER_TOKEN_ID.equals(secretKey)) {
+                  storedAuth.map(auth -> auth.get(BEARER_TOKEN))
+                      .ifPresent(oldValue -> authentication.put(secretKey, oldValue));
+                }
+              });
+    }
   }
 
   private DetachedEntityId toDetachedEntityId(final String s) {
@@ -415,8 +445,34 @@ public class RepositoryUiService
         .map(attr -> attr.get("httpclient"))
         .map(httpclient -> httpclient.get("authentication"))
         .map(Map.class::cast)
-        .ifPresent(authentication -> authentication.put("password", PasswordPlaceholder.get()));
+        .ifPresent(authentication -> {
+          replaceSecretWithPlaceholder(authentication, "password");
+          replaceSecretWithPlaceholder(authentication, BEARER_TOKEN_ID);
+          putPlaceholderForOldBearerTokenKey(authentication);
+        });
     return attributes;
+  }
+
+  private static void putPlaceholderForOldBearerTokenKey(final Map<String, Object> authentication) {
+    // Pre-migration: bearerToken exists but bearerTokenId doesn't - show placeholder for UI
+    if (!authentication.containsKey(BEARER_TOKEN_ID) && authentication.containsKey(BEARER_TOKEN)) {
+      authentication.put(BEARER_TOKEN_ID, PasswordPlaceholder.get());
+    }
+  }
+
+  /**
+   * Replaces a secret value with a placeholder if it exists in the authentication map.
+   *
+   * @param authentication the authentication map to update
+   * @param secretKey the key of the secret to replace (e.g., "password" or "bearerTokenId")
+   */
+  private static void replaceSecretWithPlaceholder(
+      final Map<String, Object> authentication,
+      final String secretKey)
+  {
+    if (authentication.containsKey(secretKey) && authentication.get(secretKey) != null) {
+      authentication.put(secretKey, PasswordPlaceholder.get());
+    }
   }
 
   @RequiresAuthentication

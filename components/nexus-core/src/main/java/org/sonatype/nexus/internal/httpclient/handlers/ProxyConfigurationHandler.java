@@ -17,6 +17,7 @@ import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.crypto.secrets.SecretsFactory;
 import org.sonatype.nexus.httpclient.config.ProxyConfiguration;
+import org.sonatype.nexus.kv.KeyValueStore;
 
 import org.apache.ibatis.type.TypeHandler;
 import org.springframework.stereotype.Component;
@@ -32,7 +33,7 @@ public class ProxyConfigurationHandler
     extends HttpClientConfigurationHandler<ProxyConfiguration>
 {
   @Inject
-  public ProxyConfigurationHandler(final SecretsFactory secretsFactory) {
-    super(secretsFactory);
+  public ProxyConfigurationHandler(final SecretsFactory secretsFactory, final KeyValueStore keyValueStore) {
+    super(secretsFactory, keyValueStore);
   }
 }

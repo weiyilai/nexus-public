@@ -25,6 +25,7 @@ import org.sonatype.nexus.internal.httpclient.AuthenticationConfigurationDeseria
 import org.sonatype.nexus.internal.httpclient.AuthenticationConfigurationSerializer;
 import org.sonatype.nexus.internal.httpclient.SecondsDeserializer;
 import org.sonatype.nexus.internal.httpclient.SecondsSerializer;
+import org.sonatype.nexus.kv.KeyValueStore;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,33 +45,30 @@ public abstract class HttpClientConfigurationHandler<T>
   // this guarantees the constructor and buildObjectMapper work on the same mapper, regardless which runs first
   private static final ThreadLocal<ObjectMapper> constructingMapper = ThreadLocal.withInitial(ObjectMapper::new);
 
-  protected HttpClientConfigurationHandler(final SecretsFactory secretsFactory) {
-    constructingMapper.get().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+  protected HttpClientConfigurationHandler(final SecretsFactory secretsFactory, final KeyValueStore keyValueStore) {
+    constructingMapper.get()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .setAnnotationIntrospector(new OverrideIgnoreTypeIntrospector(ImmutableList.of(Secret.class)))
-      // register custom serializers and deserializers
-      // - goodies Time is our internal Time representation
-      // - AuthenticationConfiguration needs a tiny bit of logic for resolving the proper impl and encryption
-      .registerModule(
-          new SimpleModule()
-              .addSerializer(
-                  Time.class,
-                  new SecondsSerializer()
-              )
-              .addDeserializer(
-                  Time.class,
-                  new SecondsDeserializer()
-              )
-              .addSerializer(
-                  AuthenticationConfiguration.class,
-                  new AuthenticationConfigurationSerializer()
-              )
-              .addDeserializer(
-                  AuthenticationConfiguration.class,
-                  new AuthenticationConfigurationDeserializer()
-              )
-              .addDeserializer(Secret.class, new SecretDeserializer(secretsFactory))
+        // register custom serializers and deserializers
+        // - goodies Time is our internal Time representation
+        // - AuthenticationConfiguration needs a tiny bit of logic for resolving the proper impl and encryption
+        .registerModule(
+            new SimpleModule()
+                .addSerializer(
+                    Time.class,
+                    new SecondsSerializer())
+                .addDeserializer(
+                    Time.class,
+                    new SecondsDeserializer())
+                .addSerializer(
+                    AuthenticationConfiguration.class,
+                    new AuthenticationConfigurationSerializer(keyValueStore))
+                .addDeserializer(
+                    AuthenticationConfiguration.class,
+                    new AuthenticationConfigurationDeserializer())
+                .addDeserializer(Secret.class, new SecretDeserializer(secretsFactory))
 
-      );
+        );
   }
 
   @Override

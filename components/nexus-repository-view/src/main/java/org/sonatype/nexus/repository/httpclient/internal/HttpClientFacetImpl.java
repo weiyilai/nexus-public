@@ -191,7 +191,9 @@ public class HttpClientFacetImpl
   public String getBearerToken() {
     if (config.authentication != null &&
         BearerTokenAuthenticationConfiguration.TYPE.equals(config.authentication.getType())) {
-      return ((BearerTokenAuthenticationConfiguration) config.authentication).getBearerToken();
+      BearerTokenAuthenticationConfiguration bearerTokenAuthenticationConfiguration =
+          ((BearerTokenAuthenticationConfiguration) config.authentication);
+      return new String(bearerTokenAuthenticationConfiguration.getBearerToken().decrypt());
     }
     return null;
   }

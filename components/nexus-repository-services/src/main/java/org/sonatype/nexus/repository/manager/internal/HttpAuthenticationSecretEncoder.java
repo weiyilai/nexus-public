@@ -16,60 +16,86 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.crypto.secrets.SecretsService;
 import org.sonatype.nexus.httpclient.config.AuthenticationConfiguration;
+import org.sonatype.nexus.kv.KeyValueStore;
 import org.sonatype.nexus.security.UserIdHelper;
 
 import org.apache.commons.lang3.StringUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Optional.ofNullable;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * Used for management of Repository secrets
+ * Used for management of Repository authentication secrets (passwords and bearer tokens)
  *
  * @see org.sonatype.nexus.repository.manager.RepositoryManager implementation
  */
 @Component
-@Singleton
-public class HttpAuthenticationPasswordEncoder
+public class HttpAuthenticationSecretEncoder
     extends ComponentSupport
 {
+  public static final String BEARER_TOKEN_MIGRATION_STARTED = "bearer.token.migration.started";
+
   private static final String PASSWORD = "password";
+
+  private static final String BEARER_TOKEN = "bearerToken";
+
+  private static final String BEARER_TOKEN_ID = "bearerTokenId";
 
   private final SecretsService secretsService;
 
-  @Inject
-  public HttpAuthenticationPasswordEncoder(final SecretsService secretsService) {
+  private final KeyValueStore keyValueStore;
+
+  @Autowired
+  public HttpAuthenticationSecretEncoder(final SecretsService secretsService, final KeyValueStore keyValueStore) {
     this.secretsService = checkNotNull(secretsService);
+    this.keyValueStore = checkNotNull(keyValueStore);
+  }
+
+  private boolean isMigrationStarted() {
+    return keyValueStore.getBoolean(BEARER_TOKEN_MIGRATION_STARTED).orElse(false);
   }
 
   /**
-   * Encode password if present in the provided attributes
+   * Encode password and bearer token if present in the provided attributes
    */
   public void encodeHttpAuthPassword(final Map<String, Map<String, Object>> attributes) {
     getAuthentication(attributes).ifPresent(authentication -> {
-      authentication.computeIfPresent(PASSWORD, (key, value) -> {
-        // only need to encrypt if a Secret object isn't already in place. Typically create
-        // from UI or REST will have a clear text password here, import from migration will have
-        // a valid Secret object already created
-        if (value instanceof String) {
-          return encrypt((String) value);
-        }
-        return ((Secret) value).getId();
-      });
+      authentication.computeIfPresent(PASSWORD, this::encryptValueIfNeeded);
+      if (isMigrationStarted()) {
+        authentication.computeIfPresent(BEARER_TOKEN_ID, this::encryptValueIfNeeded);
+        authentication.remove(BEARER_TOKEN);
+      }
+      else {
+        moveBearerTokenIdToBearerToken(authentication);
+      }
     });
   }
 
+  private String encryptValueIfNeeded(final String key, final Object value) {
+    if (value instanceof String) {
+      return encrypt((String) value);
+    }
+    return ((Secret) value).getId();
+  }
+
+  private void moveBearerTokenIdToBearerToken(final Map<String, Object> authentication) {
+    Object value = authentication.get(BEARER_TOKEN_ID);
+    if (value != null) {
+      authentication.put(BEARER_TOKEN, value);
+      authentication.remove(BEARER_TOKEN_ID);
+    }
+  }
+
   /**
-   * Encode password if present in the provided {@code newAttributes} and it is different from the value in
-   * {@code attributesToPrune}
+   * Encode password and bearer token if present in the provided {@code newAttributes} and it is different from the
+   * value in {@code attributesToPrune}
    */
   public void encodeHttpAuthPassword(
       final Map<String, Map<String, Object>> attributesToPrune,
@@ -77,28 +103,50 @@ public class HttpAuthenticationPasswordEncoder
   {
     getAuthentication(newAttributes).ifPresent(newAuth -> {
       encodeAuthSecret(PASSWORD, newAuth, attributesToPrune);
+      if (isMigrationStarted()) {
+        encodeAuthSecret(BEARER_TOKEN_ID, newAuth, attributesToPrune);
+        newAuth.remove(BEARER_TOKEN);
+      }
+      else {
+        moveBearerTokenIdToBearerToken(newAuth);
+      }
     });
   }
 
   /**
-   * Remove secret if password is not in {@code persistedAttributes} or if present
-   * then remove secret only if the value in {@code attributesToPrune} and
-   * {@code persistedAttributes} are different
+   * Remove secret if password or bearer token is not in {@code persistedAttributes} or if present then remove secret
+   * only if the value in {@code attributesToPrune} and {@code persistedAttributes} are different
    */
   public void removeSecret(
       final Map<String, Map<String, Object>> attributesToPrune,
       final Map<String, Map<String, Object>> persistedAttributes)
   {
-    ofNullable(findAuthKey(attributesToPrune))
-        .ifPresent(authKey -> removeAuthSecret(attributesToPrune, persistedAttributes, authKey));
+    getAuthentication(attributesToPrune).ifPresent(oldAuth -> {
+      if (oldAuth.containsKey(PASSWORD) && oldAuth.get(PASSWORD) != null) {
+        removeAuthSecret(attributesToPrune, persistedAttributes, PASSWORD);
+      }
+
+      if (oldAuth.containsKey(BEARER_TOKEN_ID) && oldAuth.get(BEARER_TOKEN_ID) != null) {
+        removeAuthSecret(attributesToPrune, persistedAttributes, BEARER_TOKEN_ID);
+      }
+    });
   }
 
   /**
-   * Remove secret
+   * Remove secret for password or bearer token
    */
   public void removeSecret(final Map<String, Map<String, Object>> attributes) {
-    final String authSecretKey = findAuthKey(attributes);
-    ofNullable(authSecretKey).ifPresent(authKey -> removeSecret(attributes, authKey));
+    getAuthentication(attributes).ifPresent(auth -> {
+      if (isMigrationStarted()) {
+        if (auth.containsKey(BEARER_TOKEN_ID) && auth.get(BEARER_TOKEN_ID) != null) {
+          removeSecret(attributes, BEARER_TOKEN_ID);
+        }
+      }
+
+      if (auth.containsKey(PASSWORD) && auth.get(PASSWORD) != null) {
+        removeSecret(attributes, PASSWORD);
+      }
+    });
   }
 
   private void removeSecret(final Map<String, Map<String, Object>> attributes, final String authSecretKey) {
@@ -114,14 +162,6 @@ public class HttpAuthenticationPasswordEncoder
     catch (Exception e) {
       log.error(e.getMessage(), e);
     }
-  }
-
-  private String findAuthKey(final Map<String, Map<String, Object>> attributesToPrune) {
-    final Optional<Map<String, Object>> authentication = getAuthentication(attributesToPrune);
-    return authentication
-        .map(auth -> auth.get(PASSWORD))
-        .map(value -> PASSWORD)
-        .orElse(null);
   }
 
   private void removeAuthSecret(

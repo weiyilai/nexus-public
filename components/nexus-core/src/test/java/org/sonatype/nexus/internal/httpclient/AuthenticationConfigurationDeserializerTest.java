@@ -28,6 +28,7 @@ import org.sonatype.nexus.crypto.secrets.SecretsFactory;
 import org.sonatype.nexus.datastore.mybatis.OverrideIgnoreTypeIntrospector;
 import org.sonatype.nexus.httpclient.config.AuthenticationConfiguration;
 import org.sonatype.nexus.httpclient.config.UsernameAuthenticationConfiguration;
+import org.sonatype.nexus.kv.KeyValueStore;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -48,6 +49,9 @@ public class AuthenticationConfigurationDeserializerTest
   @Mock
   private SecretsFactory secretsFactory;
 
+  @Mock
+  private KeyValueStore keyValueStore;
+
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
@@ -62,7 +66,7 @@ public class AuthenticationConfigurationDeserializerTest
                     new SecondsDeserializer())
                 .addSerializer(
                     AuthenticationConfiguration.class,
-                    new AuthenticationConfigurationSerializer())
+                    new AuthenticationConfigurationSerializer(keyValueStore))
                 .addDeserializer(
                     AuthenticationConfiguration.class,
                     new AuthenticationConfigurationDeserializer())

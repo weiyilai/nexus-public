@@ -31,6 +31,7 @@ import org.sonatype.nexus.httpclient.config.UsernameAuthenticationConfiguration;
 import org.sonatype.nexus.internal.httpclient.handlers.AuthenticationConfigurationHandler;
 import org.sonatype.nexus.internal.httpclient.handlers.ConnectionConfigurationHandler;
 import org.sonatype.nexus.internal.httpclient.handlers.ProxyConfigurationHandler;
+import org.sonatype.nexus.kv.KeyValueStore;
 import org.sonatype.nexus.testdb.DataSessionRule;
 
 import java.util.concurrent.TimeUnit;
@@ -56,11 +57,13 @@ public class HttpClientConfigurationDAOTest
 
   private SecretsService secretsService = mock(SecretsService.class);
 
+  private KeyValueStore keyValueStore = mock(KeyValueStore.class);
+
   @Rule
   public DataSessionRule sessionRule = new DataSessionRule()
-      .handle(new ConnectionConfigurationHandler(secretsService))
-      .handle(new ProxyConfigurationHandler(secretsService))
-      .handle(new AuthenticationConfigurationHandler(secretsService))
+      .handle(new ConnectionConfigurationHandler(secretsService, keyValueStore))
+      .handle(new ProxyConfigurationHandler(secretsService, keyValueStore))
+      .handle(new AuthenticationConfigurationHandler(secretsService, keyValueStore))
       .handle(new SecretTypeHandler(secretsService))
       .access(HttpClientConfigurationDAO.class);
 

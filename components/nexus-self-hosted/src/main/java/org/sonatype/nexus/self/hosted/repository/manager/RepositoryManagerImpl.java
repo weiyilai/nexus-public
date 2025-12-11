@@ -27,7 +27,7 @@ import org.sonatype.nexus.repository.manager.DefaultRepositoriesContributor;
 import org.sonatype.nexus.repository.manager.RepositoryManager;
 import org.sonatype.nexus.repository.manager.internal.BaseRepositoryManager;
 import org.sonatype.nexus.repository.manager.internal.GroupMemberMappingCache;
-import org.sonatype.nexus.repository.manager.internal.HttpAuthenticationPasswordEncoder;
+import org.sonatype.nexus.repository.manager.internal.HttpAuthenticationSecretEncoder;
 import org.sonatype.nexus.repository.manager.internal.RepositoryAdminSecurityContributor;
 import org.sonatype.nexus.repository.manager.internal.RepositoryFactory;
 
@@ -68,10 +68,10 @@ public class RepositoryManagerImpl
       final BlobStoreManager blobStoreManager,
       final GroupMemberMappingCache groupMemberMappingCache,
       final List<ConfigurationValidator> configurationValidators,
-      final HttpAuthenticationPasswordEncoder httpAuthenticationPasswordEncoder)
+      final HttpAuthenticationSecretEncoder httpAuthenticationSecretEncoder)
   {
     super(eventManager, store, factory, configFacet, recipes, securityContributor, defaultRepositoriesContributors,
         freezeService, skipDefaultRepositories, blobStoreManager, groupMemberMappingCache, configurationValidators,
-        httpAuthenticationPasswordEncoder);
+        httpAuthenticationSecretEncoder);
   }
 }

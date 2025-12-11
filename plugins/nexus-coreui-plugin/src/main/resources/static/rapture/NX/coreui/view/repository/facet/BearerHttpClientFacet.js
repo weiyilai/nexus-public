@@ -36,7 +36,7 @@ Ext.define('NX.coreui.view.repository.facet.BearerHttpClientFacet', {
           xtype: 'textfield',
           inputType: 'password',
           itemId: 'attributes_httpclient_authentication_bearerToken',
-          name: 'attributes.httpclient.authentication.bearerToken',
+          name: 'attributes.httpclient.authentication.bearerTokenId',
           fieldLabel: NX.I18n.get('System_AuthenticationSettings_Bearer_Token_FieldLabel'),
           helpText: NX.I18n.get('System_AuthenticationSettings_Bearer_Token_HelpText'),
           hidden: true,

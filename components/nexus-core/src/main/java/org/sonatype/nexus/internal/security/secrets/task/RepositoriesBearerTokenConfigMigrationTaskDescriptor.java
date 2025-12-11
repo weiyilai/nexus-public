@@ -10,30 +10,29 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-package org.sonatype.nexus.internal.httpclient.handlers;
+package org.sonatype.nexus.internal.security.secrets.task;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
+import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
+import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
-import org.sonatype.nexus.crypto.secrets.SecretsFactory;
-import org.sonatype.nexus.httpclient.config.ConnectionConfiguration;
-import org.sonatype.nexus.kv.KeyValueStore;
-
-import org.apache.ibatis.type.TypeHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * MyBatis {@link TypeHandler} that maps a {@link ConnectionConfiguration} to/from JSON.
- *
- * @since 3.21
+ * Task descriptor for bearer token configuration migration task.
  */
+@AvailabilityVersion(from = "1.0")
 @Component
-@Singleton
-public class ConnectionConfigurationHandler
-    extends HttpClientConfigurationHandler<ConnectionConfiguration>
+public class RepositoriesBearerTokenConfigMigrationTaskDescriptor
+    extends TaskDescriptorSupport
 {
-  @Inject
-  public ConnectionConfigurationHandler(final SecretsFactory secretsFactory, final KeyValueStore keyValueStore) {
-    super(secretsFactory, keyValueStore);
+  public static final String TYPE_ID = "repository.bearer.token.config.migration";
+
+  private static final String NAME = "Migrate bearer token repository configurations";
+
+  public RepositoriesBearerTokenConfigMigrationTaskDescriptor(
+      final @Value("${nexus.repository.bearer.migration:false}") boolean enabled)
+  {
+    super(TYPE_ID, RepositoriesBearerTokenConfigMigrationTask.class, NAME, enabled, enabled);
   }
 }

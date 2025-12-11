@@ -221,6 +221,10 @@
       <artifactId>JUnitParams</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.sonatype.nexus</groupId>
+      <artifactId>nexus-base</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

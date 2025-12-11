@@ -18,12 +18,16 @@ import org.sonatype.nexus.httpclient.config.AuthenticationConfiguration;
 import org.sonatype.nexus.httpclient.config.BearerTokenAuthenticationConfiguration;
 import org.sonatype.nexus.httpclient.config.NtlmAuthenticationConfiguration;
 import org.sonatype.nexus.httpclient.config.UsernameAuthenticationConfiguration;
+import org.sonatype.nexus.kv.KeyValueStore;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static org.sonatype.nexus.repository.manager.internal.HttpAuthenticationSecretEncoder.BEARER_TOKEN_MIGRATION_STARTED;
 
 /**
  * {@link AuthenticationConfiguration} serializer.
@@ -35,26 +39,33 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 public class AuthenticationConfigurationSerializer
     extends StdSerializer<AuthenticationConfiguration>
 {
-  public AuthenticationConfigurationSerializer() {
+  private final KeyValueStore keyValueStore;
+
+  public AuthenticationConfigurationSerializer(final KeyValueStore keyValueStore) {
     super(AuthenticationConfiguration.class);
+    this.keyValueStore = checkNotNull(keyValueStore);
+  }
+
+  private boolean isMigrationStarted() {
+    return keyValueStore.getBoolean(BEARER_TOKEN_MIGRATION_STARTED).orElse(false);
   }
 
   @Override
-  public void serialize(final AuthenticationConfiguration value,
-                        final JsonGenerator jgen,
-                        final SerializerProvider provider)
-      throws IOException
+  public void serialize(
+      final AuthenticationConfiguration value,
+      final JsonGenerator jgen,
+      final SerializerProvider provider) throws IOException
   {
     serialize(value, jgen);
     jgen.writeEndObject();
   }
 
   @Override
-  public void serializeWithType(final AuthenticationConfiguration value,
-                                final JsonGenerator jgen,
-                                final SerializerProvider provider,
-                                final TypeSerializer typeSer)
-      throws IOException
+  public void serializeWithType(
+      final AuthenticationConfiguration value,
+      final JsonGenerator jgen,
+      final SerializerProvider provider,
+      final TypeSerializer typeSer) throws IOException
   {
     serialize(value, jgen);
     if (value instanceof UsernameAuthenticationConfiguration) {
@@ -95,7 +106,16 @@ public class AuthenticationConfigurationSerializer
     }
     else if (value instanceof BearerTokenAuthenticationConfiguration) {
       BearerTokenAuthenticationConfiguration btac = (BearerTokenAuthenticationConfiguration) value;
-      jgen.writeStringField(BearerTokenAuthenticationConfiguration.TYPE, btac.getBearerToken());
+      if (btac.getBearerToken() != null) {
+        if (isMigrationStarted()) {
+          // Post-migration: write as bearerTokenId (encrypted secret reference)
+          jgen.writeStringField("bearerTokenId", btac.getBearerToken().getId());
+        }
+        else {
+          // Pre-migration: write as bearerToken (plain text)
+          jgen.writeStringField("bearerToken", btac.getBearerToken().getId());
+        }
+      }
     }
     else {
       // be foolproof, if new type added but this class is not updated

@@ -47,9 +47,6 @@ public class RepositoriesSecretsMigrator
   static final String AUTHENTICATION_KEY = "authentication";
 
   @VisibleForTesting
-  static final String BEARER_TOKEN_KEY = "bearerToken";
-
-  @VisibleForTesting
   static final String PASSWORD_KEY = "password";
 
   private final RepositoryManager repositoryManager;

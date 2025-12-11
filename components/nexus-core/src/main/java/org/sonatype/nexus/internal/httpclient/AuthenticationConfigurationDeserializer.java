@@ -14,6 +14,7 @@ package org.sonatype.nexus.internal.httpclient;
 
 import java.io.IOException;
 
+import org.sonatype.nexus.crypto.secrets.Secret;
 import org.sonatype.nexus.httpclient.config.AuthenticationConfiguration;
 import org.sonatype.nexus.httpclient.config.BearerTokenAuthenticationConfiguration;
 import org.sonatype.nexus.httpclient.config.NtlmAuthenticationConfiguration;
@@ -44,17 +45,18 @@ public class AuthenticationConfigurationDeserializer
   }
 
   @Override
-  public AuthenticationConfiguration deserialize(final JsonParser parser, final DeserializationContext context)
-      throws IOException
+  public AuthenticationConfiguration deserialize(
+      final JsonParser parser,
+      final DeserializationContext context) throws IOException
   {
     return deserialize(parser);
   }
 
   @Override
-  public AuthenticationConfiguration deserializeWithType(final JsonParser parser,
-                                                         final DeserializationContext context,
-                                                         final TypeDeserializer typeDeserializer)
-      throws IOException
+  public AuthenticationConfiguration deserializeWithType(
+      final JsonParser parser,
+      final DeserializationContext context,
+      final TypeDeserializer typeDeserializer) throws IOException
   {
     return deserialize(parser);
   }
@@ -77,8 +79,15 @@ public class AuthenticationConfigurationDeserializer
       ntc.setHost(ntc.getHost());
     }
     else if (BearerTokenAuthenticationConfiguration.class.equals(type)) {
-      BearerTokenAuthenticationConfiguration btac = (BearerTokenAuthenticationConfiguration) configuration;
-      btac.setBearerToken(btac.getBearerToken());
+      // Handle backward compatibility: old versions used "bearerToken", new versions use "bearerTokenId"
+      BearerTokenAuthenticationConfiguration btc = (BearerTokenAuthenticationConfiguration) configuration;
+      if (btc.getBearerToken() == null) {
+        JsonNode bearerTokenNode = node.has("bearerToken") ? node.get("bearerToken") : null;
+        if (bearerTokenNode != null && !bearerTokenNode.isNull()) {
+          Secret secret = parser.getCodec().treeToValue(bearerTokenNode, Secret.class);
+          btc.setBearerToken(secret);
+        }
+      }
     }
     return configuration;
   }

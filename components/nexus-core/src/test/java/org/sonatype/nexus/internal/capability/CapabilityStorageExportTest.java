@@ -93,7 +93,7 @@ public class CapabilityStorageExportTest
     Map<String, String> sensitiveData = ImmutableMap.of(
         "password", "admin123",
         "secret", "admin123",
-        "bearerToken", "admin123");
+        "bearerTokenId", "admin123");
     item.setId(new EntityUUID(UUID.randomUUID()));
     item.setVersion(2);
     item.setType("testing 2");
