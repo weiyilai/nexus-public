@@ -208,3 +208,15 @@ export const modifyFormFields = typesArr => {
 
   return types;
 };
+
+export const normalizeWildCardFormat = data => {
+  const clonedData = clone(data);
+  if (clonedData.repository) {
+    const [repository, format] = clonedData.repository.split('-');
+    if (repository === '*' && format) {
+      clonedData.format = format;
+      clonedData.repository = repository;
+    }
+  }
+  return clonedData;
+};

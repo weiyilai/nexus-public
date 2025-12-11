@@ -453,6 +453,53 @@ describe('PrivilegesDetails', function() {
       expect(actions()).toHaveTextContent("Browse, Read");
     });
 
+    it('transforms repository field when loading Repository Content Selector privilege with non-wildcard format', async () => {
+      const {repository} = selectors;
+      const testFormat = 'maven2';
+      const PRIVILEGE_WITH_FORMAT = {
+        type: TYPE_IDS.REPOSITORY_CONTENT_SELECTOR,
+        name: testName,
+        description: testDescription,
+        contentSelector: testContentSelector,
+        format: testFormat,
+        repository: testRepository,
+        actions: testContentSelectorActions.split(','),
+        readOnly: false,
+      };
+
+      when(Axios.get).calledWith(singlePrivilegeUrl(testName)).mockResolvedValue({
+        data: PRIVILEGE_WITH_FORMAT
+      });
+
+      await renderAndWaitForLoad(testName);
+
+      // Repository field should be transformed to *-{format}
+      expect(repository()).toHaveValue(`*-${testFormat}`);
+    });
+
+    it('does not transform repository field when loading Repository Content Selector privilege with wildcard format', async () => {
+      const {repository} = selectors;
+      const PRIVILEGE_WITH_WILDCARD_FORMAT = {
+        type: TYPE_IDS.REPOSITORY_CONTENT_SELECTOR,
+        name: testName,
+        description: testDescription,
+        contentSelector: testContentSelector,
+        format: '*',
+        repository: testRepository,
+        actions: testContentSelectorActions.split(','),
+        readOnly: false,
+      };
+
+      when(Axios.get).calledWith(singlePrivilegeUrl(testName)).mockResolvedValue({
+        data: PRIVILEGE_WITH_WILDCARD_FORMAT
+      });
+
+      await renderAndWaitForLoad(testName);
+
+      // Repository field should remain unchanged when format is '*'
+      expect(repository()).toHaveValue(testRepository);
+    });
+
     it('renders Script privilege without edit permissions', async () => {
       const {readOnly: {scriptName, actions}} = selectors;
       const warning = () => screen.getByText(SETTINGS.READ_ONLY.WARNING);

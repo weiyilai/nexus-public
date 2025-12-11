@@ -14,12 +14,7 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import {
-  convertActionsToObject,
-  convertActionsToArray,
-  TYPES,
-  ACTIONS,
-} from './PrivilegesHelper';
+import { convertActionsToObject, convertActionsToArray, normalizeWildCardFormat, TYPES } from './PrivilegesHelper';
 
 describe('PrivilegesHelper', () => {
   const mockTypes = {
@@ -394,6 +389,103 @@ describe('PrivilegesHelper', () => {
       expect(backToArray.actions).toHaveLength(2);
       expect(backToArray.actions).toContain('read');
       expect(backToArray.actions).toContain('browse');
+    });
+  });
+
+  describe('normalizeWildCardFormat', () => {
+    describe('when type is REPOSITORY_CONTENT_SELECTOR', () => {
+      it('should split repository and format when repository is wildcard with format', () => {
+        const data = {
+          type: TYPES.REPOSITORY_CONTENT_SELECTOR,
+          repository: '*-maven2',
+          name: 'test-privilege',
+        };
+
+        const result = normalizeWildCardFormat(data);
+
+        expect(result.format).toBe('maven2');
+        expect(result.repository).toBe('*');
+        expect(result.name).toBe('test-privilege');
+      });
+
+      it('should not modify when repository is wildcard without format', () => {
+        const data = {
+          type: TYPES.REPOSITORY_CONTENT_SELECTOR,
+          repository: '*',
+          name: 'test-privilege',
+        };
+
+        const result = normalizeWildCardFormat(data);
+
+        expect(result.format).toBeUndefined();
+        expect(result.repository).toBe('*');
+        expect(result.name).toBe('test-privilege');
+      });
+
+      it('should not modify when repository is not wildcard', () => {
+        const data = {
+          type: TYPES.REPOSITORY_CONTENT_SELECTOR,
+          repository: 'repo-maven2',
+          name: 'test-privilege',
+        };
+
+        const result = normalizeWildCardFormat(data);
+
+        expect(result.format).toBeUndefined();
+        expect(result.repository).toBe('repo-maven2');
+        expect(result.name).toBe('test-privilege');
+      });
+
+      it('should handle repository with multiple hyphens correctly', () => {
+        const data = {
+          type: TYPES.REPOSITORY_CONTENT_SELECTOR,
+          repository: '*-maven2-snapshot',
+          name: 'test-privilege',
+        };
+
+        const result = normalizeWildCardFormat(data);
+
+        expect(result.format).toBe('maven2');
+        expect(result.repository).toBe('*');
+      });
+    });
+
+    describe('data immutability', () => {
+      it('should not mutate the original data object', () => {
+        const data = {
+          type: TYPES.REPOSITORY_CONTENT_SELECTOR,
+          repository: '*-maven2',
+          name: 'test-privilege',
+        };
+        const originalData = { ...data };
+
+        const result = normalizeWildCardFormat(data);
+
+        expect(data).toEqual(originalData);
+        expect(result).not.toBe(data);
+        expect(result.format).toBe('maven2');
+        expect(result.repository).toBe('*');
+      });
+
+      it('should preserve all other properties when modifying', () => {
+        const data = {
+          type: TYPES.REPOSITORY_CONTENT_SELECTOR,
+          repository: '*-maven2',
+          name: 'test-privilege',
+          description: 'Test description',
+          actions: ['READ', 'BROWSE'],
+          contentSelector: 'test-selector',
+        };
+
+        const result = normalizeWildCardFormat(data);
+
+        expect(result.name).toBe('test-privilege');
+        expect(result.description).toBe('Test description');
+        expect(result.actions).toEqual(['READ', 'BROWSE']);
+        expect(result.contentSelector).toBe('test-selector');
+        expect(result.format).toBe('maven2');
+        expect(result.repository).toBe('*');
+      });
     });
   });
 });

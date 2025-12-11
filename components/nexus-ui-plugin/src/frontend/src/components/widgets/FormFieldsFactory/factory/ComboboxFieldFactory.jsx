@@ -67,7 +67,7 @@ const Field = ({id, dynamicProps, current:parentState, onChange}) => {
           },
           LOAD_WITH_DEBOUNCE: {
             target: 'loading',
-            actions: ['setQuery', 'resetError', 'debounceApiCall', 'doFetch'],
+            actions: ['setQuery', 'setAction', 'setMethod', 'resetError', 'debounceApiCall', 'doFetch'],
           },
           RESET_MATCHES: {
             target: 'loaded',
@@ -87,6 +87,12 @@ const Field = ({id, dynamicProps, current:parentState, onChange}) => {
           setQuery: assign({
             query: (_, {query}) => query,
           }),
+          setAction: assign({
+            action: (_, {action}) => action,
+          }),
+          setMethod: assign({
+            method: (_, {method}) => method,
+          }),
           setError: assign({
             error: (_, event) => event?.data?.message || UIStrings.ERROR.UNKNOWN
           }),
@@ -104,7 +110,7 @@ const Field = ({id, dynamicProps, current:parentState, onChange}) => {
           }),
         },
         services: {
-          fetch: async ({query}) => {
+          fetch: async ({query, action, method}) => {
             const options = allowAutocomplete ? {query} : null;
             const response = await ExtAPIUtils.extAPIRequest(action, method, options);
             ExtAPIUtils.checkForError(response);
@@ -114,6 +120,8 @@ const Field = ({id, dynamicProps, current:parentState, onChange}) => {
       }), {
         context: {
           query: value,
+          action,
+          method,
           data: [],
         },
         devTools: true,
@@ -126,7 +134,7 @@ const Field = ({id, dynamicProps, current:parentState, onChange}) => {
 
   const loadData = (query) => {
     if (query) {
-      sendEvent({type: 'LOAD_WITH_DEBOUNCE', query});
+      sendEvent({type: 'LOAD_WITH_DEBOUNCE', query, action, method});
     } else {
       sendEvent({type: 'RESET_MATCHES'});
     }
@@ -146,7 +154,7 @@ const Field = ({id, dynamicProps, current:parentState, onChange}) => {
             onChange={onChangeCombobox}
             onSearch={loadData}
             loading={isLoading}
-            autoComplete={true}
+            autoComplete={false}
             matches={data}
             loadError={error}
             aria-label="combobox"

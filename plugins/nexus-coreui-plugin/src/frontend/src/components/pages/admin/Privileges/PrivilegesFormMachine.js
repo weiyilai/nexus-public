@@ -33,7 +33,9 @@ import {
   FIELDS,
   modifyFormFields,
   convertActionsToArray,
-  convertActionsToObject
+  convertActionsToObject,
+  normalizeWildCardFormat,
+  TYPES,
 } from './PrivilegesHelper';
 
 
@@ -80,6 +82,13 @@ export default FormUtils.buildFormMachine({
     setData: assign((_, {data: [types, privilege]}) => {
       const typesMap = modifyFormFields(types.data);
       const data = convertActionsToObject(privilege.data, typesMap);
+      if(data.type === TYPES.REPOSITORY_CONTENT_SELECTOR) {
+        if(data.format !== '*') {
+          data.repository = `*-${data.format}`;
+          data.format = '*';
+        }
+      }
+
       return {
         types: typesMap,
         data,
@@ -107,10 +116,11 @@ export default FormUtils.buildFormMachine({
     },
     saveData: ({data, pristineData: {name}, types}) => {
       const requestData = convertActionsToArray(data, types);
+      const normalizedData = normalizeWildCardFormat(requestData);
       if (isEdit(name)) {
-        return Axios.put(updatePrivilegeUrl(data.type, name), requestData);
+        return Axios.put(updatePrivilegeUrl(data.type, name), normalizedData);
       } else {
-        return Axios.post(createPrivilegeUrl(data.type), requestData);
+        return Axios.post(createPrivilegeUrl(data.type), normalizedData);
       }
     },
     confirmDelete: ({data}) => ExtJS.requestConfirmation({
