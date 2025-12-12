@@ -15,11 +15,6 @@ package org.sonatype.nexus.repository.content.search.upgrade;
 import java.sql.Connection;
 import java.util.Optional;
 
-import jakarta.inject.Inject;
-
-import org.springframework.beans.factory.annotation.Value;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_TABLE_SEARCH_NAMED_VALUE;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -42,15 +37,6 @@ public class SqlSearchMigrationStep_1_29
 
   private final String LAST_MODIFIED = "last_modified";
 
-  private final boolean sqlSearchEnabled;
-
-  @Inject
-  public SqlSearchMigrationStep_1_29(
-      @Value(DATASTORE_TABLE_SEARCH_NAMED_VALUE) final boolean sqlSearchEnabled)
-  {
-    this.sqlSearchEnabled = sqlSearchEnabled;
-  }
-
   @Override
   public Optional<String> version() {
     return Optional.of("1.29");
@@ -67,9 +53,6 @@ public class SqlSearchMigrationStep_1_29
       runStatement(connection, NOT_NULL_QUERY);
     }
 
-    // We only need to trigger migration if the user is using SQL Search
-    if (sqlSearchEnabled) {
-      super.migrate(connection);
-    }
+    super.migrate(connection);
   }
 }

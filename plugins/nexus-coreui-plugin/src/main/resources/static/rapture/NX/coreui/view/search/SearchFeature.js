@@ -76,7 +76,7 @@ Ext.define('NX.coreui.view.search.SearchFeature', {
             iconCls: NX.Icons.cls('message-danger', 'x16'),
             hidden: true
           },
-          // depends on SQL search or Elasticsearch show corresponding message
+          // depends on SQL search to show corresponding message
           searchItem
         ]
       },

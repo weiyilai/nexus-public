@@ -25,9 +25,6 @@ import org.sonatype.nexus.repository.content.search.sql.SearchCustomFieldContrib
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 import org.sonatype.nexus.repository.search.sql.SearchRecord;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_ARTIFACT_ID;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_BASE_VERSION;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_CLASSIFIER;
@@ -39,7 +36,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @Singleton
 @Component
 @Qualifier(Maven2Format.NAME)
-@ConditionalOnProperty(name = DATASTORE_CLUSTERED_ENABLED, havingValue = "true")
 public class MavenSearchCustomFieldContributor
     implements SearchCustomFieldContributor
 {

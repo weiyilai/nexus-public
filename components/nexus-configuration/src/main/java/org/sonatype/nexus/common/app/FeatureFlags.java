@@ -72,9 +72,6 @@ public class FeatureFlags
   /* Feature flag to indicate if current db is postgresql */
   public static final String DATASTORE_IS_POSTGRESQL = "datastore.isPostgresql";
 
-  // Enable elastic search
-  public static final String ELASTIC_SEARCH_ENABLED = "nexus.elasticsearch.enabled";
-
   /* JWT externalization. Available values: true, false. Default value: false */
   public static final String JWT_ENABLED = "nexus.jwt.enabled";
 
@@ -92,15 +89,6 @@ public class FeatureFlags
 
   /*  */
   public static final String DATASTORE_BLOBSTORE_METRICS = "nexus.datastore.blobstore.metrics.enabled";
-
-  /**
-   * Enable searching components via aggregated search table.
-   * Mutual exclusive with:
-   * - ELASTIC_SEARCH_ENABLED;
-   */
-  public static final String DATASTORE_TABLE_SEARCH = "nexus.datastore.table.search.enabled";
-
-  public static final String DATASTORE_TABLE_SEARCH_NAMED_VALUE = "${nexus.datastore.table.search.enabled:false}";
 
   /**
    * The Key-Value DB storage which can be used as a distributed cache. Use it intelligently,

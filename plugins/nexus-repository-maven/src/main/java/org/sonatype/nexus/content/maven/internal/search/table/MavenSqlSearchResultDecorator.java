@@ -21,10 +21,7 @@ import org.sonatype.nexus.repository.search.ComponentSearchResult;
 import org.sonatype.nexus.repository.search.sql.SearchResult;
 import org.sonatype.nexus.repository.search.sql.SqlSearchResultDecorator;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
 import static java.util.Collections.emptyMap;
-import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED;
 import static org.sonatype.nexus.repository.maven.internal.Attributes.P_BASE_VERSION;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,7 +32,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @Singleton
 @Component
 @Qualifier(Maven2Format.NAME)
-@ConditionalOnProperty(name = DATASTORE_CLUSTERED_ENABLED, havingValue = "true")
 public class MavenSqlSearchResultDecorator
     implements SqlSearchResultDecorator
 {

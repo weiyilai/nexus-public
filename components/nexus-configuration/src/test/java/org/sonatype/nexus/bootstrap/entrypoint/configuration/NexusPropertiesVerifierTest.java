@@ -109,10 +109,8 @@ class NexusPropertiesVerifierTest
     assertThat(nexusProperties.getProperty(DATASTORE_CLUSTERED_ENABLED), is(TRUE));
 
     // datastore features
-    assertThat(nexusProperties.getProperty(DATASTORE_TABLE_SEARCH), is(TRUE));
     assertThat(nexusProperties.getProperty(SQL_DISTRIBUTED_CACHE), is(TRUE));
     assertThat(nexusProperties.getProperty(DATASTORE_BLOBSTORE_METRICS), is(TRUE));
-    assertThat(nexusProperties.getProperty(ELASTIC_SEARCH_ENABLED), is(FALSE));
 
     // authentication features
     assertThat(nexusProperties.getProperty(JWT_ENABLED), is(TRUE));
@@ -134,31 +132,8 @@ class NexusPropertiesVerifierTest
     assertThat(nexusProperties.getProperty(JWT_ENABLED), is(FALSE));
 
     // left unset
-    assertThat(nexusProperties.getProperty(DATASTORE_TABLE_SEARCH), nullValue());
     assertThat(nexusProperties.getProperty(SQL_DISTRIBUTED_CACHE), nullValue());
     assertThat(nexusProperties.getProperty(DATASTORE_BLOBSTORE_METRICS), nullValue());
-    assertThat(nexusProperties.getProperty(ELASTIC_SEARCH_ENABLED), nullValue());
-  }
-
-  @Test
-  void testSelectDatastoreFeature_WhenTableSearchEnabled_DisablesElasticSearch() {
-    mockRequiredProperties();
-
-    nexusProperties.put(DATASTORE_TABLE_SEARCH, TRUE);
-
-    nexusPropertiesVerifier.verify(nexusProperties);
-
-    assertThat(nexusProperties.getProperty(ELASTIC_SEARCH_ENABLED), is(FALSE));
-  }
-
-  @Test
-  void testSelectDatastoreFeature_WhenElasticSearchEnabled_DisablesTableSearch() {
-    mockRequiredProperties();
-    nexusProperties.put(ELASTIC_SEARCH_ENABLED, TRUE);
-
-    nexusPropertiesVerifier.verify(nexusProperties);
-
-    assertThat(nexusProperties.getProperty(DATASTORE_TABLE_SEARCH), is(FALSE));
   }
 
   @Test

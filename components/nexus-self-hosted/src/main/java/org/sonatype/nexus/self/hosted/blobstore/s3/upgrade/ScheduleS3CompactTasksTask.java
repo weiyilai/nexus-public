@@ -22,7 +22,6 @@ import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
-import jakarta.inject.Inject;
 
 import org.sonatype.nexus.blobstore.api.BlobStore;
 import org.sonatype.nexus.blobstore.api.BlobStoreConfiguration;
@@ -33,10 +32,12 @@ import org.sonatype.nexus.scheduling.TaskConfiguration;
 import org.sonatype.nexus.scheduling.TaskScheduler;
 import org.sonatype.nexus.scheduling.TaskSupport;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import jakarta.inject.Inject;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * This task creates compact blob store tasks for S3 blob stores based on the old configuration setting for expiration.
@@ -84,7 +85,7 @@ public class ScheduleS3CompactTasksTask
       return null;
     }
 
-    TemporalAmount interval = Duration.ofMinutes((24 * 60) / taskConfigurations.size());
+    TemporalAmount interval = Duration.ofMinutes(24 * 60 / taskConfigurations.size());
     LocalDateTime initial = LocalDateTime.now();
 
     for (TaskConfiguration taskConfiguration : taskConfigurations) {

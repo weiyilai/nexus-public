@@ -72,20 +72,12 @@ public class NexusPropertiesVerifier
 
   private static void selectDatastoreFeature(final NexusProperties nexusProperties) {
     if (parseBoolean(nexusProperties.getProperty(DATASTORE_CLUSTERED_ENABLED))) {
-      nexusProperties.put(DATASTORE_TABLE_SEARCH, TRUE);
       nexusProperties.put(SQL_DISTRIBUTED_CACHE, TRUE);
       nexusProperties.put(DATASTORE_BLOBSTORE_METRICS, TRUE);
     }
     else {
       // Set default of clustered upgrades off when clustering is off
       nexusProperties.put(CLUSTERED_ZERO_DOWNTIME_ENABLED, FALSE);
-    }
-
-    if (parseBoolean(nexusProperties.getProperty(DATASTORE_TABLE_SEARCH))) {
-      nexusProperties.put(ELASTIC_SEARCH_ENABLED, FALSE);
-    }
-    else if (parseBoolean(nexusProperties.getProperty(ELASTIC_SEARCH_ENABLED))) {
-      nexusProperties.put(DATASTORE_TABLE_SEARCH, FALSE);
     }
 
     nexusProperties.put(DB_FEATURE_PROPERTY_KEY, "nexus-datastore-mybatis");

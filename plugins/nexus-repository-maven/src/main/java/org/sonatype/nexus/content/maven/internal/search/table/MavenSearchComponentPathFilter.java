@@ -20,9 +20,6 @@ import jakarta.inject.Singleton;
 import org.sonatype.nexus.repository.content.utils.SearchComponentPathFilter;
 import org.sonatype.nexus.repository.maven.internal.Maven2Format;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED;
 import static org.sonatype.nexus.content.maven.internal.search.table.MavenSearchComponentPathFilter.MavenType.getMavenTypes;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,7 +27,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @Component
 @Qualifier(Maven2Format.NAME)
 @Singleton
-@ConditionalOnProperty(name = DATASTORE_CLUSTERED_ENABLED, havingValue = "true")
 public class MavenSearchComponentPathFilter
     implements SearchComponentPathFilter
 {

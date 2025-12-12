@@ -37,7 +37,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.common.QualifierUtil;
-import org.sonatype.nexus.common.app.FeatureFlags;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.text.Strings2;
 import org.sonatype.nexus.repository.Repository;
@@ -65,7 +64,6 @@ import org.sonatype.nexus.rest.Resource;
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -86,7 +84,6 @@ import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 @Path(SearchResource.RESOURCE_URI)
 @Produces(APPLICATION_JSON)
 @Consumes(APPLICATION_JSON)
-@ConditionalOnProperty(name = FeatureFlags.ELASTIC_SEARCH_ENABLED, havingValue = "true", matchIfMissing = true)
 public class SearchResource
     extends ComponentSupport
     implements Resource, SearchResourceDoc

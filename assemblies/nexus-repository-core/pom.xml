@@ -94,10 +94,7 @@
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity-engine-core</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.elasticsearch</groupId>
-      <artifactId>elasticsearch</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-jmx</artifactId>
@@ -193,6 +190,10 @@
     </dependency>
     <dependency>
       <groupId>org.sonatype.nexus</groupId>
+      <artifactId>nexus-datastore-h2</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.nexus</groupId>
       <artifactId>nexus-datastore-mybatis</artifactId>
     </dependency>
     <dependency>
@@ -201,7 +202,7 @@
     </dependency>
     <dependency>
       <groupId>org.sonatype.nexus</groupId>
-      <artifactId>nexus-elasticsearch</artifactId>
+      <artifactId>nexus-search-sql</artifactId>
     </dependency>
     <dependency>
       <groupId>org.sonatype.nexus</groupId>
@@ -529,8 +530,9 @@
                   <cutdirsmapper dirs="1"/>
                 </unzip>
 
-                <!-- overlay customizations -->
-                <copy todir="${project.build.directory}/assembly" overwrite="true">
+                <!-- overlay customizations; failonerror is set because any copy fails on an empty folder -->
+                <!-- preserving the command to stay consistent with other distributions and in case we re-add files -->
+                <copy todir="${project.build.directory}/assembly" overwrite="true" failonerror="false">
                   <fileset dir="${project.basedir}/src/main/assembly/overlay"/>
                 </copy>
 

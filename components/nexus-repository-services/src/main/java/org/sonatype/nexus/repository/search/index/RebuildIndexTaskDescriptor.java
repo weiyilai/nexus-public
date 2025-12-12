@@ -15,12 +15,10 @@ package org.sonatype.nexus.repository.search.index;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import org.sonatype.nexus.common.node.NodeAccess;
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.RepositoryCombobox;
 import org.sonatype.nexus.scheduling.TaskDescriptorSupport;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -41,10 +39,7 @@ public class RebuildIndexTaskDescriptor
   public static final String REPOSITORY_NAME_FIELD_ID = "repositoryName";
 
   @Inject
-  public RebuildIndexTaskDescriptor(
-      final NodeAccess nodeAccess,
-      @Value("${nexus.elasticsearch.enabled:true}") final boolean esEnabled)
-  {
+  public RebuildIndexTaskDescriptor() {
     super(TYPE_ID,
         RebuildIndexTask.class,
         "Repair - Rebuild repository search",
@@ -54,8 +49,6 @@ public class RebuildIndexTaskDescriptor
             REPOSITORY_NAME_FIELD_ID,
             "Repository",
             "Select the repository to rebuild index",
-            true).includingAnyOfFacets(SearchIndexFacet.class).includeAnEntryForAllRepositories(),
-
-        esEnabled && nodeAccess.isClustered() ? newMultinodeFormField().withInitialValue(true) : null);
+            true).includingAnyOfFacets(SearchIndexFacet.class).includeAnEntryForAllRepositories());
   }
 }

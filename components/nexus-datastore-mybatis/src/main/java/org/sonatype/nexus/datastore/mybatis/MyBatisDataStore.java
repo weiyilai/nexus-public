@@ -195,8 +195,6 @@ public class MyBatisDataStore
 
   private Configuration mybatisConfig;
 
-  private H2VersionUpgrader h2VersionUpgrader;
-
   private Optional<Configuration> previousConfig = empty();
 
   @Nullable
@@ -263,18 +261,7 @@ public class MyBatisDataStore
     }
 
     HikariConfig hikariConfig = configureHikari(storeName, attributes);
-
-    try {
-      dataSource = new HikariDataSource(hikariConfig);
-    }
-    catch (Exception exception) {
-      if (isH2UnsupportedDatabaseVersion(exception)) {
-        dataSource = h2VersionUpgrader.upgradeH2Database(storeName, hikariConfig);
-      }
-      else {
-        throw exception;
-      }
-    }
+    dataSource = new HikariDataSource(hikariConfig);
 
     if (logManager != null) {
       // Re-enable Hikari logging
@@ -471,11 +458,6 @@ public class MyBatisDataStore
         throw new UnsupportedOperationException("The underlying database is not supported for backup.");
       }
     }
-  }
-
-  @Inject
-  public void setH2VersionUpgrader(@Lazy final H2VersionUpgrader h2VersionUpgrader) {
-    this.h2VersionUpgrader = checkNotNull(h2VersionUpgrader);
   }
 
   @Inject

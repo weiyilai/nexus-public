@@ -15,35 +15,22 @@ package org.sonatype.nexus.coreui.search;
 import java.util.Collections;
 import java.util.Map;
 
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import org.sonatype.nexus.rapture.StateContributor;
 
-import org.springframework.beans.factory.annotation.Value;
-
-import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_TABLE_SEARCH;
 import org.springframework.stereotype.Component;
 
 /**
- * State contributor to check if SQL search enabled. By default, Elasticsearch is used.
+ * State contributor to check if SQL search enabled. By default, SQL search is used.
  */
 @Component
 @Singleton
 public class SearchStateContributor
     implements StateContributor
 {
-  private final boolean sqlSearch;
-
-  @Inject
-  public SearchStateContributor(
-      @Value("${" + DATASTORE_TABLE_SEARCH + ":false}") final boolean sqlSearch)
-  {
-    this.sqlSearch = sqlSearch;
-  }
-
   @Override
   public Map<String, Object> getState() {
-    return Collections.singletonMap("sqlSearchEnabled", sqlSearch);
+    return Collections.singletonMap("sqlSearchEnabled", true);
   }
 }

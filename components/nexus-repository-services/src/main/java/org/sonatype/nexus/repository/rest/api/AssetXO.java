@@ -229,31 +229,6 @@ public class AssetXO
         .build();
   }
 
-  public static AssetXO fromElasticSearchMap(
-      Map<String, Object> map,
-      Repository repository,
-      @Nullable Map<String, AssetXODescriptor> assetDescriptors)
-  {
-    String path = (String) map.get("name");
-    String id = (String) map.get("id");
-    Map<String, Object> attributes = (Map<String, Object>) map.getOrDefault("attributes", Map.of());
-    Map<String, String> checksum = (Map<String, String>) attributes.get("checksum");
-    String format = repository.getFormat().getValue();
-    String contentType = (String) map.get("contentType");
-
-    return new AssetXOBuilder()
-        .path(path)
-        .downloadUrl(repository.getUrl() + '/' + path)
-        .id(new RepositoryItemIDXO(repository.getName(), id).getValue())
-        .repository(repository.getName())
-        .checksum(checksum)
-        .format(format)
-        .contentType(contentType)
-        .attributes(getExpandedAttributes(attributes, format, assetDescriptors))
-        .lastModified(calculateLastModified(attributes))
-        .build();
-  }
-
   @VisibleForTesting
   static Map<String, Object> getExpandedAttributes(
       Map<String, Object> attributes,

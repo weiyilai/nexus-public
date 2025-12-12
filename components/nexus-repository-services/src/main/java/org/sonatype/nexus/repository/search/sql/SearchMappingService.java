@@ -24,10 +24,8 @@ import jakarta.inject.Singleton;
 import org.sonatype.nexus.repository.rest.SearchMappings;
 import org.sonatype.nexus.repository.rest.sql.SearchField;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.sonatype.nexus.common.app.FeatureFlags.DATASTORE_CLUSTERED_ENABLED;
+
 import org.springframework.stereotype.Component;
 
 /**
@@ -35,7 +33,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Singleton
-@ConditionalOnProperty(name = DATASTORE_CLUSTERED_ENABLED, havingValue = "true")
 public class SearchMappingService
 {
   private final Map<String, SearchField> attributeToField = new HashMap<>();
