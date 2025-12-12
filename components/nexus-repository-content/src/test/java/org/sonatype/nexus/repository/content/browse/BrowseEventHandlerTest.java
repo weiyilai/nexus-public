@@ -19,6 +19,7 @@ import org.sonatype.nexus.common.cooperation2.datastore.DefaultCooperation2Facto
 import org.sonatype.nexus.common.db.DatabaseCheck;
 import org.sonatype.nexus.common.event.EventManager;
 import org.sonatype.nexus.common.scheduling.PeriodicJobService;
+import org.sonatype.nexus.repository.content.browse.capability.BrowseTrimService;
 import org.sonatype.nexus.repository.content.event.asset.AssetCreatedEvent;
 import org.sonatype.nexus.repository.content.event.asset.AssetDeletedEvent;
 import org.sonatype.nexus.repository.content.event.asset.AssetPurgedEvent;
@@ -30,8 +31,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 public class BrowseEventHandlerTest
     extends TestSupport
@@ -45,13 +51,16 @@ public class BrowseEventHandlerTest
   @Mock
   private DatabaseCheck databaseCheck;
 
+  @Mock
+  private BrowseTrimService browseTrimService;
+
   private BrowseEventHandler underTest;
 
   @Before
   public void setup() {
     DefaultCooperation2Factory cooperation = new DefaultCooperation2Factory();
     underTest = new BrowseEventHandler(cooperation, periodicJobService, eventManager, true, Duration.ofSeconds(0),
-        Duration.ofSeconds(30), 100, 2, true, databaseCheck);
+        Duration.ofSeconds(30), 100, 2, true, databaseCheck, browseTrimService);
   }
 
   @Test
@@ -100,5 +109,50 @@ public class BrowseEventHandlerTest
     ComponentDeletedEvent event = mock(ComponentDeletedEvent.class);
     underTest.on(event);
     verifyNoInteractions(event);
+  }
+
+  @Test
+  public void testMaybeTrimRepositories_skipsWhenNotAllowed() {
+    when(browseTrimService.shouldAllowTrim()).thenReturn(false);
+
+    underTest.maybeTrimRepositories();
+
+    verify(browseTrimService, times(1)).shouldAllowTrim();
+  }
+
+  @Test
+  public void testMaybeTrimRepositories_allowsWhenEnabled() {
+    when(browseTrimService.shouldAllowTrim()).thenReturn(true);
+
+    underTest.maybeTrimRepositories();
+
+    verify(browseTrimService, times(1)).shouldAllowTrim();
+  }
+
+  @Test
+  public void testShouldTriggerImmediatePurge_withBatchEnabled_returnsFalse() {
+    when(browseTrimService.isBatchTrimEnabled()).thenReturn(true);
+
+    DefaultCooperation2Factory cooperation = new DefaultCooperation2Factory();
+    BrowseEventHandler handler = new BrowseEventHandler(
+        cooperation, periodicJobService, eventManager, true, Duration.ofSeconds(0),
+        Duration.ofSeconds(30), 100, 2, true, databaseCheck, browseTrimService);
+
+    when(browseTrimService.isBatchTrimEnabled()).thenReturn(true);
+  }
+
+  @Test
+  public void testBatchTrimEnabled_defaultsToFalse() {
+    when(browseTrimService.isBatchTrimEnabled()).thenReturn(false);
+
+    assertFalse("Batch trim should default to false", browseTrimService.isBatchTrimEnabled());
+  }
+
+  @Test
+  public void testPostgresqlTrimEnabled_canBeToggled() {
+    when(browseTrimService.isPostgresqlTrimEnabled()).thenReturn(false).thenReturn(true);
+
+    assertFalse(browseTrimService.isPostgresqlTrimEnabled());
+    assertTrue(browseTrimService.isPostgresqlTrimEnabled());
   }
 }

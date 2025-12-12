@@ -30,6 +30,7 @@ import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.cooperation2.Cooperation2;
 import org.sonatype.nexus.common.cooperation2.Cooperation2Factory;
 import org.sonatype.nexus.common.db.DatabaseCheck;
+import org.sonatype.nexus.repository.content.browse.capability.BrowseTrimService;
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.common.event.EventAware;
 import org.sonatype.nexus.common.event.EventManager;
@@ -116,6 +117,8 @@ public class BrowseEventHandler
 
   private final DatabaseCheck databaseCheck;
 
+  private final BrowseTrimService browseTrimService;
+
   // simple flag stating whether or not there is a need to fire flush events
   private volatile boolean flushQueued;
 
@@ -130,7 +133,8 @@ public class BrowseEventHandler
       @Value("${" + FLUSH_ON_COUNT_KEY + ":100}") final int flushOnCount,
       @Value("${" + FLUSH_ON_SECONDS_KEY + ":2}") final int flushOnSeconds,
       @Value("${" + NO_PURGE_DELAY_KEY + ":true}") final boolean noPurgeDelay,
-      final DatabaseCheck databaseCheck)
+      final DatabaseCheck databaseCheck,
+      final BrowseTrimService browseTrimService)
   {
     this.cooperation = checkNotNull(cooperation2Factory).configure()
         .majorTimeout(majorTimeout)
@@ -146,6 +150,7 @@ public class BrowseEventHandler
     this.flushOnSeconds = flushOnSeconds;
     this.noPurgeDelay = noPurgeDelay;
     this.databaseCheck = checkNotNull(databaseCheck);
+    this.browseTrimService = checkNotNull(browseTrimService);
 
     eventManager.register(flushEventReceiver);
   }
@@ -249,9 +254,18 @@ public class BrowseEventHandler
     repositoriesToTrim.add(repository.get());
     needsTrim.set(true);
 
-    if (noPurgeDelay) {
+    if (shouldTriggerImmediatePurge()) {
       eventManager.post(new PurgeEvent());
     }
+  }
+
+  private boolean shouldTriggerImmediatePurge() {
+    // If batch trim is enabled via capability, delay the purge (batching)
+    if (browseTrimService.isBatchTrimEnabled()) {
+      return false;
+    }
+    // Otherwise, use the property value (default behavior)
+    return noPurgeDelay;
   }
 
   /**
@@ -346,8 +360,8 @@ public class BrowseEventHandler
    * Trims all pending repositories of dangling nodes.
    */
   void maybeTrimRepositories() {
-    if (databaseCheck.isPostgresql()) {
-      return; // skip trimming if we are using PostgreSQL
+    if (!browseTrimService.shouldAllowTrim()) {
+      return; // skip trimming based on capability settings
     }
     if (needsTrim.getAndSet(false)) {
       Iterator<Repository> itr = repositoriesToTrim.iterator();
