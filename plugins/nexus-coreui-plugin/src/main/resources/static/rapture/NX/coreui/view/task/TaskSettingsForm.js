@@ -52,6 +52,10 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
         hidden: true
       },
       {
+        xtype: 'label',
+        html: NX.I18n.get('Task_TaskSettingsForm_PlanInformation_Disclaimer')
+      },
+      {
         xtype: 'checkbox',
         fieldLabel: NX.I18n.get('Task_TaskSettingsForm_Enabled_FieldLabel'),
         helpText: NX.I18n.get('Task_TaskSettingsForm_Enabled_HelpText'),

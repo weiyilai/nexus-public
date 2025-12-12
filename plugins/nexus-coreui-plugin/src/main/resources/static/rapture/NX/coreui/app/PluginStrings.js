@@ -1305,6 +1305,9 @@ Ext.define('NX.coreui.app.PluginStrings', {
     Task_TaskSettingsForm_PlanInformation_PlanId_Multiple: "Multiple",
     Task_TaskSettingsForm_PlanInformation_PlanId_NoPlans: "No active dry run plan",
     Task_TaskSettingsForm_PlanInformation_Created_Info: "Created",
+    Task_TaskSettingsForm_PlanInformation_Disclaimer: 'Use this task to generate a plan that identifies missing components when the database and blob store are out of sync. This task may take time depending on the size of your blob storage. Before running, read the '
+        +'<a href="https://help.sonatype.com/en/verify-and-repair-data-consistency-tasks.html#step-1--configure-the-data-repair-plan-task">documentation</a>'
+        +' to ensure the task is set up correctly for your environment.',
     Task_TaskSettingsForm_NotificationCondition_FieldLabel: 'Send notification on',
     Task_TaskSettingsForm_NotificationCondition_HelpText: 'Conditions that will trigger a notification email',
     Task_TaskSettingsForm_NotificationCondition_FailureItem: 'Failure',
