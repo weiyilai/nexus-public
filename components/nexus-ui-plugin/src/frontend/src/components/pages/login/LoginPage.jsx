@@ -54,9 +54,10 @@ export default function LoginPage({ logoConfig }) {
       ExtJS.state().getValue(realm, false)
     );
   const adminPasswordFilePath = ExtJS.state().getValue("admin.password.file");
+  const onboardingRequired = ExtJS.state().getValue("onboarding.required");
 
   const showInitialPasswordPathInfo =
-    !!adminPasswordFilePath && !isCloudEnvironment;
+    !!adminPasswordFilePath && !isCloudEnvironment && onboardingRequired;
 
   return (
     <LoginLayout logoConfig={logoConfig}>

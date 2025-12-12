@@ -110,7 +110,8 @@ describe('LoginPage', () => {
     ldapRealmEnabled = true,
     userTokenRealmEnabled = true,
     localAuthRealmEnabled = true,
-    crowdRealmEnabled = false
+    crowdRealmEnabled = false,
+    onboardingRequired = undefined
   ) {
     mockState.mockReturnValue({
       getValue: jest.fn().mockImplementation((key, defaultValue) => {
@@ -123,7 +124,8 @@ describe('LoginPage', () => {
           'ldapRealmEnabled': ldapRealmEnabled,
           'userTokenRealmEnabled': userTokenRealmEnabled,
           'localAuthRealmEnabled': localAuthRealmEnabled,
-          'crowdRealmEnabled': crowdRealmEnabled
+          'crowdRealmEnabled': crowdRealmEnabled,
+          'onboarding.required': onboardingRequired
         };
         return values[key] !== undefined ? values[key] : defaultValue;
       })
@@ -388,7 +390,7 @@ describe('LoginPage', () => {
   describe('initial password info', () => {
     it('displays initial password info when admin password file path is provided', () => {
       const passwordFilePath = '/path/to/admin.password';
-      setupStates(false, false, false, null, passwordFilePath);
+      setupStates(false, false, false, null, passwordFilePath, true, true, true, false, true);
 
       renderComponent({ logoConfig: mockLogoConfig });
 
@@ -422,7 +424,7 @@ describe('LoginPage', () => {
 
     it('displays initial password info with SSO enabled', () => {
       const passwordFilePath = '/path/to/admin.password';
-      setupStates(true, false, false, null, passwordFilePath);
+      setupStates(true, false, false, null, passwordFilePath, true, true, true, false, true);
 
       renderComponent({ logoConfig: mockLogoConfig });
 
@@ -439,6 +441,27 @@ describe('LoginPage', () => {
       renderComponent({ logoConfig: mockLogoConfig });
 
       expect(screen.queryByTestId('initial-password-info')).not.toBeInTheDocument();
+    });
+
+    it('does not display initial password info when admin password file exists but onboarding is not required', () => {
+      const passwordFilePath = '/path/to/admin.password';
+
+      setupStates(false, false, false, null, passwordFilePath, true, true, true, false, false);
+
+      renderComponent({ logoConfig: mockLogoConfig });
+
+      expect(screen.queryByTestId('initial-password-info')).not.toBeInTheDocument();
+    });
+
+    it('displays initial password info when admin password file exists and onboarding is required', () => {
+      const passwordFilePath = '/path/to/admin.password';
+
+      setupStates(false, false, false, null, passwordFilePath, true, true, true, false, true);
+
+      renderComponent({ logoConfig: mockLogoConfig });
+
+      expect(screen.getByTestId('initial-password-info')).toBeInTheDocument();
+      expect(screen.getByText(passwordFilePath)).toBeInTheDocument();
     });
   });
 
