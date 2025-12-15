@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 import org.sonatype.nexus.datastore.api.DataSession;
 import org.sonatype.nexus.repository.config.internal.ConfigurationData;
@@ -49,6 +48,7 @@ import org.sonatype.nexus.repository.search.sql.query.h2.H2SearchDB;
 import org.sonatype.nexus.repository.search.sql.query.postgres.PostgresSearchConditionFactory;
 import org.sonatype.nexus.repository.search.sql.query.postgres.PostgresSearchDB;
 import org.sonatype.nexus.repository.search.sql.query.syntax.ExactTerm;
+import org.sonatype.nexus.repository.search.sql.query.syntax.Expression;
 import org.sonatype.nexus.repository.search.sql.query.syntax.LenientTerm;
 import org.sonatype.nexus.repository.search.sql.query.syntax.Operand;
 import org.sonatype.nexus.repository.search.sql.query.syntax.SqlClause;
@@ -57,7 +57,6 @@ import org.sonatype.nexus.repository.search.sql.query.syntax.WildcardTerm;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -223,7 +222,6 @@ public class SearchTableDAOTest
     assertThat(count, is(0L));
   }
 
-  @Disabled("NEXUS-49879")
   @Test
   public void concurrentlyAcceptUpdatesWithCurrentEntityVersion() throws Exception {
     assertThat(GENERATED_DATA.get(0).getEntityVersion(), is(GENERATED_DATA.get(1).getEntityVersion()));
@@ -385,7 +383,6 @@ public class SearchTableDAOTest
     assertThat(count, is(1L));
   }
 
-  @Disabled("NEXUS-49878")
   @Test
   public void testSaveWithManyPaths() {
     SearchRecordData tableData = GENERATED_DATA.get(0);
@@ -394,9 +391,13 @@ public class SearchTableDAOTest
     }
     searchDAO.save(tableData);
 
-    String wholePath = tableData.getPaths().stream().collect(Collectors.joining("} {", "{", "}"));
+    Expression clause = SqlClause.create(Operand.AND, tableData.getPaths()
+        .stream()
+        .map(path -> new SqlPredicate(EQ, PATHS, new ExactTerm(path)))
+        .toArray(SqlPredicate[]::new));
+
     SqlSearchQueryConditionGroup queryCondition =
-        conditionBuilder.build(new ExpressionGroup(new SqlPredicate(EQ, PATHS, new ExactTerm(wholePath)), null));
+        conditionBuilder.build(new ExpressionGroup(clause, null));
     String conditionFormat = queryCondition.getComponentCondition().getSqlConditionFormat();
     Map<String, String> values = queryCondition.getComponentCondition().getValues();
 
