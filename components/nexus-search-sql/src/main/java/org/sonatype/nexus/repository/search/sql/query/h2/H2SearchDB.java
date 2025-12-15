@@ -73,23 +73,23 @@ public class H2SearchDB
     // Only mark columns as tokenized where we're certain they always contain tokenized data
     columns.put(KEYWORDS,
         new H2SearchColumn(addComponentPrefix("keywords"), addComponentPrefix("search_component_name"), true));
-    columns.put(FORMAT_FIELD_1, new H2SearchColumn(addComponentPrefix("format_field_values_1"), ATTRIBUTES));
-    columns.put(FORMAT_FIELD_2, new H2SearchColumn(addComponentPrefix("format_field_values_2"), ATTRIBUTES));
-    columns.put(FORMAT_FIELD_3, new H2SearchColumn(addComponentPrefix("format_field_values_3"), ATTRIBUTES));
-    columns.put(FORMAT_FIELD_4, new H2SearchColumn(addComponentPrefix("format_field_values_4"), ATTRIBUTES));
-    columns.put(FORMAT_FIELD_5, new H2SearchColumn(addComponentPrefix("format_field_values_5"), ATTRIBUTES));
-    columns.put(FORMAT_FIELD_6, new H2SearchColumn(addComponentPrefix("format_field_values_6"), ATTRIBUTES));
-    columns.put(FORMAT_FIELD_7, new H2SearchColumn(addComponentPrefix("format_field_values_7"), ATTRIBUTES));
+    columns.put(FORMAT_FIELD_1, new H2SearchColumn(addComponentPrefix("format_field_values_1"), ATTRIBUTES, true));
+    columns.put(FORMAT_FIELD_2, new H2SearchColumn(addComponentPrefix("format_field_values_2"), ATTRIBUTES, true));
+    columns.put(FORMAT_FIELD_3, new H2SearchColumn(addComponentPrefix("format_field_values_3"), ATTRIBUTES, true));
+    columns.put(FORMAT_FIELD_4, new H2SearchColumn(addComponentPrefix("format_field_values_4"), ATTRIBUTES, true));
+    columns.put(FORMAT_FIELD_5, new H2SearchColumn(addComponentPrefix("format_field_values_5"), ATTRIBUTES, true));
+    columns.put(FORMAT_FIELD_6, new H2SearchColumn(addComponentPrefix("format_field_values_6"), ATTRIBUTES, true));
+    columns.put(FORMAT_FIELD_7, new H2SearchColumn(addComponentPrefix("format_field_values_7"), ATTRIBUTES, true));
 
-    columns.put(MD5, new H2SearchColumn(addComponentPrefix("md5")));
-    columns.put(SHA1, new H2SearchColumn(addComponentPrefix("sha1")));
-    columns.put(SHA256, new H2SearchColumn(addComponentPrefix("sha256")));
-    columns.put(SHA512, new H2SearchColumn(addComponentPrefix("sha512")));
+    columns.put(MD5, new H2SearchColumn(addComponentPrefix("md5"), true));
+    columns.put(SHA1, new H2SearchColumn(addComponentPrefix("sha1"), true));
+    columns.put(SHA256, new H2SearchColumn(addComponentPrefix("sha256"), true));
+    columns.put(SHA512, new H2SearchColumn(addComponentPrefix("sha512"), true));
 
     columns.put(TAGS, new H2SearchColumn(addComponentPrefix("tags"), true));
     columns.put(PATHS, new H2SearchColumn(addComponentPrefix("paths"), true));
-    columns.put(UPLOADERS, new H2SearchColumn(addComponentPrefix("uploaders")));
-    columns.put(UPLOADER_IPS, new H2SearchColumn(addComponentPrefix("uploader_ips")));
+    columns.put(UPLOADERS, new H2SearchColumn(addComponentPrefix("uploaders"), true));
+    columns.put(UPLOADER_IPS, new H2SearchColumn(addComponentPrefix("uploader_ips"), true));
 
     // Asset table columns (with ap. prefix)
     columns.put(ASSET_FORMAT_VALUE_1, new H2SearchColumn(addAssetPrefix("asset_format_value_1")));

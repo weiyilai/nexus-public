@@ -517,52 +517,40 @@
   </insert>
 
   <insert id="saveAsset" parameterType="SearchAssetRecord"  databaseId="H2">
-    MERGE INTO search_assets
-    USING (
-      SELECT
-        #{searchAssetRecord.format} AS src_format,
-        #{searchAssetRecord.repositoryId} AS repository_id,
-        #{searchAssetRecord.componentId} AS component_id,
-        #{searchAssetRecord.assetId} AS asset_id,
-        #{searchAssetRecord.path} AS path,
-        #{searchAssetRecord.assetFormatValue1} AS asset_format_value_1,
-        #{searchAssetRecord.assetFormatValue2} AS asset_format_value_2,
-        #{searchAssetRecord.assetFormatValue3} AS asset_format_value_3,
-        #{searchAssetRecord.assetFormatValue4} AS asset_format_value_4,
-        #{searchAssetRecord.assetFormatValue5} AS asset_format_value_5,
-        #{searchAssetRecord.assetFormatValue6} AS asset_format_value_6,
-        #{searchAssetRecord.assetFormatValue7} AS asset_format_value_7,
-        #{searchAssetRecord.assetFormatValue8} AS asset_format_value_8,
-        #{searchAssetRecord.assetFormatValue9} AS asset_format_value_9,
-        #{searchAssetRecord.assetFormatValue10} AS asset_format_value_10,
-        #{searchAssetRecord.assetFormatValue11} AS asset_format_value_11,
-        #{searchAssetRecord.assetFormatValue12} AS asset_format_value_12,
-        #{searchAssetRecord.assetFormatValue13} AS asset_format_value_13,
-        #{searchAssetRecord.assetFormatValue14} AS asset_format_value_14,
-        #{searchAssetRecord.assetFormatValue15} AS asset_format_value_15,
-        #{searchAssetRecord.assetFormatValue16} AS asset_format_value_16,
-        #{searchAssetRecord.assetFormatValue17} AS asset_format_value_17,
-        #{searchAssetRecord.assetFormatValue18} AS asset_format_value_18,
-        #{searchAssetRecord.assetFormatValue19} AS asset_format_value_19,
-        #{searchAssetRecord.assetFormatValue20} AS asset_format_value_20
-      FROM ${searchAssetRecord.format}_asset a
-      WHERE a.asset_id = #{searchAssetRecord.assetId}
-    ) src
-    ON (search_assets."format" = src.src_format
-        AND search_assets.repository_id = src.repository_id
-        AND search_assets.component_id = src.component_id
-        AND search_assets.asset_id = src.asset_id)
-    WHEN NOT MATCHED THEN
-      INSERT ("format", repository_id, component_id, asset_id, path,
+    MERGE INTO search_assets (format, repository_id, component_id, asset_id, path,
               asset_format_value_1, asset_format_value_2, asset_format_value_3, asset_format_value_4, asset_format_value_5,
               asset_format_value_6, asset_format_value_7, asset_format_value_8, asset_format_value_9, asset_format_value_10,
               asset_format_value_11, asset_format_value_12, asset_format_value_13, asset_format_value_14, asset_format_value_15,
               asset_format_value_16, asset_format_value_17, asset_format_value_18, asset_format_value_19, asset_format_value_20)
-      VALUES (src.src_format, src.repository_id, src.component_id, src.asset_id, src.path,
-              src.asset_format_value_1, src.asset_format_value_2, src.asset_format_value_3, src.asset_format_value_4, src.asset_format_value_5,
-              src.asset_format_value_6, src.asset_format_value_7, src.asset_format_value_8, src.asset_format_value_9, src.asset_format_value_10,
-              src.asset_format_value_11, src.asset_format_value_12, src.asset_format_value_13, src.asset_format_value_14, src.asset_format_value_15,
-              src.asset_format_value_16, src.asset_format_value_17, src.asset_format_value_18, src.asset_format_value_19, src.asset_format_value_20)
+    KEY(format, repository_id, component_id, asset_id)
+    SELECT
+      #{searchAssetRecord.format},
+      #{searchAssetRecord.repositoryId},
+      #{searchAssetRecord.componentId},
+      #{searchAssetRecord.assetId},
+      #{searchAssetRecord.path},
+      #{searchAssetRecord.assetFormatValue1},
+      #{searchAssetRecord.assetFormatValue2},
+      #{searchAssetRecord.assetFormatValue3},
+      #{searchAssetRecord.assetFormatValue4},
+      #{searchAssetRecord.assetFormatValue5},
+      #{searchAssetRecord.assetFormatValue6},
+      #{searchAssetRecord.assetFormatValue7},
+      #{searchAssetRecord.assetFormatValue8},
+      #{searchAssetRecord.assetFormatValue9},
+      #{searchAssetRecord.assetFormatValue10},
+      #{searchAssetRecord.assetFormatValue11},
+      #{searchAssetRecord.assetFormatValue12},
+      #{searchAssetRecord.assetFormatValue13},
+      #{searchAssetRecord.assetFormatValue14},
+      #{searchAssetRecord.assetFormatValue15},
+      #{searchAssetRecord.assetFormatValue16},
+      #{searchAssetRecord.assetFormatValue17},
+      #{searchAssetRecord.assetFormatValue18},
+      #{searchAssetRecord.assetFormatValue19},
+      #{searchAssetRecord.assetFormatValue20}
+    FROM ${searchAssetRecord.format}_asset a
+    WHERE a.asset_id = #{searchAssetRecord.assetId}
   </insert>
 
   <insert id="saveAssets" parameterType="java.util.Collection" databaseId="PostgreSQL">
@@ -599,7 +587,7 @@
   </insert>
 
   <insert id="saveAssets" parameterType="java.util.Collection" databaseId="H2">
-    MERGE INTO search_assets("format", repository_id, component_id, asset_id, path,
+    MERGE INTO search_assets(format, repository_id, component_id, asset_id, path,
                               asset_format_value_1,asset_format_value_2,asset_format_value_3,asset_format_value_4,asset_format_value_5, asset_format_value_6,
                               asset_format_value_7,asset_format_value_8,asset_format_value_9,asset_format_value_10,asset_format_value_11, asset_format_value_12,
                               asset_format_value_13,asset_format_value_14,asset_format_value_15,asset_format_value_16,asset_format_value_17, asset_format_value_18, asset_format_value_19, asset_format_value_20)
@@ -794,4 +782,3 @@
     </constructor>
   </resultMap>
 </mapper>
-
