@@ -32,6 +32,9 @@ Ext.define('NX.controller.Permissions', {
     'Permission'
   ],
 
+  loadingTimeout: null,
+  maskShown: false,
+
   /**
    * @override
    */
@@ -83,6 +86,17 @@ Ext.define('NX.controller.Permissions', {
     //<if debug>
     me.logDebug('Fetching permissions...');
     //</if>
+
+    // Show Loading permissions mask if permissions load takes more than 1 second
+    if (!me.loadingTimeout) {
+      me.loadingTimeout = setTimeout(function() {
+        if (!me.maskShown) {
+          Ext.getBody().mask('Loading permissions...');
+          me.maskShown = true;
+        }
+      }, 1000);
+    }
+
     me.getStore('Permission').load();
   },
 
@@ -91,6 +105,16 @@ Ext.define('NX.controller.Permissions', {
    */
   firePermissionsChanged: function () {
     var me = this;
+
+    if (me.loadingTimeout) {
+      clearTimeout(me.loadingTimeout);
+      me.loadingTimeout = null;
+    }
+    
+    if (me.maskShown) {
+      Ext.getBody().unmask();
+      me.maskShown = false;
+    }
 
     NX.Permissions.setPermissions(me.getPermissions());
 
