@@ -265,14 +265,30 @@ public class QuartzTaskJob
     // AND are same type
     // AND are RUNNING
     // AND are not blocked
+    // AND are truly blocking (for blob store tasks, only if same blob store)
     return scheduler.get()
         .listsTasks()
         .stream()
         .filter(t -> !task.getId().equals(t.getId())
             && task.taskConfiguration().getTypeId().equals(t.getConfiguration().getTypeId())
             && t.getCurrentState().getState().isRunning()
-            && notStartingOrBlocked(t.getCurrentState().getRunState()))
+            && notStartingOrBlocked(t.getCurrentState().getRunState())
+            && isTrulyBlocking(t))
         .collect(Collectors.toList());
+  }
+
+  /**
+   * Determines if another task truly blocks this task.
+   * For blob store tasks, only block if working on the SAME blob store.
+   * For other tasks, keep existing behavior (block all same-type tasks).
+   */
+  private boolean isTrulyBlocking(final TaskInfo otherTask) {
+    String blobStoreName = task.taskConfiguration().getString("blobstoreName");
+    if (blobStoreName != null) {
+      String otherBlobStoreName = otherTask.getConfiguration().getString("blobstoreName");
+      return blobStoreName.equals(otherBlobStoreName);
+    }
+    return true;
   }
 
   private boolean notStartingOrBlocked(final TaskState runState) {
