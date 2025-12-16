@@ -65,6 +65,8 @@ class UserApiResourceTest
 
   private static final String SAML_REALM_NAME = "SamlRealm";
 
+  private static final String OAUTH_REALM_NAME = "OAuth2Realm";
+
   private static final String CROWD_REALM_NAME = "Crowd";
 
   private static final String LDAP_REALM_NAME = "LdapRealm";
@@ -159,6 +161,17 @@ class UserApiResourceTest
     underTest.deleteUser(USER_ID, SAML_REALM_NAME);
 
     verify(securitySystem).deleteUser(USER_ID, RealmToSource.getSource(SAML_REALM_NAME));
+  }
+
+  @Test
+  void testDeleteUsersWithOAuthRealm() throws Exception {
+    when(securitySystem.isValidRealm(OAUTH_REALM_NAME)).thenReturn(true);
+    when(securitySystem.getUser(
+        USER_ID,
+        RealmToSource.getSource(OAUTH_REALM_NAME))).thenReturn(createUserWithSource(OAUTH_REALM_NAME));
+    underTest.deleteUser(USER_ID, OAUTH_REALM_NAME);
+
+    verify(securitySystem).deleteUser(USER_ID, RealmToSource.getSource(OAUTH_REALM_NAME));
   }
 
   @Test

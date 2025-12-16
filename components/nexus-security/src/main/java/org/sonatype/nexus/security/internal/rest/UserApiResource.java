@@ -63,6 +63,11 @@ public class UserApiResource
 {
   private static final String SAML_SOURCE = "SAML";
 
+  private static final String OAUTH2_SOURCE = "OAuth2";
+
+  private static final Set<String> ALLOWED_REALMS_FOR_DELETION = Set.of(
+      UserManager.DEFAULT_SOURCE, SAML_SOURCE, OAUTH2_SOURCE);
+
   private final SecuritySystem securitySystem;
 
   @Inject
@@ -106,7 +111,7 @@ public class UserApiResource
     try {
       if (realm == null) {
         user = securitySystem.getUser(userId);
-        if (!UserManager.DEFAULT_SOURCE.equals(user.getSource()) && !SAML_SOURCE.equals(user.getSource())) {
+        if (!ALLOWED_REALMS_FOR_DELETION.contains(user.getSource())) {
           throw createWebException(Status.BAD_REQUEST, "Non-local user cannot be deleted.");
         }
       }
