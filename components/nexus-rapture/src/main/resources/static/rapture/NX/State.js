@@ -206,13 +206,6 @@ Ext.define('NX.State', {
   },
 
   /**
-   * Return whether or not SQL search is enabled.
-   */
-  isSqlSearchEnabled: function() {
-    return this.getValue('sqlSearchEnabled');
-  },
-
-  /**
    * Return whether or not conan V2 is enabled.
    */
   isConanV2Enabled: function() {

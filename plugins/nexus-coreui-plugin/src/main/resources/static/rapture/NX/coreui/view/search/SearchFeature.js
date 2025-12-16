@@ -34,7 +34,7 @@ Ext.define('NX.coreui.view.search.SearchFeature', {
 
   initComponent: function() {
     var me = this,
-        searchItem = NX.State.isSqlSearchEnabled() ? this.getSqlSearchItem() : this.getEsSearchItem();
+        searchItem = this.getSqlSearchItem();
 
     me.masters = [
       {
@@ -132,15 +132,6 @@ Ext.define('NX.coreui.view.search.SearchFeature', {
           header: false
         }
       ]
-    }
-  },
-
-  getEsSearchItem: function() {
-    return {
-      xtype: 'nx-coreui-search-result-list',
-      cls: 'nx-search-result-list',
-      flex: 1,
-      header: false
     }
   }
 
