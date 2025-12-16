@@ -83,7 +83,6 @@ import org.sonatype.nexus.security.PasswordHelper;
 import org.sonatype.nexus.transaction.TransactionIsolation;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Splitter.MapSplitter;
 import com.google.common.collect.ImmutableSet;
@@ -169,9 +168,6 @@ public class MyBatisDataStore
   private static final Pattern MAPPER_BODY = compile(".*<mapper[^>]*>(.*)</mapper>", DOTALL);
 
   private static final int DEFAULT_CONTENT_STORE_MAX_POOL_SIZE = 100;
-
-  private final Predicate<Throwable> isH2JdbcSQLNonTransientConnectionException =
-      isH2JdbcSQLNonTransientConnectionException();
 
   private final List<TransactionalStoreSupport> declaredAccessTypes;
 
@@ -816,15 +812,6 @@ public class MyBatisDataStore
     }
   }
 
-  private boolean isH2UnsupportedDatabaseVersion(final Exception exception) {
-    int unsupportedDatabaseErrorCode = 90048;
-
-    if (isH2JdbcSQLNonTransientConnectionException.test(exception.getCause())) {
-      return ((SQLException) exception.getCause()).getErrorCode() == unsupportedDatabaseErrorCode;
-    }
-    return false;
-  }
-
   /**
    * Finds the expected access type for the expected template type, given the current access and template types.
    */
@@ -983,19 +970,6 @@ public class MyBatisDataStore
     }
     catch (Exception | LinkageError e) {
       log.warn("Problem applying MyBatis proxy workaround", e);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private static Predicate<Throwable> isH2JdbcSQLNonTransientConnectionException() {
-    try {
-      Class<? extends SQLException> clazz = (Class<? extends SQLException>) Class
-          .forName("org.h2.jdbc.JdbcSQLNonTransientConnectionException");
-
-      return clazz::isInstance;
-    }
-    catch (ClassNotFoundException e) {
-      return Predicates.alwaysFalse();
     }
   }
 
