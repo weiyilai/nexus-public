@@ -105,6 +105,11 @@ import static org.sonatype.nexus.repository.CleanupDryRunEvent.FINISHED_AT_IN_MI
 import static org.sonatype.nexus.repository.CleanupDryRunEvent.STARTED_AT_IN_MILLISECONDS;
 import static org.sonatype.nexus.rest.APIConstants.INTERNAL_API_PREFIX;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 /**
  * @since 3.29
  */
@@ -377,7 +382,11 @@ public class CleanupPolicyResource
       cleanupPolicyXO.setCriteriaLastDownloaded(criteriaLastDownloaded.longValue());
     }
     cleanupPolicyXO.setCriteriaReleaseType(criteriaReleaseType);
-    cleanupPolicyXO.setCriteriaAssetRegex(criteriaAssetRegex);
+
+    // Normalize the regex from URL parameter (e.g., %7B6,%7D -> {6,})
+    String normalizedCriteriaAssetRegex =
+        criteriaAssetRegex != null ? normalizeAndValidateRegex(criteriaAssetRegex) : null;
+    cleanupPolicyXO.setCriteriaAssetRegex(normalizedCriteriaAssetRegex);
     cleanupPolicyXO.setRetain(criteriaRetain);
     cleanupPolicyXO.setSortBy(criteriaSortBy);
 
@@ -395,7 +404,7 @@ public class CleanupPolicyResource
           criteriaLastBlobUpdated,
           criteriaLastDownloaded,
           criteriaReleaseType,
-          criteriaAssetRegex,
+          normalizedCriteriaAssetRegex,
           criteriaRetain,
           criteriaSortBy);
       xo.setCriteria(criteria);
@@ -473,13 +482,52 @@ public class CleanupPolicyResource
     if (value != null) {
       Boolean val = cleanupPolicyConfiguration.getConfiguration().get(key);
       if (val != null && val.equals(TRUE)) {
-        criteriaMap.put(key, String.valueOf(value));
+        // Normalize regex if this is the regex key
+        Object normalizedValue = value;
+        if (REGEX_KEY.equals(key) && value instanceof String regex) {
+          normalizedValue = normalizeAndValidateRegex(regex);
+        }
+        criteriaMap.put(key, String.valueOf(normalizedValue));
       }
       else {
         throw new BadRequestException(
             String.format("Specified format %s does not support the '%s' criteria.", format, keyText));
       }
     }
+  }
+
+  /**
+   * Normalizes and validates a regex pattern by decoding any URL-encoded characters.
+   * This ensures that patterns like %7B6,%7D are converted to {6,} before storage.
+   *
+   * @param regex the regex pattern to normalize
+   * @return the normalized regex pattern
+   * @throws ValidationErrorsException if the regex is invalid
+   */
+  private String normalizeAndValidateRegex(final String regex) {
+    if (isBlank(regex)) {
+      return regex;
+    }
+
+    // Decode the regex to handle URL-encoded characters
+    String decodedRegex = URLDecoder.decode(regex, StandardCharsets.UTF_8);
+
+    // Validate that the decoded regex is a valid pattern
+    try {
+      Pattern.compile(decodedRegex);
+    }
+    catch (PatternSyntaxException e) {
+      log.warn("Invalid regex pattern after decoding: {}", decodedRegex, e);
+      throw new ValidationErrorsException("criteriaAssetRegex",
+          "Invalid regex pattern: " + e.getMessage());
+    }
+
+    // Log if we decoded something (for debugging)
+    if (!regex.equals(decodedRegex)) {
+      log.debug("Normalized regex from '{}' to '{}'", regex, decodedRegex);
+    }
+
+    return decodedRegex;
   }
 
   private static Long toSeconds(final Long days) {
