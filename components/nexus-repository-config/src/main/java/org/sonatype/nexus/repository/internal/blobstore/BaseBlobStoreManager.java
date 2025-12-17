@@ -90,7 +90,7 @@ public abstract class BaseBlobStoreManager
 
   private final EventManager eventManager;
 
-  private final Map<String, BlobStore> stores = Maps.newConcurrentMap();
+  protected final Map<String, BlobStore> stores = Maps.newConcurrentMap();
 
   protected final BlobStoreConfigurationStore store;
 
@@ -173,7 +173,7 @@ public abstract class BaseBlobStoreManager
     log.info("Completed initialization");
   }
 
-  private void restoreBlobStore(final BlobStoreConfiguration configuration) {
+  protected void restoreBlobStore(final BlobStoreConfiguration configuration) {
     log.debug("Restoring BlobStore: {}", configuration);
     BlobStore blobStore = null;
 
@@ -191,7 +191,7 @@ public abstract class BaseBlobStoreManager
     }
   }
 
-  private void startBlobStore(final Entry<String, BlobStore> entry) {
+  protected void startBlobStore(final Entry<String, BlobStore> entry) {
     String name = entry.getKey();
     BlobStore blobStore = entry.getValue();
     log.debug("Starting BlobStore: {}", name);
