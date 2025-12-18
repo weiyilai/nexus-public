@@ -15,61 +15,57 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import { UIView } from '@uirouter/react';
-import {
-  CleanupPoliciesList,
-  CleanupPoliciesForm,
-  Permissions,
-  CapabilitiesList,
-  CapabilitiesCreate,
-  CapabilitiesEdit,
-} from '@sonatype/nexus-ui-plugin';
-import IqServer from '../../components/pages/admin/IqServer/IqServer';
-import RepositoriesExt from '../../components/pages/admin/Repositories/RepositoriesExt';
-import DataStoreConfiguration from '../../components/pages/admin/DataStoreConfiguration/DataStoreConfiguration';
-import ProprietaryRepositories from '../../components/pages/admin/ProprietaryRepositories/ProprietaryRepositories';
-import EmailServer from '../../components/pages/admin/EmailServer/EmailServer';
-import SslCertificatesList from '../../components/pages/admin/SslCertificates/SslCertificatesList';
-import SslCertificatesAddForm from '../../components/pages/admin/SslCertificates/SslCertificatesAddForm';
-import SslCertificatesDetailsForm from '../../components/pages/admin/SslCertificates/SslCertificatesDetailsForm';
-import UsersExt from '../../components/pages/admin/Users/UsersExt';
-import AnonymousSettings from '../../components/pages/admin/AnonymousSettings/AnonymousSettings';
-import Realms from '../../components/pages/admin/Realms/Realms';
-import UserTokens from '../../components/pages/admin/UserTokens/UserTokens';
-import CrowdSettings from '../../components/pages/admin/CrowdSettings/CrowdSettings';
-import SamlConfiguration from '../../components/pages/admin/SamlConfiguration/SamlConfiguration';
-import OAuth2Configuration from '../../components/pages/admin/OAuth2Configuration/OAuth2Configuration';
-import SupportRequest from '../../components/pages/admin/SupportRequest/SupportRequest';
-import SystemInformation from '../../components/pages/admin/SystemInformation/SystemInformation';
-import MetricHealth from '../../components/pages/admin/MetricHealth/MetricHealth';
-import SupportZip from '../../components/pages/admin/SupportZip/SupportZip';
-import Logs from '../../components/pages/admin/Logs/Logs';
-import Api from '../../components/pages/admin/Api/Api';
-import HTTP from '../../components/pages/admin/Http/Http';
-import Licensing from '../../components/pages/admin/Licensing/Licensing';
-import Upgrade from '../../components/pages/admin/Upgrade/Upgrade';
-import NodesExt from '../../components/pages/admin/Nodes/NodesExt';
-import Tasks from '../../components/pages/admin/Tasks/Tasks';
-import BlobStoresList from '../../components/pages/admin/BlobStores/BlobStoresList';
-import BlobStoresForm from '../../components/pages/admin/BlobStores/BlobStoresForm';
-import LdapServersExt from '../../components/pages/admin/LdapServers/LdapServersExt';
-import AdminRepositoriesDirectoryPage from '../../components/pages/AdminRepositories/AdminRepositoriesDirectoryPage';
-import AdminSecurityDirectoryPage from '../../components/pages/AdminSecurity/AdminSecurityDirectoryPage';
-import AdminSystemDirectoryPage from '../../components/pages/AdminSystem/AdminSystemDirectoryPage';
-import AdminSupportDirectoryPage from '../../components/pages/AdminSupport/AdminSupportDirectoryPage';
-import SettingsPageLayout from '../../components/LeftNavigationMenu/SettingsPageLayout/SettingsPageLayout';
-import PrivilegesList from '../../components/pages/admin/Privileges/PrivilegesList';
-import PrivilegesDetails from '../../components/pages/admin/Privileges/PrivilegesDetails';
-import ContentSelectorsList from '../../components/pages/admin/ContentSelectors/ContentSelectorsList';
-import ContentSelectorsDetails from '../../components/pages/admin/ContentSelectors/ContentSelectorsDetails';
-import RolesList from '../../components/pages/admin/Roles/RolesList';
-import RolesDetails from '../../components/pages/admin/Roles/RolesDetails';
-import RoutingRulesForm from '../../components/pages/admin/RoutingRules/RoutingRulesForm';
-import RoutingRulesList from '../../components/pages/admin/RoutingRules/RoutingRulesList';
-import RoutingRulesGlobalPreview from '../../components/pages/admin/RoutingRules/RoutingRulesGlobalPreview.jsx';
-import LoggingConfigurationList from '../../components/pages/admin/LoggingConfiguration/LoggingConfigurationList.jsx';
-import LoggingConfigurationForm from '../../components/pages/admin/LoggingConfiguration/LoggingConfigurationForm.jsx';
+import { Permissions, CleanupPoliciesList, CleanupPoliciesForm, CapabilitiesList, CapabilitiesCreate, CapabilitiesEdit } from '@sonatype/nexus-ui-plugin';
 import { ROUTE_NAMES } from '../routeNames/routeNames';
-import Capabilities from '../../components/pages/admin/Capabilities/Capabilities.jsx';
+import { lazyLoad } from './lazyLoad';
+
+// Lazy load all route components for better code splitting
+const IqServer = lazyLoad(() => import('../../components/pages/admin/IqServer/IqServer'));
+const RepositoriesExt = lazyLoad(() => import('../../components/pages/admin/Repositories/RepositoriesExt'));
+const DataStoreConfiguration = lazyLoad(() => import('../../components/pages/admin/DataStoreConfiguration/DataStoreConfiguration'));
+const ProprietaryRepositories = lazyLoad(() => import('../../components/pages/admin/ProprietaryRepositories/ProprietaryRepositories'));
+const EmailServer = lazyLoad(() => import('../../components/pages/admin/EmailServer/EmailServer'));
+const SslCertificatesList = lazyLoad(() => import('../../components/pages/admin/SslCertificates/SslCertificatesList'));
+const SslCertificatesAddForm = lazyLoad(() => import('../../components/pages/admin/SslCertificates/SslCertificatesAddForm'));
+const SslCertificatesDetailsForm = lazyLoad(() => import('../../components/pages/admin/SslCertificates/SslCertificatesDetailsForm'));
+const UsersExt = lazyLoad(() => import('../../components/pages/admin/Users/UsersExt'));
+const AnonymousSettings = lazyLoad(() => import('../../components/pages/admin/AnonymousSettings/AnonymousSettings'));
+const Realms = lazyLoad(() => import('../../components/pages/admin/Realms/Realms'));
+const UserTokens = lazyLoad(() => import('../../components/pages/admin/UserTokens/UserTokens'));
+const CrowdSettings = lazyLoad(() => import('../../components/pages/admin/CrowdSettings/CrowdSettings'));
+const SamlConfiguration = lazyLoad(() => import('../../components/pages/admin/SamlConfiguration/SamlConfiguration'));
+const OAuth2Configuration = lazyLoad(() => import('../../components/pages/admin/OAuth2Configuration/OAuth2Configuration'));
+const SupportRequest = lazyLoad(() => import('../../components/pages/admin/SupportRequest/SupportRequest'));
+const SystemInformation = lazyLoad(() => import('../../components/pages/admin/SystemInformation/SystemInformation'));
+const MetricHealth = lazyLoad(() => import('../../components/pages/admin/MetricHealth/MetricHealth'));
+const SupportZip = lazyLoad(() => import('../../components/pages/admin/SupportZip/SupportZip'));
+const Logs = lazyLoad(() => import('../../components/pages/admin/Logs/Logs'));
+const Api = lazyLoad(() => import('../../components/pages/admin/Api/Api'));
+const HTTP = lazyLoad(() => import('../../components/pages/admin/Http/Http'));
+const Licensing = lazyLoad(() => import('../../components/pages/admin/Licensing/Licensing'));
+const Upgrade = lazyLoad(() => import('../../components/pages/admin/Upgrade/Upgrade'));
+const NodesExt = lazyLoad(() => import('../../components/pages/admin/Nodes/NodesExt'));
+const Tasks = lazyLoad(() => import('../../components/pages/admin/Tasks/Tasks'));
+const Capabilities = lazyLoad(() => import('../../components/pages/admin/Capabilities/Capabilities'));
+const BlobStoresList = lazyLoad(() => import('../../components/pages/admin/BlobStores/BlobStoresList'));
+const BlobStoresForm = lazyLoad(() => import('../../components/pages/admin/BlobStores/BlobStoresForm'));
+const LdapServersExt = lazyLoad(() => import('../../components/pages/admin/LdapServers/LdapServersExt'));
+const AdminRepositoriesDirectoryPage = lazyLoad(() => import('../../components/pages/AdminRepositories/AdminRepositoriesDirectoryPage'));
+const AdminSecurityDirectoryPage = lazyLoad(() => import('../../components/pages/AdminSecurity/AdminSecurityDirectoryPage'));
+const AdminSystemDirectoryPage = lazyLoad(() => import('../../components/pages/AdminSystem/AdminSystemDirectoryPage'));
+const AdminSupportDirectoryPage = lazyLoad(() => import('../../components/pages/AdminSupport/AdminSupportDirectoryPage'));
+const SettingsPageLayout = lazyLoad(() => import('../../components/LeftNavigationMenu/SettingsPageLayout/SettingsPageLayout'));
+const PrivilegesList = lazyLoad(() => import('../../components/pages/admin/Privileges/PrivilegesList'));
+const PrivilegesDetails = lazyLoad(() => import('../../components/pages/admin/Privileges/PrivilegesDetails'));
+const ContentSelectorsList = lazyLoad(() => import('../../components/pages/admin/ContentSelectors/ContentSelectorsList'));
+const ContentSelectorsDetails = lazyLoad(() => import('../../components/pages/admin/ContentSelectors/ContentSelectorsDetails'));
+const RolesList = lazyLoad(() => import('../../components/pages/admin/Roles/RolesList'));
+const RolesDetails = lazyLoad(() => import('../../components/pages/admin/Roles/RolesDetails'));
+const RoutingRulesForm = lazyLoad(() => import('../../components/pages/admin/RoutingRules/RoutingRulesForm'));
+const RoutingRulesList = lazyLoad(() => import('../../components/pages/admin/RoutingRules/RoutingRulesList'));
+const RoutingRulesGlobalPreview = lazyLoad(() => import('../../components/pages/admin/RoutingRules/RoutingRulesGlobalPreview.jsx'));
+const LoggingConfigurationList = lazyLoad(() => import('../../components/pages/admin/LoggingConfiguration/LoggingConfigurationList.jsx'));
+const LoggingConfigurationForm = lazyLoad(() => import('../../components/pages/admin/LoggingConfiguration/LoggingConfigurationForm.jsx'));
 
 const ADMIN = ROUTE_NAMES.ADMIN;
 

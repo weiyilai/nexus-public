@@ -78,7 +78,8 @@ module.exports = {
   },
   plugins: [
     new rspack.CssExtractRspackPlugin({
-      filename: '[name].css'
+      filename: '[name].css',
+      chunkFilename: '[name].[contenthash:8].css'
     }),
     new rspack.CopyRspackPlugin({
       patterns: [{

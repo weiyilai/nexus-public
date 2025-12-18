@@ -26,6 +26,7 @@ module.exports = merge(common, {
 
   output: {
     filename: '[name].js',
+    chunkFilename: '[name].[contenthash:8].js',
     path: path.resolve(__dirname, 'target', 'classes', 'static')
   },
 
@@ -34,6 +35,7 @@ module.exports = merge(common, {
     minimizer: [
       new rspack.SwcJsMinimizerRspackPlugin(),
       new rspack.LightningCssMinimizerRspackPlugin()
-    ]
+    ],
+    chunkIds: 'deterministic'
   }
 });

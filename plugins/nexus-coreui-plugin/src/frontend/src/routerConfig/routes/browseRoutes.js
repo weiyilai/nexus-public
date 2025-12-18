@@ -15,40 +15,42 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 import { Permissions } from '@sonatype/nexus-ui-plugin';
-
-import Welcome from '../../components/pages/user/Welcome/Welcome';
-import BrowseReactExt from '../../components/pages/browse/Browse/BrowseExt';
-import MalwareRemediation from '../../components/pages/maliciousrisk/MalwareRemediation';
-import SearchGenericExt from '../../components/pages/browse/Search/SearchGenericExt';
-import SearchAptExt from '../../components/pages/browse/Search/SearchAptExt';
-import SearchCargoExt from '../../components/pages/browse/Search/SearchCargoExt';
-import SearchCocoapodsExt from '../../components/pages/browse/Search/SearchCocoapodsExt';
-import SearchComposerExt from '../../components/pages/browse/Search/SearchComposerExt';
-import SearchConanExt from '../../components/pages/browse/Search/SearchConanExt';
-import SearchCondaExt from '../../components/pages/browse/Search/SearchCondaExt';
-import SearchCustomExt from '../../components/pages/browse/Search/SearchCustomExt';
-import SearchDockerExt from '../../components/pages/browse/Search/SearchDockerExt';
-import SearchGitLfsExt from '../../components/pages/browse/Search/SearchGitLfsExt';
-import SearchGolangExt from '../../components/pages/browse/Search/SearchGolangExt';
-import SearchHelmExt from '../../components/pages/browse/Search/SearchHelmExt';
-import SearchHuggingFaceExt from '../../components/pages/browse/Search/SearchHuggingFaceExt';
-import SearchMavenExt from '../../components/pages/browse/Search/SearchMavenExt';
-import SearchNpmExt from '../../components/pages/browse/Search/SearchNpmExt';
-import SearchNugetExt from '../../components/pages/browse/Search/SearchNugetExt';
-import SearchP2Ext from '../../components/pages/browse/Search/SearchP2Ext';
-import SearchPypiExt from '../../components/pages/browse/Search/SearchPypiExt';
-import SearchRExt from '../../components/pages/browse/Search/SearchRExt';
-import SearchRawExt from '../../components/pages/browse/Search/SearchRawExt';
-import SearchRubygemsExt from '../../components/pages/browse/Search/SearchRubygemsExt';
-import SearchTerraformExt from '../../components/pages/browse/Search/SearchTerraformExt';
-import SearchYumExt from '../../components/pages/browse/Search/SearchYumExt';
-import FeatureFlags from '../../constants/FeatureFlags';
 import { UIView } from '@uirouter/react';
-import Tags from '../../components/pages/browse/Tags/Tags';
 import { ROUTE_NAMES } from '../routeNames/routeNames';
-import UploadList from '../../components/pages/browse/Upload/UploadList';
-import UploadDetails from '../../components/pages/browse/Upload/UploadDetails';
-import TestForm from '../../components/pages/TestForm';
+import { lazyLoad } from './lazyLoad';
+import FeatureFlags from '../../constants/FeatureFlags';
+
+// Lazy load all route components for better code splitting
+const Welcome = lazyLoad(() => import('../../components/pages/user/Welcome/Welcome'));
+const BrowseReactExt = lazyLoad(() => import('../../components/pages/browse/Browse/BrowseExt'));
+const MalwareRemediation = lazyLoad(() => import('../../components/pages/maliciousrisk/MalwareRemediation'));
+const SearchGenericExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchGenericExt'));
+const SearchAptExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchAptExt'));
+const SearchCargoExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchCargoExt'));
+const SearchCocoapodsExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchCocoapodsExt'));
+const SearchComposerExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchComposerExt'));
+const SearchConanExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchConanExt'));
+const SearchCondaExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchCondaExt'));
+const SearchCustomExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchCustomExt'));
+const SearchDockerExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchDockerExt'));
+const SearchGitLfsExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchGitLfsExt'));
+const SearchGolangExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchGolangExt'));
+const SearchHelmExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchHelmExt'));
+const SearchHuggingFaceExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchHuggingFaceExt'));
+const SearchMavenExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchMavenExt'));
+const SearchNpmExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchNpmExt'));
+const SearchNugetExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchNugetExt'));
+const SearchP2Ext = lazyLoad(() => import('../../components/pages/browse/Search/SearchP2Ext'));
+const SearchPypiExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchPypiExt'));
+const SearchRExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchRExt'));
+const SearchRawExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchRawExt'));
+const SearchRubygemsExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchRubygemsExt'));
+const SearchTerraformExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchTerraformExt'));
+const SearchYumExt = lazyLoad(() => import('../../components/pages/browse/Search/SearchYumExt'));
+const Tags = lazyLoad(() => import('../../components/pages/browse/Tags/Tags'));
+const UploadList = lazyLoad(() => import('../../components/pages/browse/Upload/UploadList'));
+const UploadDetails = lazyLoad(() => import('../../components/pages/browse/Upload/UploadDetails'));
+const TestForm = lazyLoad(() => import('../../components/pages/TestForm'));
 
 const { MALWARE_RISK_ENABLED } = FeatureFlags;
 

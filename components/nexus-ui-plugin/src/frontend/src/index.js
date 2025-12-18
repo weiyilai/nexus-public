@@ -57,6 +57,8 @@ export { default as TokenMachine } from './interface/TokenMachine';
 export { createRouter } from './router/createRouter';
 export { handleExtJsUnsavedChanges, useExtJsUnsavedChangesGuard } from './router/extJsUnsavedChanges';
 
+export { default as RouteLoadingFallback } from './components/widgets/RouteLoadingFallback/RouteLoadingFallback';
+
 export { ThemeSelector } from './components/widgets/ThemeSelector/ThemeSelector';
 
 export * from './components/layout';

@@ -10,10 +10,10 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
-import React from 'react';
+import React, { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { UIRouter, UIView, useRouter } from '@uirouter/react';
-import { ExtJS, UnsavedChangesModal } from '@sonatype/nexus-ui-plugin';
+import { ExtJS, UnsavedChangesModal, RouteLoadingFallback } from '@sonatype/nexus-ui-plugin';
 
 import { getRouter } from './routerConfig/routerConfig';
 import { ROUTE_NAMES } from './routerConfig/routeNames/routeNames';
@@ -69,7 +69,9 @@ export function App() {
 
       <UnsavedChangesModal/>
 
-      <UIView />
+      <Suspense fallback={<RouteLoadingFallback />}>
+        <UIView />
+      </Suspense>
 
       {footerEnabled && (
         <div
