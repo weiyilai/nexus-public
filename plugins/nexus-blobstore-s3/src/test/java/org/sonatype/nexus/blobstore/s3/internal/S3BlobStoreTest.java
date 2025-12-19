@@ -637,6 +637,17 @@ public class S3BlobStoreTest
     verify(s3, never()).deleteObjects(any());
   }
 
+  @Test
+  public void testStopShouldStopMetricsService() throws Exception {
+    blobStore.init(config);
+    blobStore.start();
+
+    blobStore.stop();
+
+    verify(storeMetrics).stop();
+    verify(blobStoreQuotaUsageChecker).stop();
+  }
+
   private S3BlobStore createBlobStore() {
     S3BlobStore blobstore = new S3BlobStore(amazonS3Factory, new DefaultBlobIdLocationResolver(), uploader, copier,
         false, storeMetrics, deletedBlobIndex, dryRunPrefix, bucketManager, blobStoreQuotaUsageChecker, false);
