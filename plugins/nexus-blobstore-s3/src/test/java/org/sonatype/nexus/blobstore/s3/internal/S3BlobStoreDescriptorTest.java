@@ -18,6 +18,7 @@ import java.util.Map;
 import jakarta.inject.Provider;
 import javax.validation.ValidationException;
 
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.blobstore.MockBlobStoreConfiguration;
 import org.sonatype.nexus.blobstore.SelectOption;
 import org.sonatype.nexus.blobstore.api.BlobStore;
@@ -27,22 +28,22 @@ import org.sonatype.nexus.blobstore.s3.internal.capability.CustomS3RegionCapabil
 import org.sonatype.nexus.blobstore.s3.internal.capability.CustomS3RegionCapabilityConfiguration;
 import org.sonatype.nexus.capability.CapabilityReference;
 import org.sonatype.nexus.capability.CapabilityRegistry;
+import org.sonatype.nexus.validation.ssrf.AntiSsrfHelper;
+import org.sonatype.nexus.validation.ssrf.AntiSsrfHelper.SsrfValidationResult;
 
 import com.google.common.base.Predicate;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -51,8 +52,8 @@ import static org.mockito.Mockito.when;
 import static org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper.BUCKET_PREFIX_KEY;
 import static org.sonatype.nexus.blobstore.s3.S3BlobStoreConfigurationHelper.CONFIG_KEY;
 
-@RunWith(MockitoJUnitRunner.class)
-public class S3BlobStoreDescriptorTest
+class S3BlobStoreDescriptorTest
+    extends Test5Support
 {
 
   @Mock
@@ -67,31 +68,33 @@ public class S3BlobStoreDescriptorTest
   @Mock
   private CapabilityRegistry capabilityRegistry;
 
+  @Mock
+  private AntiSsrfHelper antiSsrfHelper;
+
   private S3BlobStoreDescriptor underTest;
 
   private Map<String, BlobStore> blobStores;
 
-  private AutoCloseable closeable;
-
-  @Before
-  public void setup() {
-    closeable = MockitoAnnotations.openMocks(this);
-    underTest = new S3BlobStoreDescriptor(quotaService, blobStoreManager, capabilityRegistryProvider);
+  @BeforeEach
+  void setup() {
+    underTest = new S3BlobStoreDescriptor(quotaService, blobStoreManager, capabilityRegistryProvider, antiSsrfHelper);
     blobStores = new HashMap<>();
 
-    Mockito.lenient().when(blobStoreManager.get(anyString())).thenAnswer(invocation -> {
+    lenient().when(blobStoreManager.get(anyString())).thenAnswer(invocation -> {
       String name = invocation.getArgument(0, String.class);
       return blobStores.computeIfAbsent(name, k -> mockBlobStore(k, "mock", new HashMap<>()));
     });
+
+    lenient().when(blobStoreManager.browse()).thenAnswer(invocation -> blobStores.values());
   }
 
-  @After
-  public void tearDown() throws Exception {
-    closeable.close();
+  @AfterEach
+  void tearDown() {
+    blobStores.clear();
   }
 
   @Test
-  public void testS3BlobStoreValidatesItsQuota() {
+  void testS3BlobStoreValidatesItsQuota() {
     MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();
 
     underTest.validateConfig(config);
@@ -100,7 +103,7 @@ public class S3BlobStoreDescriptorTest
   }
 
   @Test
-  public void testSingleS3ConfigurationIsValid() {
+  void testSingleS3ConfigurationIsValid() {
     MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();
 
     Map<String, Object> s3Attributes = new HashMap<>();
@@ -116,7 +119,7 @@ public class S3BlobStoreDescriptorTest
   }
 
   @Test
-  public void testConfigSharesBucketWithNonOverlappingPrefixesIsValid() {
+  void testConfigSharesBucketWithNonOverlappingPrefixesIsValid() {
     MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();
 
     Map<String, Object> otherS3Attributes = new HashMap<>();
@@ -142,7 +145,7 @@ public class S3BlobStoreDescriptorTest
   }
 
   @Test
-  public void testConfigSharesBucketWithNoPrefixIsInvalid() {
+  void testConfigSharesBucketWithNoPrefixIsInvalid() {
     MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();
 
     Map<String, Object> otherS3Attributes = new HashMap<>();
@@ -164,16 +167,14 @@ public class S3BlobStoreDescriptorTest
     config.setName("self");
     config.setAttributes(selfAttributes);
 
-    try {
+    ValidationException exception = assertThrows(ValidationException.class, () -> {
       underTest.validateConfig(config);
-    }
-    catch (ValidationException e) {
-      assertEquals("Blob Store 'other' is already using bucket 'bucket' with prefix ''", e.getMessage());
-    }
+    });
+    assertEquals("Blob Store 'other' is already using bucket 'bucket'", exception.getMessage());
   }
 
   @Test
-  public void testConfigSharesBucketWithOverlappingPrefixesInvalid() {
+  void testConfigSharesBucketWithOverlappingPrefixesInvalid() {
     String[][] prefixes = {
         {"foo", "foo"},
         {"", "foo"},
@@ -204,18 +205,16 @@ public class S3BlobStoreDescriptorTest
       config.setName("self");
       config.setAttributes(selfAttributes);
 
-      try {
+      ValidationException exception = assertThrows(ValidationException.class, () -> {
         underTest.validateConfig(config);
-      }
-      catch (ValidationException e) {
-        assertEquals("Blob Store 'other' is already using bucket 'bucket' with prefix '" + prefixPair[0] + "'",
-            e.getMessage());
-      }
+      });
+      assertEquals("Blob Store 'other' is already using bucket 'bucket' with prefix '" + prefixPair[0] + "'",
+          exception.getMessage());
     }
   }
 
   @Test
-  public void testConfigSharesBucketWithNonOverlappingPrefixesValid() {
+  void testConfigSharesBucketWithNonOverlappingPrefixesValid() {
     String[][] prefixes = {
         {"foo", "bar"},
         {"foo", "bar/foo"},
@@ -249,7 +248,7 @@ public class S3BlobStoreDescriptorTest
   }
 
   @Test
-  public void testConfigSharesBucketNameWithDifferentEndpointsIsValid() {
+  void testConfigSharesBucketNameWithDifferentEndpointsIsValid() {
     MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();
 
     Map<String, Object> otherS3Attributes = new HashMap<>();
@@ -275,7 +274,7 @@ public class S3BlobStoreDescriptorTest
   }
 
   @Test
-  public void testTransformPrefixByTrimmingAndCollapsingDuplicateSlashes() {
+  void testTransformPrefixByTrimmingAndCollapsingDuplicateSlashes() {
     String[][] prefixes = {
         {null, ""},
         {"", ""},
@@ -310,9 +309,9 @@ public class S3BlobStoreDescriptorTest
   }
 
   @Test
-  public void testCustomS3RegionCapabilityIsEnabled() {
+  void testCustomS3RegionCapabilityIsEnabled() {
     S3BlobStoreDescriptor spyDescriptor =
-        spy(new S3BlobStoreDescriptor(quotaService, blobStoreManager, capabilityRegistryProvider));
+        spy(new S3BlobStoreDescriptor(quotaService, blobStoreManager, capabilityRegistryProvider, antiSsrfHelper));
     doReturn(true).when(spyDescriptor).isCustomS3RegionCapabilityEnabled();
 
     CustomS3RegionCapability mockCapability = mock(CustomS3RegionCapability.class);
@@ -334,6 +333,67 @@ public class S3BlobStoreDescriptorTest
     assertEquals(mockRegionsList, regionOptions);
   }
 
+  @Test
+  void testValidPublicEndpointPasses() {
+    MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();
+
+    Map<String, Object> s3Attributes = new HashMap<>();
+    s3Attributes.put("bucket", "bucket");
+    s3Attributes.put("endpoint", "https://s3.endpoint.com");
+
+    Map<String, Map<String, Object>> attributes = new HashMap<>();
+    attributes.put("s3", s3Attributes);
+
+    config.setName("self");
+    config.setAttributes(attributes);
+
+    when(antiSsrfHelper.validateHostForConfiguration("s3.endpoint.com"))
+        .thenReturn(SsrfValidationResult.success());
+
+    underTest.validateConfig(config);
+  }
+
+  @Test
+  void testLocalhostEndpointBlocked() {
+    MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();
+
+    Map<String, Object> s3Attributes = new HashMap<>();
+    s3Attributes.put("bucket", "bucket");
+    s3Attributes.put("endpoint", "http://localhost:9000");
+
+    Map<String, Map<String, Object>> attributes = new HashMap<>();
+    attributes.put("s3", s3Attributes);
+
+    config.setName("self");
+    config.setAttributes(attributes);
+
+    when(antiSsrfHelper.validateHostForConfiguration("localhost"))
+        .thenReturn(SsrfValidationResult.failure("loopback address"));
+
+    assertThrows(ValidationException.class, () -> {
+      underTest.validateConfig(config);
+    });
+  }
+
+  @Test
+  void testInvalidEndpointUrlFormat() {
+    MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();
+
+    Map<String, Object> s3Attributes = new HashMap<>();
+    s3Attributes.put("bucket", "bucket");
+    s3Attributes.put("endpoint", "not a valid url");
+
+    Map<String, Map<String, Object>> attributes = new HashMap<>();
+    attributes.put("s3", s3Attributes);
+
+    config.setName("self");
+    config.setAttributes(attributes);
+
+    assertThrows(ValidationException.class, () -> {
+      underTest.validateConfig(config);
+    });
+  }
+
   private BlobStore mockBlobStore(String name, String type, Map<String, Map<String, Object>> attributes) {
     BlobStore blobStore = mock(BlobStore.class);
     MockBlobStoreConfiguration config = new MockBlobStoreConfiguration();
@@ -341,6 +401,8 @@ public class S3BlobStoreDescriptorTest
     config.setName(name);
     config.setType(type);
     config.setAttributes(attributes);
+
+    when(blobStore.getBlobStoreConfiguration()).thenReturn(config);
 
     return blobStore;
   }

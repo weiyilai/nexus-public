@@ -57,6 +57,8 @@ import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.payloads.HttpEntityPayload;
 import org.sonatype.nexus.transaction.RetryDeniedException;
 import org.sonatype.nexus.validation.constraint.Url;
+import org.sonatype.nexus.validation.ssrf.AntiSsrfHelper;
+import org.sonatype.nexus.validation.ssrf.AntiSsrfHelper.SsrfValidationResult;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
@@ -250,6 +252,13 @@ public abstract class ProxyFacetSupport
   @Inject
   @Nullable
   private FirewallHeaderProvider firewallHeaderProvider;
+
+  private AntiSsrfHelper antiSsrfHelper;
+
+  @Inject
+  protected void configureAntiSsrfHelper(final AntiSsrfHelper ssrfProtectionHelper) {
+    this.antiSsrfHelper = checkNotNull(ssrfProtectionHelper);
+  }
 
   @VisibleForTesting
   void buildCooperation() {
@@ -611,6 +620,7 @@ public abstract class ProxyFacetSupport
       log.warn("Unable to resolve url. Reason: {}", e.getMessage());
       throw new BadRequestException("Invalid repository path");
     }
+    validateNotPrivateNetwork(uri);
 
     HttpRequestBase request = buildFetchHttpRequest(uri, context, stale);
 
@@ -899,6 +909,22 @@ public abstract class ProxyFacetSupport
 
   protected EscapeHelper getEscapeHelper() {
     return escapeHelper;
+  }
+
+  private void validateNotPrivateNetwork(final URI uri) throws RemoteBlockedIOException {
+    String host = uri.getHost();
+    if (host == null) {
+      return;
+    }
+
+    SsrfValidationResult result = antiSsrfHelper.validateHost(host);
+    if (!result.isValid()) {
+      String message = ("Access to remote %s blocked: %s. To allow connections, set " +
+          "nexus.proxy.allowPrivateNetworks=true to allow all private networks, or configure specific " +
+          "hosts using nexus.proxy.privateNetworks.allowedIPs or nexus.proxy.privateNetworks.allowedDomains.")
+              .formatted(uri, result.getErrorMessage());
+      throw new RemoteBlockedIOException(message);
+    }
   }
 
   @Subscribe

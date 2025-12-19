@@ -39,6 +39,8 @@ import org.sonatype.nexus.repository.view.Content;
 import org.sonatype.nexus.repository.view.Context;
 import org.sonatype.nexus.repository.view.Request;
 import org.sonatype.nexus.transaction.RetryDeniedException;
+import org.sonatype.nexus.validation.ssrf.AntiSsrfHelper;
+import org.sonatype.nexus.validation.ssrf.AntiSsrfHelper.SsrfValidationResult;
 
 import com.google.common.net.HttpHeaders;
 import org.apache.http.Header;
@@ -170,6 +172,9 @@ public class ProxyFacetSupportTest
   @Mock
   private RepositoryAttributeService repositoryAttributeService;
 
+  @Mock
+  private AntiSsrfHelper antiSsrfHelper;
+
   private final ArgumentCaptor<ProxyThrottledRequestEvent> captor =
       ArgumentCaptor.forClass(ProxyThrottledRequestEvent.class);
 
@@ -197,6 +202,9 @@ public class ProxyFacetSupportTest
     when(missingContextAttributesMap.get("proxy.remote-fetch.skip")).thenReturn(false);
     when(cachedContext.getAttributes()).thenReturn(cachedContextAttributesMap);
     when(missingContext.getAttributes()).thenReturn(missingContextAttributesMap);
+
+    when(antiSsrfHelper.validateHost(anyString()))
+        .thenReturn(SsrfValidationResult.success());
 
     underTest.installDependencies(eventManager);
     underTest.attach(repository);

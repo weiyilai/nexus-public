@@ -12,6 +12,7 @@
  */
 package org.sonatype.nexus.blobstore.s3.internal;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,8 @@ import org.sonatype.nexus.capability.CapabilityRegistry;
 import org.sonatype.nexus.capability.CapabilityType;
 import org.sonatype.nexus.common.upgrade.AvailabilityVersion;
 import org.sonatype.nexus.formfields.FormField;
+import org.sonatype.nexus.validation.ssrf.AntiSsrfHelper;
+import org.sonatype.nexus.validation.ssrf.AntiSsrfHelper.SsrfValidationResult;
 
 import software.amazon.awssdk.regions.Region;
 import com.google.common.collect.ImmutableList;
@@ -81,6 +84,8 @@ public class S3BlobStoreDescriptor
 
   private final Provider<CapabilityRegistry> capabilityRegistryProvider;
 
+  private final AntiSsrfHelper antiSsrfHelper;
+
   private interface Messages
       extends MessageBundle
   {
@@ -96,11 +101,13 @@ public class S3BlobStoreDescriptor
   public S3BlobStoreDescriptor(
       final BlobStoreQuotaService quotaService,
       @Lazy final BlobStoreManager blobStoreManager,
-      final Provider<CapabilityRegistry> capabilityRegistryProvider)
+      final Provider<CapabilityRegistry> capabilityRegistryProvider,
+      final AntiSsrfHelper antiSsrfHelper)
   {
     super(quotaService);
     this.blobStoreManager = checkNotNull(blobStoreManager);
     this.capabilityRegistryProvider = checkNotNull(capabilityRegistryProvider);
+    this.antiSsrfHelper = checkNotNull(antiSsrfHelper);
   }
 
   @Override
@@ -126,6 +133,7 @@ public class S3BlobStoreDescriptor
   @Override
   public void validateConfig(final BlobStoreConfiguration config) {
     super.validateConfig(config);
+    validateEndpoint(config);
     for (BlobStore existingBlobStore : blobStoreManager.browse()) {
       validateOverlappingBucketWithConfiguration(config, existingBlobStore.getBlobStoreConfiguration());
     }
@@ -225,6 +233,33 @@ public class S3BlobStoreDescriptor
         }
         throw new ValidationException(message);
       }
+    }
+  }
+
+  private void validateEndpoint(final BlobStoreConfiguration config) {
+    String endpoint = config.attributes(CONFIG_KEY).get(ENDPOINT_KEY, String.class);
+    if (StringUtils.isBlank(endpoint)) {
+      return;
+    }
+
+    try {
+      URI endpointUri = new URI(endpoint);
+      String host = endpointUri.getHost();
+      if (host != null) {
+        SsrfValidationResult result = antiSsrfHelper.validateHostForConfiguration(host);
+        if (!result.isValid()) {
+          throw new ValidationException(
+              "S3 endpoint blocked: " + result.getErrorMessage() + ". To allow connections, set " +
+                  "nexus.proxy.allowPrivateNetworks=true to allow all private networks, or configure specific " +
+                  "hosts using nexus.proxy.privateNetworks.allowedIPs or nexus.proxy.privateNetworks.allowedDomains.");
+        }
+      }
+    }
+    catch (Exception e) {
+      if (e instanceof ValidationException ve) {
+        throw ve;
+      }
+      throw new ValidationException("Invalid S3 endpoint URL format: " + endpoint);
     }
   }
 
