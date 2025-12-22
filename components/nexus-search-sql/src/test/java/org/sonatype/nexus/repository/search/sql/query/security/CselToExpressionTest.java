@@ -14,7 +14,7 @@ package org.sonatype.nexus.repository.search.sql.query.security;
 
 import java.util.Optional;
 
-import org.sonatype.goodies.testsupport.TestSupport;
+import org.sonatype.goodies.testsupport.Test5Support;
 import org.sonatype.nexus.repository.rest.sql.SearchField;
 import org.sonatype.nexus.repository.search.sql.SearchMappingService;
 import org.sonatype.nexus.repository.search.sql.query.syntax.ExactTerm;
@@ -27,37 +27,38 @@ import org.sonatype.nexus.repository.search.sql.query.syntax.WildcardTerm;
 import org.sonatype.nexus.selector.JexlEngine;
 
 import org.apache.commons.jexl3.parser.ASTJexlScript;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
-public class CselToExpressionTest
-    extends TestSupport
+abstract class CselToExpressionTest
+    extends Test5Support
 {
   @Mock
-  private SearchMappingService service;
+  protected SearchMappingService service;
 
-  private JexlEngine jexlEngine = new JexlEngine();
+  protected JexlEngine jexlEngine = new JexlEngine();
 
-  private SelectorExpressionBuilder builder;
+  protected SelectorExpressionBuilder builder;
 
-  private CselToExpression underTest;
+  protected CselToExpression underTest;
 
-  @Before
-  public void setup() {
-    underTest = new CselToExpression();
+  protected abstract CselToExpression createUnderTest();
 
+  @BeforeEach
+  void setup() {
+    underTest = createUnderTest();
     reset();
   }
 
   @Test
-  public void andTest() {
+  void andTest() {
     final ASTJexlScript script = jexlEngine.parseExpression("a==\"woof\" && b==\"meow\"");
 
     script.childrenAccept(underTest, builder);
@@ -77,7 +78,7 @@ public class CselToExpressionTest
   }
 
   @Test
-  public void orTest() {
+  void orTest() {
     final ASTJexlScript script = jexlEngine.parseExpression("a==\"woof\" || b==\"meow\"");
 
     script.childrenAccept(underTest, builder);
@@ -97,7 +98,7 @@ public class CselToExpressionTest
   }
 
   @Test
-  public void prefixTest() {
+  void prefixTest() {
     final ASTJexlScript script = jexlEngine.parseExpression("a =^ \"woof\"");
 
     script.childrenAccept(underTest, builder);
@@ -107,7 +108,7 @@ public class CselToExpressionTest
   }
 
   @Test
-  public void notEqualTest() {
+  void notEqualTest() {
     final ASTJexlScript script = jexlEngine.parseExpression("a != \"woof\"");
 
     script.childrenAccept(underTest, builder);
@@ -123,7 +124,7 @@ public class CselToExpressionTest
   }
 
   @Test
-  public void parensTest() {
+  void parensTest() {
     final ASTJexlScript script = jexlEngine.parseExpression("a==\"woof\" && (b==\"meow\" || b==\"purr\")");
 
     script.childrenAccept(underTest, builder);
@@ -153,112 +154,12 @@ public class CselToExpressionTest
   }
 
   @Test
-  public void regexpTest() {
-    ASTJexlScript script = jexlEngine.parseExpression("a =~ \"woof\"");
-
-    script.childrenAccept(underTest, builder);
-
-    // "paths_alias ~ :param_0"
-    assertPredicate((SqlPredicate) builder.build(), SearchField.FORMAT_FIELD_1, Operand.REGEX,
-        new ExactTerm("(^|{)(woof)(}|$)"));
-
-    reset();
-
-    script = jexlEngine.parseExpression("a =~ \"woof$\""); // match always starts from start of path
-    script.childrenAccept(underTest, builder);
-
-    assertPredicate((SqlPredicate) builder.build(), SearchField.FORMAT_FIELD_1, Operand.REGEX,
-        new ExactTerm("(^|{)(woof)(}|$)"));
-
-    reset();
-
-    script = jexlEngine.parseExpression("a =~ \"^woof$\"");
-    script.childrenAccept(underTest, builder);
-
-    assertPredicate((SqlPredicate) builder.build(), SearchField.FORMAT_FIELD_1, Operand.REGEX,
-        new ExactTerm("(^|{)woof(}|$)"));
-
-    reset();
-
-    script = jexlEngine.parseExpression("a =~ \"^woof\"");
-    script.childrenAccept(underTest, builder);
-
-    assertPredicate((SqlPredicate) builder.build(), SearchField.FORMAT_FIELD_1, Operand.REGEX,
-        new ExactTerm("(^|{)woof"));
-
-    reset();
-
-    script = jexlEngine.parseExpression("a =~ \"^/woof|/woof/foo\"");
-
-    script.childrenAccept(underTest, builder);
-
-    assertPredicate((SqlPredicate) builder.build(), SearchField.FORMAT_FIELD_1, Operand.REGEX,
-        new ExactTerm("(^|{)/woof|/woof/foo"));
-  }
-
-  @Test
-  public void regexpTestWithNestedParentheses() {
-    // Test simple negative lookahead - should work
-    ASTJexlScript script = jexlEngine.parseExpression("a =~ \"^(?!/test).*$\"");
-    script.childrenAccept(underTest, builder);
-
-    assertPredicate((SqlPredicate) builder.build(), SearchField.FORMAT_FIELD_1, Operand.REGEX,
-        new ExactTerm("(^|{)(?!/test).*(}|$)"));
-
-    reset();
-
-    // Test complex nested parentheses - the original buggy case
-    script = jexlEngine.parseExpression("a =~ \"^(?!(/com/customer/(nested))).*$\"");
-    script.childrenAccept(underTest, builder);
-
-    // Should preserve the nested parentheses structure
-    assertPredicate((SqlPredicate) builder.build(), SearchField.FORMAT_FIELD_1, Operand.REGEX,
-        new ExactTerm("(^|{)(?!(/com/customer/(nested))).*(}|$)"));
-
-    reset();
-
-    // Test nested parentheses without anchors - should also work
-    script = jexlEngine.parseExpression("a =~ \"(?!(/com/customer/(nested))).*\"");
-    script.childrenAccept(underTest, builder);
-
-    assertPredicate((SqlPredicate) builder.build(), SearchField.FORMAT_FIELD_1, Operand.REGEX,
-        new ExactTerm("(^|{)((?!(/com/customer/(nested))).*)(}|$)"));
-
-    reset();
-
-    // Test multiple levels of nesting
-    script = jexlEngine.parseExpression("a =~ \"^(?=(.*test.*))(?!(.*debug.*)).*$\"");
-    script.childrenAccept(underTest, builder);
-
-    assertPredicate((SqlPredicate) builder.build(), SearchField.FORMAT_FIELD_1, Operand.REGEX,
-        new ExactTerm("(^|{)(?=(.*test.*))(?!(.*debug.*)).*(}|$)"));
-
-    reset();
-
-    // Test nested alternation groups
-    script = jexlEngine.parseExpression("a =~ \"^/(com|org|(net|io))/.*$\"");
-    script.childrenAccept(underTest, builder);
-
-    assertPredicate((SqlPredicate) builder.build(), SearchField.FORMAT_FIELD_1, Operand.REGEX,
-        new ExactTerm("(^|{)/(com|org|(net|io))/.*(}|$)"));
-
-    reset();
-
-    // Test anchored pattern without end anchor - should only add start delimiter
-    script = jexlEngine.parseExpression("a =~ \"^(?!(/com/test)).*\"");
-    script.childrenAccept(underTest, builder);
-
-    assertPredicate((SqlPredicate) builder.build(), SearchField.FORMAT_FIELD_1, Operand.REGEX,
-        new ExactTerm("(^|{)(?!(/com/test)).*"));
-  }
-
-  @Test
   public void publicDocumentationExampleTest() {
     // Test the public documentation example: progressive Maven path access
     // format == "maven2" and (path == "/" or path == "/org/" or path == "/org/apache/" or path =^
     // "/org/apache/commons/")
-    when(service.getSearchField("format")).thenReturn(Optional.of(SearchField.FORMAT_FIELD_1));
-    when(service.getSearchField("path")).thenReturn(Optional.of(SearchField.PATHS));
+    lenient().when(service.getSearchField("format")).thenReturn(Optional.of(SearchField.FORMAT_FIELD_1));
+    lenient().when(service.getSearchField("path")).thenReturn(Optional.of(SearchField.PATHS));
 
     final ASTJexlScript script = jexlEngine.parseExpression(
         "format == \"maven2\" and (path == \"/\" or path == \"/org/\" or path == \"/org/apache/\" or path =^ \"/org/apache/commons/\")");
@@ -295,14 +196,14 @@ public class CselToExpressionTest
         new WildcardTerm("/org/apache/commons/", false));
   }
 
-  private void reset() {
-    when(service.getSearchField("a")).thenReturn(Optional.of(SearchField.FORMAT_FIELD_1));
-    when(service.getSearchField("b")).thenReturn(Optional.of(SearchField.FORMAT_FIELD_2));
+  protected void reset() {
+    lenient().when(service.getSearchField("a")).thenReturn(Optional.of(SearchField.FORMAT_FIELD_1));
+    lenient().when(service.getSearchField("b")).thenReturn(Optional.of(SearchField.FORMAT_FIELD_2));
     builder = new SelectorExpressionBuilder(service);
     builder.propertyAlias("paths", SearchField.PATHS);
   }
 
-  private static void assertPredicate(
+  protected static void assertPredicate(
       final SqlPredicate actual,
       final SearchField field,
       final Operand operand,

@@ -14,14 +14,15 @@ package org.sonatype.nexus.repository.search.sql.query.security;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
+import com.google.common.base.Suppliers;
 
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.repository.rest.sql.SearchField;
 import org.sonatype.nexus.repository.search.sql.SearchMappingService;
+import org.sonatype.nexus.repository.search.sql.query.DatabaseTypeDetector;
 import org.sonatype.nexus.repository.search.sql.query.syntax.ExactTerm;
 import org.sonatype.nexus.repository.search.sql.query.syntax.Expression;
 import org.sonatype.nexus.repository.search.sql.query.syntax.Operand;
@@ -36,6 +37,7 @@ import org.sonatype.nexus.selector.SelectorManager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -43,7 +45,6 @@ import org.springframework.stereotype.Component;
  * WHERE clause.
  */
 @Component
-@Singleton
 public class SearchContentSelectorSqlFilterGenerator
     extends ComponentSupport
 {
@@ -53,13 +54,20 @@ public class SearchContentSelectorSqlFilterGenerator
 
   private final SearchMappingService mappingService;
 
-  @Inject
+  private final Supplier<CselToExpression> cselToExpressionSupplier;
+
+  @Autowired
   public SearchContentSelectorSqlFilterGenerator(
       final SelectorManager selectorManager,
-      final SearchMappingService mappingService)
+      final SearchMappingService mappingService,
+      final DatabaseTypeDetector databaseTypeDetector)
   {
+    checkNotNull(databaseTypeDetector);
     this.selectorManager = checkNotNull(selectorManager);
     this.mappingService = checkNotNull(mappingService);
+    this.cselToExpressionSupplier = Suppliers.memoize(() -> databaseTypeDetector.isH2()
+        ? new H2CselToExpression()
+        : new PostgresCselToExpression());
   }
 
   /**
@@ -95,9 +103,7 @@ public class SearchContentSelectorSqlFilterGenerator
   private Expression transformSelectorToSql(final SelectorConfiguration selector) throws SelectorEvaluationException {
     SelectorExpressionBuilder selectorBuilder = new SelectorExpressionBuilder(mappingService);
     selectorBuilder.propertyAlias(PATH, SearchField.PATHS);
-    CselToExpression cselToTsQuerySql = new CselToExpression();
-
-    selectorManager.toSql(selector, selectorBuilder, cselToTsQuerySql);
+    selectorManager.toSql(selector, selectorBuilder, cselToExpressionSupplier.get());
 
     return selectorBuilder.build();
   }

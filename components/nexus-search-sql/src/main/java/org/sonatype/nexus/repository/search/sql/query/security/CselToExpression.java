@@ -39,17 +39,23 @@ import static org.apache.commons.lang3.StringUtils.removeStart;
 
 /**
  * Walks the script,transforming CSEL into {@link Expression} for use by SQL Search queries.
+ * This abstract class must be extended by database-specific implementations.
  */
-// Don't inject
-public class CselToExpression
+public abstract class CselToExpression
     extends ParserVisitorSupport
     implements CselToSql<SelectorExpressionBuilder>
 {
   private static final String EXPECTED_STRING_LITERAL = "Expected string literal";
 
-  public static final String TOKEN_END_REGEX = "(}|$)";
+  /**
+   * Get the token start regex pattern for database-specific path matching.
+   */
+  protected abstract String getTokenStartRegex();
 
-  public static final String TOKEN_START_REGEX = "(^|{)";
+  /**
+   * Get the token end regex pattern for database-specific path matching.
+   */
+  protected abstract String getTokenEndRegex();
 
   @Override
   public void transformCselToSql(final ASTJexlScript script, final SelectorExpressionBuilder builder) {
@@ -197,11 +203,12 @@ public class CselToExpression
 
   /**
    * Builds the regex expression for a regex selector.
-   * The database column that it checks is a VARCHAR containing one or more paths
-   * where each path is surrounded with a '{}'. The paths are space delimited.
+   * The database column that it checks is a VARCHAR containing one or more paths.
    *
-   * Therefore, to simulate matching a full path within the VARCHAR (e.g. {/foo/bar} ) within the VARCHAR,
-   * this method uses '(^|{})' to represent '^' and '(}|$)' to represent '$'
+   * Format varies by database:
+   * - PostgresSQL: {'/foo/bar'} {'/baz/qux'} (brace-delimited with quotes)
+   * - H2: '/foo/bar' '/baz/qux' (no braces)
+   *
    */
   protected SelectorExpressionBuilder transformMatchesOperator(
       final JexlNode node,
@@ -220,7 +227,7 @@ public class CselToExpression
         if (pattern.charAt(pattern.length() - 1) == '$') {
           pattern = removeEnd(pattern, "$");
         }
-        pattern = String.format(TOKEN_START_REGEX + "(%s)" + TOKEN_END_REGEX, pattern); // match entire string
+        pattern = String.format(getTokenStartRegex() + "(%s)" + getTokenEndRegex(), pattern); // match entire string
       }
       else {
         // Handle anchored patterns properly to avoid corrupting nested parentheses
@@ -229,10 +236,10 @@ public class CselToExpression
 
         if (endsWithDollar) {
           innerPattern = removeEnd(innerPattern, "$");
-          pattern = TOKEN_START_REGEX + innerPattern + TOKEN_END_REGEX;
+          pattern = getTokenStartRegex() + innerPattern + getTokenEndRegex();
         }
         else {
-          pattern = TOKEN_START_REGEX + innerPattern;
+          pattern = getTokenStartRegex() + innerPattern;
         }
       }
 

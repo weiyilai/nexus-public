@@ -20,6 +20,7 @@ import org.sonatype.goodies.testsupport.TestSupport;
 import org.sonatype.nexus.repository.rest.internal.DefaultSearchMappings;
 import org.sonatype.nexus.repository.rest.sql.SearchField;
 import org.sonatype.nexus.repository.search.sql.SearchMappingService;
+import org.sonatype.nexus.repository.search.sql.query.DatabaseTypeDetector;
 import org.sonatype.nexus.repository.search.sql.query.syntax.ExactTerm;
 import org.sonatype.nexus.repository.search.sql.query.syntax.Expression;
 import org.sonatype.nexus.repository.search.sql.query.syntax.LenientTerm;
@@ -64,12 +65,16 @@ public class SearchContentSelectorSqlFilterGeneratorTest
   @Mock
   private SelectorManager selectorManager;
 
+  @Mock
+  private DatabaseTypeDetector databaseTypeDetector;
+
   private SearchContentSelectorSqlFilterGenerator underTest;
 
   @Before
   public void setup() {
+    when(databaseTypeDetector.isH2()).thenReturn(false);
     underTest = new SearchContentSelectorSqlFilterGenerator(selectorManager,
-        new SearchMappingService(Arrays.asList(new DefaultSearchMappings())));
+        new SearchMappingService(Arrays.asList(new DefaultSearchMappings())), databaseTypeDetector);
   }
 
   @Test
