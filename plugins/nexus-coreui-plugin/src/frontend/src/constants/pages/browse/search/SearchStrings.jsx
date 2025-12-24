@@ -254,7 +254,7 @@ export default {
           CRITERIA: {
               GROUP: 'Terraform Repositories',
               FIELD_LABEL: {
-                  PROVIDER: 'Provider',
+                  PROVIDER: 'Provider/Type',
                   NAMESPACE: 'Namespace',
                   NAME: 'Name',
               }
