@@ -219,6 +219,8 @@ class ScheduledTaskEventsTest
     // do not use latches, as this task will not even start!
 
     // done
+    Thread.sleep(100);
+    Thread.yield();
     assertRunningTaskCount(0);
     assertExecutedTaskCount(1);
     assertThat(taskInfo.getCurrentState().getState(), equalTo(TaskState.OK));
