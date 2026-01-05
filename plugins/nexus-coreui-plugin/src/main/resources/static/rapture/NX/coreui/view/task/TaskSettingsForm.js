@@ -53,7 +53,9 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
       },
       {
         xtype: 'label',
-        html: NX.I18n.get('Task_TaskSettingsForm_PlanInformation_Disclaimer')
+        name: 'planInformationDisclaimer',
+        html: NX.I18n.get('Task_TaskSettingsForm_PlanInformation_Disclaimer'),
+        hidden: true
       },
       {
         xtype: 'checkbox',
@@ -219,6 +221,12 @@ Ext.define('NX.coreui.view.task.TaskSettingsForm', {
       scheduleFieldSet.setStartDate(model.get('startDate'));
 
       this.maybeMakeReadOnly(model);
+
+      // Show disclaimer only for Data Repair Task (Plan Reconciliation)
+      const disclaimerLabel = me.down('[name="planInformationDisclaimer"]');
+      if (disclaimerLabel) {
+        disclaimerLabel.setVisible(this.isPlanReconcileTask() || this.isExecutePlanReconcileTask());
+      }
 
       if (this.isPlanReconcileTask()) {
         this.handlePlanReconcileTask(model, me);
