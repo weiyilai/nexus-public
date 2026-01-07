@@ -73,6 +73,13 @@ public class TaskFactoryImpl
    */
   private final Map<String, TaskDefinition> taskDefinitions = Maps.newConcurrentMap();
 
+  /**
+   * Flag to indicate if taskDefinitions has been fully initialized.
+   * This is volatile to ensure visibility across threads - a thread will only see initialized=true
+   * after the populating thread has finished adding all descriptors.
+   */
+  private volatile boolean initialized = false;
+
   @Inject
   public TaskFactoryImpl(
       final DatabaseCheck databaseCheck,
@@ -209,16 +216,24 @@ public class TaskFactoryImpl
     return task;
   }
 
+  /**
+   * Returns the task definitions map, ensuring it is fully initialized first.
+   * Uses double-checked locking with a volatile flag to ensure thread-safety:
+   * - The volatile read of 'initialized' provides visibility of all writes made before it was set to true
+   * - The synchronized block ensures only one thread populates the map
+   * - The second check inside the synchronized block prevents duplicate initialization
+   */
   private Map<String, TaskDefinition> taskDefinitions() {
-    if (taskDefinitions.isEmpty()) {
+    if (!initialized) {
       createTaskDefinitionMap();
     }
     return taskDefinitions;
   }
 
   private synchronized void createTaskDefinitionMap() {
-    if (taskDefinitions.isEmpty()) {
+    if (!initialized) {
       descriptors.forEach(this::addDescriptor);
+      initialized = true;
     }
   }
 }
