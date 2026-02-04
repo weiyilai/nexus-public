@@ -78,7 +78,7 @@ To run Nexus Repository Core after building:
 1. Navigate to `public/selfhosted/assemblies/nexus-repository-core/target/assembly`
 2. Run `java -jar bin/nexus-repository-core-*.jar`
 
-The application will create a sonatype-work directory at `assemblies/nexus-repository-core/target/sonatype-work`, 
+The application will create a sonatype-work directory at `public/selfhosted/assemblies/nexus-repository-core/target/sonatype-work`, 
 which will contain the default administrator credentials, database, and file blobstore.
 
 ## License
