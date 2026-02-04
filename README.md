@@ -12,6 +12,7 @@
     Eclipse Foundation. All other trademarks are the property of their respective owners.
 
 -->
+
 # Sonatype Nexus Repository Core
 
 Sonatype Nexus Repository is the single source of truth for all your internal and third-party binaries, components, and packages. Integrate all your development tools into a centralized binary repository manager so that you can choose the best open source components, optimize your build performance, and ship code quickly while increasing visibility across your SDLC.
@@ -32,15 +33,11 @@ Sonatype Nexus Repository Pro customers can contact our world-class support team
 
 ## Build Requirements
 
-Builds use Apache Maven and require Java 17. Apache Maven wrapper scripts are included in the source tree.
-
-### Configuring Maven for SNAPSHOT Dependencies
-
-Following best practices, the nexus-public POM does not include any root `<repositories>` elements.
+Builds use Apache Maven and require Java 21. Apache Maven wrapper scripts are included in the source tree.
 
 ## Building From Source
 
-Released versions are tagged and branched using a name of the form `release-{version}`. For example: `release-3.72.0-04`
+Released versions are tagged and branched using a name of the form `release-{version}`. For example: `release-3.89.0-09`
 
 To build a tagged release, first fetch all tags:
 
@@ -51,25 +48,38 @@ git fetch --tags
 Then checkout the remote branch you want. For example:
 
 ```shell
-git checkout -b release-3.77.0-08 origin/release-3.77.0-08 --
+git checkout -b release-3.89.0-09 origin/release-3.89.0-09 --
 ```
 
-Then build using the included Maven wrapper script. For example:
+### Initialize Yarn Workspaces
+
+Before building with Maven, initialize the Yarn workspaces (required for frontend modules):
 
 ```shell
-./mvnw clean install -Dpublic
+# Enable corepack (ships with Node.js 16.10+)
+corepack enable
+
+# Install workspace dependencies
+corepack yarn install
 ```
 
-The `public` property is required outside of Sonatype's internal infrastructure.
+### Build
+
+Build using the included Maven wrapper script:
+
+```shell
+./mvnw clean install -Ppublic
+```
 
 ## Running
 
-To run Nexus Repository, after building, unzip the assembly and start the server:
+To run Nexus Repository Core after building:
 
-    unzip -d target assemblies/nexus-base-template/target/nexus-base-template-*.zip
-    ./target/nexus-base-template-*/bin/nexus console
+1. Navigate to `public/selfhosted/assemblies/nexus-repository-core/target/assembly`
+2. Run `java -jar bin/nexus-repository-core-*.jar`
 
-The `nexus-base-template` assembly is used as the basis for the official Sonatype Nexus Repository distributions.
+The application will create a sonatype-work directory at `public/selfhosted/assemblies/nexus-repository-core/target/sonatype-work`, 
+which will contain the default administrator credentials, database, and file blobstore.
 
 ## License
 

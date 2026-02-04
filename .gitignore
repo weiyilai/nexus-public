@@ -22,6 +22,14 @@ atlassian-ide-plugin.xml
 dependency-reduced-pom.xml
 out
 
+# Yarn / Node.js
+node_modules/
+.yarn/
+.pnp.*
+yarn.lock
+
+groovy-classes/
+
 # Zion
 .zion/
 variables.properties
