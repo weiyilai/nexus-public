@@ -1050,8 +1050,10 @@
         </property>
       </activation>
       <properties>
-        <!-- override yarn build -->
+        <!-- Yarn 1.x does not support immutable flag -->
         <npm.install>install</npm.install>
+        <!-- Skip lint/format to avoid arch-specific native module issues -->
+        <npm.build>build-no-lint</npm.build>
       </properties>
     </profile>
 

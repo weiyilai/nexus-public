@@ -33,11 +33,11 @@ Sonatype Nexus Repository Pro customers can use https://support.sonatype.com/.
  
 ## Build Requirements
 
-Builds use Apache Maven and require Java 17. Apache Maven wrapper scripts are included in the source tree.
+Builds use Apache Maven and require Java 21. Apache Maven wrapper scripts are included in the source tree.
 
 ## Building From Source
 
-Released versions are tagged and branched using a name of the form `release-{version}`. For example: `release-3.78.0-04`
+Released versions are tagged and branched using a name of the form `release-{version}`. For example: `release-3.89.0-09`
 
 To build a tagged release, first fetch all tags:
 
@@ -48,20 +48,34 @@ git fetch --tags
 Then checkout the remote branch you want. For example:
 
 ```shell
-git checkout -b release-3.78.0-04 origin/release-3.78.0-04 --
+git checkout -b release-3.89.0-09 origin/release-3.89.0-09 --
 ```
 
-Then build using the included Maven wrapper script. For example:
+### Initialize Yarn Workspaces
+
+Before building with Maven, initialize the Yarn workspaces (required for frontend modules):
 
 ```shell
-./mvnw clean install
+# Enable corepack (ships with Node.js 16.10+)
+corepack enable
+
+# Install workspace dependencies
+corepack yarn install
+```
+
+### Build
+
+Build using the included Maven wrapper script:
+
+```shell
+./mvnw clean install -Ppublic
 ```
 
 ## Running
 
 To run Nexus Repository Core after building:
 
-1. Navigate to `assemblies/nexus-repository-core/target/assembly`
+1. Navigate to `public/selfhosted/assemblies/nexus-repository-core/target/assembly`
 2. Run `java -jar bin/nexus-repository-core-*.jar`
 
 The application will create a sonatype-work directory at `assemblies/nexus-repository-core/target/sonatype-work`, 
