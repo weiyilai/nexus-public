@@ -1,10 +1,10 @@
 {
   "private": true,
   "workspaces": [
-    "components/nexus-ui-plugin",
-    "components/nexus-rapture",
-    "plugins/nexus-coreui-plugin",
-    "private/plugins/nexus-cloudui-plugin"
+    "public/common/components/nexus-ui-plugin",
+    "public/common/components/nexus-rapture",
+    "public/common/components/nexus-coreui-plugin",
+    "private/cloud/components/nexus-cloudui-plugin"
   ],
   "packageManager": "yarn@4.9.1",
   "resolutions": {
